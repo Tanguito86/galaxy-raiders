@@ -736,20 +736,33 @@ if (shouldShow) {
 	        const len = b.trail.length;
 
 	        for (let i = 0; i < len; i++) {
-	          const t = (i + 1) / len; // mas nuevo = mas intenso
+	          const t = (i + 1) / len;
 	          const p = b.trail[i];
-	          const tw = Math.max(1, b.w * (0.45 + t * 0.40));
-	          const th = Math.max(2, b.h * (0.30 + t * 0.35));
+	          const tw = Math.max(1, b.w * (0.40 + t * 0.45));
+	          const th = Math.max(1, b.h * (0.25 + t * 0.40));
 
-	          ctx.globalAlpha = 0.05 + t * 0.32;
+	          ctx.globalAlpha = 0.03 + t * 0.30;
 	          ctx.fillStyle = trailColor;
 	          ctx.fillRect(p.x - tw / 2, p.y - th / 2, tw, th);
 	        }
 	        ctx.globalAlpha = 1;
 	      }
 
+	      const glowW = b.type === 'laser' ? 4 : 2;
+	      const glowH = b.type === 'laser' ? 6 : 2;
+	      ctx.globalAlpha = b.type === 'laser' ? 0.12 : 0.08;
+	      ctx.fillStyle = b.color;
+	      ctx.fillRect(b.x - glowW, b.y - glowH, b.w + glowW * 2, b.h + glowH * 2);
+
+	      ctx.globalAlpha = 1;
 	      ctx.fillStyle = b.color;
 	      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+	      const coreW = b.type === 'laser' ? 2 : 1;
+	      const coreH = b.type === 'laser' ? 4 : 1;
+	      ctx.globalAlpha = b.type === 'laser' ? 0.55 : 0.50;
+	      ctx.fillStyle = '#fff';
+	      ctx.fillRect(b.x + coreW, b.y + coreH, Math.max(1, b.w - coreW * 2), Math.max(1, b.h - coreH * 2));
 	    });
 	    ctx.globalAlpha = 1;
 
