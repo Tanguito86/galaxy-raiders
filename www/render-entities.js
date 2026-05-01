@@ -30,6 +30,12 @@ function drawEnemyBullet(b) {
     const cx = x + w * 0.5;
     const cy = y + h * 0.5;
 
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.globalAlpha = 0.32;
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -45,6 +51,11 @@ function drawEnemyBullet(b) {
   }
 
   if (kind === 'fortress') {
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x + 1, y, Math.max(1, w - 2), h);
     ctx.fillStyle = 'rgba(255,240,180,0.72)';
@@ -53,6 +64,11 @@ function drawEnemyBullet(b) {
   }
 
   if (kind === 'split_fan') {
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
     ctx.globalAlpha = 0.42;
@@ -62,6 +78,11 @@ function drawEnemyBullet(b) {
   }
 
   if (kind === 'crossfire_a' || kind === 'crossfire_b') {
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
     ctx.globalAlpha = 0.46;
@@ -70,6 +91,16 @@ function drawEnemyBullet(b) {
     return;
   }
 
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = color;
+  ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+  ctx.globalAlpha = 1;
   ctx.fillStyle = color;
   ctx.fillRect(x, y, w, h);
+
+  ctx.globalAlpha = 0.42;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x + 1, y + h * 0.5 - 0.5, Math.max(1, w - 2), 1);
+  ctx.globalAlpha = 1;
 }
