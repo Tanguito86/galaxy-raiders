@@ -18,11 +18,16 @@ function draw() {
   starShakeY = starShakeY * SHAKE_CONFIG.starSmoothingKeep + ((Math.random() - 0.5) * shakeAmt) * SHAKE_CONFIG.starSmoothingNoise;
 
   stars.forEach(s => {
-    ctx.fillStyle = s.color;
-
     const height = (warpSpeed > 2) ? s.size * (warpSpeed * 1.5) : s.size;
-    const depth = (s.depth ?? 0.5);        // 0.1 lejos, 1.0 cerca
-    const mult  = 0.15 + depth * 0.95;     // cuánto le pega el shake según profundidad
+    const depth = (s.depth ?? 0.5);
+    const mult  = 0.15 + depth * 0.95;
+
+    const twinkle = Math.sin(globalTime * 0.003 + s.tw + s.phase * 0.001);
+    const tw = 0.65 + 0.35 * twinkle;
+    const depthAlpha = 0.45 + depth * 0.55;
+
+    ctx.globalAlpha = depthAlpha * tw;
+    ctx.fillStyle = s.color;
 
     ctx.fillRect(
       s.x + starShakeX * mult,
@@ -30,7 +35,20 @@ function draw() {
       s.size,
       height
     );
+
+    if (depth > 0.7 && warpSpeed <= 2) {
+      ctx.globalAlpha = (depth - 0.7) * 2.0 * tw;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(
+        s.x + starShakeX * mult,
+        s.y + starShakeY * mult,
+        Math.max(1, s.size - 1),
+        Math.max(1, Math.floor(height * 0.4))
+      );
+    }
   });
+
+  ctx.globalAlpha = 1;
 
   // 3) A PARTIR DE ACÁ: shake global SOLO para gameplay (player/enemies/etc.)
   ctx.save();
