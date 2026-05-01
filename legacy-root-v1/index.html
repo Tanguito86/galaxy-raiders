@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- Viewport para juegos moviles (sin zoom accidental) -->
+  <meta name="viewport"
+        content="width=device-width,
+                 initial-scale=1.0,
+                 maximum-scale=1.0,
+                 user-scalable=no,
+                 viewport-fit=cover">
+
+  <!-- Metadata App / PWA -->
+  <meta name="theme-color" content="#050505">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description"
+        content="Galaxy Raiders: ULTIMATE - arcade shooter retro optimizado para moviles">
+
+  <title>Galaxy Raiders: ULTIMATE</title>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+  <div id="game-container">
+
+    <!-- HUD / Ayuda -->
+    <div id="info">
+      ENTER / TOUCH: START - ARROWS: MOVE - SPACE: SHOOT
+    </div>
+
+    <!-- Canvas del juego (resolucion interna fija, escalado por CSS) -->
+    <canvas id="game" width="360" height="640"></canvas>
+
+    <!-- Efectos visuales -->
+    <div class="scanlines"></div>
+
+    <!-- Boton fullscreen (gesto valido para Android) -->
+    <button id="btn-fullscreen"
+            class="fullscreen-btn"
+            title="Pantalla completa">
+      &#x26F6;
+    </button>
+
+     
+    <!-- CONTROLES MOVIL -->
+    <div id="mobile-controls">
+
+      <!-- Joystick virtual -->
+      <div id="joystick-container">
+        <div id="joystick-base"></div>
+        <div id="joystick-stick"></div>
+      </div>
+
+      <!-- Boton de pausa EN EL MEDIO -->
+      <button id="btn-pause" class="pause-btn-center" title="Pausar">&#10074;&#10074;</button>
+
+      <button id="btn-mute" class="mute-btn" title="Silenciar">&#128266;</button>
+
+      <!-- Disparo -->
+      <button id="btn-fire"
+              class="fire"
+              aria-label="Disparar">
+        FIRE
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfPl-9KNF5jGEYRbnDhICvzSffo_tl8eE",
+      authDomain: "galaxy-raiders-460c0.firebaseapp.com",
+      projectId: "galaxy-raiders-460c0",
+      storageBucket: "galaxy-raiders-460c0.firebasestorage.app",
+      messagingSenderId: "766972217622",
+      appId: "1:766972217622:web:afaabd0a3695fd24196837"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+
+  <!-- Juego -->
+  <script src="game.js"></script>
+</body>
+</html>

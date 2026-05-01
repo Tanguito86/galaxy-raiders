@@ -1,0 +1,674 @@
+﻿// =====================
+// GALAXY RAIDERS - entities.js
+// =====================
+
+const MAX_PARTICLES = 100;
+
+// --- STARS ---
+function initStars() {
+  stars = [];
+
+  function addStar(count, speed, size, color, depth) {
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        speed: speed + (Math.random() - 0.5) * speed * 0.3,  // Â±15% variaciÃ³n
+        size,
+        color,
+        depth,
+        tw: Math.random() * 6.28,
+        drift: (Math.random() - 0.5) * 0.25,  // mÃ¡s drift
+        phase: Math.random() * 1000  // desfase para movimiento
+      });
+    }
+  }
+
+  // === 7 CAPAS DE PROFUNDIDAD ===
+  
+  // Capa 1: Muy muy lejos (casi estÃ¡ticas, nebulosa)
+  addStar(40, 0.4, 1, '#222', 0.05);
+  
+  // Capa 2: Muy lejos
+  addStar(60, 0.8, 1, '#333', 0.12);
+  
+  // Capa 3: Lejos
+  addStar(50, 1.2, 1, '#444', 0.20);
+  
+  // Capa 4: Medio-lejos
+  addStar(40, 1.8, 1, '#555', 0.35);
+  
+  // Capa 5: Medio
+  addStar(35, 2.5, 2, '#777', 0.50);
+  
+  // Capa 6: Cerca
+  addStar(20, 3.5, 2, '#aaa', 0.70);
+  
+  // Capa 7: Muy cerca
+  addStar(12, 4.5, 2, '#ccc', 0.85);
+  
+  // Capa 8: Destellos brillantes (primer plano)
+  addStar(6, 5.5, 3, '#fff', 1.0);
+}
+
+
+initStars();
+
+function createExplosion(x, y, color, count = 15) {
+  const overflow = (particles.length + count + 8) - MAX_PARTICLES;
+  if (overflow > 0) particles.splice(0, overflow);
+
+  // PartÃ­culas principales
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 4 + 2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      life: 1.0,
+      gravity: 0.25,
+      color,
+      size: Math.random() * 3 + 2
+    });
+  }
+  
+  // Anillo expansivo
+  particles.push({
+    x, y,
+    vx: 0, vy: 0,
+    life: 0.6,
+    gravity: 0,
+    color,
+    isRing: true,
+    ringRadius: 5,
+    ringExpand: 8
+  });
+  
+  // Chispas rÃ¡pidas
+  for (let i = 0; i < 6; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 6 + 4;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.4,
+      gravity: 0,
+      color: '#fff',
+      size: 1,
+      isSpark: true
+    });
+  }
+}
+
+function spawnVictoryParticles() {
+  for (let i = 0; i < 100; i++) {
+    victoryParticles.push({
+      x: Math.random() * W,
+      y: -20,
+      vx: (Math.random() - 0.5) * 8,
+      vy: Math.random() * -5 - 2,
+      life: 1.0,
+      color: currentPalette[Math.floor(Math.random() * 4)]
+    });
+  }
+}
+
+function startLevel() {
+  recordRunLevel(level);
+  hitstopTimer = 0;
+  clearScreenShakeLayers();
+  currentSetPiece = null;
+  setPieceBannerText = '';
+  setPieceBannerTimer = 0;
+  setPieceIntroTimer = 0;
+  setPieceIntroResolved = true;
+  setPiecePatternTimer = 0;
+  setPieceFireTimer = 0;
+  setPieceLaneIndex = 0;
+  setPieceTelegraphTimer = 0;
+  setPieceTelegraphSide = 0;
+  setPieceBurstShotsRemaining = 0;
+  setPieceBurstDelayTimer = 0;
+  setPieceBurstVariant = 0;
+  initStars();
+  powerUpsSpawnedThisLevel = 0;
+  satellites = []; // âœ… Agregar
+  mines = [];      // âœ… Agregar
+  ufoRewards = [];
+  
+  // âœ… Verificar si este nivel tiene boss
+  if (BOSS_LEVELS.includes(level)) {
+    initBoss();
+    startMusic('boss');
+  } else {
+    initEnemies();
+    startMusic('normal');
+  }
+  
+  currentPalette = PALETTES[(level - 1) % PALETTES.length];
+  container.style.boxShadow = `0 0 60px ${currentPalette[0]}40`;
+  ufo.active = false;
+  bullets = [];
+  enemyBullets = [];
+
+  // âœ… PARALLAX: referencia inicial para evitar â€œtirÃ³nâ€ al arrancar el nivel
+  prevPlayerX = player.x;
+  prevPlayerY = player.y;
+}
+
+
+// --- FORMACIONES DE ENEMIGOS ---
+function getFormation(levelNum) {
+  const formations = ['classic', 'vshape', 'diamond', 'zigzag'];
+
+  // cuÃ¡ntos bosses ya pasaron antes de este nivel
+  const bossesBefore = BOSS_LEVELS.filter(b => b < levelNum).length;
+
+  // Ã­ndice real solo contando niveles normales
+  const nonBossIndex = (levelNum - bossesBefore) - 1; // 0-based
+
+  return formations[nonBossIndex % formations.length];
+}
+
+// Determinar tipo de oleada segÃºn nivel
+function getWaveType(levelNum) {
+  if (BOSS_LEVELS.includes(levelNum)) return 'boss';
+  
+  // Oleada especial cada 4 niveles
+  if (levelNum % 4 === 0) {
+    const waveIndex = Math.floor(levelNum / 4) % 5;
+    const specialWaves = ['swarm', 'tanks', 'kamikazes', 'splitters', 'mixed'];
+    return specialWaves[waveIndex];
+  }
+  
+  return 'normal';
+}
+
+const SET_PIECE_BY_LEVEL = {
+  3:  { key: 'pincer',         name: 'PINCER ASSAULT' },
+  7:  { key: 'fortress',       name: 'FORTRESS LINE' },
+  12: { key: 'kamikaze_rush',  name: 'KAMIKAZE RUSH' },
+  16: { key: 'split_storm',    name: 'SPLITTER STORM' },
+  18: { key: 'imperial_guard', name: 'IMPERIAL GUARD' }
+};
+
+function getSetPieceForLevel(levelNum) {
+  if (BOSS_LEVELS.includes(levelNum)) return null;
+  return SET_PIECE_BY_LEVEL[levelNum] || null;
+}
+
+function createSetPieceFormation(setPieceKey) {
+  const newEnemies = [];
+
+  if (setPieceKey === 'pincer') {
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 3; c++) {
+        newEnemies.push(createEnemy(18 + c * 38 + r * 4, 64 + r * 30, r, 'alien4'));
+        newEnemies.push(createEnemy(W - 18 - (c + 1) * 38 - r * 4, 64 + r * 30, r, 'alien4'));
+      }
+    }
+    for (let c = 0; c < 4; c++) {
+      newEnemies.push(createEnemy(W / 2 - 70 + c * 40, 126, 4, 'alien2'));
+    }
+    newEnemies.push(createEnemy(W / 2 - 15, 56, 0, 'alien3'));
+    return newEnemies;
+  }
+
+  if (setPieceKey === 'fortress') {
+    for (let c = 0; c < 5; c++) newEnemies.push(createEnemy(40 + c * 62, 66, 0, 'alien3'));
+    for (let c = 0; c < 7; c++) newEnemies.push(createEnemy(32 + c * 42, 110, 1, 'alien2'));
+    for (let c = 0; c < 7; c++) newEnemies.push(createEnemy(32 + c * 42, 146, 2, 'alien1'));
+    for (let c = 0; c < 5; c++) newEnemies.push(createEnemy(40 + c * 56, 184, 3, 'alien2'));
+    return newEnemies;
+  }
+
+  if (setPieceKey === 'kamikaze_rush') {
+    for (let c = 0; c < 8; c++) newEnemies.push(createEnemy(24 + c * 39, 62, 0, 'alien5'));
+    for (let c = 0; c < 6; c++) newEnemies.push(createEnemy(35 + c * 47, 102, 1, 'alien4'));
+    for (let c = 0; c < 5; c++) newEnemies.push(createEnemy(40 + c * 56, 142, 2, 'alien5'));
+    for (let c = 0; c < 6; c++) newEnemies.push(createEnemy(30 + c * 48, 182, 3, 'alien2'));
+    return newEnemies;
+  }
+
+  if (setPieceKey === 'split_storm') {
+    for (let c = 0; c < 6; c++) newEnemies.push(createEnemy(30 + c * 50, 68, 0, 'alien6'));
+    for (let c = 0; c < 7; c++) newEnemies.push(createEnemy(24 + c * 44, 106, 1, 'alien2'));
+    for (let c = 0; c < 6; c++) newEnemies.push(createEnemy(30 + c * 50, 144, 2, 'alien6'));
+    for (let c = 0; c < 7; c++) {
+      const type = (c % 2 === 0) ? 'alien1' : 'alien4';
+      newEnemies.push(createEnemy(24 + c * 44, 182, 3, type));
+    }
+    return newEnemies;
+  }
+
+  if (setPieceKey === 'imperial_guard') {
+    for (let c = 0; c < 4; c++) newEnemies.push(createEnemy(52 + c * 68, 64, 0, 'alien3'));
+    for (let c = 0; c < 6; c++) newEnemies.push(createEnemy(30 + c * 50, 106, 1, 'alien6'));
+    for (let c = 0; c < 7; c++) newEnemies.push(createEnemy(24 + c * 44, 148, 2, 'alien2'));
+    for (let c = 0; c < 8; c++) {
+      const flank = (c === 0 || c === 7);
+      newEnemies.push(createEnemy(18 + c * 41, 190, 3, flank ? 'alien5' : 'alien1'));
+    }
+    return newEnemies;
+  }
+
+  return newEnemies;
+}
+
+// Determinar tipo de enemigo segÃºn fila y nivel
+function getEnemyTypeForRow(row, levelNum) {
+  // Niveles bajos: solo alien1 y alien2
+  if (levelNum <= 3) {
+    return row < 2 ? 'alien1' : 'alien2';
+  }
+  
+  // Niveles medios: introducir alien3 y alien4
+  if (levelNum <= 8) {
+    if (row === 0) return 'alien3';  // Tanque arriba
+    if (row < 2) return 'alien1';
+    if (row === 4 && Math.random() < 0.3) return 'alien4';  // Veloz abajo
+    return 'alien2';
+  }
+  
+  // Niveles altos: mezcla con todos
+  if (row === 0 && Math.random() < 0.5) return 'alien3';
+  if (row === 1 && Math.random() < 0.3) return 'alien6';  // Splitter
+  if (row < 3) return 'alien1';
+  if (row === 4 && Math.random() < 0.4) return 'alien5';  // Kamikaze
+  if (Math.random() < 0.3) return 'alien4';
+  return 'alien2';
+}
+
+// Helper para crear enemigo con stats
+function createEnemy(x, y, row, type) {
+  const data = ENEMY_TYPES[type] || ENEMY_TYPES.alien1;
+  const spriteKey = type + '_a';
+  const sprite = SPRITES[spriteKey];
+  const scaledHp = getEnemyHpForLevel(type, data.hp, level);
+  
+  const w = sprite ? sprite[0].length * 3 : 24;
+  const h = sprite ? sprite.length * 3 : 24;
+  
+  return {
+    x, y, w, h, row, type,
+    hp: scaledHp,
+    maxHp: scaledHp,
+    speedMult: data.speed,
+    points: data.points,
+    alive: true,
+    diving: false,
+    vx: 0, vy: 0,
+    flashTimer: 0  // Para feedback visual de daÃ±o
+  };
+}
+
+
+
+function createFormation(formation) {
+  const newEnemies = [];
+  const waveType = getWaveType(level);
+  
+  // OLEADAS ESPECIALES
+  if (waveType === 'swarm') {
+    for (let r = 0; r < 6; r++) {
+      for (let c = 0; c < 10; c++) {
+        newEnemies.push(createEnemy(20 + c * 32, 60 + r * 28, r, 'alien4'));
+      }
+    }
+    return newEnemies;
+  }
+  
+  if (waveType === 'tanks') {
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 5; c++) {
+        newEnemies.push(createEnemy(40 + c * 60, 70 + r * 45, r, 'alien3'));
+      }
+    }
+    return newEnemies;
+  }
+  
+  if (waveType === 'kamikazes') {
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 7; c++) {
+        newEnemies.push(createEnemy(35 + c * 42, 60 + r * 35, r, 'alien5'));
+      }
+    }
+    return newEnemies;
+  }
+  
+  if (waveType === 'splitters') {
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 5; c++) {
+        newEnemies.push(createEnemy(45 + c * 55, 70 + r * 45, r, 'alien6'));
+      }
+    }
+    return newEnemies;
+  }
+  
+  if (waveType === 'mixed') {
+    const types = ['alien1', 'alien2', 'alien3', 'alien4', 'alien5', 'alien6'];
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 7; c++) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        newEnemies.push(createEnemy(35 + c * 42, 65 + r * 35, r, type));
+      }
+    }
+    return newEnemies;
+  }
+  
+  // FORMACIONES NORMALES
+  if (formation === 'classic') {
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 8; c++) {
+        const type = getEnemyTypeForRow(r, level);
+        newEnemies.push(createEnemy(30 + c * 38, 70 + r * 35, r, type));
+      }
+    }
+  }
+  
+  else if (formation === 'vshape') {
+    for (let r = 0; r < 5; r++) {
+      const cols = 6;
+      const offsetX = r * 30;
+      for (let c = 0; c < cols; c++) {
+        const type = getEnemyTypeForRow(r, level);
+        newEnemies.push(createEnemy(20 + offsetX + c * 38, 70 + r * 35, r, type));
+      }
+    }
+  }
+  
+  else if (formation === 'diamond') {
+    const rows = [2, 4, 6, 4, 2];
+    for (let r = 0; r < 5; r++) {
+      const cols = rows[r];
+      const startX = W / 2 - (cols * 38) / 2;
+      for (let c = 0; c < cols; c++) {
+        const type = getEnemyTypeForRow(r, level);
+        newEnemies.push(createEnemy(startX + c * 38, 70 + r * 35, r, type));
+      }
+    }
+  }
+  
+  else if (formation === 'zigzag') {
+    for (let r = 0; r < 5; r++) {
+      const zigOffset = (r % 2) * 25;
+      const startX = 35;
+      for (let c = 0; c < 7; c++) {
+        const type = getEnemyTypeForRow(r, level);
+        newEnemies.push(createEnemy(startX + zigOffset + c * 42, 70 + r * 35, r, type));
+      }
+    }
+  }
+  
+  return newEnemies;
+}
+
+function initEnemies() {
+  boss.active = false;
+
+  const setPiece = getSetPieceForLevel(level);
+  currentSetPiece = setPiece ? setPiece.key : null;
+
+  if (setPiece) {
+    enemies = createSetPieceFormation(setPiece.key);
+    setPieceBannerText = setPiece.name;
+    setPieceBannerTimer = 3200;
+    setPieceIntroTimer = 2200;
+    setPieceIntroResolved = false;
+    setPiecePatternTimer = 0;
+    setPieceFireTimer = 0;
+    setPieceLaneIndex = 0;
+    setPieceTelegraphTimer = 0;
+    setPieceTelegraphSide = 0;
+    setPieceBurstShotsRemaining = 0;
+    setPieceBurstDelayTimer = 0;
+    setPieceBurstVariant = 0;
+
+    enemies.forEach((e, idx) => {
+      const targetX = e.x;
+      const targetY = e.y;
+      const side = targetX + e.w / 2 < W / 2 ? -1 : 1;
+
+      e.entryTargetX = targetX;
+      e.entryTargetY = targetY;
+      e.entryDelay = e.row * 120 + (idx % 5) * 45;
+      e.entryDone = false;
+
+      e.x = side < 0 ? -e.w - 80 - e.row * 12 : W + 80 + e.row * 12;
+      e.y = targetY - 70 + (idx % 3) * 14;
+    });
+
+    pushScreenShake('light', 3);
+    sfxBossWarning();
+  } else {
+    const formation = getFormation(level);
+    enemies = createFormation(formation);
+    setPieceBannerText = '';
+    setPieceBannerTimer = 0;
+    setPieceIntroTimer = 0;
+    setPieceIntroResolved = true;
+    setPiecePatternTimer = 0;
+    setPieceFireTimer = 0;
+    setPieceLaneIndex = 0;
+    setPieceTelegraphTimer = 0;
+    setPieceTelegraphSide = 0;
+    setPieceBurstShotsRemaining = 0;
+    setPieceBurstDelayTimer = 0;
+    setPieceBurstVariant = 0;
+  }
+
+  const stage = Math.floor((level - 1) / 5);
+  enemySpeedX = 0.65 + stage * 0.4;
+  enemyDir = 1;
+}
+
+function initBoss() {
+  enemies = [];
+  
+  // âœ… Resetear flags de patrones anteriores
+    delete boss.crabInit;
+  delete boss.divebombInit;
+  delete boss.supremeInit;
+  delete boss.orbitDir;
+  delete boss.orbitChangeTimer;
+  delete boss.pulseMode;
+  delete boss.pulseTimer;
+  delete boss.chargeMode;
+  delete boss.retreating;
+  delete boss.isTeleporting
+  
+  // âœ… Cargar datos especÃ­ficos del boss segÃºn el nivel
+  const bossData = BOSS_DATA[level];
+  
+  boss.active = true;
+  boss.name = bossData.name;
+  boss.pattern = bossData.pattern;
+  
+ // âœ… Ajustar tamaÃ±o segÃºn el boss
+  if (boss.pattern === 'zigzag') {
+    boss.w = 100;  // 20 columnas Ã— 5
+    boss.h = 55;   // âœ… MÃ¡s alto para mejor proporciÃ³n (antes 45)
+  } else if (boss.pattern === 'rotate') {
+    boss.w = 90;   // Orbital mantiene tamaÃ±o
+    boss.h = 50;   // Pero es mÃ¡s alto (10 filas)
+  } else if (boss.pattern === 'supreme') {
+    boss.w = 90;   // Emperador
+    boss.h = 60;   // âœ… MÃ¡s alto (12 filas ahora)
+  } else {
+    boss.w = 90;   // Resto mantiene tamaÃ±o normal
+    boss.h = 45;
+  }
+   
+  boss.color = bossData.color;
+  boss.x = W / 2 - boss.w / 2;
+  boss.y = 100;
+  boss.maxHp = bossData.baseHp;
+  boss.hp = boss.maxHp;
+  boss.dir = 1;
+  boss.shootTimer = 0;
+  boss.phase = 1;
+  
+  // Limpiar satÃ©lites anteriores
+  satellites = [];
+  
+  // Crear satÃ©lites para ORBITAL
+  if (boss.pattern === 'rotate') {
+    const satCount = 2; // 2 satÃ©lites iniciales
+    for (let i = 0; i < satCount; i++) {
+      satellites.push({
+        angle: (Math.PI * 2 * i) / satCount, // Distribuidos uniformemente
+        distance: 60,
+        radius: 8,
+        shootTimer: Math.random() * 1000 // Desfasados para no disparar todos juntos
+      });
+    }
+  }
+  
+  sfxBossWarning();
+}
+
+function getBossPhase() {
+  if (!boss.active || boss.maxHp <= 0) return 1;
+
+  const hpPct = boss.hp / boss.maxHp;
+
+  if (hpPct > 0.66) return 1;
+  if (hpPct > 0.33) return 2;
+  return 3;
+}
+
+
+function spawnRandomPowerUp(x, y) {
+  const r = Math.random();
+  let type;
+
+  // âœ… Comunes -> Raros (suma 1.0)
+  if (r < 0.45) type = 'double';        // 45% (mÃ¡s comÃºn)
+  else if (r < 0.75) type = 'spread';   // 30% (comÃºn)
+  else if (r < 0.92) type = 'machine';  // 17% (raro)
+  else type = 'laser';                  // 8%  (muy raro)
+
+  powerUps.push({ x, y, w: 12, h: 12, vy: 2, type });
+}
+
+function spawnUfoRewardDrop(x, y) {
+  const r = Math.random();
+  let reward = null;
+  const endgame = level >= 18;
+  const finalStage = level >= 20;
+  const profile = (typeof getBalanceProfileConfig === 'function') ? getBalanceProfileConfig() : null;
+  const aidMult = profile ? profile.ufoAidMult : 1.0;
+  const scoreMult = profile ? profile.ufoScoreMult : 1.0;
+
+  if (!endgame) {
+    if (r < 0.35) reward = { kind: 'weapon', type: 'laser', duration: 12000 };
+    else if (r < 0.55) reward = { kind: 'weapon', type: 'machine', duration: 10000 };
+    else if (r < 0.75) {
+      // 20% del total - mix de vida, score, shield
+      const roll = Math.random();
+      if (roll < 0.5) reward = { kind: 'life' };
+      else if (roll < 0.8) reward = { kind: 'score', amount: 3000 };
+      else reward = { kind: 'shield', duration: 2000 };
+    } else {
+      reward = { kind: 'score', amount: 5000, rare: true };
+    }
+  } else {
+    // Endgame: priorizar supervivencia sin regalar la partida
+    if (r < 0.30) reward = { kind: 'weapon', type: 'laser', duration: finalStage ? 14000 : 13000 };
+    else if (r < 0.50) reward = { kind: 'weapon', type: 'machine', duration: finalStage ? 12000 : 11000 };
+    else if (r < 0.84) {
+      const roll = Math.random();
+      if (roll < 0.42) reward = { kind: 'life' };
+      else if (roll < 0.75) reward = { kind: 'shield', duration: finalStage ? 3200 : 2600 };
+      else reward = { kind: 'score', amount: finalStage ? 4500 : 3800 };
+    } else {
+      reward = { kind: 'score', amount: finalStage ? 7000 : 6000, rare: true };
+    }
+  }
+
+  if (reward) {
+    if (reward.kind === 'weapon') {
+      reward.duration = Math.max(7000, Math.round(reward.duration * (0.88 + aidMult * 0.12)));
+    }
+    if (reward.kind === 'shield') {
+      reward.duration = Math.max(1200, Math.round(reward.duration * aidMult));
+    }
+    if (reward.kind === 'life' && Math.random() > aidMult) {
+      reward = { kind: 'score', amount: endgame ? 4200 : 2800 };
+    }
+    if (reward.kind === 'score') {
+      reward.amount = Math.max(500, Math.round(reward.amount * scoreMult));
+    }
+  }
+
+  ufoRewards.push({
+    x, y,
+    w: 16, h: 16,
+    vy: 2.2,
+    reward,
+    t: 0
+  });
+
+  sfxPowerUp();
+}
+
+
+
+
+function trySpawnPowerUp(x, y, chance) {
+  const balance = getPowerUpBalance(level, lives);
+  const cooldownMs = POWERUP_COOLDOWN * balance.cooldownMult;
+  const effectiveChance = Math.min(0.24, chance * balance.chanceMult);
+
+  if (
+    player.weaponType !== 'normal' ||
+    globalTime < nextPowerUpTime ||
+    powerUps.length >= MAX_ACTIVE_POWERUPS ||
+    powerUpsSpawnedThisLevel >= balance.maxPerLevel ||
+    Math.random() >= effectiveChance
+  ) return false;
+
+  spawnRandomPowerUp(x, y);
+  powerUpsSpawnedThisLevel++;
+  nextPowerUpTime = globalTime + cooldownMs;
+  return true;
+}
+
+
+function activateWeapon(type) {
+  // DuraciÃ³n segÃºn rareza
+  const durations = {
+    double: 4000,    // 4s - comÃºn
+    spread: 4000,    // 4s - comÃºn
+    machine: 4000,   // 4s - raro
+    laser: 4000      // 4s - muy raro
+  };
+  
+  const duration = durations[type] || 10000;
+  
+  // Acumulable si es el mismo tipo
+  if (player.weaponType === type) {
+    player.weaponTimer += 5000;  // +5 segundos
+    sfxPowerUp();  // Sonido de bonus
+  } else {
+    player.weaponType = type;
+    player.weaponTimer = duration;
+    sfxPowerUp();
+  }
+  
+  vibrate('hit');
+}
+
+function getWeaponColor(type) {
+  if (type === 'double') return '#ff0';
+  if (type === 'spread') return '#0f0';
+  if (type === 'machine') return '#f0f';
+  if (type === 'laser') return '#0ff';
+  return '#fff';
+}
+
+
+
+

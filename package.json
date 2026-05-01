@@ -1,0 +1,25 @@
+{
+  "name": "galaxy-raiders-clean",
+  "version": "1.2.0",
+  "description": "Galaxy Raiders web game packaged with Capacitor for Android.",
+  "private": true,
+  "main": "www/game.js",
+  "scripts": {
+    "serve": "npx http-server www -p 8080 -c-1",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "android:debug": "npm run cap:sync && cd android && gradlew.bat assembleDebug",
+    "android:bundle": "npm run cap:sync && cd android && gradlew.bat bundleRelease",
+    "test": "echo \"No automated tests yet\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0"
+  }
+}

@@ -1,0 +1,191 @@
+// =====================
+// GALAXY RAIDERS - input-keyboard.js
+// =====================
+
+document.addEventListener('keydown', e => {
+  if (handleBalanceDebugKeydown(e)) return;
+
+  // A/B de mezcla de musica (ducks): F3
+  if (e.code === 'F3') {
+    const preset = cycleMusicDuckingPreset();
+    if (typeof refreshMusicDucking === 'function') refreshMusicDucking();
+    if (typeof setBalanceDebugNotice === 'function') {
+      setBalanceDebugNotice(`MIX PRESET: ${preset.toUpperCase()}`, 1600);
+    }
+    if (!isMuted) sfxUIClick();
+    e.preventDefault();
+    return;
+  }
+
+  // QA quick view de runs guardadas: F4
+  if (e.code === 'F4') {
+    const rows = (typeof getRecentRunQaSnapshots === 'function') ? getRecentRunQaSnapshots(8) : [];
+    if (rows.length > 0) {
+      console.table(rows.map(r => ({
+        date: r.date,
+        profile: r.profile,
+        difficulty: r.difficulty,
+        endedBy: r.endedBy,
+        levelReached: r.levelReached,
+        score: r.score,
+        continues: r.continues,
+        deaths: r.deaths,
+        accuracy: r.accuracy,
+        totalTimeSec: r.totalTimeSec
+      })));
+    }
+    if (typeof setBalanceDebugNotice === 'function') {
+      setBalanceDebugNotice(`RUN QA: ${rows.length} snapshots`, 1400);
+    }
+    e.preventDefault();
+    return;
+  }
+
+  // Iniciar musica del menu con cualquier tecla
+  if (state === 'menu' && !menuMusicStarted && !isMuted) {
+    initAudio();
+    startMusic('menu');
+    menuMusicStarted = true;
+  }
+
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+
+  // Mute music
+  if (e.code === 'KeyM') {
+    isMuted = !isMuted;
+    if (isMuted) {
+      if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+    } else if (!isMuted && state === 'playing') {
+      startMusic(boss.active ? 'boss' : 'normal');
+    }
+    return;
+  }
+
+  // Input de nombre (high score)
+  if (state === 'entering_name') {
+    if (e.code === 'Enter') {
+      submitEnteredName();
+      return;
+    }
+
+    if (e.code === 'Backspace') {
+      removeLastNameChar();
+      return;
+    }
+
+    appendKeyboardNameChar(e.key);
+    return;
+  }
+
+  // Continue
+  if (state === 'continue' && (e.code === 'Space' || e.code === 'Enter')) {
+    handleContinueConfirmInput();
+    return;
+  }
+  
+  if (state === 'continue' && e.code === 'Escape') {
+    handleContinueDeclineInput();
+    return;
+  }
+
+  if (state === 'victory' && (e.code === 'Space' || e.code === 'Enter')) {
+    handleVictoryConfirmInput();
+    return;
+  }
+
+  if (state === 'menu') {
+    if (e.code === 'ArrowUp') moveMenuSelection(-1);
+    if (e.code === 'ArrowDown') moveMenuSelection(1);
+    
+    // Cambiar dificultad con izq/der
+    if ((e.code === 'ArrowRight' || e.code === 'ArrowLeft') && hardcoreUnlocked) {
+      cycleMenuDifficulty();
+    }
+
+    if (e.code === 'Space' || e.code === 'Enter') {
+      confirmMenuSelection();
+    }
+  }
+  
+  // Input para scores
+  if (state === 'scores') {
+    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+      cycleScoresTab(true);
+    }
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'Escape') {
+      closeScoresScreen();
+    }
+  }
+  
+  // Input para options
+  if (state === 'options') {
+    if (e.code === 'ArrowUp') moveOptionSelection(-1);
+    if (e.code === 'ArrowDown') moveOptionSelection(1);
+    
+    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+      applyOptionHorizontalInput(false);
+    }
+    
+    if (e.code === 'Space' || e.code === 'Enter') {
+      confirmOptionsFromKeyboard();
+    }
+    
+    if (e.code === 'Escape') {
+      confirmOptionsFromKeyboard();
+    }
+  }
+  
+  if (state === 'playing') {
+    if (e.code === 'ArrowLeft') player.movingLeft = true;
+    if (e.code === 'ArrowRight') player.movingRight = true;
+    if (e.code === 'ArrowUp') player.movingUp = true;
+    if (e.code === 'ArrowDown') player.movingDown = true;
+    if (e.code === 'Space' || e.code === 'Enter') isFiring = true;
+  }
+
+  // Input para paused
+  if (state === 'paused') {
+    if (e.code === 'ArrowUp') movePauseSelection(-1);
+    if (e.code === 'ArrowDown') movePauseSelection(1);
+    if (e.code === 'Space' || e.code === 'Enter') {
+      confirmPauseSelection();
+    }
+    if (e.code === 'Escape') {
+      // ESC = Resume rapido
+      resumeGameplay();
+    }
+    return;
+  }
+
+  // Pause toggle desde playing
+  if ((e.code === 'KeyP' || e.code === 'Escape') && state === 'playing') {
+    pauseGameplay();
+  }
+});
+
+document.addEventListener('keyup', e => {
+  if (e.code === 'ArrowLeft') player.movingLeft = false;
+  if (e.code === 'ArrowRight') player.movingRight = false;
+  if (e.code === 'ArrowUp') player.movingUp = false;
+  if (e.code === 'ArrowDown') player.movingDown = false;
+  if (e.code === 'Space' || e.code === 'Enter') isFiring = false;
+});
+
+// Android/Chrome: auto-pause cuando la app va a background
+let wasPlayingBeforeHide = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (state === 'playing') {
+      wasPlayingBeforeHide = true;
+      pauseGameplay();
+    } else {
+      stopMusicPlayback();
+    }
+  } else {
+    if (state === 'paused' && wasPlayingBeforeHide) {
+      requestFull();
+      resumeGameplay();
+      wasPlayingBeforeHide = false;
+    }
+  }
+});
