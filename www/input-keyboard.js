@@ -2,6 +2,14 @@
 // GALAXY RAIDERS - input-keyboard.js
 // =====================
 
+var _kbKeys = { left: false, right: false, up: false, down: false };
+
+function _kbSyncMove() {
+  var netX = (_kbKeys.right ? 1 : 0) - (_kbKeys.left ? 1 : 0);
+  var netY = (_kbKeys.down ? 1 : 0) - (_kbKeys.up ? 1 : 0);
+  InputManager.setMove(netX, netY);
+}
+
 document.addEventListener('keydown', e => {
   if (handleBalanceDebugKeydown(e)) return;
 
@@ -136,11 +144,11 @@ document.addEventListener('keydown', e => {
   }
   
   if (state === 'playing') {
-    if (e.code === 'ArrowLeft') player.movingLeft = true;
-    if (e.code === 'ArrowRight') player.movingRight = true;
-    if (e.code === 'ArrowUp') player.movingUp = true;
-    if (e.code === 'ArrowDown') player.movingDown = true;
-    if (e.code === 'Space' || e.code === 'Enter') isFiring = true;
+    if (e.code === 'ArrowLeft')   { _kbKeys.left   = true; _kbSyncMove(); }
+    if (e.code === 'ArrowRight')  { _kbKeys.right  = true; _kbSyncMove(); }
+    if (e.code === 'ArrowUp')     { _kbKeys.up     = true; _kbSyncMove(); }
+    if (e.code === 'ArrowDown')   { _kbKeys.down   = true; _kbSyncMove(); }
+    if (e.code === 'Space' || e.code === 'Enter') InputManager.setFiring(true);
   }
 
   // Input para paused
@@ -164,11 +172,11 @@ document.addEventListener('keydown', e => {
 });
 
 document.addEventListener('keyup', e => {
-  if (e.code === 'ArrowLeft') player.movingLeft = false;
-  if (e.code === 'ArrowRight') player.movingRight = false;
-  if (e.code === 'ArrowUp') player.movingUp = false;
-  if (e.code === 'ArrowDown') player.movingDown = false;
-  if (e.code === 'Space' || e.code === 'Enter') isFiring = false;
+  if (e.code === 'ArrowLeft')   { _kbKeys.left   = false; _kbSyncMove(); }
+  if (e.code === 'ArrowRight')  { _kbKeys.right  = false; _kbSyncMove(); }
+  if (e.code === 'ArrowUp')     { _kbKeys.up     = false; _kbSyncMove(); }
+  if (e.code === 'ArrowDown')   { _kbKeys.down   = false; _kbSyncMove(); }
+  if (e.code === 'Space' || e.code === 'Enter') InputManager.setFiring(false);
 });
 
 // Android/Chrome: auto-pause cuando la app va a background

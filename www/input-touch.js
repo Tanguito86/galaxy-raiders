@@ -156,20 +156,17 @@ if (joystickContainer && joystickStick) {
       }
     }
     else {
-      player.movingLeft = x < -threshold * joystickMaxDistance;
-      player.movingRight = x > threshold * joystickMaxDistance;
-      player.movingUp = y < -threshold * joystickMaxDistance;
-      player.movingDown = y > threshold * joystickMaxDistance;
+      InputManager.setMove(
+        x < -threshold * joystickMaxDistance ? -1 : (x > threshold * joystickMaxDistance ? 1 : 0),
+        y < -threshold * joystickMaxDistance ? -1 : (y > threshold * joystickMaxDistance ? 1 : 0)
+      );
     }
   }
 
   function resetJoystick() {
     joystickActive = false;
     joystickStick.style.transform = 'translate(0px, 0px)';
-    player.movingLeft = false;
-    player.movingRight = false;
-    player.movingUp = false;
-    player.movingDown = false;
+    InputManager.setMove(0, 0);
   }
 }
 
@@ -227,9 +224,9 @@ bindHold(
       return;
     }
 
-    if (state === 'playing' && !pendingNextLevel) isFiring = true;
+    if (state === 'playing' && !pendingNextLevel) InputManager.setFiring(true);
   },
-  () => { isFiring = false; }
+  () => { InputManager.setFiring(false); }
 );
 
 // Deteccion de movil

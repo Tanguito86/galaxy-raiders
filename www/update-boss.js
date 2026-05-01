@@ -11,6 +11,188 @@ function requestBossMinorDuck(ms = 120, level = 0.66) {
   requestMusicDuck(ms, level);
 }
 
+function applyBossDefaultMovement(phase) {
+  // Velocidad según fase (continua)
+  const patternOverridesMove =
+    (boss.pattern === 'zigzag' ||
+     boss.pattern === 'rotate' ||
+     boss.pattern === 'supreme' ||
+     boss.pattern === 'divebomb');
+
+  if (!patternOverridesMove) {
+    boss.speed = (phase === 3) ? 3.5 : 2;
+
+    // Movimiento horizontal
+    boss.x += boss.speed * boss.dir;
+    if (boss.x < 10 || boss.x + boss.w > W - 10) {
+      boss.dir *= -1;
+    }
+
+    // Movimiento vertical suave (fase 2+)
+    if (phase >= 2) {
+      boss.y = Math.max(
+        80,
+        Math.min(H - boss.h - 50, 120 + Math.sin(globalTime * 0.002) * 30 * (phase / 3))
+      );
+    } else {
+      boss.y = Math.max(80, Math.min(H - boss.h - 50, 100));
+    }
+  }
+}
+
+function handleBossImmediateCounter(step) {
+  if (boss.counterFlag) {
+    const dx = player.x + player.width / 2 - boss.x;
+    const dy = player.y - boss.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // 2 balas homing rápidas (rojas para que se vean)
+    enemyBullets.push(
+      {
+        x: boss.x + boss.w / 2 - 10,
+        y: boss.y + boss.h,
+        w: 10,  // ✅ Más grandes para que se vean
+        h: 20,
+        vx: (dx / dist) * 7,
+        vy: (dy / dist) * 7
+      },
+      {
+        x: boss.x + boss.w / 2 + 10,
+        y: boss.y + boss.h,
+        w: 10,
+        h: 20,
+        vx: (dx / dist) * 7,
+        vy: (dy / dist) * 7
+      }
+    );
+
+    sfxEnemyHit(); // Sonido grave de contraataque
+    pushScreenShake('medium', 5);
+    boss.counterFlag = false; // Reset
+  }
+}
+
+function getBossShootRate(phase) {
+  let shootRate = Math.max(600, 1800 - level * 40);
+  if (phase === 3) shootRate *= 0.6;
+  return shootRate;
+}
+
+function updateBossZigzagMovement(step) {
+  const phase = getBossPhase();
+  const playerFiring = isFiring || bullets.length > 5;
+
+  // SERPENTRIX: Movimiento de serpiente (doble onda)
+  const zigFreq = 0.004 * (1 + phase * 0.3);
+  const zigAmp = 140 - (phase * 15);
+  
+  boss.x = Math.max(20, Math.min(W - boss.w - 20, W / 2 + Math.sin(globalTime * zigFreq) * zigAmp));
+  
+  const vertFreq = 0.006 * (1 + phase * 0.2);
+  const vertAmp = 40 + (phase * 15);
+  const baseY = 120;
+  
+  if (playerFiring && phase >= 2) {
+    boss.y += 0.2 * step;
+    boss.y = Math.min(boss.y, H / 2 - 20);
+  } else {
+    boss.y = baseY + Math.cos(globalTime * vertFreq) * vertAmp;
+  }
+}
+
+function updateBossRotateMovement(step) {
+  const phase = getBossPhase();
+  if (boss.pulseMode) {
+    const targetX = W / 2 - boss.w / 2;
+    const targetY = 130;
+    boss.x += (targetX - boss.x) * 0.05;
+    boss.y += (targetY - boss.y) * 0.05;
+  } else {
+    const rotSpeed = 0.002 * phase * boss.orbitDir;
+    const radiusX = 100 + Math.sin(globalTime * 0.0005) * 30;
+    const radiusY = 40 + phase * 10;
+
+    boss.x = Math.max(30, Math.min(W - boss.w - 30, W / 2 + Math.cos(globalTime * rotSpeed) * radiusX));
+    boss.y = Math.max(80, Math.min(H - boss.h - 80, 140 + Math.sin(globalTime * rotSpeed) * radiusY));
+  }
+}
+
+function fireBossOrbitalPattern(step) {
+  const phase = getBossPhase();
+  const bossCenter = { x: boss.x + boss.w / 2, y: boss.y + boss.h / 2 };
+
+  if (boss.pulseMode) {
+    // PULSO EXPANSIVO: Anillo de balas desde el centro
+    const pulseCount = 12 + (phase * 4); // 16, 20, 24 balas
+    for (let i = 0; i < pulseCount; i++) {
+      const angle = (Math.PI * 2 * i / pulseCount);
+      enemyBullets.push({
+        x: bossCenter.x,
+        y: bossCenter.y,
+        w: 8,
+        h: 8,
+        vx: Math.cos(angle) * 3,
+        vy: Math.sin(angle) * 3
+      });
+    }
+    pushScreenShake('heavy', 10);
+    sfxBigExplosion();
+  } else {
+    // Espiral rotativa normal
+    const angleOffset = globalTime * 0.002;
+    const spiralCount = 4 + (phase * 2);
+    for (let i = 0; i < spiralCount; i++) {
+      const angle = (Math.PI * 2 * i / spiralCount) + angleOffset;
+      enemyBullets.push({
+        x: bossCenter.x,
+        y: bossCenter.y,
+        w: 6,
+        h: 6,
+        vx: Math.cos(angle) * 4,
+        vy: Math.sin(angle) * 4
+      });
+    }
+
+    // Rayo tractor (fase 2+): línea vertical que sigue al jugador
+    if (phase >= 2 && Math.random() < 0.3) {
+      for (let i = 0; i < 5; i++) {
+        enemyBullets.push({
+          x: player.x + player.width / 2 + (Math.random() - 0.5) * 30,
+          y: 50 + i * 25,
+          w: 4,
+          h: 12,
+          vx: 0,
+          vy: 5
+        });
+      }
+      sfxEnemyHit();
+    }
+  }
+}
+
+function fireBossDivebombPattern(step, phase) {
+  if (boss.chargeMode || boss.retreating) return;
+  const diveDx = player.x + player.width / 2 - (boss.x + boss.w / 2);
+  const diveDy = player.y - boss.y;
+  const diveDist = Math.sqrt(diveDx * diveDx + diveDy * diveDy);
+
+  enemyBullets.push({
+    x: boss.x + boss.w / 2,
+    y: boss.y + boss.h,
+    w: 8,
+    h: 14,
+    vx: (diveDx / diveDist) * 3,
+    vy: (diveDy / diveDist) * 3
+  });
+
+  if (phase >= 2 && Math.random() < 0.4) {
+    enemyBullets.push(
+      { x: boss.x + boss.w / 2 - 15, y: boss.y + boss.h, w: 5, h: 10, vx: -2, vy: 3 },
+      { x: boss.x + boss.w / 2 + 15, y: boss.y + boss.h, w: 5, h: 10, vx: 2, vy: 3 }
+    );
+  }
+}
+
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
@@ -21,32 +203,7 @@ function updateBossStep(step, dt) {
 
   // 🔥 MEJORA 4: modo desesperación (fase 3)
 
-// Velocidad según fase (continua)
-const patternOverridesMove =
-  (boss.pattern === 'zigzag' ||
-   boss.pattern === 'rotate' ||
-   boss.pattern === 'supreme' ||
-   boss.pattern === 'divebomb');
-
-if (!patternOverridesMove) {
-  boss.speed = (phase === 3) ? 3.5 : 2;
-
-  // Movimiento horizontal
-  boss.x += boss.speed * boss.dir;
-  if (boss.x < 10 || boss.x + boss.w > W - 10) {
-    boss.dir *= -1;
-  }
-
-  // Movimiento vertical suave (fase 2+)
-  if (phase >= 2) {
-    boss.y = Math.max(
-      80,
-      Math.min(H - boss.h - 50, 120 + Math.sin(globalTime * 0.002) * 30 * (phase / 3))
-    );
-  } else {
-    boss.y = Math.max(80, Math.min(H - boss.h - 50, 100));
-  }
-}
+  applyBossDefaultMovement(phase);
 
 // ✅ IA BASE: Evalúa comportamiento del jugador
 const playerDist = Math.hypot(player.x - boss.x, player.y - boss.y);
@@ -186,22 +343,7 @@ switch (boss.pattern) {
   }
 
   case 'zigzag':
-    // SERPENTRIX: Movimiento de serpiente (doble onda)
-    const zigFreq = 0.004 * (1 + phase * 0.3);
-    const zigAmp = 140 - (phase * 15);
-    
-    boss.x = Math.max(20, Math.min(W - boss.w - 20, W / 2 + Math.sin(globalTime * zigFreq) * zigAmp));
-    
-    const vertFreq = 0.006 * (1 + phase * 0.2);
-    const vertAmp = 40 + (phase * 15);
-    const baseY = 120;
-    
-    if (playerFiring && phase >= 2) {
-      boss.y += 0.2 * step;
-      boss.y = Math.min(boss.y, H / 2 - 20);
-    } else {
-      boss.y = baseY + Math.cos(globalTime * vertFreq) * vertAmp;
-    }
+    updateBossZigzagMovement(step);
     break;
 
   case 'rotate':
@@ -224,23 +366,13 @@ switch (boss.pattern) {
       boss.pulseTimer = 1500;
     }
     
+    updateBossRotateMovement(step);
+    
     if (boss.pulseMode) {
-      const targetX = W / 2 - boss.w / 2;
-      const targetY = 130;
-      boss.x += (targetX - boss.x) * 0.05;
-      boss.y += (targetY - boss.y) * 0.05;
       boss.pulseTimer -= dt;
-      
       if (boss.pulseTimer <= 0) {
         boss.pulseMode = false;
       }
-    } else {
-      const rotSpeed = 0.002 * phase * boss.orbitDir;
-      const radiusX = 100 + Math.sin(globalTime * 0.0005) * 30;
-      const radiusY = 40 + phase * 10;
-      
-      boss.x = Math.max(30, Math.min(W - boss.w - 30, W / 2 + Math.cos(globalTime * rotSpeed) * radiusX));
-      boss.y = Math.max(80, Math.min(H - boss.h - 80, 140 + Math.sin(globalTime * rotSpeed) * radiusY));
     }
     break;
 
@@ -513,40 +645,9 @@ switch (boss.pattern) {
 
 boss.shootTimer += dt;
 
-// ✅ CONTRAATAQUE INMEDIATO (fuera del timer normal)
-if (boss.counterFlag) {
-  const dx = player.x + player.width / 2 - boss.x;
-  const dy = player.y - boss.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  
-  // 2 balas homing rápidas (rojas para que se vean)
-  enemyBullets.push(
-    {
-      x: boss.x + boss.w / 2 - 10,
-      y: boss.y + boss.h,
-      w: 10,  // ✅ Más grandes para que se vean
-      h: 20,
-      vx: (dx / dist) * 7,
-      vy: (dy / dist) * 7
-    },
-    {
-      x: boss.x + boss.w / 2 + 10,
-      y: boss.y + boss.h,
-      w: 10,
-      h: 20,
-      vx: (dx / dist) * 7,
-      vy: (dy / dist) * 7
-    }
-  );
-  
-  sfxEnemyHit(); // Sonido grave de contraataque
-  pushScreenShake('medium', 5);
-  boss.counterFlag = false; // Reset
-}
+handleBossImmediateCounter(step);
 
-// Cadencia según fase (más agresiva)
-let shootRate = Math.max(600, 1800 - level * 40);
-if (phase === 3) shootRate *= 0.6;
+  const shootRate = getBossShootRate(phase);
 
 if (boss.shootTimer > shootRate) {
   boss.shootTimer = 0;
@@ -683,85 +784,13 @@ if (Math.random() < 0.5 && mines.length < 8) {
   }
   break;
       
-    case 'rotate':
-      // ORBITAL: Diferentes ataques según modo
-      const bossCenter = { x: boss.x + boss.w / 2, y: boss.y + boss.h / 2 };
-      
-      if (boss.pulseMode) {
-        // PULSO EXPANSIVO: Anillo de balas desde el centro
-        const pulseCount = 12 + (phase * 4); // 16, 20, 24 balas
-        for (let i = 0; i < pulseCount; i++) {
-          const angle = (Math.PI * 2 * i / pulseCount);
-          enemyBullets.push({
-            x: bossCenter.x,
-            y: bossCenter.y,
-            w: 8,
-            h: 8,
-            vx: Math.cos(angle) * 3,
-            vy: Math.sin(angle) * 3
-          });
-        }
-        pushScreenShake('heavy', 10);
-        sfxBigExplosion();
-      } else {
-        // Espiral rotativa normal
-        const angleOffset = globalTime * 0.002;
-        const spiralCount = 4 + (phase * 2);
-        for (let i = 0; i < spiralCount; i++) {
-          const angle = (Math.PI * 2 * i / spiralCount) + angleOffset;
-          enemyBullets.push({
-            x: bossCenter.x,
-            y: bossCenter.y,
-            w: 6,
-            h: 6,
-            vx: Math.cos(angle) * 4,
-            vy: Math.sin(angle) * 4
-          });
-        }
-        
-        // Rayo tractor (fase 2+): línea vertical que sigue al jugador
-        if (phase >= 2 && Math.random() < 0.3) {
-          for (let i = 0; i < 5; i++) {
-            enemyBullets.push({
-              x: player.x + player.width / 2 + (Math.random() - 0.5) * 30,
-              y: 50 + i * 25,
-              w: 4,
-              h: 12,
-              vx: 0,
-              vy: 5
-            });
-          }
-          sfxEnemyHit();
-        }
-      }
-      break;
-      
-    case 'divebomb':
-      // TENIENTE: No disparar durante embestida o retroceso
-      if (boss.chargeMode || boss.retreating) break;
-      
-      // Misil hacia el jugador
-      const diveDx = player.x + player.width / 2 - (boss.x + boss.w / 2);
-      const diveDy = player.y - boss.y;
-      const diveDist = Math.sqrt(diveDx * diveDx + diveDy * diveDy);
-      
-      enemyBullets.push({
-        x: boss.x + boss.w / 2,
-        y: boss.y + boss.h,
-        w: 8,
-        h: 14,
-        vx: (diveDx / diveDist) * 3,
-        vy: (diveDy / diveDist) * 3
-      });
-      
-      // Spread lateral en fase 2+
-      if (phase >= 2 && Math.random() < 0.4) {
-        enemyBullets.push(
-          { x: boss.x + boss.w / 2 - 15, y: boss.y + boss.h, w: 5, h: 10, vx: -2, vy: 3 },
-          { x: boss.x + boss.w / 2 + 15, y: boss.y + boss.h, w: 5, h: 10, vx: 2, vy: 3 }
-        );
-      }
-      break;
+     case 'rotate':
+       fireBossOrbitalPattern(step);
+       break;
+       
+      case 'divebomb':
+       fireBossDivebombPattern(step, phase);
+       break;
       
     case 'supreme':
       // EMPERADOR: No disparar durante teletransporte
