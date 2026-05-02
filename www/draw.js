@@ -46,6 +46,22 @@ function drawArcadePanel(x, y, w, h, accentColor) {
   ctx.restore();
 }
 
+function drawGameplayHudPanel(x, y, w, h, accentColor) {
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x, y, w, h);
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x, y, w, 1);
+  ctx.fillRect(x, y + h - 1, w, 1);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.restore();
+}
+
 function drawOverlayPanel(x, y, w, h, accentColor) {
   ctx.save();
   ctx.fillStyle = 'rgba(2,4,12,0.92)';
@@ -1623,43 +1639,47 @@ ufoRewards.forEach(d => {
 
 
     // HUD
-    // Left panel: SCORE + LEVEL
-    drawArcadePanel(6, 8, 100, 48, '#0ff');
+    ctx.save();
+    const hudTop = 7;
+    const hudLeftX = 6;
+    const hudLeftW = 112;
+    const hudRightW = 108;
+    const hudRightX = W - hudRightW - 6;
 
+    drawGameplayHudPanel(hudLeftX, hudTop, hudLeftW, 38, '#0ff');
+    drawGameplayHudPanel(hudRightX, hudTop, hudRightW, 38, '#ffd966');
+
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.font = '6px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(100,245,255,0.82)';
+    ctx.fillText('SCORE', hudLeftX + 6, hudTop + 13);
+    ctx.fillText('LEVEL', hudLeftX + 6, hudTop + 31);
+
+    ctx.textAlign = 'right';
+    ctx.font = '9px "Press Start 2P"';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(score, hudLeftX + hudLeftW - 7, hudTop + 14);
+    ctx.fillText(level, hudLeftX + hudLeftW - 7, hudTop + 32);
+
+    ctx.textAlign = 'left';
+    ctx.font = '6px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(255,217,102,0.86)';
+    ctx.fillText('HI', hudRightX + 6, hudTop + 10);
+    ctx.fillStyle = 'rgba(158,231,255,0.82)';
+    ctx.fillText('CHAIN', hudRightX + 6, hudTop + 23);
+    ctx.fillStyle = 'rgba(255,217,102,0.78)';
+    ctx.fillText('NEXT', hudRightX + 6, hudTop + 35);
+
+    ctx.textAlign = 'right';
     ctx.font = '7px "Press Start 2P"';
-    ctx.fillStyle = '#0ff';
-    ctx.textAlign = 'left';
-    ctx.fillText('SCORE', 12, 24);
-
-    ctx.font = '11px "Press Start 2P"';
     ctx.fillStyle = '#fff';
-    ctx.textAlign = 'right';
-    ctx.fillText(score, 98, 24);
-
-    ctx.font = '7px "Press Start 2P"';
-    ctx.fillStyle = '#0ff';
-    ctx.textAlign = 'left';
-    ctx.fillText('LEVEL', 12, 46);
-
-    ctx.font = '11px "Press Start 2P"';
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'right';
-    ctx.fillText(level, 98, 46);
-
-    // Right panel: HI
-    drawArcadePanel(W - 82, 28, 78, 22, '#ff0');
-
-    ctx.font = '8px "Press Start 2P"';
-    ctx.fillStyle = '#ff0';
-    ctx.textAlign = 'left';
-    ctx.fillText('HI', W - 76, 43);
-
-    ctx.font = '11px "Press Start 2P"';
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'right';
-    ctx.fillText(bestScore, W - 10, 43);
-
-    drawMedalHUD(ctx);
+    ctx.fillText(bestScore, hudRightX + hudRightW - 6, hudTop + 10);
+    ctx.fillStyle = '#9ee7ff';
+    ctx.fillText(medalChain, hudRightX + hudRightW - 6, hudTop + 23);
+    ctx.fillStyle = '#ffd966';
+    ctx.fillText(medalValue, hudRightX + hudRightW - 6, hudTop + 35);
+    ctx.restore();
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {
         ctx.textAlign = 'center';
@@ -1771,60 +1791,61 @@ ufoRewards.forEach(d => {
 if (player.weaponType !== 'normal') {
   const maxDurations = { double: 4000, spread: 4000, machine: 4000, laser: 4000 };
   const maxTime = maxDurations[player.weaponType] || 5000;
-  const barW = Math.min(100, (player.weaponTimer / maxTime) * 100);
+  const trackW = 76;
+  const barW = Math.min(trackW, (player.weaponTimer / maxTime) * trackW);
 
-  const barX = W - 120;   // derecha
-  const barY = H - 18;    // alineado con vidas (un pelín arriba)
+  const barX = W - 90;    // derecha
+  const barY = H - 17;    // alineado con vidas
   const wColor = getWeaponColor(player.weaponType);
 
   ctx.save();
 
   // Fondo oscuro del track
-  ctx.globalAlpha = 0.30;
+  ctx.globalAlpha = 0.22;
   ctx.fillStyle = '#000';
-  ctx.fillRect(barX - 1, barY - 1, 102, 8);
+  ctx.fillRect(barX - 1, barY - 1, trackW + 2, 7);
 
   // Track vacio (tenue)
   ctx.globalAlpha = 0.10;
   ctx.fillStyle = wColor;
-  ctx.fillRect(barX, barY, 100, 6);
+  ctx.fillRect(barX, barY, trackW, 5);
 
   // Barra llena
-  ctx.globalAlpha = 0.80;
+  ctx.globalAlpha = 0.72;
   ctx.fillStyle = wColor;
-  ctx.fillRect(barX, barY, barW, 6);
+  ctx.fillRect(barX, barY, barW, 5);
 
   // Brillo interno
-  ctx.globalAlpha = 0.35;
+  ctx.globalAlpha = 0.28;
   ctx.fillStyle = '#fff';
-  ctx.fillRect(barX, barY + 1, barW, 3);
+  ctx.fillRect(barX, barY + 1, barW, 2);
 
   // Borde fino
-  ctx.globalAlpha = 0.50;
+  ctx.globalAlpha = 0.38;
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 1;
-  ctx.strokeRect(barX + 0.5, barY + 0.5, 99, 5);
+  ctx.strokeRect(barX + 0.5, barY + 0.5, trackW - 1, 4);
 
   // Low-time pulse
       if (player.weaponTimer < 1200) {
         const warnPulse = 0.30 + 0.30 * Math.sin(globalTime * 0.06);
         ctx.globalAlpha = warnPulse;
         ctx.fillStyle = '#f44';
-        ctx.fillRect(barX, barY, barW, 6);
+        ctx.fillRect(barX, barY, barW, 5);
       }
 
       // Etiqueta con sombra para legibilidad
-      ctx.globalAlpha = 0.70;
+      ctx.globalAlpha = 0.62;
       ctx.fillStyle = '#000';
-      ctx.font = '7px "Press Start 2P"';
+      ctx.font = '6px "Press Start 2P"';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 4);
-      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 2);
+      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 3);
+      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 1);
 
       ctx.globalAlpha = 1;
       ctx.fillStyle = wColor;
-      ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 3);
+      ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 2);
 
   ctx.restore();
 }
@@ -1832,11 +1853,11 @@ if (player.weaponType !== 'normal') {
 
 
     // Lives
-    const livesW = 14 + lives * 18;
-    drawArcadePanel(4, H - 28, livesW, 20, currentPalette[0]);
+    const livesW = 12 + lives * 15;
+    drawGameplayHudPanel(4, H - 26, livesW, 17, currentPalette[0]);
     for (let i = 0; i < lives; i++) {
       ctx.fillStyle = currentPalette[0];
-      ctx.fillRect(12 + i * 18, H - 22, 10, 7);
+      ctx.fillRect(11 + i * 15, H - 21, 9, 6);
     }
 
     // LEVEL CLEAR overlay
