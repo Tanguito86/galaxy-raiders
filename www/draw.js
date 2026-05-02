@@ -880,9 +880,17 @@ if (shouldShow) {
         
         if (e.diving) color = '#f00';
         
-        const size = (e.type === 'alien_mini') ? 2 : 3;
-        
-        drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
+    const size = (e.type === 'alien_mini') ? 2 : 3;
+    
+    ctx.save();
+    ctx.globalAlpha = 0.04;
+    ctx.fillStyle = color;
+    ctx.fillRect(e.x - 2, e.y - 2, e.w + 4, e.h + 4);
+    ctx.globalAlpha = 0.07;
+    ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
+    ctx.restore();
+    
+    drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
 
         if (e.flashTimer > 0) {
           const flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
