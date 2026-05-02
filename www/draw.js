@@ -2,12 +2,37 @@
 // GALAXY RAIDERS - draw.js
 // =====================
 
+function drawBackgroundMood() {
+  const isWarpMood = pendingNextLevel || warpSpeed > 1.5;
+  const isBossMood = boss && boss.active;
+
+  if (isWarpMood) {
+    const intensity = Math.min(1, (warpSpeed - 1.5) / 4);
+    ctx.fillStyle = '#050812';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.08 + intensity * 0.12;
+    ctx.fillStyle = '#09f';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  } else if (isBossMood) {
+    const hpRatio = boss.hp / boss.maxHp;
+    ctx.fillStyle = '#080404';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.04 + (1 - hpRatio) * 0.08;
+    ctx.fillStyle = '#400';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.fillStyle = '#05050a';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
   ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = '#050505';
-  ctx.fillRect(0, 0, W, H);
+  drawBackgroundMood();
 
   // 2) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
