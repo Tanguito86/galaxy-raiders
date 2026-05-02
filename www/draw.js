@@ -46,6 +46,49 @@ function drawArcadePanel(x, y, w, h, accentColor) {
   ctx.restore();
 }
 
+function drawOverlayPanel(x, y, w, h, accentColor) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(2,4,12,0.92)';
+  ctx.fillRect(x, y, w, h);
+
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x + 4, y + 4, w - 8, 2);
+  ctx.fillRect(x + 4, y + h - 6, w - 8, 2);
+
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 6.5, y + 6.5, w - 13, h - 13);
+
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x - 2, y + 12, 4, 18);
+  ctx.fillRect(x + w - 2, y + 12, 4, 18);
+  ctx.fillRect(x - 2, y + h - 30, 4, 18);
+  ctx.fillRect(x + w - 2, y + h - 30, 4, 18);
+  ctx.restore();
+}
+
+function drawGlowText(text, x, y, font, fillColor, glowColor) {
+  ctx.save();
+  ctx.font = font;
+  ctx.textAlign = 'center';
+  ctx.shadowColor = glowColor;
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = glowColor;
+  ctx.fillText(text, x + 2, y + 2);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#000';
+  ctx.fillText(text, x + 2, y + 3);
+  ctx.fillStyle = fillColor;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1436,133 +1479,161 @@ if (player.weaponType !== 'normal') {
 
     // Pause overlay - ESTILO ARCADE
     if (state === 'paused') {
-      // Fondo oscuro
-      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      const pausePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
+      const panelW = Math.min(W - 40, 300);
+      const panelH = 330;
+      const panelX = (W - panelW) / 2;
+      const panelY = Math.max(52, (H - panelH) / 2);
+      const accent = currentPalette[0] || '#0ff';
+
+      ctx.fillStyle = 'rgba(0,0,0,0.72)';
       ctx.fillRect(0, 0, W, H);
-      
-      // Borde decorativo
-      ctx.strokeStyle = currentPalette[0];
-      ctx.lineWidth = 4;
-      ctx.strokeRect(30, 80, W - 60, H - 200);
-      
-      // Título PAUSED parpadeante
+
+      ctx.globalAlpha = 0.18 + pausePulse * 0.08;
+      ctx.fillStyle = accent;
+      ctx.fillRect(0, 0, W, 2);
+      ctx.fillRect(0, H - 2, W, 2);
+      ctx.globalAlpha = 1;
+
+      drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
+
       ctx.textAlign = 'center';
-      ctx.font = '28px "Press Start 2P"';
-      ctx.fillStyle = 'rgba(0,0,0,0.8)';
-      ctx.fillText('PAUSED', W / 2 + 3, 123);
-      ctx.fillStyle = Math.sin(globalTime * 0.005) > 0 ? '#ff0' : '#fff';
-      ctx.fillText('PAUSED', W / 2, 120);
-      
-      // Línea separadora
-      ctx.strokeStyle = '#444';
-      ctx.lineWidth = 2;
+      drawGlowText(
+        'PAUSED',
+        W / 2,
+        panelY + 46,
+        '24px "Press Start 2P"',
+        pausePulse > 0.45 ? '#fff36a' : '#fff',
+        'rgba(255,235,90,0.65)'
+      );
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(50, 145);
-      ctx.lineTo(W - 50, 145);
+      ctx.moveTo(panelX + 24, panelY + 68);
+      ctx.lineTo(panelX + panelW - 24, panelY + 68);
       ctx.stroke();
-      
-      // Stats
+
       ctx.font = '10px "Press Start 2P"';
-      const statsX = 60;
-      let y = 175;
-      const lh = 26;
-      
-      // SCORE
-      ctx.fillStyle = '#0ff';
+      const statsX = panelX + 34;
+      const statsValueX = panelX + panelW - 34;
+      let y = panelY + 98;
+      const lh = 24;
+
       ctx.textAlign = 'left';
+      ctx.fillStyle = '#64f5ff';
       ctx.fillText('SCORE:', statsX, y);
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'right';
-      ctx.fillText(score.toString(), W - 60, y);
-      
-      // HI-SCORE
+      ctx.fillText(score.toString(), statsValueX, y);
+
       y += lh;
-      ctx.fillStyle = '#0ff';
       ctx.textAlign = 'left';
+      ctx.fillStyle = '#64f5ff';
       ctx.fillText('HI-SCORE:', statsX, y);
       ctx.fillStyle = score > bestScore ? '#0f0' : '#fff';
       ctx.textAlign = 'right';
-      ctx.fillText(Math.max(score, bestScore).toString(), W - 60, y);
-      
-      // LEVEL
+      ctx.fillText(Math.max(score, bestScore).toString(), statsValueX, y);
+
       y += lh;
-      ctx.fillStyle = '#0ff';
       ctx.textAlign = 'left';
+      ctx.fillStyle = '#64f5ff';
       ctx.fillText('LEVEL:', statsX, y);
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'right';
-      ctx.fillText(level + ' / 20', W - 60, y);
-      
-      // LIVES
+      ctx.fillText(level + ' / 20', statsValueX, y);
+
       y += lh;
-      ctx.fillStyle = '#0ff';
       ctx.textAlign = 'left';
+      ctx.fillStyle = '#64f5ff';
       ctx.fillText('LIVES:', statsX, y);
       for (let i = 0; i < lives; i++) {
-        ctx.fillStyle = currentPalette[0];
-        ctx.fillRect(W - 60 - (lives - 1 - i) * 18, y - 10, 12, 8);
+        ctx.fillStyle = accent;
+        ctx.fillRect(statsValueX - 12 - (lives - 1 - i) * 18, y - 10, 12, 8);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.fillRect(statsValueX - 12 - (lives - 1 - i) * 18, y - 10, 12, 1);
       }
-      
-      // WEAPON
+
       y += lh;
-      ctx.fillStyle = '#0ff';
       ctx.textAlign = 'left';
+      ctx.fillStyle = '#64f5ff';
       ctx.fillText('WEAPON:', statsX, y);
       ctx.fillStyle = player.weaponType !== 'normal' ? getWeaponColor(player.weaponType) : '#666';
       ctx.textAlign = 'right';
-      ctx.fillText(player.weaponType.toUpperCase(), W - 60, y);
-      
-      // Línea separadora
-      y += 25;
-      ctx.strokeStyle = '#444';
+      ctx.fillText(player.weaponType.toUpperCase(), statsValueX, y);
+
+      y += 24;
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
       ctx.beginPath();
-      ctx.moveTo(50, y);
-      ctx.lineTo(W - 50, y);
+      ctx.moveTo(panelX + 24, y);
+      ctx.lineTo(panelX + panelW - 24, y);
       ctx.stroke();
-      
-      // Menú de pausa
+
       y += 30;
       const pauseOptions = ['RESUME', 'OPTIONS', 'QUIT'];
-      
+
       for (let i = 0; i < pauseOptions.length; i++) {
-        const optY = y + i * 35;
+        const optY = y + i * 32;
         const isSelected = (pauseSelection === i);
-        
+
         if (isSelected) {
-          ctx.fillStyle = 'rgba(255,255,255,0.1)';
-          ctx.fillRect(50, optY - 18, W - 100, 30);
-          
-          ctx.fillStyle = '#ff0';
+          ctx.fillStyle = 'rgba(255,245,120,0.12)';
+          ctx.fillRect(panelX + 28, optY - 18, panelW - 56, 28);
+          ctx.strokeStyle = 'rgba(255,245,120,0.45)';
+          ctx.strokeRect(panelX + 28.5, optY - 18.5, panelW - 57, 27);
+
           ctx.font = '12px "Press Start 2P"';
-          const pulse = Math.sin(globalTime * 0.008) * 3;
+          ctx.fillStyle = '#ff0';
+          const cursorPulse = Math.sin(globalTime * 0.008) * 3;
           ctx.textAlign = 'left';
-          ctx.fillText('►', 60 - pulse, optY);
+          ctx.fillText('>', panelX + 42 - cursorPulse, optY);
           ctx.textAlign = 'right';
-          ctx.fillText('◄', W - 60 + pulse, optY);
+          ctx.fillText('<', panelX + panelW - 42 + cursorPulse, optY);
         }
-        
+
         ctx.font = '14px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillStyle = isSelected ? '#ff0' : '#666';
+        ctx.fillStyle = isSelected ? '#fff36a' : '#8a94a8';
         ctx.fillText(pauseOptions[i], W / 2, optY);
       }
-      
-      // Instrucciones
+
       ctx.font = '8px "Press Start 2P"';
-      ctx.fillStyle = '#444';
-      ctx.fillText('↑↓ SELECT   FIRE=OK', W / 2, H - 100);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, panelY + panelH - 22);
     }
   }
 
   // TRY AGAIN overlay (gameover transient)
   if (state === 'gameover' && showTryAgain) {
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    const overPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
+    const panelW = Math.min(W - 56, 300);
+    const panelH = 138;
+    const panelX = (W - panelW) / 2;
+    const panelY = (H - panelH) / 2 - 8;
+    const accent = '#ff365f';
+
+    ctx.fillStyle = 'rgba(0,0,0,0.82)';
     ctx.fillRect(-10, -10, W + 20, H + 20);
 
-    ctx.fillStyle = '#fff';
+    ctx.globalAlpha = 0.16 + overPulse * 0.08;
+    ctx.fillStyle = accent;
+    ctx.fillRect(0, Math.floor(H / 2) - 2, W, 4);
+    ctx.globalAlpha = 1;
+
+    drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
+    drawGlowText(
+      'TRY AGAIN',
+      W / 2,
+      panelY + 62,
+      '24px "Press Start 2P"',
+      overPulse > 0.35 ? '#fff' : '#ffd7df',
+      'rgba(255,54,95,0.75)'
+    );
+
     ctx.textAlign = 'center';
-    ctx.font = '28px "Press Start 2P"';
-    ctx.fillText('TRY AGAIN', W / 2, H / 2);
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(255,255,255,0.58)';
+    ctx.fillText('PRESS FIRE', W / 2, panelY + 98);
   }
 
   // Victory screen ÉPICO
