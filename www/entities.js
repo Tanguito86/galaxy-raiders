@@ -119,80 +119,102 @@ function createExplosion(x, y, color, count = 15) {
 }
 
 function createBossDeathExplosion(x, y, color) {
-  var overflow = (particles.length + 80) - MAX_PARTICLES;
+  var totalCount = 88;
+  var overflow = (particles.length + totalCount) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
 
-  var i, angle, speed;
+  var i, angle, speed, sx, sy;
+  var bossW = boss && boss.w ? boss.w : 90;
+  var bossH = boss && boss.h ? boss.h : 50;
+  var accent = '#ffea44';
+  var ember = '#ff7a18';
 
-  for (i = 0; i < 40; i++) {
+  for (i = 0; i < 26; i++) {
     angle = Math.random() * Math.PI * 2;
-    speed = 1 + Math.random() * 5;
+    speed = 1.2 + Math.random() * 4.8;
     particles.push({
       x: x, y: y,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 2,
-      life: 0.7 + Math.random() * 0.5,
-      gravity: 0.3,
+      vy: Math.sin(angle) * speed - 1.8,
+      life: 0.75 + Math.random() * 0.45,
+      gravity: 0.24,
       color: color,
-      size: Math.random() * 4 + 2
+      size: 3 + Math.random() * 4
     });
   }
 
-  var sx, sy, s;
-  for (s = 0; s < 4; s++) {
-    sx = x + (Math.random() - 0.5) * boss.w * 1.2;
-    sy = y + (Math.random() - 0.5) * boss.h * 0.9;
-    for (i = 0; i < 6; i++) {
+  for (i = 0; i < 18; i++) {
+    angle = Math.random() * Math.PI * 2;
+    speed = 0.6 + Math.random() * 2.6;
+    particles.push({
+      x: x + Math.cos(angle) * bossW * (0.16 + Math.random() * 0.28),
+      y: y + Math.sin(angle) * bossH * (0.14 + Math.random() * 0.32),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.9,
+      life: 0.55 + Math.random() * 0.45,
+      gravity: 0.18,
+      color: i % 3 === 0 ? accent : ember,
+      size: 2 + Math.random() * 3
+    });
+  }
+
+  for (var s = 0; s < 5; s++) {
+    angle = (Math.PI * 2 * s) / 5 + Math.random() * 0.35;
+    sx = x + Math.cos(angle) * bossW * (0.24 + Math.random() * 0.28);
+    sy = y + Math.sin(angle) * bossH * (0.20 + Math.random() * 0.24);
+    for (i = 0; i < 4; i++) {
       angle = Math.random() * Math.PI * 2;
-      speed = 1 + Math.random() * 3;
+      speed = 1.1 + Math.random() * 3.2;
       particles.push({
         x: sx, y: sy,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 1,
-        life: 0.3 + Math.random() * 0.4,
-        gravity: 0.15,
-        color: i % 2 === 0 ? color : '#ffea44',
-        size: 1 + Math.random() * 3
+        vy: Math.sin(angle) * speed - 0.8,
+        life: 0.34 + Math.random() * 0.36,
+        gravity: 0.12,
+        color: i % 2 === 0 ? '#fff' : accent,
+        size: 1.5 + Math.random() * 2.5
       });
     }
   }
 
-  for (i = 0; i < 10; i++) {
-    angle = Math.random() * Math.PI * 2;
-    speed = 3 + Math.random() * 4;
+  for (i = 0; i < 16; i++) {
+    angle = (Math.PI * 2 * i) / 16 + (Math.random() - 0.5) * 0.2;
+    speed = 3.5 + Math.random() * 4.5;
     particles.push({
       x: x, y: y,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 0.15 + Math.random() * 0.2,
+      vy: Math.sin(angle) * speed - 0.5,
+      life: 0.16 + Math.random() * 0.18,
       gravity: 0,
       color: '#fff',
-      size: 1 + Math.random() * 2,
+      size: 1 + Math.random() * 1.7,
       isSpark: true
     });
   }
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 4; i++) {
     particles.push({
       x: x, y: y,
       vx: 0, vy: 0,
-      life: 0.35 + i * 0.1,
+      life: 0.28 + i * 0.08,
       gravity: 0,
-      color: i === 0 ? color : i === 1 ? '#fff' : '#ffea44',
+      color: i === 0 ? '#fff' : i === 1 ? color : i === 2 ? accent : ember,
       isRing: true,
-      ringRadius: 8 + i * 16,
-      ringExpand: 5 + i * 3
+      ringRadius: 6 + i * 13,
+      ringExpand: 7 + i * 2
     });
   }
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 4; i++) {
     particles.push({
-      x: x, y: y,
-      vx: 0, vy: (i - 1) * 0.8,
-      life: 0.12 + i * 0.06,
+      x: x + (i - 1.5) * 3,
+      y: y + (i % 2 === 0 ? -2 : 2),
+      vx: (i - 1.5) * 0.15,
+      vy: (i - 1.5) * 0.35,
+      life: 0.10 + i * 0.04,
       gravity: 0,
-      color: i === 0 ? '#fff' : i === 1 ? color : '#ffea44',
-      size: 6 + i * 4
+      color: i === 0 ? '#fff' : i === 1 ? accent : color,
+      size: 7 + i * 3
     });
   }
 }
