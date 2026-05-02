@@ -158,7 +158,10 @@ function vibrate(type = 'tap') {
         default:
           Haptics.impact({ style: 'light' });
       }
-    } else if (navigator.vibrate) {
+    } else if (
+      navigator.vibrate &&
+      (!navigator.userActivation || navigator.userActivation.hasBeenActive)
+    ) {
       // Fallback web
       let ms;
       switch (type) {
@@ -184,9 +187,11 @@ const fullscreenBtn = document.getElementById('btn-fullscreen');
 function toggleFullscreen() {
   const el = document.documentElement;
   if (!document.fullscreenElement) {
-    (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+    const request = (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+    if (request && typeof request.catch === 'function') request.catch(() => {});
   } else {
-    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
+    const exit = (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
+    if (exit && typeof exit.catch === 'function') exit.catch(() => {});
   }
 }
 

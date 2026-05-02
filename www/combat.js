@@ -83,7 +83,10 @@ function requestFull() {
   const el = document.documentElement;
   const fs = el.requestFullscreen || el.webkitRequestFullscreen;
   if (fs && !document.fullscreenElement) {
-    try { fs.call(el); } catch (e) {}
+    try {
+      const request = fs.call(el);
+      if (request && typeof request.catch === 'function') request.catch(() => {});
+    } catch (e) {}
   }
 }
 
