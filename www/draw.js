@@ -1297,7 +1297,7 @@ if (shouldShow) {
       const _barW = 200;
       const _barH = 8;
       const _barX = W / 2 - _barW / 2;
-      const _barY = 86;
+      const _barY = 92;
       const _pad = 4;
       
       ctx.save();
@@ -1754,7 +1754,7 @@ ufoRewards.forEach(d => {
         const label = isDoubleCrossfire
           ? (isSecondTelegraph ? 'CROSSFIRE B' : 'CROSSFIRE A')
           : 'CROSSFIRE';
-        ctx.fillText(label, W / 2, 96);
+        ctx.fillText(label, W / 2, 104);
       }
 
       if (setPieceTelegraphTimer > 0 && currentSetPiece === 'fortress') {
@@ -1778,7 +1778,7 @@ ufoRewards.forEach(d => {
         ctx.textAlign = 'center';
         ctx.font = '8px "Press Start 2P"';
         ctx.fillStyle = `rgba(255,220,120,${0.45 + 0.45 * pulse})`;
-        ctx.fillText(`ROW ${lane + 1} BARRAGE`, W / 2, 96);
+        ctx.fillText(`ROW ${lane + 1} BARRAGE`, W / 2, 104);
       }
 
       if (setPieceTelegraphTimer > 0 && currentSetPiece === 'split_storm') {
@@ -1799,7 +1799,7 @@ ufoRewards.forEach(d => {
         ctx.textAlign = 'center';
         ctx.font = '8px "Press Start 2P"';
         ctx.fillStyle = `rgba(170,255,220,${0.50 + 0.40 * pulse})`;
-        ctx.fillText('FAN BURST', W / 2, 96);
+        ctx.fillText('FAN BURST', W / 2, 104);
       }
 
 	    if (setPieceBannerTimer > 0 && setPieceBannerText && setPieceIntroTimer <= 0) {
