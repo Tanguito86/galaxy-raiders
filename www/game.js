@@ -103,17 +103,18 @@ function drawPopups(ctxRef) {
   }
 
   drawCtx.restore();
-  drawCtx.globalAlpha = 1;
 }
 
 function drawMedalHUD(ctxRef) {
   const drawCtx = ctxRef || ctx;
+  drawCtx.save();
   drawCtx.textAlign = 'right';
   drawCtx.font = '8px "Press Start 2P"';
   drawCtx.fillStyle = '#9ee7ff';
   drawCtx.fillText('CHAIN: ' + medalChain, W - 10, 52);
   drawCtx.fillStyle = '#ffd966';
   drawCtx.fillText('NEXT: ' + medalValue, W - 10, 67);
+  drawCtx.restore();
 }
 
 // --- PARALLAX ---

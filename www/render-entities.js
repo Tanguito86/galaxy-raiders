@@ -26,6 +26,7 @@ function drawEnemyBullet(b) {
   const y = b.y;
   const w = b.w || 4;
   const h = b.h || 10;
+  ctx.save();
 
   if (kind === 'boss') {
     ctx.globalAlpha = 0.16;
@@ -54,6 +55,7 @@ function drawEnemyBullet(b) {
     ctx.lineWidth = 0.5;
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     ctx.globalAlpha = 1;
+    ctx.restore();
     return;
   }
 
@@ -79,6 +81,7 @@ function drawEnemyBullet(b) {
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
+    ctx.restore();
     return;
   }
 
@@ -92,6 +95,7 @@ function drawEnemyBullet(b) {
     ctx.fillRect(x + 1, y, Math.max(1, w - 2), h);
     ctx.fillStyle = 'rgba(255,240,180,0.72)';
     ctx.fillRect(x + Math.max(1, Math.floor(w * 0.5)), y, 1, h);
+    ctx.restore();
     return;
   }
 
@@ -106,6 +110,7 @@ function drawEnemyBullet(b) {
     ctx.globalAlpha = 0.42;
     ctx.fillRect(x - (b.vx || 0) * 0.6, y - 3, w, 3);
     ctx.globalAlpha = 1;
+    ctx.restore();
     return;
   }
 
@@ -120,6 +125,7 @@ function drawEnemyBullet(b) {
     ctx.globalAlpha = 0.46;
     ctx.fillRect(x, y - 2, w, 2);
     ctx.globalAlpha = 1;
+    ctx.restore();
     return;
   }
 
@@ -135,4 +141,5 @@ function drawEnemyBullet(b) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(x + 1, y + h * 0.5 - 0.5, Math.max(1, w - 2), 1);
   ctx.globalAlpha = 1;
+  ctx.restore();
 }
