@@ -301,6 +301,125 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
 
   // PANTALLA DE SCORES
   if (state === 'scores') {
+    {
+    const panelW = Math.min(W - 34, 326);
+    const panelH = Math.min(H - 82, 492);
+    const panelX = (W - panelW) / 2;
+    const panelY = 34;
+    const accent = '#64f5ff';
+    const scoresPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.36)';
+    ctx.fillRect(0, 0, W, H);
+    drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
+
+    ctx.textAlign = 'center';
+    drawGlowText(
+      'HALL OF FAME',
+      W / 2,
+      panelY + 38,
+      '16px "Press Start 2P"',
+      scoresPulse > 0.45 ? '#fff36a' : '#fff',
+      'rgba(255,235,90,0.65)'
+    );
+
+    ctx.font = '10px "Press Start 2P"';
+    const tabY = panelY + 74;
+    const tabW = 108;
+    const tabH = 26;
+
+    if (scoresTab === 0) {
+      ctx.fillStyle = 'rgba(100,245,255,0.14)';
+      ctx.fillRect(W / 2 - tabW - 7, tabY - 17, tabW, tabH);
+      ctx.strokeStyle = 'rgba(100,245,255,0.55)';
+      ctx.strokeRect(W / 2 - tabW - 6.5, tabY - 17.5, tabW - 1, tabH);
+    }
+    ctx.fillStyle = scoresTab === 0 ? '#64f5ff' : '#586073';
+    ctx.fillText('LOCAL', W / 2 - 60, tabY);
+
+    if (scoresTab === 1) {
+      ctx.fillStyle = 'rgba(100,245,255,0.14)';
+      ctx.fillRect(W / 2 + 7, tabY - 17, tabW, tabH);
+      ctx.strokeStyle = 'rgba(100,245,255,0.55)';
+      ctx.strokeRect(W / 2 + 7.5, tabY - 17.5, tabW - 1, tabH);
+    }
+    ctx.fillStyle = scoresTab === 1 ? '#64f5ff' : '#586073';
+    ctx.fillText('GLOBAL', W / 2 + 60, tabY);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(panelX + 24, panelY + 96);
+    ctx.lineTo(panelX + panelW - 24, panelY + 96);
+    ctx.stroke();
+
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = '#8a94a8';
+    ctx.textAlign = 'left';
+    ctx.fillText('#', panelX + 24, panelY + 122);
+    ctx.fillText('NAME', panelX + 54, panelY + 122);
+    ctx.textAlign = 'right';
+    ctx.fillText('SCORE', panelX + panelW - 64, panelY + 122);
+    if (scoresTab === 0) ctx.fillText(String.fromCharCode(169), panelX + panelW - 24, panelY + 122);
+
+    ctx.font = '12px "Press Start 2P"';
+    for (let i = 0; i < 10; i++) {
+      const y = panelY + 148 + i * 27;
+      let name, scoreVal, cont;
+
+      if (scoresTab === 0) {
+        name = (highNames[i] || '---').toString().slice(0, 8);
+        scoreVal = highScores[i] || 0;
+        cont = highContinues[i] || 0;
+      } else {
+        const entry = globalScores[i];
+        name = entry ? entry.name.slice(0, 8) : '---';
+        scoreVal = entry ? entry.score : 0;
+        cont = 0;
+      }
+
+      let color = '#555';
+      if (i === 0) color = '#ff0';
+      else if (i === 1) color = '#ccc';
+      else if (i === 2) color = '#c84';
+      else if (i < 5) color = '#777';
+
+      if (i % 2 === 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.035)';
+        ctx.fillRect(panelX + 18, y - 18, panelW - 36, 22);
+      }
+
+      ctx.fillStyle = color;
+      ctx.textAlign = 'left';
+      ctx.fillText((i + 1) + '.', panelX + 24, y);
+      ctx.fillText(name, panelX + 54, y);
+      ctx.textAlign = 'right';
+      ctx.fillText(scoreVal.toString(), panelX + panelW - 64, y);
+
+      if (scoresTab === 0 && cont > 0) {
+        ctx.fillStyle = '#f44';
+        ctx.fillText(cont.toString(), panelX + panelW - 24, y);
+      }
+    }
+
+    ctx.font = '9px "Press Start 2P"';
+    ctx.fillStyle = '#0f0';
+    ctx.textAlign = 'center';
+    const yourRank = highScores.indexOf(bestScore) + 1;
+    ctx.fillText('YOUR BEST: ' + bestScore + (yourRank > 0 ? ' (#' + yourRank + ')' : ''), W / 2, panelY + panelH - 52);
+
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(String.fromCharCode(8592) + String.fromCharCode(8594) + ' TAB   FIRE=BACK', W / 2, panelY + panelH - 24);
+
+    if (scoresTab === 1 && globalScores.length === 0) {
+      ctx.font = '10px "Press Start 2P"';
+      ctx.fillStyle = '#586073';
+      ctx.fillText('LOADING...', W / 2, panelY + 250);
+    }
+
+    ctx.restore();
+    return;
+    }
     ctx.textAlign = 'center';
     
     // Título
@@ -411,6 +530,75 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
 
   // PANTALLA DE CREDITS
   if (state === 'credits') {
+    {
+    const panelW = Math.min(W - 42, 312);
+    const panelH = Math.min(H - 96, 430);
+    const panelX = (W - panelW) / 2;
+    const panelY = 52;
+    const accent = '#ff4dcb';
+    const creditsPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
+
+    ctx.fillStyle = 'rgba(0,0,0,0.34)';
+    ctx.fillRect(0, 0, W, H);
+    drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
+
+    ctx.textAlign = 'center';
+    drawGlowText(
+      'CREDITS',
+      W / 2,
+      panelY + 42,
+      '16px "Press Start 2P"',
+      creditsPulse > 0.45 ? '#fff36a' : '#fff',
+      'rgba(255,77,203,0.68)'
+    );
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(panelX + 24, panelY + 66);
+    ctx.lineTo(panelX + panelW - 24, panelY + 66);
+    ctx.stroke();
+
+    ctx.font = '9px "Press Start 2P"';
+    ctx.fillStyle = '#64f5ff';
+    ctx.fillText('A TRIBUTE TO THE', W / 2, panelY + 104);
+    ctx.fillText('ARCADE GAMES OF THE', W / 2, panelY + 129);
+    ctx.fillText('80s THAT MARKED', W / 2, panelY + 154);
+    ctx.fillText('OUR CHILDHOOD', W / 2, panelY + 179);
+
+    ctx.fillStyle = '#ff4dcb';
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillText('SPACE INVADERS', W / 2, panelY + 224);
+    ctx.fillText('GALAGA - GALAXIAN', W / 2, panelY + 244);
+    ctx.fillText('AND ALL THE CLASSICS', W / 2, panelY + 264);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+    ctx.beginPath();
+    ctx.moveTo(panelX + 34, panelY + 288);
+    ctx.lineTo(panelX + panelW - 34, panelY + 288);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px "Press Start 2P"';
+    ctx.fillText('MADE WITH ' + String.fromCharCode(9829), W / 2, panelY + 322);
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillText('BY TANGUITO STUDIO', W / 2, panelY + 347);
+    ctx.fillText('& FLIA', W / 2, panelY + 367);
+
+    ctx.fillStyle = '#0f0';
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillText('LIKE IT? BUY A TOKEN', W / 2, panelY + 402);
+    ctx.fillText('TO SUPPORT THE DEV!', W / 2, panelY + 420);
+
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = '#586073';
+    ctx.fillText(String.fromCharCode(169) + ' 2025', W / 2, Math.min(H - 112, panelY + panelH + 28));
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('FIRE = BACK', W / 2, H - 80);
+
+    ctx.restore();
+    return;
+    }
     ctx.textAlign = 'center';
     
     // Título
@@ -459,6 +647,143 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
 
   // PANTALLA DE OPTIONS
   if (state === 'options') {
+    {
+    const panelW = Math.min(W - 34, 326);
+    const panelH = Math.min(H - 84, 492);
+    const panelX = (W - panelW) / 2;
+    const panelY = 42;
+    const accent = '#64f5ff';
+    const optionsPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
+    const rowX = panelX + 20;
+    const rowW = panelW - 40;
+    const labelX = panelX + 34;
+    const valueX = panelX + panelW - 34;
+    const optStartY = panelY + 108;
+    const optSpacing = 48;
+
+    function drawOptionRow(index, label, value, valueColor, y, danger) {
+      const isSelected = optionSelection === index;
+
+      if (isSelected) {
+        ctx.fillStyle = danger ? 'rgba(255,54,95,0.16)' : 'rgba(255,245,120,0.12)';
+        ctx.fillRect(rowX, y - 20, rowW, danger ? 38 : 32);
+        ctx.strokeStyle = danger ? 'rgba(255,54,95,0.5)' : 'rgba(255,245,120,0.45)';
+        ctx.strokeRect(rowX + 0.5, y - 20.5, rowW - 1, danger ? 37 : 31);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.035)';
+        ctx.fillRect(rowX, y - 20, rowW, 32);
+      }
+
+      ctx.font = danger ? '11px "Press Start 2P"' : '12px "Press Start 2P"';
+      ctx.textAlign = danger ? 'center' : 'left';
+      ctx.fillStyle = isSelected ? (danger ? '#ff365f' : '#fff36a') : (danger ? '#944' : '#dce6ff');
+      ctx.fillText(label, danger ? W / 2 : labelX, y);
+
+      if (!danger) {
+        ctx.textAlign = 'right';
+        ctx.fillStyle = valueColor;
+        ctx.fillText(value, valueX, y);
+      }
+
+      if (isSelected) {
+        const cursorPulse = Math.sin(globalTime * 0.008) * 3;
+        ctx.font = '10px "Press Start 2P"';
+        ctx.fillStyle = danger ? '#ff365f' : '#ff0';
+        ctx.textAlign = 'left';
+        ctx.fillText('>', rowX + 10 - cursorPulse, y);
+        ctx.textAlign = 'right';
+        ctx.fillText('<', rowX + rowW - 10 + cursorPulse, y);
+      }
+    }
+
+    ctx.fillStyle = 'rgba(0,0,0,0.36)';
+    ctx.fillRect(0, 0, W, H);
+    drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
+
+    ctx.textAlign = 'center';
+    drawGlowText(
+      'OPTIONS',
+      W / 2,
+      panelY + 42,
+      '18px "Press Start 2P"',
+      optionsPulse > 0.45 ? '#fff36a' : '#fff',
+      'rgba(100,245,255,0.68)'
+    );
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(panelX + 24, panelY + 68);
+    ctx.lineTo(panelX + panelW - 24, panelY + 68);
+    ctx.stroke();
+
+    let y = optStartY;
+    drawOptionRow(0, 'SOUND', isMuted ? 'OFF' : 'ON', isMuted ? '#ff365f' : '#0f0', y, false);
+
+    y = optStartY + optSpacing;
+    drawOptionRow(1, 'VIBRATION', vibrationEnabled ? 'ON' : 'OFF', vibrationEnabled ? '#0f0' : '#ff365f', y, false);
+
+    y = optStartY + optSpacing * 2;
+    drawOptionRow(2, 'CONTROLS', JOYSTICK_SIZES[joystickSize], joystickSize === 1 ? '#64f5ff' : '#0f0', y, false);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.beginPath();
+    ctx.moveTo(panelX + 28, optStartY + optSpacing * 2.47);
+    ctx.lineTo(panelX + panelW - 28, optStartY + optSpacing * 2.47);
+    ctx.stroke();
+
+    y = optStartY + optSpacing * 3;
+    if (hardcoreUnlocked) {
+      drawOptionRow(
+        3,
+        'DIFFICULTY',
+        difficulties[difficultyIndex].name,
+        difficultyIndex === 0 ? '#0f0' : '#ff365f',
+        y,
+        false
+      );
+    } else {
+      drawOptionRow(3, 'DIFFICULTY', 'NORMAL', '#586073', y, false);
+      ctx.font = '7px "Press Start 2P"';
+      ctx.fillStyle = '#586073';
+      ctx.textAlign = 'center';
+      ctx.fillText(String.fromCharCode(128274) + ' BEAT GAME TO UNLOCK', W / 2, y + 18);
+    }
+
+    y = optStartY + optSpacing * 4;
+    const balanceLabel = (typeof getBalanceProfileLabel === 'function') ? getBalanceProfileLabel() : 'ARCADE';
+    const isTournament = (typeof getBalanceProfile === 'function') && getBalanceProfile() === 'tournament';
+    drawOptionRow(4, 'BALANCE', balanceLabel, isTournament ? '#ff9d2e' : '#0f0', y, false);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.beginPath();
+    ctx.moveTo(panelX + 28, optStartY + optSpacing * 4.47);
+    ctx.lineTo(panelX + panelW - 28, optStartY + optSpacing * 4.47);
+    ctx.stroke();
+
+    y = optStartY + optSpacing * 5;
+    drawOptionRow(5, 'RESET ALL SCORES', '', '#ff365f', y, true);
+    if (optionSelection === 5) {
+      ctx.font = '8px "Press Start 2P"';
+      ctx.fillStyle = '#ff6b82';
+      ctx.textAlign = 'center';
+      ctx.fillText('PRESS FIRE TO RESET', W / 2, y + 20);
+    }
+
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = '#586073';
+    ctx.textAlign = 'center';
+    ctx.fillText('VERSION 1.2', W / 2, panelY + panelH - 52);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(
+      String.fromCharCode(8593) + String.fromCharCode(8595) + ' SELECT  ' +
+      String.fromCharCode(8592) + String.fromCharCode(8594) + ' CHANGE  FIRE=BACK',
+      W / 2,
+      panelY + panelH - 24
+    );
+
+    ctx.restore();
+    return;
+    }
     ctx.textAlign = 'center';
     
     // Título
