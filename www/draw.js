@@ -781,9 +781,16 @@ if (shouldShow) {
         }
       })();
       
-      // Flash blanco al recibir daño
-      const bossColor = (boss.flashTimer > 0) ? '#fff' : (boss.color || '#f00');
+      const bossColor = boss.color || '#f00';
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
+
+      if (boss.flashTimer > 0) {
+        const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
+        ctx.save();
+        ctx.globalAlpha = flicker;
+        drawSprite(ctx, bossSprite, boss.x, boss.y, '#ffaaaa', 5);
+        ctx.restore();
+      }
           
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
       
@@ -869,19 +876,21 @@ if (shouldShow) {
         const spriteKey = e.type + (animationFrame === 0 ? '_a' : '_b');
         const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
         
-        // Color base según tipo
         let color = currentPalette[data.color] || currentPalette[1];
         
-        // Diving = rojo
         if (e.diving) color = '#f00';
         
-        // Flash blanco al recibir daño
-        if (e.flashTimer > 0) color = '#fff';
-        
-        // Tamaño del sprite (mini aliens más chicos)
         const size = (e.type === 'alien_mini') ? 2 : 3;
         
         drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
+
+        if (e.flashTimer > 0) {
+          const flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
+          ctx.save();
+          ctx.globalAlpha = flicker;
+          drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffe0e0', size);
+          ctx.restore();
+        }
         
         // Barra de HP para tanques (hp > 1)
         if (e.maxHp > 1 && e.hp < e.maxHp) {
