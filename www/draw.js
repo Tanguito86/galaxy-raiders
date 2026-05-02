@@ -1262,7 +1262,26 @@ if (shouldShow) {
       })();
       
       const bossColor = boss.color || '#f00';
+      const bossGlow = 0.08 + 0.03 * Math.sin(globalTime * 0.018);
+      ctx.save();
+      ctx.globalAlpha = bossGlow;
+      drawSprite(ctx, bossSprite, boss.x - 4, boss.y, bossColor, 5);
+      drawSprite(ctx, bossSprite, boss.x + 4, boss.y, bossColor, 5);
+      drawSprite(ctx, bossSprite, boss.x, boss.y - 4, bossColor, 5);
+      drawSprite(ctx, bossSprite, boss.x, boss.y + 4, bossColor, 5);
+      ctx.globalAlpha = 0.38;
+      drawSprite(ctx, bossSprite, boss.x - 2, boss.y, '#120008', 5);
+      drawSprite(ctx, bossSprite, boss.x + 2, boss.y, '#120008', 5);
+      drawSprite(ctx, bossSprite, boss.x, boss.y - 2, '#120008', 5);
+      drawSprite(ctx, bossSprite, boss.x, boss.y + 2, '#120008', 5);
+      ctx.restore();
+
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
+
+      ctx.save();
+      ctx.globalAlpha = 0.10;
+      drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
+      ctx.restore();
 
       if (boss.flashTimer > 0) {
         const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
