@@ -97,9 +97,24 @@ function draw() {
 
   const mobileControls = document.getElementById('mobile-controls');
   if (mobileControls) {
-    const targetOpacity = state === 'menu' ? '0.42' : '';
+    const menuControlStates = ['menu', 'options', 'scores', 'credits'];
+    const overlayControlStates = ['paused', 'gameover'];
+    const controlsDimmed = menuControlStates.includes(state);
+    const controlsSoftened = overlayControlStates.includes(state);
+    const targetOpacity = controlsDimmed ? '0.22' : (controlsSoftened ? '0.34' : '');
+    const targetFilter = controlsDimmed
+      ? 'saturate(0.55) brightness(0.72)'
+      : (controlsSoftened ? 'saturate(0.7) brightness(0.82)' : '');
+    const targetTransition = (controlsDimmed || controlsSoftened) ? 'opacity 140ms ease, filter 140ms ease' : '';
+
     if (mobileControls.style.opacity !== targetOpacity) {
       mobileControls.style.opacity = targetOpacity;
+    }
+    if (mobileControls.style.filter !== targetFilter) {
+      mobileControls.style.filter = targetFilter;
+    }
+    if (mobileControls.style.transition !== targetTransition) {
+      mobileControls.style.transition = targetTransition;
     }
   }
 
