@@ -178,6 +178,8 @@ if (
         hit = true;
         recordShotHit();
         
+        createImpactBurst(b.x + b.w / 2, b.y + b.h / 2, currentPalette[data.color] || currentPalette[1] || "#fff", 5);
+        
         if (e.hp <= 0) {
           /// MUERTE
           e.alive = false;

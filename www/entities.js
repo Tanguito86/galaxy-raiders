@@ -102,6 +102,26 @@ function createExplosion(x, y, color, count = 15) {
   }
 }
 
+function createImpactBurst(x, y, color, count = 5) {
+  const overflow = (particles.length + count) - MAX_PARTICLES;
+  if (overflow > 0) particles.splice(0, overflow);
+
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 3 + 1.5;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.16 + Math.random() * 0.19,
+      gravity: 0.05,
+      color,
+      size: 1 + Math.random() * 2,
+      isSpark: true
+    });
+  }
+}
+
 function spawnVictoryParticles() {
   for (let i = 0; i < 100; i++) {
     victoryParticles.push({
