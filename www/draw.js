@@ -1885,38 +1885,106 @@ if (player.weaponType !== 'normal') {
 
       var lcPulse = 0.6 + 0.4 * Math.sin(globalTime * 0.003);
       var lcAlpha = Math.min(1, levelClearTimer / 300);
+      var _ly = H / 2 - 55;
+      var _lh = 110;
+      var _lm = 20;
 
-      ctx.globalAlpha = 0.3 * lcAlpha;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, H / 2 - 55, W, 110);
+      // Dark band
+      ctx.globalAlpha = 0.35 * lcAlpha;
+      ctx.fillStyle = '#010a14';
+      ctx.fillRect(0, _ly, W, _lh);
 
-      ctx.globalAlpha = 0.7 * lcAlpha * lcPulse;
+      // Inner cyan wash (horizontal glow strip)
+      ctx.globalAlpha = 0.06 * lcAlpha * lcPulse;
+      ctx.fillStyle = '#0af';
+      ctx.fillRect(0, _ly + _lh / 2 - 10, W, 20);
+
+      // Scanlines scrolling up (warp feel)
+      ctx.globalAlpha = 0.10 * lcAlpha;
+      ctx.strokeStyle = '#0ff';
+      ctx.lineWidth = 1;
+      var _scanY = (globalTime * 0.06) % 6;
+      for (var _s = _ly + _scanY; _s < _ly + _lh; _s += 6) {
+        ctx.globalAlpha = 0.07 * lcAlpha * (1 - Math.abs(_s - _ly - _lh / 2) / (_lh / 2));
+        ctx.beginPath();
+        ctx.moveTo(0, _s);
+        ctx.lineTo(W, _s);
+        ctx.stroke();
+      }
+
+      // Arcade corner brackets
+      ctx.globalAlpha = 0.75 * lcAlpha * lcPulse;
       ctx.strokeStyle = '#0ff';
       ctx.lineWidth = 2;
+      var _bl = 16;
       ctx.beginPath();
-      ctx.moveTo(0, H / 2 - 55);
-      ctx.lineTo(W, H / 2 - 55);
+      ctx.moveTo(_lm, _ly + 10); ctx.lineTo(_lm, _ly + 10 + _bl);
+      ctx.moveTo(_lm, _ly + 10); ctx.lineTo(_lm + _bl, _ly + 10);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(0, H / 2 + 55);
-      ctx.lineTo(W, H / 2 + 55);
+      ctx.moveTo(W - _lm, _ly + 10); ctx.lineTo(W - _lm, _ly + 10 + _bl);
+      ctx.moveTo(W - _lm, _ly + 10); ctx.lineTo(W - _lm - _bl, _ly + 10);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(_lm, _ly + _lh - 10); ctx.lineTo(_lm, _ly + _lh - 10 - _bl);
+      ctx.moveTo(_lm, _ly + _lh - 10); ctx.lineTo(_lm + _bl, _ly + _lh - 10);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(W - _lm, _ly + _lh - 10); ctx.lineTo(W - _lm, _ly + _lh - 10 - _bl);
+      ctx.moveTo(W - _lm, _ly + _lh - 10); ctx.lineTo(W - _lm - _bl, _ly + _lh - 10);
       ctx.stroke();
 
+      // Main border lines (between corner brackets)
+      ctx.globalAlpha = 0.50 * lcAlpha * lcPulse;
+      ctx.strokeStyle = '#0cf';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(_lm + _bl + 4, _ly + 4);
+      ctx.lineTo(W - _lm - _bl - 4, _ly + 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(_lm + _bl + 4, _ly + _lh - 4);
+      ctx.lineTo(W - _lm - _bl - 4, _ly + _lh - 4);
+      ctx.stroke();
+
+      // "LEVEL CLEAR" text
       ctx.textAlign = 'center';
       ctx.font = '28px "Press Start 2P"';
 
-      ctx.globalAlpha = 0.7 * lcAlpha;
+      // Drop shadow
+      ctx.globalAlpha = 0.65 * lcAlpha;
       ctx.fillStyle = '#000';
       ctx.fillText('LEVEL CLEAR', W / 2 + 3, H / 2 - 3);
 
-      ctx.globalAlpha = lcAlpha * lcPulse;
+      // Cyan glow
+      ctx.globalAlpha = 0.35 * lcAlpha * lcPulse;
+      ctx.shadowColor = '#0ff';
+      ctx.shadowBlur = 18;
       ctx.fillStyle = '#0ff';
+      ctx.fillText('LEVEL CLEAR', W / 2, H / 2 - 7);
+      ctx.shadowBlur = 0;
+
+      // Main text (white)
+      ctx.globalAlpha = lcAlpha * lcPulse;
+      ctx.fillStyle = '#fff';
       ctx.fillText('LEVEL CLEAR', W / 2, H / 2 - 6);
 
+      // "WARPING" with animated trailing dots
       ctx.font = '12px "Press Start 2P"';
-      ctx.globalAlpha = 0.8 * lcAlpha * (0.5 + 0.5 * Math.sin(globalTime * 0.005));
-      ctx.fillStyle = '#fff';
-      ctx.fillText('WARPING', W / 2, H / 2 + 30);
+      var _dp = Math.floor(globalTime / 300) % 4;
+      var _dots = '';
+      for (var _d = 0; _d < _dp; _d++) { _dots += '.'; }
+
+      ctx.globalAlpha = 0.25 * lcAlpha;
+      ctx.shadowColor = '#0af';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#0af';
+      ctx.fillText('WARPING' + _dots, W / 2, H / 2 + 31);
+      ctx.shadowBlur = 0;
+
+      ctx.globalAlpha = 0.85 * lcAlpha * (0.6 + 0.4 * Math.sin(globalTime * 0.005));
+      ctx.fillStyle = '#f0f8ff';
+      ctx.fillText('WARPING' + _dots, W / 2, H / 2 + 30);
 
       ctx.globalAlpha = 1;
       ctx.restore();
