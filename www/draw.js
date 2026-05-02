@@ -714,25 +714,80 @@ if (shouldShow) {
           
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
       
-      // Barra de HP con color del boss
-      ctx.fillStyle = '#500';
-      ctx.fillRect(W / 2 - 100, 60, 200, 10);
-      ctx.fillStyle = boss.color || '#f00';
-      ctx.fillRect(W / 2 - 100, 60, 200 * hpPct, 10);
+      const _barW = 200;
+      const _barH = 8;
+      const _barX = W / 2 - _barW / 2;
+      const _barY = 60;
+      const _pad = 4;
+      
+      ctx.save();
+      
+      ctx.globalAlpha = 0.30;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(_barX - _pad, _barY - _pad, _barW + _pad * 2, _barH + _pad * 2);
+      
+      ctx.globalAlpha = 0.35;
       ctx.strokeStyle = '#fff';
-      ctx.strokeRect(W / 2 - 100, 60, 200, 10);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(_barX - _pad + 0.5, _barY - _pad + 0.5, _barW + _pad * 2 - 1, _barH + _pad * 2 - 1);
       
-      // ✅ Mostrar nombre del boss (arriba de la barra de HP)
-      ctx.font = '12px "Press Start 2P"';
+      ctx.globalAlpha = 0.50;
+      ctx.strokeStyle = boss.color || '#f44';
+      ctx.beginPath();
+      ctx.moveTo(_barX - _pad, _barY - _pad + 0.5);
+      ctx.lineTo(_barX + _barW + _pad, _barY - _pad + 0.5);
+      ctx.stroke();
+      
+      ctx.globalAlpha = 0.30;
+      ctx.fillStyle = '#300';
+      ctx.fillRect(_barX, _barY, _barW, _barH);
+      
+      var _barColor;
+      if (hpPct > 0.66) {
+        _barColor = boss.color || '#f00';
+      } else if (hpPct > 0.33) {
+        _barColor = '#f80';
+      } else {
+        _barColor = '#f33';
+      }
+      
+      var _fillW = _barW * hpPct;
+      
+      ctx.globalAlpha = 0.88;
+      ctx.fillStyle = _barColor;
+      ctx.fillRect(_barX, _barY, _fillW, _barH);
+      
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(_barX, _barY + 1, _fillW, Math.floor(_barH * 0.45));
+      
+      ctx.globalAlpha = 0.10;
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      for (var _sx = _barX + 10; _sx < _barX + _fillW; _sx += 11) {
+        ctx.beginPath();
+        ctx.moveTo(_sx + 0.5, _barY + 1);
+        ctx.lineTo(_sx + 0.5, _barY + _barH - 1);
+        ctx.stroke();
+      }
+      
+      if (hpPct <= 0.33) {
+        var _pulse = 0.18 + 0.22 * Math.sin(globalTime * 0.012);
+        ctx.globalAlpha = _pulse;
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(_barX, _barY, _fillW, _barH);
+      }
+      
+      ctx.font = '10px "Press Start 2P"';
       ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(0,0,0,0.88)';
+      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2 + 2, _barY - 8);
+      var _txtColor = boss.color || '#fff';
+      if (_txtColor === '#f00' || _txtColor === '#ff0000') _txtColor = '#ffd6d6';
+      ctx.fillStyle = _txtColor;
+      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2, _barY - 10);
       
-      // Sombra del texto
-      ctx.fillStyle = 'rgba(0,0,0,0.8)';
-      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2 + 2, 52);
-      
-      // Texto principal con color del boss
-      ctx.fillStyle = boss.color || '#fff';
-      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2, 50);
+      ctx.restore();
     }
 
     // Enemies
