@@ -156,7 +156,7 @@ if (
           );
           
           const color = currentPalette[data.color] || currentPalette[1];
-          createExplosion(e.x + e.w / 2, e.y + e.h / 2, color);
+          createEnemyDeathPop(e.x + e.w / 2, e.y + e.h / 2, color);
           sfxEnemyKill();
           vibrate('hit');
           pushScreenShake('medium', 4);

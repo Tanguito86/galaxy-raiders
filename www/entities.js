@@ -117,6 +117,29 @@ function createExplosion(x, y, color, count = 15) {
   });
 }
 
+function createEnemyDeathPop(x, y, color) {
+  createExplosion(x, y, color, 13);
+
+  const accentCount = 6;
+  const overflow = (particles.length + accentCount) - MAX_PARTICLES;
+  if (overflow > 0) particles.splice(0, overflow);
+
+  for (let i = 0; i < accentCount; i++) {
+    const angle = (Math.PI * 2 * i) / accentCount + Math.random() * 0.35;
+    const speed = 2.8 + Math.random() * 2.2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1.1,
+      life: 0.22 + Math.random() * 0.12,
+      gravity: 0.02,
+      color: i % 2 === 0 ? '#fff' : '#ffea7a',
+      size: 1 + Math.random() * 1.4,
+      isSpark: true
+    });
+  }
+}
+
 function createImpactBurst(x, y, color, count = 5) {
   const overflow = (particles.length + count) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
