@@ -871,13 +871,45 @@ if (shouldShow) {
 
     // Powerups
     powerUps.forEach(p => {
-      const char = p.type.charAt(0).toUpperCase();
       const color = getWeaponColor(p.type);
+      const cx = p.x + p.w / 2;
+      const cy = p.y + p.h / 2;
+      const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.012 + cx * 0.1);
+      const char = p.type.charAt(0).toUpperCase();
+
+      ctx.save();
+
+      // Aura exterior pulsing
+      ctx.globalAlpha = 0.06 + 0.14 * pulse;
+      ctx.fillStyle = color;
+      ctx.fillRect(p.x - 4, p.y - 4, p.w + 8, p.h + 8);
+      ctx.globalAlpha = 0.10 + 0.18 * pulse;
+      ctx.fillStyle = color;
+      ctx.fillRect(p.x - 2, p.y - 2, p.w + 4, p.h + 4);
+
+      // Núcleo con borde oscuro para contraste
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = '#111';
+      ctx.fillRect(p.x - 1, p.y - 1, p.w + 2, p.h + 2);
       ctx.fillStyle = color;
       ctx.fillRect(p.x, p.y, p.w, p.h);
+
+      // Brillo interno
+      ctx.globalAlpha = 0.35 * pulse;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(p.x + 2, p.y + 2, p.w - 4, p.h - 4);
+
+      // Letra centrada con sombra
+      ctx.globalAlpha = 1;
+      ctx.font = '9px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = '#000';
-      ctx.font = '10px "Press Start 2P"';
-      ctx.fillText(char, p.x + 2, p.y + 10);
+      ctx.fillText(char, cx + 1, cy + 1);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(char, cx, cy);
+
+      ctx.restore();
     });
 
     // UFO reward drops
@@ -1079,18 +1111,50 @@ if (player.weaponType !== 'normal') {
 
   const barX = W - 120;   // derecha
   const barY = H - 18;    // alineado con vidas (un pelín arriba)
+  const wColor = getWeaponColor(player.weaponType);
 
-  ctx.fillStyle = getWeaponColor(player.weaponType);
+  ctx.save();
+
+  // Fondo oscuro del track
+  ctx.globalAlpha = 0.30;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(barX - 1, barY - 1, 102, 8);
+
+  // Track vacio (tenue)
+  ctx.globalAlpha = 0.10;
+  ctx.fillStyle = wColor;
+  ctx.fillRect(barX, barY, 100, 6);
+
+  // Barra llena
+  ctx.globalAlpha = 0.80;
+  ctx.fillStyle = wColor;
   ctx.fillRect(barX, barY, barW, 6);
 
-  ctx.strokeStyle = '#fff';
-  ctx.strokeRect(barX, barY, 100, 6);
-
-  // etiqueta chica arriba de la barra (para que no pelee con las vidas)
+  // Brillo interno
+  ctx.globalAlpha = 0.35;
   ctx.fillStyle = '#fff';
-  ctx.font = '8px "Press Start 2P"';
+  ctx.fillRect(barX, barY + 1, barW, 3);
+
+  // Borde fino
+  ctx.globalAlpha = 0.50;
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX + 0.5, barY + 0.5, 99, 5);
+
+  // Etiqueta con sombra para legibilidad
+  ctx.globalAlpha = 0.70;
+  ctx.fillStyle = '#000';
+  ctx.font = '7px "Press Start 2P"';
   ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
   ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 4);
+  ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 2);
+
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = wColor;
+  ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 3);
+
+  ctx.restore();
 }
 
 
