@@ -1079,17 +1079,41 @@ if (shouldShow) {
 
     // UFO reward drops
 ufoRewards.forEach(d => {
-  const pulse = Math.sin(globalTime * 0.01) * 0.3 + 0.7;
+  const cx = d.x + d.w * 0.5;
+  const cy = d.y + d.h * 0.5;
+  const pulse = Math.sin(globalTime * 0.018) * 0.3 + 0.7;
+  const color = d.reward?.rare ? '#ffea00' : '#23f6ff';
+  const accent = d.reward?.rare ? '#fff6a8' : '#c8ffff';
 
-  ctx.fillStyle = d.reward?.rare ? '#ff0' : '#0ff';
-  ctx.globalAlpha = pulse;
-  ctx.fillRect(d.x, d.y, d.w, d.h);
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  ctx.globalAlpha = 0.18 + pulse * 0.28;
+  ctx.fillStyle = color;
+  ctx.fillRect(-d.w * 0.5 - 4, -d.h * 0.5 - 4, d.w + 8, d.h + 8);
+
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#071014';
+  ctx.fillRect(-d.w * 0.5 - 1, -d.h * 0.5 - 1, d.w + 2, d.h + 2);
 
-  ctx.fillStyle = '#000';
+  ctx.fillStyle = color;
+  ctx.fillRect(-d.w * 0.5, -d.h * 0.5, d.w, d.h);
+
+  ctx.globalAlpha = 0.35 + pulse * 0.35;
+  ctx.fillStyle = accent;
+  ctx.fillRect(-d.w * 0.5 + 2, -d.h * 0.5 + 2, d.w - 4, 3);
+  ctx.fillRect(-d.w * 0.5 + 3, -d.h * 0.5 + 6, 2, d.h - 9);
+
+  ctx.globalAlpha = 1;
   ctx.font = '10px "Press Start 2P"';
-  ctx.textAlign = 'left';
-  ctx.fillText('?', d.x + 3, d.y + 12);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000';
+  ctx.fillText('?', 1, 2);
+  ctx.fillStyle = '#fff';
+  ctx.fillText('?', 0, 1);
+
+  ctx.restore();
 });
 
     drawMedals(ctx);

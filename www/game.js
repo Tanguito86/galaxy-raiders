@@ -41,21 +41,41 @@ function drawMedals(ctxRef) {
 
   for (let i = 0; i < medals.length; i++) {
     const m = medals[i];
-    const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.02 + i * 0.9);
+    const cx = m.x + m.w * 0.5;
+    const cy = m.y + m.h * 0.5;
+    const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.025 + i * 0.9);
+    const glow = 0.25 + pulse * 0.35;
 
-    drawCtx.fillStyle = '#6a4200';
-    drawCtx.fillRect(m.x, m.y, m.w, m.h);
+    drawCtx.save();
+    drawCtx.translate(cx, cy);
 
-    drawCtx.fillStyle = '#ffd34d';
-    drawCtx.fillRect(m.x + 1, m.y + 1, m.w - 2, m.h - 2);
+    drawCtx.globalAlpha = glow;
+    drawCtx.fillStyle = '#ffe680';
+    drawCtx.fillRect(-m.w * 0.5 - 3, -m.h * 0.5 - 3, m.w + 6, m.h + 6);
 
-    drawCtx.fillStyle = '#b87900';
-    drawCtx.fillRect(m.x + 4, m.y + 4, m.w - 8, m.h - 8);
-
-    drawCtx.globalAlpha = 0.35 + pulse * 0.55;
-    drawCtx.fillStyle = '#fff8c6';
-    drawCtx.fillRect(m.x + 3, m.y + 2, 4, 3);
     drawCtx.globalAlpha = 1;
+    drawCtx.fillStyle = '#2b1600';
+    drawCtx.fillRect(-m.w * 0.5 - 1, -m.h * 0.5 - 1, m.w + 2, m.h + 2);
+
+    drawCtx.fillStyle = '#ffb000';
+    drawCtx.fillRect(-m.w * 0.5, -m.h * 0.5, m.w, m.h);
+
+    drawCtx.fillStyle = '#fff06a';
+    drawCtx.fillRect(-m.w * 0.5 + 2, -m.h * 0.5 + 2, m.w - 4, m.h - 4);
+
+    drawCtx.fillStyle = '#9b5f00';
+    drawCtx.fillRect(-m.w * 0.5 + 4, -m.h * 0.5 + 4, m.w - 8, m.h - 8);
+
+    drawCtx.fillStyle = '#ffd966';
+    drawCtx.fillRect(-2, -4, 4, 8);
+    drawCtx.fillRect(-4, -2, 8, 4);
+
+    drawCtx.globalAlpha = 0.35 + pulse * 0.45;
+    drawCtx.fillStyle = '#fff8c6';
+    drawCtx.fillRect(-m.w * 0.5 + 3, -m.h * 0.5 + 2, 5, 2);
+    drawCtx.fillRect(m.w * 0.5 - 4, m.h * 0.5 - 5, 2, 2);
+
+    drawCtx.restore();
   }
 }
 
@@ -67,10 +87,18 @@ function drawPopups(ctxRef) {
 
   for (let i = 0; i < popups.length; i++) {
     const p = popups[i];
-    drawCtx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
+    const alpha = Math.max(0, Math.min(1, p.alpha));
+    const liftPulse = 0.8 + 0.2 * Math.sin(globalTime * 0.08 + i);
+    drawCtx.globalAlpha = alpha * 0.45;
+    drawCtx.fillStyle = p.color || '#fff';
+    drawCtx.fillText(p.text, p.x, p.y - 1);
+    drawCtx.globalAlpha = alpha;
     drawCtx.fillStyle = 'rgba(0,0,0,0.65)';
     drawCtx.fillText(p.text, p.x + 1, p.y + 1);
+    drawCtx.fillStyle = 'rgba(0,0,0,0.85)';
+    drawCtx.fillText(p.text, p.x - 1, p.y + 1);
     drawCtx.fillStyle = p.color || '#fff';
+    drawCtx.globalAlpha = alpha * liftPulse;
     drawCtx.fillText(p.text, p.x, p.y);
   }
 
