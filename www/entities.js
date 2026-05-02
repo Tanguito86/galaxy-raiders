@@ -118,6 +118,85 @@ function createExplosion(x, y, color, count = 15) {
   });
 }
 
+function createBossDeathExplosion(x, y, color) {
+  var overflow = (particles.length + 80) - MAX_PARTICLES;
+  if (overflow > 0) particles.splice(0, overflow);
+
+  var i, angle, speed;
+
+  for (i = 0; i < 40; i++) {
+    angle = Math.random() * Math.PI * 2;
+    speed = 1 + Math.random() * 5;
+    particles.push({
+      x: x, y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      life: 0.7 + Math.random() * 0.5,
+      gravity: 0.3,
+      color: color,
+      size: Math.random() * 4 + 2
+    });
+  }
+
+  var sx, sy, s;
+  for (s = 0; s < 4; s++) {
+    sx = x + (Math.random() - 0.5) * boss.w * 1.2;
+    sy = y + (Math.random() - 0.5) * boss.h * 0.9;
+    for (i = 0; i < 6; i++) {
+      angle = Math.random() * Math.PI * 2;
+      speed = 1 + Math.random() * 3;
+      particles.push({
+        x: sx, y: sy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1,
+        life: 0.3 + Math.random() * 0.4,
+        gravity: 0.15,
+        color: i % 2 === 0 ? color : '#ffea44',
+        size: 1 + Math.random() * 3
+      });
+    }
+  }
+
+  for (i = 0; i < 10; i++) {
+    angle = Math.random() * Math.PI * 2;
+    speed = 3 + Math.random() * 4;
+    particles.push({
+      x: x, y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.15 + Math.random() * 0.2,
+      gravity: 0,
+      color: '#fff',
+      size: 1 + Math.random() * 2,
+      isSpark: true
+    });
+  }
+
+  for (i = 0; i < 3; i++) {
+    particles.push({
+      x: x, y: y,
+      vx: 0, vy: 0,
+      life: 0.35 + i * 0.1,
+      gravity: 0,
+      color: i === 0 ? color : i === 1 ? '#fff' : '#ffea44',
+      isRing: true,
+      ringRadius: 8 + i * 16,
+      ringExpand: 5 + i * 3
+    });
+  }
+
+  for (i = 0; i < 3; i++) {
+    particles.push({
+      x: x, y: y,
+      vx: 0, vy: (i - 1) * 0.8,
+      life: 0.12 + i * 0.06,
+      gravity: 0,
+      color: i === 0 ? '#fff' : i === 1 ? color : '#ffea44',
+      size: 6 + i * 4
+    });
+  }
+}
+
 function createEnemyDeathPop(x, y, color) {
   createExplosion(x, y, color, 13);
 

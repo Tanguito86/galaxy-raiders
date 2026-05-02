@@ -202,7 +202,7 @@ if (bossDefeated) {
   boss.active = false;
   requestHitstop(95);
 
-  createExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, '#f00', 80);
+  createBossDeathExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, '#f00');
   sfxBigExplosion();
   vibrate('explosion');
   pushScreenShake('heavy', 50);
