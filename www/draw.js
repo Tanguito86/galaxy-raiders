@@ -687,6 +687,31 @@ if (shouldShow) {
   ctx.translate(cx, cy);
   ctx.rotate(tilt);
   ctx.translate(-cx, -cy);
+
+  const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.035);
+  const thrust = player.movingUp ? 1.4 : player.movingDown ? 0.6 : 1.0;
+  const flameH = Math.max(4, (10 + 6 * pulse) * thrust);
+  const fx = cx;
+  const fy = player.y + player.height;
+
+  ctx.globalAlpha = (0.06 + 0.06 * pulse) * thrust;
+  ctx.fillStyle = '#0ff';
+  ctx.fillRect(fx - 7, fy - 2, 14, flameH + 6);
+
+  ctx.globalAlpha = 0.5 + 0.35 * pulse;
+  ctx.fillStyle = '#f80';
+  ctx.fillRect(fx - 3, fy, 6, flameH);
+
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = '#ff0';
+  ctx.fillRect(fx - 2, fy + 2, 4, Math.max(2, flameH - 3));
+
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(fx - 1, fy + 3, 2, Math.max(1, flameH - 5));
+
+  ctx.globalAlpha = 1;
+
   drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
   ctx.restore();
 }
