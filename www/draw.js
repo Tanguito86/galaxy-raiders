@@ -712,6 +712,54 @@ if (shouldShow) {
 
   ctx.globalAlpha = 1;
 
+  const playerFiring = typeof isFiring !== 'undefined' && isFiring;
+  if (playerFiring && state === 'playing' && !pendingNextLevel) {
+    const flashByWeapon = {
+      normal: ['#fff', '#ff0'],
+      double: ['#ff0', '#ff8'],
+      spread: ['#0f0', '#afa'],
+      machine: ['#f0f', '#faf'],
+      laser: ['#0ff', '#aff']
+    };
+    const colors = flashByWeapon[player.weaponType] || flashByWeapon.normal;
+    const pulse = 0.45 + 0.55 * Math.sin(globalTime * 0.07 + player.x * 0.01);
+
+    if (player.weaponType === 'double') {
+      ctx.globalAlpha = 0.10 + 0.12 * pulse;
+      ctx.fillStyle = colors[1];
+      ctx.fillRect(player.x - 2, player.y - 7, 6, 10);
+      ctx.globalAlpha = 0.28 + 0.22 * pulse;
+      ctx.fillStyle = colors[0];
+      ctx.fillRect(player.x - 1, player.y - 5, 4, 7);
+      ctx.globalAlpha = 0.50 + 0.28 * pulse;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(player.x, player.y - 3, 2, 4);
+
+      const rx = player.x + player.width - 4;
+      ctx.globalAlpha = 0.10 + 0.12 * pulse;
+      ctx.fillStyle = colors[1];
+      ctx.fillRect(rx - 2, player.y - 7, 6, 10);
+      ctx.globalAlpha = 0.28 + 0.22 * pulse;
+      ctx.fillStyle = colors[0];
+      ctx.fillRect(rx - 1, player.y - 5, 4, 7);
+      ctx.globalAlpha = 0.50 + 0.28 * pulse;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(rx, player.y - 3, 2, 4);
+    } else {
+      ctx.globalAlpha = 0.12 + 0.14 * pulse;
+      ctx.fillStyle = colors[1];
+      ctx.fillRect(cx - 5, player.y - 9, 10, 14);
+      ctx.globalAlpha = 0.32 + 0.24 * pulse;
+      ctx.fillStyle = colors[0];
+      ctx.fillRect(cx - 3, player.y - 7, 6, 11);
+      ctx.globalAlpha = 0.55 + 0.28 * pulse;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(cx - 1.5, player.y - 5, 3, 7);
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
   drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
   ctx.restore();
 }
