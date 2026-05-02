@@ -1277,7 +1277,7 @@ if (shouldShow) {
       const _barW = 200;
       const _barH = 8;
       const _barX = W / 2 - _barW / 2;
-      const _barY = 60;
+      const _barY = 86;
       const _pad = 4;
       
       ctx.save();
@@ -1909,61 +1909,62 @@ if (player.weaponType !== 'normal') {
 
       var bwPulse = 0.7 + 0.3 * Math.sin(globalTime * 0.004);
       var bwPulseF = 0.55 + 0.45 * Math.sin(globalTime * 0.006 + 1.5);
-      var _bwH = 22;
+      var _bwY = 52;
+      var _bwH = 24;
       var _bwColor = boss.color || '#f44';
       var _stripeStep = 20;
 
       ctx.globalAlpha = 0.22;
       ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, W, _bwH);
+      ctx.fillRect(0, _bwY, W, _bwH);
 
       ctx.globalAlpha = 0.12 + 0.04 * bwPulseF;
       ctx.fillStyle = '#400';
       for (var sx = -_stripeStep; sx < W + _stripeStep; sx += _stripeStep) {
         ctx.beginPath();
-        ctx.moveTo(sx, _bwH);
-        ctx.lineTo(sx + _stripeStep * 0.5, 0);
-        ctx.lineTo(sx + _stripeStep, 0);
-        ctx.lineTo(sx + _stripeStep * 0.5, _bwH);
+        ctx.moveTo(sx, _bwY + _bwH);
+        ctx.lineTo(sx + _stripeStep * 0.5, _bwY);
+        ctx.lineTo(sx + _stripeStep, _bwY);
+        ctx.lineTo(sx + _stripeStep * 0.5, _bwY + _bwH);
         ctx.closePath();
         ctx.fill();
       }
 
       ctx.globalAlpha = 0.72 * bwPulse;
       ctx.fillStyle = _bwColor;
-      ctx.fillRect(0, 0, W, 1);
-      ctx.fillRect(0, _bwH - 1, W, 1);
+      ctx.fillRect(0, _bwY, W, 1);
+      ctx.fillRect(0, _bwY + _bwH - 1, W, 1);
 
       ctx.globalAlpha = 0.30 + 0.22 * bwPulseF;
       ctx.fillStyle = _bwColor;
-      ctx.fillRect(0, 1, 2, _bwH - 2);
-      ctx.fillRect(W - 2, 1, 2, _bwH - 2);
+      ctx.fillRect(0, _bwY + 1, 2, _bwH - 2);
+      ctx.fillRect(W - 2, _bwY + 1, 2, _bwH - 2);
 
       ctx.textAlign = 'center';
       ctx.font = '9px "Press Start 2P"';
 
       ctx.globalAlpha = 0.22 * bwPulseF;
       ctx.fillStyle = _bwColor;
-      ctx.fillText('WARNING', W / 2, 8);
-      ctx.fillText('WARNING', W / 2, 10);
+      ctx.fillText('WARNING', W / 2, _bwY + 9);
+      ctx.fillText('WARNING', W / 2, _bwY + 11);
 
       ctx.globalAlpha = 0.60 * bwPulse;
       ctx.fillStyle = '#000';
-      ctx.fillText('WARNING', W / 2 + 1, 10);
+      ctx.fillText('WARNING', W / 2 + 1, _bwY + 11);
 
       ctx.globalAlpha = 0.82 * bwPulse;
       ctx.fillStyle = _bwColor;
-      ctx.fillText('WARNING', W / 2, 9);
+      ctx.fillText('WARNING', W / 2, _bwY + 10);
 
       if (boss.name) {
         ctx.font = '7px "Press Start 2P"';
         ctx.globalAlpha = 0.50 * bwPulse;
         ctx.fillStyle = '#000';
-        ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, 20);
+        ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 21);
 
         ctx.globalAlpha = 0.60 * bwPulseF;
         ctx.fillStyle = '#fbb';
-        ctx.fillText(boss.name.toUpperCase(), W / 2, 19);
+        ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 20);
       }
 
       ctx.globalAlpha = 1;
