@@ -890,7 +890,27 @@ if (shouldShow) {
     ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
     ctx.restore();
     
+    if (e.spawnFlashTimer > 0) {
+      const spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
+      const pulse = 0.5 + 0.5 * Math.sin((1 - spawnT) * Math.PI * 4);
+      ctx.save();
+      ctx.globalAlpha = 0.10 * spawnT + 0.08 * pulse * spawnT;
+      ctx.fillStyle = color;
+      ctx.fillRect(e.x - 6, e.y - 6, e.w + 12, e.h + 12);
+      ctx.globalAlpha = 0.20 * spawnT;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(Math.round(e.x - 3), Math.round(e.y - 3), e.w + 6, e.h + 6);
+      ctx.restore();
+    }
+    
+    ctx.save();
+    if (e.spawnFlashTimer > 0) {
+      const spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
+      ctx.globalAlpha = 1 - spawnT * 0.42;
+    }
     drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
+    ctx.restore();
 
         if (e.flashTimer > 0) {
           const flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);

@@ -3,6 +3,7 @@
 // =====================
 
 const MAX_PARTICLES = 100;
+const ENEMY_SPAWN_FLASH_DURATION = 220;
 
 // --- STARS ---
 function initStars() {
@@ -358,6 +359,7 @@ function createEnemy(x, y, row, type) {
     alive: true,
     diving: false,
     vx: 0, vy: 0,
+    spawnFlashTimer: ENEMY_SPAWN_FLASH_DURATION,
     flashTimer: 0  // Para feedback visual de daÃ±o
   };
 }
