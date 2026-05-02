@@ -1196,6 +1196,34 @@ if (shouldShow) {
     ctx.globalAlpha = 1;
   }
 
+  if (isInvincible) {
+    const shieldPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.045);
+    const shieldBlink = 0.5 + 0.5 * Math.sin(globalTime * 0.09);
+    const shieldW = player.width + 18 + shieldPulse * 5;
+    const shieldH = player.height + 16 + shieldPulse * 4;
+
+    ctx.globalAlpha = 0.12 + shieldPulse * 0.08;
+    ctx.fillStyle = '#64f5ff';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 1, shieldW * 0.5, shieldH * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.35 + shieldBlink * 0.20;
+    ctx.strokeStyle = '#64f5ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 1, shieldW * 0.5, shieldH * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.18 + shieldPulse * 0.12;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 1, shieldW * 0.36, shieldH * 0.36, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
   drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
   ctx.restore();
 }
