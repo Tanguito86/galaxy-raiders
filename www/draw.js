@@ -1962,7 +1962,7 @@ if (player.weaponType !== 'normal') {
       ctx.lineTo(panelX + panelW - 24, y);
       ctx.stroke();
 
-      y += 30;
+      y += 22;
       const pauseOptions = ['RESUME', 'OPTIONS', 'QUIT'];
 
       for (let i = 0; i < pauseOptions.length; i++) {
@@ -1992,7 +1992,7 @@ if (player.weaponType !== 'normal') {
 
       ctx.font = '8px "Press Start 2P"';
       ctx.fillStyle = 'rgba(255,255,255,0.38)';
-      ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, panelY + panelH + 14);
+      ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, panelY + panelH + 28);
     }
   }
 
