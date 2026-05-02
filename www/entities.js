@@ -460,6 +460,7 @@ function createEnemy(x, y, row, type) {
     alive: true,
     diving: false,
     vx: 0, vy: 0,
+    movePattern: ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN,
     spawnFlashTimer: ENEMY_SPAWN_FLASH_DURATION,
     flashTimer: 0  // Para feedback visual de daÃ±o
   };

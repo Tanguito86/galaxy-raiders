@@ -169,6 +169,7 @@ if (
               mini.diving = true;
               mini.vx = (i === 0) ? -2 : 2;
               mini.vy = 2;
+              setEnemyMovePattern(mini, chooseEnemyDivePattern(mini));
               enemies.push(mini);
             }
             sfxEnemyHit();
@@ -661,6 +662,7 @@ if (!boss.active && activeEnemies.length > 0) {
       const speed = diffSettings.diveSpeed * (data.speed || 1);
       diver.vx = Math.cos(angle) * speed;
       diver.vy = Math.sin(angle) * speed;
+      setEnemyMovePattern(diver, chooseEnemyDivePattern(diver));
     }
   }
 
@@ -670,13 +672,13 @@ if (!boss.active && activeEnemies.length > 0) {
   activeEnemies.forEach(e => {
     if (!e.diving) return;
 
-    e.x += e.vx * step;
-    e.y += e.vy * step;
+    updateEnemyBehavior(e, dt, step);
 
     if (e.y > H) {
       e.y = -30;
       e.x = Math.random() * (W - 30);
       e.diving = false;
+      resetEnemyMovePattern(e);
     }
 
     if (
