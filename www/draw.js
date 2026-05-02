@@ -53,9 +53,7 @@ function draw() {
   // 3) A PARTIR DE ACÁ: shake global SOLO para gameplay (player/enemies/etc.)
   ctx.save();
   if (screenShakeGameplay > 0) {
-    const dx = (Math.random() - 0.5) * screenShakeGameplay * SHAKE_CONFIG.gameplayTranslate;
-    const dy = (Math.random() - 0.5) * screenShakeGameplay * SHAKE_CONFIG.gameplayTranslate;
-    ctx.translate(dx, dy);
+    ctx.translate(gameplayShakeX, gameplayShakeY);
   }
 
 

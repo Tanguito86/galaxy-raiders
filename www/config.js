@@ -39,7 +39,10 @@ const SHAKE_CONFIG = {
   bgNormalMultiplier: 0.22,
   starSmoothingKeep: 0.72,
   starSmoothingNoise: 0.28,
-  gameplayTranslate: 0.13
+  gameplayTranslate: 0.13,
+  gameplaySmoothingKeep: 0.72,
+  gameplaySmoothingNoise: 0.28,
+  gameplayTranslateMax: 8
 };
 
 // Bullet VFX tuning

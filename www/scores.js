@@ -64,6 +64,8 @@ let nextPowerUpTime = 0;
 let powerUpsSpawnedThisLevel = 0;
 let starShakeX = 0;
 let starShakeY = 0;
+let gameplayShakeX = 0;
+let gameplayShakeY = 0;
 
 
 const POWERUP_COOLDOWN = 2600;       // 2.6s minimo entre drops

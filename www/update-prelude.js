@@ -158,6 +158,13 @@ function updateCombatEffects(dt) {
   // Mantener variable vieja para render/compatibilidad.
   screenShake = screenShakeGameplay;
 
+  const gpAmt = screenShakeGameplay * SHAKE_CONFIG.gameplayTranslate;
+  gameplayShakeX = gameplayShakeX * SHAKE_CONFIG.gameplaySmoothingKeep + (Math.random() - 0.5) * gpAmt * SHAKE_CONFIG.gameplaySmoothingNoise;
+  gameplayShakeY = gameplayShakeY * SHAKE_CONFIG.gameplaySmoothingKeep + (Math.random() - 0.5) * gpAmt * SHAKE_CONFIG.gameplaySmoothingNoise;
+  const maxTx = SHAKE_CONFIG.gameplayTranslateMax;
+  gameplayShakeX = clamp(gameplayShakeX, -maxTx, maxTx);
+  gameplayShakeY = clamp(gameplayShakeY, -maxTx, maxTx);
+
   if (flashScreen > 0) {
     flashScreen -= dt * 0.1;
     if (flashScreen < 0) flashScreen = 0;
