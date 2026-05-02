@@ -1520,6 +1520,14 @@ if (shouldShow) {
       ctx.globalAlpha = 0.85;
       ctx.fillStyle = '#111';
       ctx.fillRect(p.x - 1, p.y - 1, p.w + 2, p.h + 2);
+
+      ctx.globalAlpha = 0.22 + 0.14 * pulse;
+      ctx.fillStyle = color;
+      ctx.fillRect(p.x - 1, p.y - 1, p.w + 2, 1);
+      ctx.fillRect(p.x - 1, p.y + p.h, p.w + 2, 1);
+      ctx.fillRect(p.x - 1, p.y, 1, p.h);
+      ctx.fillRect(p.x + p.w, p.y, 1, p.h);
+
       ctx.fillStyle = color;
       ctx.fillRect(p.x, p.y, p.w, p.h);
 
@@ -1528,11 +1536,14 @@ if (shouldShow) {
       ctx.fillStyle = '#fff';
       ctx.fillRect(p.x + 2, p.y + 2, p.w - 4, p.h - 4);
 
-      // Letra centrada con sombra
-      ctx.globalAlpha = 1;
+      // Letra con glow sutil y sombra
+      ctx.globalAlpha = 0.30 * pulse;
       ctx.font = '9px "Press Start 2P"';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.fillStyle = color;
+      ctx.fillText(char, cx, cy);
+      ctx.globalAlpha = 1;
       ctx.fillStyle = '#000';
       ctx.fillText(char, cx + 1, cy + 1);
       ctx.fillStyle = '#fff';
@@ -1794,18 +1805,26 @@ if (player.weaponType !== 'normal') {
   ctx.lineWidth = 1;
   ctx.strokeRect(barX + 0.5, barY + 0.5, 99, 5);
 
-  // Etiqueta con sombra para legibilidad
-  ctx.globalAlpha = 0.70;
-  ctx.fillStyle = '#000';
-  ctx.font = '7px "Press Start 2P"';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 4);
-  ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 2);
+  // Low-time pulse
+      if (player.weaponTimer < 1200) {
+        const warnPulse = 0.30 + 0.30 * Math.sin(globalTime * 0.06);
+        ctx.globalAlpha = warnPulse;
+        ctx.fillStyle = '#f44';
+        ctx.fillRect(barX, barY, barW, 6);
+      }
 
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = wColor;
-  ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 3);
+      // Etiqueta con sombra para legibilidad
+      ctx.globalAlpha = 0.70;
+      ctx.fillStyle = '#000';
+      ctx.font = '7px "Press Start 2P"';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 4);
+      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 2);
+
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = wColor;
+      ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 3);
 
   ctx.restore();
 }

@@ -711,10 +711,12 @@ function activateWeapon(type) {
   // Acumulable si es el mismo tipo
   if (player.weaponType === type) {
     player.weaponTimer += 5000;  // +5 segundos
+    spawnPopup(player.x + player.w / 2, player.y - 8, '+' + type.toUpperCase(), getWeaponColor(type));
     sfxPowerUp();  // Sonido de bonus
   } else {
     player.weaponType = type;
     player.weaponTimer = duration;
+    spawnPopup(player.x + player.w / 2, player.y - 8, type.toUpperCase(), getWeaponColor(type));
     sfxPowerUp();
   }
   
