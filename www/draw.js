@@ -1054,6 +1054,84 @@ if (player.weaponType !== 'normal') {
       ctx.fillRect(10 + i * 20, H - 20, 10, 8);
     }
 
+    // LEVEL CLEAR overlay
+    if (pendingNextLevel) {
+      ctx.save();
+
+      var lcPulse = 0.6 + 0.4 * Math.sin(globalTime * 0.003);
+      var lcAlpha = Math.min(1, levelClearTimer / 300);
+
+      ctx.globalAlpha = 0.3 * lcAlpha;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, H / 2 - 55, W, 110);
+
+      ctx.globalAlpha = 0.7 * lcAlpha * lcPulse;
+      ctx.strokeStyle = '#0ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, H / 2 - 55);
+      ctx.lineTo(W, H / 2 - 55);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, H / 2 + 55);
+      ctx.lineTo(W, H / 2 + 55);
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.font = '28px "Press Start 2P"';
+
+      ctx.globalAlpha = 0.7 * lcAlpha;
+      ctx.fillStyle = '#000';
+      ctx.fillText('LEVEL CLEAR', W / 2 + 3, H / 2 - 3);
+
+      ctx.globalAlpha = lcAlpha * lcPulse;
+      ctx.fillStyle = '#0ff';
+      ctx.fillText('LEVEL CLEAR', W / 2, H / 2 - 6);
+
+      ctx.font = '12px "Press Start 2P"';
+      ctx.globalAlpha = 0.8 * lcAlpha * (0.5 + 0.5 * Math.sin(globalTime * 0.005));
+      ctx.fillStyle = '#fff';
+      ctx.fillText('WARPING', W / 2, H / 2 + 30);
+
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    // BOSS WARNING overlay
+    if (boss && boss.active) {
+      ctx.save();
+
+      var bwPulse = 0.7 + 0.3 * Math.sin(globalTime * 0.004);
+
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = '#300';
+      ctx.fillRect(0, 0, W, 22);
+
+      ctx.globalAlpha = 0.55 * bwPulse;
+      ctx.strokeStyle = '#f44';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 22);
+      ctx.lineTo(W, 22);
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.font = '8px "Press Start 2P"';
+
+      ctx.globalAlpha = 0.75 * bwPulse;
+      ctx.fillStyle = '#f44';
+      ctx.fillText('WARNING', W / 2, 10);
+
+      if (boss.name) {
+        ctx.globalAlpha = 0.6 * bwPulse;
+        ctx.fillStyle = '#f88';
+        ctx.fillText(boss.name.toUpperCase(), W / 2, 20);
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
     // Pause overlay - ESTILO ARCADE
     if (state === 'paused') {
       // Fondo oscuro
