@@ -145,10 +145,25 @@ function draw() {
 
 
   if (state === 'menu') {
+    const menuPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
+    const accent = currentPalette[0] || '#0ff';
+    const panelW = Math.min(W - 46, 318);
+    const panelH = 272;
+    const panelX = (W - panelW) / 2;
+    const panelY = 258;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalAlpha = 0.12 + menuPulse * 0.08;
+    ctx.fillStyle = accent;
+    ctx.fillRect(0, 78, W, 2);
+    ctx.fillRect(0, H - 86, W, 2);
+    ctx.globalAlpha = 1;
+
     ctx.textAlign = 'center';
     
     // Aliens decorativos animados
-    const alienWave = Math.sin(globalTime * 0.003) * 15;
     menuAliens.forEach((alien, i) => {
   const menuAnim = Math.floor(globalTime / 500) % 2;
 const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
@@ -164,30 +179,53 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
   // Movimiento ondulante
   const wave = Math.sin(globalTime * 0.003 + alien.col * 0.5) * 8;
   
+  ctx.globalAlpha = 0.78 + menuPulse * 0.18;
   drawSprite(ctx, SPRITES[spriteKey], baseX + wave - 12, alien.y, color, 3);
+  ctx.globalAlpha = 1;
 });
     
     // Título
-    ctx.font = '36px "Press Start 2P"';
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillText('GALAXY', W / 2 + 3, 203);
-    ctx.fillStyle = currentPalette[0];
-    ctx.fillText('GALAXY', W / 2, 200);
-    
-    ctx.font = '30px "Press Start 2P"';
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillText('RAIDERS', W / 2 + 3, 243);
-    ctx.fillStyle = '#fff';
-    ctx.fillText('RAIDERS', W / 2, 240);
+    drawGlowText(
+      'GALAXY',
+      W / 2,
+      190,
+      '36px "Press Start 2P"',
+      menuPulse > 0.35 ? '#fff36a' : '#fff',
+      'rgba(255,235,90,0.72)'
+    );
+
+    drawGlowText(
+      'RAIDERS',
+      W / 2,
+      232,
+      '30px "Press Start 2P"',
+      '#ffffff',
+      'rgba(0,245,255,0.68)'
+    );
+
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(100,245,255,0.72)';
+    ctx.fillText('INSERT COIN // READY', W / 2, 254);
+
+    drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
     
     // High Score
-    ctx.font = '10px "Press Start 2P"';
-    ctx.fillStyle = '#ff0';
-    ctx.fillText('🌍 ' + globalTopName + ' ' + globalTopScore, W / 2, 280);
-    
+    ctx.font = '9px "Press Start 2P"';
+    ctx.fillStyle = '#64f5ff';
+    ctx.fillText('TOP PILOT', W / 2, panelY + 30);
+    ctx.fillStyle = '#fff36a';
+    ctx.fillText(globalTopName + '  ' + globalTopScore, W / 2, panelY + 50);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(panelX + 28, panelY + 68);
+    ctx.lineTo(panelX + panelW - 28, panelY + 68);
+    ctx.stroke();
+
     // Opciones del menú
-    const menuStartY = 340;
-    const menuSpacing = 40;
+    const menuStartY = panelY + 100;
+    const menuSpacing = 34;
     
     MENU_OPTIONS.forEach((option, i) => {
       const y = menuStartY + i * menuSpacing;
@@ -195,44 +233,51 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
       
       if (isSelected) {
         // Fondo seleccionado
-        ctx.fillStyle = 'rgba(255,255,255,0.1)';
-        ctx.fillRect(W / 2 - 100, y - 23, 200, 30);
+        ctx.fillStyle = 'rgba(255,245,120,0.12)';
+        ctx.fillRect(panelX + 34, y - 20, panelW - 68, 28);
+        ctx.strokeStyle = 'rgba(255,245,120,0.45)';
+        ctx.strokeRect(panelX + 34.5, y - 20.5, panelW - 69, 27);
         
         // Flechas
         ctx.fillStyle = '#ff0';
-        ctx.font = '14px "Press Start 2P"';
+        ctx.font = '12px "Press Start 2P"';
         const pulse = Math.sin(globalTime * 0.008) * 3;
-        ctx.fillText('►', W / 2 - 80 - pulse, y);
-        ctx.fillText('◄', W / 2 + 80 + pulse, y);
+        ctx.textAlign = 'left';
+        ctx.fillText('>', panelX + 48 - pulse, y);
+        ctx.textAlign = 'right';
+        ctx.fillText('<', panelX + panelW - 48 + pulse, y);
       }
-      
+
       ctx.font = '16px "Press Start 2P"';
-      ctx.fillStyle = isSelected ? '#ff0' : '#666';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isSelected ? '#fff36a' : '#8a94a8';
       ctx.fillText(option, W / 2, y);
     });
     
     // Dificultad (si está desbloqueado)
+    let infoY = panelY + panelH - 28;
     if (hardcoreUnlocked) {
       ctx.font = '8px "Press Start 2P"';
-      ctx.fillStyle = '#444';
-      ctx.fillText('MODE: ' + difficulties[difficultyIndex].name, W / 2, 470);
+      ctx.fillStyle = 'rgba(255,255,255,0.42)';
+      ctx.fillText('MODE: ' + difficulties[difficultyIndex].name, W / 2, infoY);
+      infoY += 18;
     }
 
     if (typeof getBalanceProfileLabel === 'function') {
       ctx.font = '8px "Press Start 2P"';
-      ctx.fillStyle = '#444';
-      ctx.fillText('BALANCE: ' + getBalanceProfileLabel(), W / 2, 490);
+      ctx.fillStyle = 'rgba(255,255,255,0.34)';
+      ctx.fillText('BALANCE: ' + getBalanceProfileLabel(), W / 2, infoY);
     }
     
     // Créditos/Fichas
     ctx.font = '10px "Press Start 2P"';
-    ctx.fillStyle = '#0ff';
-    ctx.fillText('🪙 ' + playerCredits + ' CREDITS', W / 2, H - 100);
+    ctx.fillStyle = '#64f5ff';
+    ctx.fillText(playerCredits + ' CREDITS', W / 2, H - 100);
     
     // Instrucciones
     ctx.font = '8px "Press Start 2P"';
-    ctx.fillStyle = '#555';
-    ctx.fillText('↑↓ SELECT   FIRE=OK', W / 2, H - 70);
+    ctx.fillStyle = 'rgba(255,255,255,0.52)';
+    ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, H - 70);
     
     // Botones inferiores
     ctx.font = '16px "Press Start 2P"';
