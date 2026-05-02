@@ -1991,8 +1991,8 @@ if (player.weaponType !== 'normal') {
       }
 
       ctx.font = '8px "Press Start 2P"';
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, panelY + panelH - 22);
+      ctx.fillStyle = 'rgba(255,255,255,0.38)';
+      ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, panelY + panelH + 14);
     }
   }
 
