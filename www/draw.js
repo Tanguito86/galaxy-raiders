@@ -1962,30 +1962,39 @@ if (player.weaponType !== 'normal') {
       ctx.textAlign = 'center';
       ctx.font = '9px "Press Start 2P"';
 
-      ctx.globalAlpha = 0.22 * bwPulseF;
+      ctx.shadowColor = 'rgba(255, 32, 32, 0.72)';
+      ctx.shadowBlur = 8;
+      ctx.globalAlpha = 0.38 * bwPulseF;
       ctx.fillStyle = _bwColor;
       ctx.fillText('WARNING', W / 2, _bwY + 9);
       ctx.fillText('WARNING', W / 2, _bwY + 11);
 
-      ctx.globalAlpha = 0.60 * bwPulse;
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.86 * bwPulse;
       ctx.fillStyle = '#000';
       ctx.fillText('WARNING', W / 2 + 1, _bwY + 11);
 
-      ctx.globalAlpha = 0.82 * bwPulse;
-      ctx.fillStyle = _bwColor;
+      ctx.shadowColor = 'rgba(255, 36, 36, 0.85)';
+      ctx.shadowBlur = 5;
+      ctx.globalAlpha = 0.94 * bwPulse;
+      ctx.fillStyle = '#fff3e8';
       ctx.fillText('WARNING', W / 2, _bwY + 10);
 
       if (boss.name) {
         ctx.font = '7px "Press Start 2P"';
-        ctx.globalAlpha = 0.50 * bwPulse;
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 0.82 * bwPulse;
         ctx.fillStyle = '#000';
         ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 21);
 
-        ctx.globalAlpha = 0.60 * bwPulseF;
-        ctx.fillStyle = '#fbb';
+        ctx.shadowColor = 'rgba(255, 64, 64, 0.65)';
+        ctx.shadowBlur = 4;
+        ctx.globalAlpha = 0.88 * bwPulseF;
+        ctx.fillStyle = '#ffd6d6';
         ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 20);
       }
 
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
       ctx.restore();
     }
