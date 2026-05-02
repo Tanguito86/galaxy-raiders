@@ -95,6 +95,14 @@ function draw() {
   ctx.clearRect(0, 0, W, H);
   drawBackgroundMood();
 
+  const mobileControls = document.getElementById('mobile-controls');
+  if (mobileControls) {
+    const targetOpacity = state === 'menu' ? '0.42' : '';
+    if (mobileControls.style.opacity !== targetOpacity) {
+      mobileControls.style.opacity = targetOpacity;
+    }
+  }
+
   // 2) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
   const shakeAmt = Math.max(0, screenShakeBg) * SHAKE_CONFIG.bgStrength * bgShakeMult;
@@ -146,17 +154,17 @@ function draw() {
 
   if (state === 'menu') {
     const menuPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
-    const accent = currentPalette[0] || '#0ff';
+    const panelAccent = 'rgba(100,245,255,0.58)';
     const panelW = Math.min(W - 46, 318);
-    const panelH = 272;
+    const panelH = 248;
     const panelX = (W - panelW) / 2;
     const panelY = 258;
 
     ctx.fillStyle = 'rgba(0,0,0,0.28)';
     ctx.fillRect(0, 0, W, H);
 
-    ctx.globalAlpha = 0.12 + menuPulse * 0.08;
-    ctx.fillStyle = accent;
+    ctx.globalAlpha = 0.07 + menuPulse * 0.05;
+    ctx.fillStyle = panelAccent;
     ctx.fillRect(0, 78, W, 2);
     ctx.fillRect(0, H - 86, W, 2);
     ctx.globalAlpha = 1;
@@ -207,7 +215,7 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     ctx.fillStyle = 'rgba(100,245,255,0.72)';
     ctx.fillText('INSERT COIN // READY', W / 2, 254);
 
-    drawOverlayPanel(panelX, panelY, panelW, panelH, accent);
+    drawOverlayPanel(panelX, panelY, panelW, panelH, panelAccent);
     
     // High Score
     ctx.font = '9px "Press Start 2P"';
@@ -272,12 +280,12 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     // Créditos/Fichas
     ctx.font = '10px "Press Start 2P"';
     ctx.fillStyle = '#64f5ff';
-    ctx.fillText(playerCredits + ' CREDITS', W / 2, H - 100);
+    ctx.fillText(playerCredits + ' CREDITS', W / 2, H - 88);
     
     // Instrucciones
     ctx.font = '8px "Press Start 2P"';
     ctx.fillStyle = 'rgba(255,255,255,0.52)';
-    ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, H - 70);
+    ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, H - 60);
     
     // Botones inferiores
     ctx.font = '16px "Press Start 2P"';
