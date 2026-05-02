@@ -3,6 +3,8 @@
 // =====================
 
 function getEnemyBulletRenderStyle(b) {
+  if (!b.kind && !b.color) return { kind: 'boss', color: '#ffdd44' };
+
   const kind = b.kind || 'basic';
 
   if (kind === 'fortress') return { kind, color: b.color || '#ffc66f' };
@@ -24,6 +26,36 @@ function drawEnemyBullet(b) {
   const y = b.y;
   const w = b.w || 4;
   const h = b.h || 10;
+
+  if (kind === 'boss') {
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = '#080000';
+    ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+
+    ctx.globalAlpha = 0.60;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+
+    ctx.globalAlpha = 0.34;
+    ctx.fillStyle = '#000';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.globalAlpha = 1;
+    return;
+  }
 
   if (kind === 'orb') {
     const r = Math.max(2, Math.max(w, h) * 0.5);
