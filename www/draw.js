@@ -28,6 +28,24 @@ function drawBackgroundMood() {
   }
 }
 
+// --- HUD HELPERS ---
+function drawArcadePanel(x, y, w, h, accentColor) {
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x, y, w, h);
+  ctx.globalAlpha = 0.10;
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x, y + h, w, 2);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x, y, w, 1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -909,14 +927,43 @@ ufoRewards.forEach(d => {
 
 
     // HUD
-    ctx.fillStyle = '#fff';
-    ctx.font = '14px "Press Start 2P"';
+    // Left panel: SCORE + LEVEL
+    drawArcadePanel(6, 8, 100, 48, '#0ff');
+
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillStyle = '#0ff';
     ctx.textAlign = 'left';
-	    ctx.fillText(`SC:${score}`, 10, 35);
-	    ctx.fillText(`LV:${level}`, 10, 55);
-	    ctx.textAlign = 'right';
-	    ctx.fillText(`HI:${bestScore}`, W - 10, 35);
-      drawMedalHUD(ctx);
+    ctx.fillText('SCORE', 12, 24);
+
+    ctx.font = '11px "Press Start 2P"';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'right';
+    ctx.fillText(score, 98, 24);
+
+    ctx.font = '7px "Press Start 2P"';
+    ctx.fillStyle = '#0ff';
+    ctx.textAlign = 'left';
+    ctx.fillText('LEVEL', 12, 46);
+
+    ctx.font = '11px "Press Start 2P"';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'right';
+    ctx.fillText(level, 98, 46);
+
+    // Right panel: HI
+    drawArcadePanel(W - 82, 28, 78, 22, '#ff0');
+
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = '#ff0';
+    ctx.textAlign = 'left';
+    ctx.fillText('HI', W - 76, 43);
+
+    ctx.font = '11px "Press Start 2P"';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'right';
+    ctx.fillText(bestScore, W - 10, 43);
+
+    drawMedalHUD(ctx);
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {
         ctx.textAlign = 'center';
@@ -1049,9 +1096,11 @@ if (player.weaponType !== 'normal') {
 
 
     // Lives
+    const livesW = 14 + lives * 18;
+    drawArcadePanel(4, H - 28, livesW, 20, currentPalette[0]);
     for (let i = 0; i < lives; i++) {
       ctx.fillStyle = currentPalette[0];
-      ctx.fillRect(10 + i * 20, H - 20, 10, 8);
+      ctx.fillRect(12 + i * 18, H - 22, 10, 7);
     }
 
     // LEVEL CLEAR overlay
