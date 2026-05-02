@@ -105,6 +105,14 @@ function drawGlowText(text, x, y, font, fillColor, glowColor) {
   ctx.restore();
 }
 
+var FLASH_BY_WEAPON = {
+  normal: ['#fff', '#ff0'],
+  double: ['#ff0', '#ff8'],
+  spread: ['#0f0', '#afa'],
+  machine: ['#f0f', '#faf'],
+  laser: ['#0ff', '#aff']
+};
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1166,14 +1174,7 @@ if (shouldShow) {
 
   const playerFiring = typeof isFiring !== 'undefined' && isFiring;
   if (playerFiring && state === 'playing' && !pendingNextLevel) {
-    const flashByWeapon = {
-      normal: ['#fff', '#ff0'],
-      double: ['#ff0', '#ff8'],
-      spread: ['#0f0', '#afa'],
-      machine: ['#f0f', '#faf'],
-      laser: ['#0ff', '#aff']
-    };
-    const colors = flashByWeapon[player.weaponType] || flashByWeapon.normal;
+    const colors = FLASH_BY_WEAPON[player.weaponType] || FLASH_BY_WEAPON.normal;
     const pulse = 0.45 + 0.55 * Math.sin(globalTime * 0.07 + player.x * 0.01);
 
     if (player.weaponType === 'double') {
@@ -1381,16 +1382,27 @@ if (shouldShow) {
         
     const size = (e.type === 'alien_mini') ? 2 : 3;
     
+    var spawnT = 0;
+    if (e.spawnFlashTimer > 0) {
+      spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
+    }
+
     ctx.save();
     ctx.globalAlpha = 0.04;
     ctx.fillStyle = color;
     ctx.fillRect(e.x - 2, e.y - 2, e.w + 4, e.h + 4);
     ctx.globalAlpha = 0.07;
     ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
-    ctx.restore();
-    
+
     if (e.spawnFlashTimer > 0) {
-      const spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
+      ctx.globalAlpha = 1 - spawnT * 0.42;
+    } else {
+      ctx.globalAlpha = 1;
+    }
+    drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
+    ctx.restore();
+
+    if (e.spawnFlashTimer > 0) {
       const pulse = 0.5 + 0.5 * Math.sin((1 - spawnT) * Math.PI * 4);
       ctx.save();
       ctx.globalAlpha = 0.10 * spawnT + 0.08 * pulse * spawnT;
@@ -1402,14 +1414,6 @@ if (shouldShow) {
       ctx.strokeRect(Math.round(e.x - 3), Math.round(e.y - 3), e.w + 6, e.h + 6);
       ctx.restore();
     }
-    
-    ctx.save();
-    if (e.spawnFlashTimer > 0) {
-      const spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
-      ctx.globalAlpha = 1 - spawnT * 0.42;
-    }
-    drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
-    ctx.restore();
 
         if (e.flashTimer > 0) {
           const flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
