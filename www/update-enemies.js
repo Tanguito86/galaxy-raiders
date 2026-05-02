@@ -98,46 +98,7 @@ if (
   pushScreenShake('light', 3);
   vibrate('hit');
   
-  // Chispas en punto de impacto
-  for (let j = 0; j < 8; j++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 5 + 4;
-    particles.push({
-      x: b.x + b.w / 2, 
-      y: b.y + b.h / 2,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 0.7,
-      gravity: 0,
-      color: '#fff',
-      size: 4,
-      isSpark: true
-    });
-  }
-  
-  // Destello grande en punto de impacto
-  particles.push({
-    x: b.x + b.w / 2,
-    y: b.y + b.h / 2,
-    vx: 0, vy: 0,
-    life: 0.3,
-    gravity: 0,
-    color: '#ff0',
-    size: 12
-  });
-  
-  // Anillo de impacto
-  particles.push({
-    x: b.x + b.w / 2,
-    y: b.y + b.h / 2,
-    vx: 0, vy: 0,
-    life: 0.4,
-    gravity: 0,
-    color: boss.color || '#f00',
-    isRing: true,
-    ringRadius: 5,
-    ringExpand: 12
-  });
+  createImpactBurst(b.x + b.w / 2, b.y + b.h / 2, boss.color || "#ff5050", 4);
 
   if (!piercing) bullets.splice(i, 1);
   continue;
