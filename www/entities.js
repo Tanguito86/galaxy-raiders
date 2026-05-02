@@ -55,51 +55,66 @@ function initStars() {
 initStars();
 
 function createExplosion(x, y, color, count = 15) {
-  const overflow = (particles.length + count + 8) - MAX_PARTICLES;
+  const mainCount = count;
+  const sparkCount = Math.min(Math.ceil(count / 3), 8);
+  const flashCount = count >= 15 ? 2 : 1;
+  const ringCount = 1;
+  const totalCount = mainCount + sparkCount + flashCount + ringCount;
+
+  const overflow = (particles.length + totalCount) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
 
-  // PartÃ­culas principales
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < mainCount; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = Math.random() * 4 + 2;
     particles.push({
       x, y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed - 2,
-      life: 1.0,
+      life: 0.8 + Math.random() * 0.2,
       gravity: 0.25,
       color,
       size: Math.random() * 3 + 2
     });
   }
-  
-  // Anillo expansivo
-  particles.push({
-    x, y,
-    vx: 0, vy: 0,
-    life: 0.6,
-    gravity: 0,
-    color,
-    isRing: true,
-    ringRadius: 5,
-    ringExpand: 8
-  });
-  
-  // Chispas rÃ¡pidas
-  for (let i = 0; i < 6; i++) {
+
+  for (let i = 0; i < sparkCount; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 6 + 4;
+    const speed = Math.random() * 5 + 3;
     particles.push({
       x, y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      life: 0.4,
+      life: 0.2 + Math.random() * 0.15,
       gravity: 0,
       color: '#fff',
-      size: 1,
+      size: 1 + Math.random() * 1.5,
       isSpark: true
     });
   }
+
+  for (let i = 0; i < flashCount; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5 - 1,
+      life: 0.18 + Math.random() * 0.1,
+      gravity: 0,
+      color: '#fff',
+      size: 4 + Math.random() * 3
+    });
+  }
+
+  particles.push({
+    x, y,
+    vx: 0, vy: 0,
+    life: 0.45,
+    gravity: 0,
+    color,
+    isRing: true,
+    ringRadius: 4,
+    ringExpand: 7
+  });
 }
 
 function createImpactBurst(x, y, color, count = 5) {
