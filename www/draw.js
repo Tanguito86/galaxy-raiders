@@ -672,7 +672,7 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     const rowX = panelX + 20;
     const rowW = panelW - 40;
     const labelX = panelX + 34;
-    const valueX = panelX + panelW - 34;
+    const valueX = panelX + panelW - 42;
     const optStartY = panelY + 108;
     const optSpacing = 48;
 
@@ -705,9 +705,9 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
         ctx.font = '10px "Press Start 2P"';
         ctx.fillStyle = danger ? '#ff365f' : '#ff0';
         ctx.textAlign = 'left';
-        ctx.fillText('>', rowX + 6 - cursorPulse, y);
+        ctx.fillText('>', rowX + 4 - cursorPulse, y);
         ctx.textAlign = 'right';
-        ctx.fillText('<', rowX + rowW - 6 + cursorPulse, y);
+        ctx.fillText('<', rowX + rowW - 4 + cursorPulse, y);
       }
     }
 
