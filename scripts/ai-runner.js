@@ -5,18 +5,23 @@ const task = fs.readFileSync("ai/TASK.md", "utf-8");
 console.log("===== TASK =====");
 console.log(task);
 
-// Simulación de IA (después se conecta a Codex)
-const output = `
-# Resultado IA
+// Ejemplo real: modificar archivo de juego
+const filePath = "www/index.html";
 
-Tarea procesada automáticamente.
+if (fs.existsSync(filePath)) {
+  let content = fs.readFileSync(filePath, "utf-8");
 
-Resumen:
-- Se leyó TASK.md
-- Se ejecutó pipeline base
-`;
+  // cambio simple y seguro (no rompe nada)
+  if (!content.includes("AI_PATCH")) {
+    content += "\n<!-- AI_PATCH: modificación automática -->\n";
+    fs.writeFileSync(filePath, content);
+    console.log("index.html modificado");
+  } else {
+    console.log("Ya estaba modificado");
+  }
+}
 
-// Escribir resultado
-fs.writeFileSync("ai/RESULT.md", output);
+// resultado
+fs.writeFileSync("ai/RESULT.md", "IA ejecutó cambio real en código");
 
-console.log("Archivo RESULT.md generado");
+console.log("Proceso terminado");
