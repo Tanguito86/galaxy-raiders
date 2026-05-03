@@ -2,7 +2,8 @@ const fs = require("fs");
 const OpenAI = require("openai");
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: "https://api.deepseek.com"
 });
 
 const task = fs.readFileSync("ai/TASK.md", "utf-8");
@@ -12,31 +13,34 @@ async function run() {
     console.log("===== TASK =====");
     console.log(task);
 
-    const response = await client.responses.create({
-      model: "gpt-5.5",
-      input: [
+    const response = await client.chat.completions.create({
+      model: "deepseek-v4-pro",
+      messages: [
         {
           role: "system",
-          content: "Sos un desarrollador que modifica archivos de un juego HTML canvas sin romper gameplay."
+          content:
+            "Sos un desarrollador que modifica archivos de un juego HTML canvas sin romper gameplay."
         },
         {
           role: "user",
-          content: `Tarea:\n${task}\n\nDecime qué archivo modificar y devolveme SOLO el contenido nuevo del archivo.`
+          content:
+            `Tarea:\n${task}\n\n` +
+            "Devolve una respuesta breve con: archivo recomendado, resumen del cambio y riesgos. No modifiques archivos todavia."
         }
-      ]
+      ],
+      stream: false
     });
 
-    const output = response.output_text;
+    const output = response.choices?.[0]?.message?.content;
 
     if (!output) {
-      throw new Error("La IA no devolvio contenido");
+      throw new Error("DeepSeek no devolvio contenido");
     }
 
     fs.writeFileSync("ai/RESULT.md", output);
-
-    console.log("Resultado IA generado");
+    console.log("Resultado IA generado con DeepSeek");
   } catch (err) {
-    console.error("Error IA:", err.message);
+    console.error("Error DeepSeek:", err.message);
     process.exit(1);
   }
 }

@@ -29,9 +29,9 @@ jobs:
       - name: Instalar dependencias IA
         run: npm install openai
 
-      - name: Ejecutar IA real
+      - name: Ejecutar IA real DeepSeek
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.VD }}
         run: |
           node scripts/ai-runner.js
 
