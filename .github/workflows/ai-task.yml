@@ -11,11 +11,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Show TASK.md
+      - name: Configurar git
+        run: |
+          git config user.name "ai-bot"
+          git config user.email "ai@bot.com"
+
+      - name: Leer TASK.md
         run: |
           echo "===== TASK ====="
           cat ai/TASK.md
 
-      - name: Placeholder IA
+      - name: Simular cambio IA
         run: |
-          echo "Acá después va Codex / DeepSeek"
+          echo "IA ejecutó esta tarea el $(date)" > ai/RESULT.md
+
+      - name: Commit y push automático
+        run: |
+          git add .
+          git commit -m "ai: ejecución automática desde TASK.md" || echo "No changes"
+          git push
