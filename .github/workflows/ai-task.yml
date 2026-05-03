@@ -1,0 +1,21 @@
+name: AI Task Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-ai-task:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Show TASK.md
+        run: |
+          echo "===== TASK ====="
+          cat ai/TASK.md
+
+      - name: Placeholder IA
+        run: |
+          echo "Acá después va Codex / DeepSeek"
