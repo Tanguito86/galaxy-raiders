@@ -220,10 +220,11 @@ function createBossDeathExplosion(x, y, color) {
 }
 
 function createEnemyDeathPop(x, y, color) {
-  createExplosion(x, y, color, 13);
+  createExplosion(x, y, color, 18);
 
   const accentCount = 6;
-  const overflow = (particles.length + accentCount) - MAX_PARTICLES;
+  const extraCount = 3;
+  const overflow = (particles.length + accentCount + extraCount) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
 
   for (let i = 0; i < accentCount; i++) {
@@ -240,6 +241,29 @@ function createEnemyDeathPop(x, y, color) {
       isSpark: true
     });
   }
+
+  for (let i = 0; i < 2; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5 - 0.8,
+      life: 0.12 + Math.random() * 0.08,
+      gravity: 0,
+      color: '#fff',
+      size: 3 + Math.random() * 2
+    });
+  }
+
+  particles.push({
+    x, y,
+    vx: 0, vy: 0,
+    life: 0.28,
+    gravity: 0,
+    color: '#fff',
+    isRing: true,
+    ringRadius: 3,
+    ringExpand: 5
+  });
 }
 
 function createImpactBurst(x, y, color, count = 5) {
