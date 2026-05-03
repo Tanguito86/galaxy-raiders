@@ -1027,6 +1027,15 @@ if (shouldShow) {
       ctx.restore();
     }
 
+    function getEnemyFormationPulse(e, time) {
+      var row = e.row || 0;
+      var wave = Math.sin(time * 0.0018 + row * 0.45);
+      return {
+        scale: 1 + wave * 0.015,
+        y: wave * 1.2
+      };
+    }
+
     function getEnemyEntranceVisual(e, spawnT) {
       if (spawnT <= 0) return { scale: 1, entryY: 0 };
       var progress = 1 - spawnT;
@@ -1087,6 +1096,13 @@ if (shouldShow) {
           ctx.translate(-_ecx, -_ecy);
           ctx.translate(0, _ent.entryY);
         }
+        var _pulse = getEnemyFormationPulse(e, globalTime);
+        var _pcx = e.x + e.w / 2;
+        var _pcy = e.y + e.h / 2;
+        ctx.translate(_pcx, _pcy);
+        ctx.scale(_pulse.scale, _pulse.scale);
+        ctx.translate(-_pcx, -_pcy);
+        ctx.translate(0, _pulse.y);
         const spriteKey = e.type + (animationFrame === 0 ? '_a' : '_b');
         const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
         
