@@ -1030,6 +1030,10 @@ if (shouldShow) {
     // Enemies
     enemies.forEach(e => {
       if (e.alive) {
+        const ox = Math.sin(globalTime * 0.003 + e.x * 0.13 + e.row * 2.5) * 2;
+        const oy = Math.cos(globalTime * 0.0035 + e.y * 0.07 + e.row * 1.8) * 3;
+        ctx.save();
+        ctx.translate(ox, oy);
         const spriteKey = e.type + (animationFrame === 0 ? '_a' : '_b');
         const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
         
@@ -1092,6 +1096,7 @@ if (shouldShow) {
           ctx.fillStyle = '#f00';
           ctx.fillRect(barX, barY, barW * (e.hp / e.maxHp), barH);
         }
+        ctx.restore();
       }
     });
 
