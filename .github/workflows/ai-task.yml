@@ -31,12 +31,16 @@ jobs:
 
       - name: Ejecutar IA real DeepSeek
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.VD }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           node scripts/ai-runner.js
+
+      - name: Validar proyecto
+        run: |
+          npm run validate
 
       - name: Commit y push automatico
         run: |
           git add .
-          git commit -m "ai: ejecucion automatica desde TASK.md" || echo "No changes"
+          git commit -m "ai: aplicar cambios desde TASK.md" || echo "No changes"
           git push
