@@ -1027,11 +1027,43 @@ if (shouldShow) {
       ctx.restore();
     }
 
+    function getEnemyVisualOffset(e, time) {
+      const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
+      const row = e.row || 0;
+      const phase = e.x * 0.13 + e.y * 0.07 + row * 2.1;
+      var ampX = 2;
+      var ampY = 3;
+      var speedX = 0.003;
+      var speedY = 0.0035;
+      if (data.hp >= 2 && data.speed < 1.0) {
+        ampX = 1.2;
+        ampY = 1.8;
+        speedX = 0.0018;
+        speedY = 0.002;
+      } else if (data.speed >= 1.5 || data.kamikaze) {
+        ampX = 2.8;
+        ampY = 2.2;
+        speedX = 0.004;
+        speedY = 0.003;
+      } else if (data.splits) {
+        ampX = 2.2;
+        ampY = 2.5;
+        speedX = 0.0032;
+        speedY = 0.0038;
+      }
+      ampY += row * 0.15;
+      return {
+        ox: Math.sin(time * speedX + phase) * ampX,
+        oy: Math.cos(time * speedY + phase) * ampY
+      };
+    }
+
     // Enemies
     enemies.forEach(e => {
       if (e.alive) {
-        const ox = Math.sin(globalTime * 0.003 + e.x * 0.13 + e.row * 2.5) * 2;
-        const oy = Math.cos(globalTime * 0.0035 + e.y * 0.07 + e.row * 1.8) * 3;
+        var _voff = getEnemyVisualOffset(e, globalTime);
+        var ox = _voff.ox;
+        var oy = _voff.oy;
         ctx.save();
         ctx.translate(ox, oy);
         const spriteKey = e.type + (animationFrame === 0 ? '_a' : '_b');
