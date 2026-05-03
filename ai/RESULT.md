@@ -1,7 +1,4 @@
 # Resultado IA
 
-Resumen:
-no seguro
-
-Archivos modificados:
-
+Cambios:
+ninguno
