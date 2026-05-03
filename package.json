@@ -10,7 +10,8 @@
     "cap:open": "npx cap open android",
     "android:debug": "npm run cap:sync && cd android && gradlew.bat assembleDebug",
     "android:bundle": "npm run cap:sync && cd android && gradlew.bat bundleRelease",
-    "test": "echo \"No automated tests yet\""
+    "test": "echo \"No automated tests yet\"",
+    "validate": "node scripts/validate-galaxy.js"
   },
   "keywords": [],
   "author": "",
