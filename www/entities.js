@@ -701,6 +701,15 @@ function getBossPhase() {
   return 3;
 }
 
+function updateBossPhase() {
+  if (!boss.active || boss.maxHp <= 0) return;
+
+  const newPhase = getBossPhase();
+  boss.lastPhase = boss.phase;
+  boss.phase = newPhase;
+  boss.phaseChanged = (boss.lastPhase !== boss.phase);
+}
+
 
 function spawnRandomPowerUp(x, y) {
   const r = Math.random();

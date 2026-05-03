@@ -196,10 +196,11 @@ function fireBossDivebombPattern(step, phase) {
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
-  // Actualizar flash del boss
+  updateBossPhase();
+
   if (boss.flashTimer > 0) boss.flashTimer -= dt;
 
-  const phase = getBossPhase();
+  const phase = boss.phase;
 
   // 🔥 MEJORA 4: modo desesperación (fase 3)
 
