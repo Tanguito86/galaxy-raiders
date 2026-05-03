@@ -1036,6 +1036,18 @@ if (shouldShow) {
       };
     }
 
+    function getEnemyHitVisual(e, time) {
+      if (e.flashTimer <= 0) return { scale: 1, shakeX: 0, shakeY: 0, glow: 0 };
+      var t = e.flashTimer / 150;
+      var hit = t * t * t;
+      return {
+        scale: 1 + hit * 0.07,
+        shakeX: Math.sin(time * 0.09 + e.x * 0.1) * hit * 2.2,
+        shakeY: Math.cos(time * 0.12 + e.y * 0.1) * hit * 0.8,
+        glow: hit * 0.38
+      };
+    }
+
     function getEnemyEntranceVisual(e, spawnT) {
       if (spawnT <= 0) return { scale: 1, entryY: 0 };
       var progress = 1 - spawnT;
@@ -1103,6 +1115,14 @@ if (shouldShow) {
         ctx.scale(_pulse.scale, _pulse.scale);
         ctx.translate(-_pcx, -_pcy);
         ctx.translate(0, _pulse.y);
+        var _hit = getEnemyHitVisual(e, globalTime);
+        if (_hit.scale !== 1 || _hit.shakeX !== 0) {
+          var _hcx = e.x + e.w / 2;
+          var _hcy = e.y + e.h / 2;
+          ctx.translate(_hcx + _hit.shakeX, _hcy + _hit.shakeY);
+          ctx.scale(_hit.scale, _hit.scale);
+          ctx.translate(-_hcx, -_hcy);
+        }
         const spriteKey = e.type + (animationFrame === 0 ? '_a' : '_b');
         const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
         
@@ -1141,9 +1161,15 @@ if (shouldShow) {
     }
 
         if (e.flashTimer > 0) {
-          const flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
+          var _ft = e.flashTimer / 150;
+          var _hi = _ft * _ft * _ft;
+          var flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
           ctx.save();
-          ctx.globalAlpha = flicker;
+          if (_hi > 0.3) {
+            ctx.globalAlpha = _hi * 0.55;
+            drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffffff', size);
+          }
+          ctx.globalAlpha = flicker * (0.5 + 0.5 * _hi);
           drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffe0e0', size);
           ctx.restore();
         }
