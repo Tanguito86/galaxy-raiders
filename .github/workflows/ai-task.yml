@@ -26,9 +26,9 @@ jobs:
           echo "===== TASK ====="
           cat ai/TASK.md
 
-      - name: Simular cambio IA
+      - name: Ejecutar IA Codex-ready
         run: |
-          echo "IA ejecutó esta tarea el $(date)" > ai/RESULT.md
+           node scripts/ai-runner.js
 
       - name: Commit y push automático
         run: |
