@@ -39,15 +39,42 @@ function resetEnemyMovePattern(e) {
 
 function chooseEnemyDivePattern(e) {
   if (level < 4) return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
-  if (e.type === 'alien4') return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+
   if (e.type === 'alien_mini') return ENEMY_MOVE_PATTERNS.ZIGZAG_DIVE;
-  if (level >= 5 && e.type === 'alien3') return ENEMY_MOVE_PATTERNS.ARC_PASS;
-  if (level >= 8 && e.type === 'alien5' && Math.random() < 0.25) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
-  if (level >= 6 && e.type === 'alien2') {
-    const roll = Math.random();
-    if (roll < 0.18) return ENEMY_MOVE_PATTERNS.ARC_PASS;
-    if (roll < 0.30) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+
+  if (level === 4) {
+    if (e.type === 'alien4') return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+    return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
   }
+
+  if (level === 5) {
+    if (e.type === 'alien4') return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+    if (e.type === 'alien3' && Math.random() < 0.35) return ENEMY_MOVE_PATTERNS.ARC_PASS;
+    return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
+  }
+
+  if (level <= 7) {
+    if (e.type === 'alien4') return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+    if (e.type === 'alien3' && Math.random() < 0.45) return ENEMY_MOVE_PATTERNS.ARC_PASS;
+    if (e.type === 'alien2' && Math.random() < 0.20) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+    return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
+  }
+
+  if (e.type === 'alien4') {
+    const roll = Math.random();
+    if (roll < 0.70) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+    if (roll < 0.85) return ENEMY_MOVE_PATTERNS.ZIGZAG_DIVE;
+    return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
+  }
+  if (e.type === 'alien3') {
+    const roll = Math.random();
+    if (roll < 0.45) return ENEMY_MOVE_PATTERNS.ARC_PASS;
+    if (roll < 0.55) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+    return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
+  }
+  if (e.type === 'alien2' && Math.random() < 0.25) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+  if (e.type === 'alien5' && Math.random() < 0.25) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+
   return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
 }
 
