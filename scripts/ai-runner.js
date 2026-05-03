@@ -7,29 +7,16 @@ const client = new OpenAI({
 });
 
 const task = fs.readFileSync("ai/TASK.md", "utf-8");
-const rules = fs.existsSync("ai/AI_RULES.md")
-  ? fs.readFileSync("ai/AI_RULES.md", "utf-8")
-  : "";
 
-// Parser robusto: intenta JSON directo, si no, lo extrae
-function extractJson(text) {
-  try {
-    return JSON.parse(text);
-  } catch {
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) {
-      throw new Error("No se encontro JSON en la respuesta");
-    }
-    return JSON.parse(match[0]);
-  }
-}
+function safeAppend(filePath, marker, text) {
+  if (!fs.existsSync(filePath)) return false;
 
-// Seguridad: solo permitir rutas controladas
-function isAllowedPath(filePath) {
-  return (
-    filePath.startsWith("www/") ||
-    filePath === "ai/RESULT.md"
-  );
+  const content = fs.readFileSync(filePath, "utf-8");
+
+  if (content.includes(marker)) return false;
+
+  fs.writeFileSync(filePath, content + "\n" + text + "\n");
+  return true;
 }
 
 async function run() {
@@ -43,89 +30,86 @@ async function run() {
         {
           role: "system",
           content:
-            "Sos un desarrollador de juegos HTML Canvas. RESPONDES SOLO JSON VALIDO."
+            "Sos un desarrollador de juegos HTML Canvas. Responde en JSON."
         },
         {
           role: "user",
           content: `
-REGLAS:
-${rules}
-
 TAREA:
 ${task}
 
-IMPORTANTE:
-- RESPONDE SOLO JSON VALIDO
-- SIN TEXTO EXTRA
-- SIN MARKDOWN
+Devuelve JSON:
 
-FORMATO:
 {
-  "summary": "string",
-  "files": [
+  "actions": [
     {
-      "path": "www/index.html",
-      "content": "contenido completo"
+      "type": "append_html",
+      "marker": "AI_PATCH_HTML"
+    },
+    {
+      "type": "append_css",
+      "marker": "AI_PATCH_CSS"
     }
   ]
 }
 
-SI NO ESTAS SEGURO:
+Tipos permitidos:
+- append_html
+- append_css
+- none
+
+Si no estás seguro:
 {
-  "summary": "no seguro",
-  "files": []
+  "actions": [{"type": "none"}]
 }
 `
         }
-      ],
-      stream: false
+      ]
     });
 
     const raw = response.choices?.[0]?.message?.content;
 
-    if (!raw) {
-      throw new Error("DeepSeek no devolvio contenido");
-    }
-
-    console.log("===== RAW RESPONSE =====");
+    console.log("===== IA RESPONSE =====");
     console.log(raw);
 
-    const parsed = extractJson(raw);
+    const json = raw.match(/\{[\s\S]*\}/);
+    if (!json) throw new Error("No JSON");
 
-    if (!Array.isArray(parsed.files)) {
-      throw new Error("JSON invalido: falta files[]");
-    }
+    const parsed = JSON.parse(json[0]);
 
-    const changedFiles = [];
+    let changes = [];
 
-    for (const file of parsed.files) {
-      if (!file.path || typeof file.content !== "string") {
-        throw new Error("JSON invalido en files");
+    for (const action of parsed.actions || []) {
+      if (action.type === "append_html") {
+        const ok = safeAppend(
+          "www/index.html",
+          action.marker || "AI_PATCH_HTML",
+          "<!-- AI_PATCH_HTML: agregado automatico -->"
+        );
+        if (ok) changes.push("www/index.html");
       }
 
-      if (!isAllowedPath(file.path)) {
-        throw new Error(`Ruta no permitida: ${file.path}`);
+      if (action.type === "append_css") {
+        const ok = safeAppend(
+          "www/style.css",
+          action.marker || "AI_PATCH_CSS",
+          "/* AI_PATCH_CSS: agregado automatico */"
+        );
+        if (ok) changes.push("www/style.css");
       }
-
-      fs.writeFileSync(file.path, file.content);
-      changedFiles.push(file.path);
-      console.log(`Archivo escrito: ${file.path}`);
     }
 
     const result = `# Resultado IA
 
-Resumen:
-${parsed.summary || "sin resumen"}
-
-Archivos modificados:
-${changedFiles.map(f => "- " + f).join("\n")}
+Cambios:
+${changes.length ? changes.join("\n") : "ninguno"}
 `;
 
     fs.writeFileSync("ai/RESULT.md", result);
 
-    console.log("Proceso terminado");
+    console.log("Cambios aplicados:", changes);
   } catch (err) {
-    console.error("Error DeepSeek:", err.message);
+    console.error("Error:", err.message);
     process.exit(1);
   }
 }
