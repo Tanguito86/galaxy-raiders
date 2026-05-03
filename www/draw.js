@@ -1027,6 +1027,16 @@ if (shouldShow) {
       ctx.restore();
     }
 
+    function getEnemyEntranceVisual(e, spawnT) {
+      if (spawnT <= 0) return { scale: 1, entryY: 0 };
+      var progress = 1 - spawnT;
+      var ease = 1 - (1 - progress) * (1 - progress);
+      return {
+        scale: 0.82 + 0.18 * ease,
+        entryY: -7 * (1 - ease)
+      };
+    }
+
     function getEnemyVisualOffset(e, time) {
       const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
       const row = e.row || 0;
@@ -1061,11 +1071,22 @@ if (shouldShow) {
     // Enemies
     enemies.forEach(e => {
       if (e.alive) {
+        var spawnT = 0;
+        if (e.spawnFlashTimer > 0) {
+          spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
+        }
         var _voff = getEnemyVisualOffset(e, globalTime);
-        var ox = _voff.ox;
-        var oy = _voff.oy;
+        var _ent = spawnT > 0 ? getEnemyEntranceVisual(e, spawnT) : null;
         ctx.save();
-        ctx.translate(ox, oy);
+        ctx.translate(_voff.ox, _voff.oy);
+        if (_ent) {
+          var _ecx = e.x + e.w / 2;
+          var _ecy = e.y + e.h / 2;
+          ctx.translate(_ecx, _ecy);
+          ctx.scale(_ent.scale, _ent.scale);
+          ctx.translate(-_ecx, -_ecy);
+          ctx.translate(0, _ent.entryY);
+        }
         const spriteKey = e.type + (animationFrame === 0 ? '_a' : '_b');
         const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
         
@@ -1074,11 +1095,6 @@ if (shouldShow) {
         if (e.diving) color = '#f00';
         
     const size = (e.type === 'alien_mini') ? 2 : 3;
-    
-    var spawnT = 0;
-    if (e.spawnFlashTimer > 0) {
-      spawnT = Math.max(0, Math.min(1, e.spawnFlashTimer / ENEMY_SPAWN_FLASH_DURATION));
-    }
 
     ctx.save();
     ctx.globalAlpha = 0.04;
