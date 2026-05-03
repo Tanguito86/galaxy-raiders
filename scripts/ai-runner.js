@@ -11,14 +11,20 @@ const rules = fs.existsSync("ai/AI_RULES.md")
   ? fs.readFileSync("ai/AI_RULES.md", "utf-8")
   : "";
 
+// Parser robusto: intenta JSON directo, si no, lo extrae
 function extractJson(text) {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) {
-    throw new Error("No se encontro JSON en la respuesta de DeepSeek");
+  try {
+    return JSON.parse(text);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) {
+      throw new Error("No se encontro JSON en la respuesta");
+    }
+    return JSON.parse(match[0]);
   }
-  return JSON.parse(match[0]);
 }
 
+// Seguridad: solo permitir rutas controladas
 function isAllowedPath(filePath) {
   return (
     filePath.startsWith("www/") ||
@@ -37,7 +43,7 @@ async function run() {
         {
           role: "system",
           content:
-            "Sos un desarrollador experto en juegos HTML Canvas. Debes respetar estrictamente las reglas del proyecto."
+            "Sos un desarrollador de juegos HTML Canvas. RESPONDES SOLO JSON VALIDO."
         },
         {
           role: "user",
@@ -48,23 +54,27 @@ ${rules}
 TAREA:
 ${task}
 
-Devolve SOLO JSON valido, sin markdown, sin explicaciones.
+IMPORTANTE:
+- RESPONDE SOLO JSON VALIDO
+- SIN TEXTO EXTRA
+- SIN MARKDOWN
 
-Formato obligatorio:
+FORMATO:
 {
-  "summary": "resumen breve",
+  "summary": "string",
   "files": [
     {
-      "path": "www/archivo.ext",
-      "content": "contenido completo del archivo"
+      "path": "www/index.html",
+      "content": "contenido completo"
     }
   ]
 }
 
-Condiciones:
-- Solo podes modificar archivos dentro de www/ o ai/RESULT.md.
-- No cambies gameplay salvo que TASK.md lo pida explicitamente.
-- Si no estas seguro, no modifiques www/ y escribi solo ai/RESULT.md.
+SI NO ESTAS SEGURO:
+{
+  "summary": "no seguro",
+  "files": []
+}
 `
         }
       ],
@@ -90,7 +100,7 @@ Condiciones:
 
     for (const file of parsed.files) {
       if (!file.path || typeof file.content !== "string") {
-        throw new Error("JSON invalido: cada file requiere path y content");
+        throw new Error("JSON invalido en files");
       }
 
       if (!isAllowedPath(file.path)) {
@@ -105,10 +115,10 @@ Condiciones:
     const result = `# Resultado IA
 
 Resumen:
-${parsed.summary || "Sin resumen"}
+${parsed.summary || "sin resumen"}
 
 Archivos modificados:
-${changedFiles.map((file) => `- ${file}`).join("\n")}
+${changedFiles.map(f => "- " + f).join("\n")}
 `;
 
     fs.writeFileSync("ai/RESULT.md", result);
