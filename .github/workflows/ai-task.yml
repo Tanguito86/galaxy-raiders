@@ -26,12 +26,17 @@ jobs:
           echo "===== TASK ====="
           cat ai/TASK.md
 
-      - name: Ejecutar IA Codex-ready
+      - name: Instalar dependencias IA
+        run: npm install openai
+
+      - name: Ejecutar IA real
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           node scripts/ai-runner.js
 
-      - name: Commit y push automático
+      - name: Commit y push automatico
         run: |
           git add .
-          git commit -m "ai: ejecución automática desde TASK.md" || echo "No changes"
+          git commit -m "ai: ejecucion automatica desde TASK.md" || echo "No changes"
           git push

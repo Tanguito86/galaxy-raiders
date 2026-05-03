@@ -1,107 +1,44 @@
 const fs = require("fs");
-const path = require("path");
+const OpenAI = require("openai");
 
-const taskPath = "ai/TASK.md";
-const resultPath = "ai/RESULT.md";
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
-const task = fs.readFileSync(taskPath, "utf-8");
+const task = fs.readFileSync("ai/TASK.md", "utf-8");
 
-console.log("===== TASK =====");
-console.log(task);
+async function run() {
+  try {
+    console.log("===== TASK =====");
+    console.log(task);
 
-function appendOnce(filePath, marker, text) {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`No existe el archivo: ${filePath}`);
-  }
+    const response = await client.responses.create({
+      model: "gpt-5.5",
+      input: [
+        {
+          role: "system",
+          content: "Sos un desarrollador que modifica archivos de un juego HTML canvas sin romper gameplay."
+        },
+        {
+          role: "user",
+          content: `Tarea:\n${task}\n\nDecime qué archivo modificar y devolveme SOLO el contenido nuevo del archivo.`
+        }
+      ]
+    });
 
-  const content = fs.readFileSync(filePath, "utf-8");
+    const output = response.output_text;
 
-  if (content.includes(marker)) {
-    console.log(`Ya aplicado: ${marker}`);
-    return false;
-  }
+    if (!output) {
+      throw new Error("La IA no devolvio contenido");
+    }
 
-  fs.writeFileSync(filePath, content + "\n" + text + "\n");
-  console.log(`Modificado: ${filePath}`);
-  return true;
-}
+    fs.writeFileSync("ai/RESULT.md", output);
 
-const lowerTask = task.toLowerCase();
-
-let changes = [];
-
-if (lowerTask.includes("index") || lowerTask.includes("html")) {
-  const changed = appendOnce(
-    "www/index.html",
-    "AI_PATCH_HTML",
-    "<!-- AI_PATCH_HTML: cambio automático desde TASK.md -->"
-  );
-
-  if (changed) changes.push("www/index.html");
-}
-
-if (lowerTask.includes("css") || lowerTask.includes("estilo") || lowerTask.includes("visual")) {
-  const changed = appendOnce(
-    "www/style.css",
-    "AI_PATCH_CSS",
-    "/* AI_PATCH_CSS: cambio automático desde TASK.md */"
-  );
-
-  if (changed) changes.push("www/style.css");
-}
-
-if (lowerTask.includes("javascript") || lowerTask.includes("js") || lowerTask.includes("codigo")) {
-  const candidateFiles = [
-    "www/game.js",
-    "www/draw.js",
-    "www/entities.js",
-    "www/update-boss.js"
-  ];
-
-  const target = candidateFiles.find((file) => fs.existsSync(file));
-
-  if (target) {
-    const changed = appendOnce(
-      target,
-      "AI_PATCH_JS",
-      "// AI_PATCH_JS: cambio automático desde TASK.md"
-    );
-
-    if (changed) changes.push(target);
-  } else {
-    console.log("No se encontró archivo JS candidato.");
+    console.log("Resultado IA generado");
+  } catch (err) {
+    console.error("Error IA:", err.message);
+    process.exit(1);
   }
 }
 
-if (changes.length === 0) {
-  fs.writeFileSync(
-    resultPath,
-    `# Resultado IA
-
-No se aplicaron cambios.
-
-Motivo:
-TASK.md no contiene una instrucción reconocida.
-
-Palabras reconocidas:
-- html / index
-- css / estilo / visual
-- javascript / js / codigo
-`
-  );
-
-  console.log("No hubo cambios.");
-} else {
-  fs.writeFileSync(
-    resultPath,
-    `# Resultado IA
-
-Cambios aplicados automáticamente.
-
-Archivos modificados:
-${changes.map((file) => `- ${file}`).join("\n")}
-`
-  );
-
-  console.log("Cambios aplicados:", changes.join(", "));
-}
+run();
