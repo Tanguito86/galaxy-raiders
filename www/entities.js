@@ -219,19 +219,52 @@ function createBossDeathExplosion(x, y, color) {
   }
 }
 
-function createEnemyDeathPop(x, y, color) {
-  createExplosion(x, y, color, 18);
+function createEnemyDeathPop(x, y, color, enemy) {
+  var data = enemy ? (ENEMY_TYPES[enemy.type] || ENEMY_TYPES.alien1) : null;
+  var etype = data ? enemy.type : 'default';
 
-  const accentCount = 6;
-  const extraCount = 3;
-  const overflow = (particles.length + accentCount + extraCount) - MAX_PARTICLES;
+  var explosionCount = 18;
+  var sparkBase = 2.8;
+  var sparkExtra = 2.2;
+  var ringLife = 0.28;
+  var ringR = 3;
+  var ringExpand = 5;
+  var flashCount = 2;
+
+  if (etype === 'alien_mini') {
+    explosionCount = 12;
+    ringLife = 0.18;
+    ringR = 2;
+    ringExpand = 3;
+    flashCount = 1;
+  } else if (data && data.hp >= 2 && data.speed < 1.0) {
+    explosionCount = 22;
+    sparkBase = 1.8;
+    sparkExtra = 1.6;
+    ringLife = 0.38;
+    ringR = 5;
+    ringExpand = 4;
+  } else if (data && (data.speed >= 1.5 || data.kamikaze)) {
+    sparkBase = 3.4;
+    sparkExtra = 2.8;
+  } else if (data && data.splits) {
+    explosionCount = 20;
+    sparkBase = 2.4;
+    sparkExtra = 2.8;
+  }
+
+  createExplosion(x, y, color, explosionCount);
+
+  var accentCount = 6;
+  var totalExtra = accentCount + flashCount + 1;
+  var overflow = (particles.length + totalExtra) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
 
-  for (let i = 0; i < accentCount; i++) {
-    const angle = (Math.PI * 2 * i) / accentCount + Math.random() * 0.35;
-    const speed = 2.8 + Math.random() * 2.2;
+  for (var i = 0; i < accentCount; i++) {
+    var angle = (Math.PI * 2 * i) / accentCount + Math.random() * 0.35;
+    var speed = sparkBase + Math.random() * sparkExtra;
     particles.push({
-      x, y,
+      x: x, y: y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed - 1.1,
       life: 0.22 + Math.random() * 0.12,
@@ -242,9 +275,9 @@ function createEnemyDeathPop(x, y, color) {
     });
   }
 
-  for (let i = 0; i < 2; i++) {
+  for (var j = 0; j < flashCount; j++) {
     particles.push({
-      x, y,
+      x: x, y: y,
       vx: (Math.random() - 0.5) * 0.5,
       vy: (Math.random() - 0.5) * 0.5 - 0.8,
       life: 0.12 + Math.random() * 0.08,
@@ -255,14 +288,14 @@ function createEnemyDeathPop(x, y, color) {
   }
 
   particles.push({
-    x, y,
+    x: x, y: y,
     vx: 0, vy: 0,
-    life: 0.28,
+    life: ringLife,
     gravity: 0,
     color: '#fff',
     isRing: true,
-    ringRadius: 3,
-    ringExpand: 5
+    ringRadius: ringR,
+    ringExpand: ringExpand
   });
 }
 
