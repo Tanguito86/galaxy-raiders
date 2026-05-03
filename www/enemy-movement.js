@@ -6,7 +6,8 @@
 const ENEMY_MOVE_PATTERNS = {
   STRAIGHT_DOWN: 'straight_down',
   SINE_SWEEP: 'sine_sweep',
-  ZIGZAG_DIVE: 'zigzag_dive'
+  ZIGZAG_DIVE: 'zigzag_dive',
+  ARC_PASS: 'arc_pass'
 };
 
 function setEnemyMovePattern(e, movePattern) {
@@ -18,6 +19,9 @@ function setEnemyMovePattern(e, movePattern) {
   e.moveBaseVx = e.vx || 0;
   e.moveBaseVy = e.vy || 0;
   e.moveSide = Math.random() < 0.5 ? -1 : 1;
+  if (e.movePattern === ENEMY_MOVE_PATTERNS.ARC_PASS) {
+    e.moveSide = e.x < W * 0.5 ? 1 : -1;
+  }
   e.movePhase = e.moveSide > 0 ? 0 : Math.PI;
 }
 
@@ -37,6 +41,7 @@ function chooseEnemyDivePattern(e) {
   if (level < 4) return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
   if (e.type === 'alien4') return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
   if (e.type === 'alien_mini') return ENEMY_MOVE_PATTERNS.ZIGZAG_DIVE;
+  if (level >= 6 && e.type === 'alien2') return ENEMY_MOVE_PATTERNS.ARC_PASS;
   return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
 }
 
@@ -76,10 +81,25 @@ function moveEnemyZigzagDive(e, dt, step) {
   e.y = baseY;
 }
 
+function moveEnemyArcPass(e, dt, step) {
+  e.moveAge += dt;
+  e.moveStepAge += step;
+
+  const baseX = e.moveStartX + e.moveBaseVx * e.moveStepAge;
+  const baseY = e.moveStartY + e.moveBaseVy * e.moveStepAge;
+  const arcT = clamp(e.moveAge / 1300, 0, 1);
+  const arc = Math.sin(arcT * Math.PI) * 34 * e.moveSide;
+  const settle = Math.sin(e.moveAge * 0.006 + e.movePhase) * 4 * (1 - arcT);
+
+  e.x = baseX + arc + settle;
+  e.y = baseY;
+}
+
 const ENEMY_MOVE_PATTERN_HANDLERS = {
   straight_down: moveEnemyStraightDown,
   sine_sweep: moveEnemySineSweep,
-  zigzag_dive: moveEnemyZigzagDive
+  zigzag_dive: moveEnemyZigzagDive,
+  arc_pass: moveEnemyArcPass
 };
 
 function updateEnemyBehavior(e, dt, step) {

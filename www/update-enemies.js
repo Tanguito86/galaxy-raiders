@@ -674,7 +674,7 @@ if (!boss.active && activeEnemies.length > 0) {
 
     updateEnemyBehavior(e, dt, step);
 
-    if (e.y > H) {
+    if (e.y > H || e.x < -60 || e.x > W + 60) {
       e.y = -30;
       e.x = Math.random() * (W - 30);
       e.diving = false;
