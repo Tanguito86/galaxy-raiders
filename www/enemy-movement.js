@@ -41,7 +41,13 @@ function chooseEnemyDivePattern(e) {
   if (level < 4) return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
   if (e.type === 'alien4') return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
   if (e.type === 'alien_mini') return ENEMY_MOVE_PATTERNS.ZIGZAG_DIVE;
-  if (level >= 6 && e.type === 'alien2') return ENEMY_MOVE_PATTERNS.ARC_PASS;
+  if (level >= 5 && e.type === 'alien3') return ENEMY_MOVE_PATTERNS.ARC_PASS;
+  if (level >= 8 && e.type === 'alien5' && Math.random() < 0.25) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+  if (level >= 6 && e.type === 'alien2') {
+    const roll = Math.random();
+    if (roll < 0.18) return ENEMY_MOVE_PATTERNS.ARC_PASS;
+    if (roll < 0.30) return ENEMY_MOVE_PATTERNS.SINE_SWEEP;
+  }
   return ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN;
 }
 
