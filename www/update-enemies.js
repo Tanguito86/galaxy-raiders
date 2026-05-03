@@ -727,7 +727,7 @@ if (!boss.active && activeEnemies.length > 0) {
         getDifficultySettings(level).bulletSpeed,
         4,
         10,
-        { kind: 'basic', color: '#ff5050' }
+        { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
       );
       enemyLastShot = globalTime;
     }
