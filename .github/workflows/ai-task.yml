@@ -28,7 +28,7 @@ jobs:
 
       - name: Ejecutar IA Codex-ready
         run: |
-           node scripts/ai-runner.js
+          node scripts/ai-runner.js
 
       - name: Commit y push automático
         run: |
