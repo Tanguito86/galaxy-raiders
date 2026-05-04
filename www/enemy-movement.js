@@ -186,6 +186,76 @@ function launchSetPieceDiver(e, targetX, targetY, speedMult = 1) {
   e.vy = Math.sin(angle) * baseSpeed;
 }
 
+// =====================
+// SHMUP ROUTES
+// Rutas de movimiento tipo shoot'em up vertical
+// Solo se aplican si e.shmupRoute está definido
+// =====================
+
+const SHMUP_ROUTES = {
+  STRAIGHT_DOWN: 'straightDown',
+  SINE_DOWN: 'sineDown',
+  DIAGONAL_LEFT: 'diagonalLeft',
+  DIAGONAL_RIGHT: 'diagonalRight',
+  SWEEP_LEFT: 'sweepLeft',
+  SWEEP_RIGHT: 'sweepRight',
+  DIVE_TO_PLAYER: 'diveToPlayer'
+};
+
+function applyShmupEnemyRoute(e, step, time, player) {
+  if (!e.shmupRoute) return false;
+
+  switch (e.shmupRoute) {
+    case SHMUP_ROUTES.STRAIGHT_DOWN:
+      e.y += (e.routeSpeed || 2.5) * step;
+      break;
+
+    case SHMUP_ROUTES.SINE_DOWN:
+      e.y += (e.routeSpeed || 2.0) * step;
+      e.x = (e.baseX != null ? e.baseX : e.x) + Math.sin(time * 0.003 + (e.routePhase || 0)) * (e.routeAmp || 32);
+      break;
+
+    case SHMUP_ROUTES.DIAGONAL_LEFT:
+      e.y += (e.routeSpeed || 2.2) * step;
+      e.x -= (e.routeSideSpeed || 1.0) * step;
+      break;
+
+    case SHMUP_ROUTES.DIAGONAL_RIGHT:
+      e.y += (e.routeSpeed || 2.2) * step;
+      e.x += (e.routeSideSpeed || 1.0) * step;
+      break;
+
+    case SHMUP_ROUTES.SWEEP_LEFT:
+      e.x -= (e.routeSideSpeed || 2.5) * step;
+      e.y += (e.routeSpeed || 1.0) * step;
+      break;
+
+    case SHMUP_ROUTES.SWEEP_RIGHT:
+      e.x += (e.routeSideSpeed || 2.5) * step;
+      e.y += (e.routeSpeed || 1.0) * step;
+      break;
+
+    case SHMUP_ROUTES.DIVE_TO_PLAYER:
+      if (player) {
+        const dx = (player.x + player.width / 2) - (e.x + e.w / 2);
+        const dy = (player.y + player.height / 2) - (e.y + e.h / 2);
+        const dist = Math.hypot(dx, dy);
+        const speed = (e.routeSpeed || 2.2) * step;
+        if (dist > 1) {
+          e.x += (dx / dist) * speed * (e.routeHomingX != null ? e.routeHomingX : 0.7);
+          e.y += (dy / dist) * speed;
+        } else {
+          e.y += speed;
+        }
+      } else {
+        e.y += (e.routeSpeed || 2.2) * step;
+      }
+      break;
+  }
+
+  return true;
+}
+
 function runSetPieceDivePattern(activeEnemies, dt, diveSlotsLeft) {
   if (diveSlotsLeft <= 0 || setPieceIntroTimer > 0) return 0;
   if (currentSetPiece !== 'pincer') return 0;

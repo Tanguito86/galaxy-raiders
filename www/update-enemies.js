@@ -497,6 +497,44 @@ if (!boss.active && activeEnemies.length > 0) {
     return;
   }
 
+  // --- shmup route enemies ---
+  activeEnemies.forEach(e => { e._shmupHandled = false; });
+
+  activeEnemies.forEach(e => {
+    if (!e.shmupRoute || e.diving) return;
+    if (e.baseX === undefined) e.baseX = e.x;
+    if (e.routePhase === undefined) e.routePhase = Math.random() * Math.PI * 2;
+    applyShmupEnemyRoute(e, step, globalTime, player);
+    e._shmupHandled = true;
+
+    if (e.y > H + 40 || e.x < -e.w * 2 || e.x > W + e.w * 2) {
+      e.alive = false;
+      return;
+    }
+
+    if (
+      !isInvincible &&
+      e.x < player.x + player.width &&
+      e.x + e.w > player.x &&
+      e.y < player.y + player.height &&
+      e.y + e.h > player.y
+    ) {
+      recordPlayerDeath('diving');
+      requestHitstop(76);
+      lives--;
+      e.alive = false;
+      createExplosion(player.x, player.y, '#f00', 40);
+      sfxPlayerHit();
+      vibrate('damage');
+      pushScreenShake('heavy', 30);
+      flashScreen = 15;
+      player.weaponType = 'normal';
+      isInvincible = true;
+      invincibleTimer = INVINCIBLE_DURATION;
+      if (lives <= 0) safeEndGame();
+    }
+  });
+
   // --- speed scaling (por stage + por limpieza) ---
   const totalEnemies = Math.max(1, enemies.length);
   const alive = activeEnemies.length;
@@ -521,7 +559,7 @@ if (!boss.active && activeEnemies.length > 0) {
     const decisionEveryMs = 720;
 
     activeEnemies.forEach(e => {
-      if (e.diving) return;
+      if (e.diving || e._shmupHandled) return;
 
       // init per-enemy AI vars
       if (e.aiOffX === undefined) e.aiOffX = 0;
@@ -594,7 +632,7 @@ if (!boss.active && activeEnemies.length > 0) {
   // --- formation movement (global) ---
   let invasionComplete = false;
   activeEnemies.forEach(e => {
-    if (e.diving || invasionComplete) return;
+    if (e.diving || invasionComplete || e._shmupHandled) return;
 
     e.x += enemySpeedX * enemyDir * step;
 
@@ -616,7 +654,7 @@ if (!boss.active && activeEnemies.length > 0) {
     const drop = 12;
 
     activeEnemies.forEach(e => {
-      if (e.diving) return;
+      if (e.diving || e._shmupHandled) return;
       e.y += drop;
       e.x = clamp(e.x, 10, W - 10 - e.w);
     });
@@ -632,7 +670,7 @@ if (!boss.active && activeEnemies.length > 0) {
 
   // Kamikaze: prioriza diving, pero respeta el maxDivers del nivel.
   if (diveSlotsLeft > 0) {
-    const kamikazes = activeEnemies.filter(e => !e.diving && ENEMY_TYPES[e.type]?.kamikaze);
+    const kamikazes = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.kamikaze);
     for (let i = 0; i < kamikazes.length && diveSlotsLeft > 0; i++) {
       const e = kamikazes[i];
       const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
@@ -648,7 +686,7 @@ if (!boss.active && activeEnemies.length > 0) {
   }
 
   if (diveSlotsLeft > 0 && Math.random() < diffSettings.diveChance) {
-    const candidates = activeEnemies.filter(e => !e.diving && ENEMY_TYPES[e.type]?.canDive !== false);
+    const candidates = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.canDive !== false);
     if (candidates.length > 0) {
       const diver = candidates[Math.floor(Math.random() * candidates.length)];
       diver.diving = true;
