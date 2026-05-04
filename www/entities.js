@@ -666,6 +666,53 @@ function createFormation(formation) {
   return newEnemies;
 }
 
+function assignInitialShmupRoutes(enemies, level) {
+  if (!Array.isArray(enemies) || enemies.length === 0) return;
+
+  const maxRoutes = level <= 1 ? 3 : Math.min(5, Math.floor(enemies.length * 0.12));
+
+  const picked = [];
+  for (let i = 0; i < enemies.length && picked.length < maxRoutes; i++) {
+    const e = enemies[i];
+    if (e.alive && !e.diving && !e.shmupRoute && e.row !== undefined) {
+      picked.push(e);
+    }
+  }
+
+  picked.forEach((e, i) => {
+    e.baseX = e.x;
+    e.routePhase = i * 1.7 + Math.random() * 0.5;
+
+    if (level <= 1) {
+      if (i === 0) {
+        e.shmupRoute = SHMUP_ROUTES.STRAIGHT_DOWN;
+        e.routeSpeed = 1.1;
+      } else if (i === 1) {
+        e.shmupRoute = SHMUP_ROUTES.SINE_DOWN;
+        e.routeSpeed = 0.95;
+        e.routeAmp = 28;
+      } else if (i === 2) {
+        e.shmupRoute = SHMUP_ROUTES.STRAIGHT_DOWN;
+        e.routeSpeed = 1.2;
+      }
+    } else {
+      const pool = i % 3;
+      if (pool === 0) {
+        e.shmupRoute = SHMUP_ROUTES.STRAIGHT_DOWN;
+        e.routeSpeed = 1.0 + Math.random() * 0.4;
+      } else if (pool === 1) {
+        e.shmupRoute = SHMUP_ROUTES.SINE_DOWN;
+        e.routeSpeed = 0.9 + Math.random() * 0.3;
+        e.routeAmp = 24 + Math.random() * 16;
+      } else {
+        e.shmupRoute = i % 2 === 0 ? SHMUP_ROUTES.SWEEP_LEFT : SHMUP_ROUTES.SWEEP_RIGHT;
+        e.routeSpeed = 0.7;
+        e.routeSideSpeed = 1.2 + Math.random() * 0.6;
+      }
+    }
+  });
+}
+
 function initEnemies() {
   boss.active = false;
 
@@ -706,6 +753,7 @@ function initEnemies() {
   } else {
     const formation = getFormation(level);
     enemies = createFormation(formation);
+    assignInitialShmupRoutes(enemies, level);
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
     setPieceIntroTimer = 0;
