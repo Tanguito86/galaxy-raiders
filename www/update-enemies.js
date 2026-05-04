@@ -540,17 +540,61 @@ if (!boss.active && activeEnemies.length > 0) {
       if (e.shmupShootTimer <= 0) {
         e.shmupShootTimer = e.shmupShootCooldown;
         e.shmupShotsRemaining--;
+
+        const sx = e.x + e.w / 2;
+        const sy = e.y + e.h;
         const bulletSpeed = getDifficultySettings(level).bulletSpeed;
-        pushEnemyBullet(
-          e.x + e.w / 2,
-          e.y + e.h,
-          0,
-          bulletSpeed,
-          4,
-          10,
-          { kind: 'shmup_external', color: '#ffaa44', sourceType: e.type }
-        );
-        createEnemyMuzzleFlash(e.x + e.w / 2, e.y + e.h, e.type);
+        const pattern = e.shmupShotPattern || 'basic';
+
+        switch (pattern) {
+          case 'basic':
+            pushEnemyBullet(sx, sy, 0, bulletSpeed, 4, 10,
+              { kind: 'shmup_basic', color: '#ffaa44', sourceType: e.type });
+            break;
+
+          case 'aimed':
+            const adx = (player.x + player.width / 2) - sx;
+            const ady = (player.y + player.height / 2) - sy;
+            const aimAngle = clamp(Math.atan2(ady, adx), Math.PI * 0.35, Math.PI * 0.65);
+            pushEnemyBullet(sx, sy,
+              Math.cos(aimAngle) * bulletSpeed,
+              Math.sin(aimAngle) * bulletSpeed,
+              4, 10,
+              { kind: 'shmup_aimed', color: '#ff8844', sourceType: e.type });
+            break;
+
+          case 'sweep':
+            const sweepBase = Math.PI / 2;
+            pushEnemyBullet(sx, sy,
+              Math.cos(sweepBase - 0.55) * bulletSpeed,
+              Math.sin(sweepBase - 0.55) * bulletSpeed,
+              4, 10,
+              { kind: 'shmup_sweep', color: '#ffaa44', sourceType: e.type });
+            pushEnemyBullet(sx, sy,
+              Math.cos(sweepBase + 0.55) * bulletSpeed,
+              Math.sin(sweepBase + 0.55) * bulletSpeed,
+              4, 10,
+              { kind: 'shmup_sweep', color: '#ffaa44', sourceType: e.type });
+            break;
+
+          case 'heavy':
+            pushEnemyBullet(sx, sy, 0, bulletSpeed * 0.75, 6, 12,
+              { kind: 'shmup_heavy', color: '#ff6644', sourceType: e.type });
+            break;
+
+          case 'spread':
+            [-0.4, 0, 0.4].forEach(function(a) {
+              var rad = Math.PI / 2 + a;
+              pushEnemyBullet(sx, sy,
+                Math.cos(rad) * bulletSpeed,
+                Math.sin(rad) * bulletSpeed,
+                4, 10,
+                { kind: 'shmup_spread', color: '#ffaa44', sourceType: e.type });
+            });
+            break;
+        }
+
+        createEnemyMuzzleFlash(sx, sy, e.type);
       }
     }
   });

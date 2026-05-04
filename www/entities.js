@@ -715,6 +715,7 @@ function addInitialExternalShmupWave(enemies, level) {
     e1.shmupShootCooldown = 3000;
     e1.shmupShootTimer = 1200;
     e1.shmupShotsRemaining = 1;
+    e1.shmupShotPattern = 'basic';
     enemies.push(e1);
 
     const e2 = createEnemy(50 + Math.random() * (W - 100), -(90 + Math.random() * 60), -1, 'alien2');
@@ -728,6 +729,7 @@ function addInitialExternalShmupWave(enemies, level) {
     e2.shmupShootCooldown = 3500;
     e2.shmupShootTimer = 1500;
     e2.shmupShotsRemaining = 1;
+    e2.shmupShotPattern = 'aimed';
     enemies.push(e2);
 
   } else {
@@ -741,6 +743,7 @@ function addInitialExternalShmupWave(enemies, level) {
     e1.shmupShootCooldown = 2500;
     e1.shmupShootTimer = 1000;
     e1.shmupShotsRemaining = 2;
+    e1.shmupShotPattern = 'basic';
     enemies.push(e1);
 
     const e2 = createEnemy(50 + Math.random() * (W - 100), -(90 + Math.random() * 60), -1, 'alien2');
@@ -754,6 +757,7 @@ function addInitialExternalShmupWave(enemies, level) {
     e2.shmupShootCooldown = 2800;
     e2.shmupShootTimer = 1300;
     e2.shmupShotsRemaining = 2;
+    e2.shmupShotPattern = 'aimed';
     enemies.push(e2);
 
     const fromRight = Math.random() < 0.5;
@@ -768,6 +772,7 @@ function addInitialExternalShmupWave(enemies, level) {
     e3.shmupShootCooldown = 1800;
     e3.shmupShootTimer = 1000;
     e3.shmupShotsRemaining = 1;
+    e3.shmupShotPattern = 'sweep';
     enemies.push(e3);
   }
 }
