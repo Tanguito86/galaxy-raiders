@@ -533,6 +533,26 @@ if (!boss.active && activeEnemies.length > 0) {
       invincibleTimer = INVINCIBLE_DURATION;
       if (lives <= 0) safeEndGame();
     }
+
+    // --- external shmup shooting ---
+    if (e.isExternalShmup && e.shmupShotsRemaining > 0) {
+      e.shmupShootTimer -= dt;
+      if (e.shmupShootTimer <= 0) {
+        e.shmupShootTimer = e.shmupShootCooldown;
+        e.shmupShotsRemaining--;
+        const bulletSpeed = getDifficultySettings(level).bulletSpeed;
+        pushEnemyBullet(
+          e.x + e.w / 2,
+          e.y + e.h,
+          0,
+          bulletSpeed,
+          4,
+          10,
+          { kind: 'shmup_external', color: '#ffaa44', sourceType: e.type }
+        );
+        createEnemyMuzzleFlash(e.x + e.w / 2, e.y + e.h, e.type);
+      }
+    }
   });
 
   // --- speed scaling (por stage + por limpieza) ---
@@ -754,7 +774,7 @@ if (!boss.active && activeEnemies.length > 0) {
   const didScriptedSetPieceShot = runSetPieceFirePattern(activeEnemies, dt, baseCooldown);
 
   if (!didScriptedSetPieceShot && globalTime - enemyLastShot > baseCooldown) {
-    const shooters = activeEnemies.filter(e => !e.diving && ENEMY_TYPES[e.type]?.shoots);
+    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots);
 
     if (shooters.length > 0) {
       const shooter = shooters[Math.floor(Math.random() * shooters.length)];
