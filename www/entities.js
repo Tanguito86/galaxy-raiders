@@ -666,6 +666,57 @@ function createFormation(formation) {
   return newEnemies;
 }
 
+function addInitialExternalShmupWave(enemies, level) {
+  if (!Array.isArray(enemies)) return;
+
+  if (level <= 1) {
+    const e1 = createEnemy(40 + Math.random() * (W - 80), -(40 + Math.random() * 50), -1, 'alien1');
+    e1.y = e1.y - e1.h;
+    e1.shmupRoute = SHMUP_ROUTES.STRAIGHT_DOWN;
+    e1.routeSpeed = 1.1;
+    e1.baseX = e1.x;
+    e1.routePhase = Math.random() * Math.PI * 2;
+    enemies.push(e1);
+
+    const e2 = createEnemy(50 + Math.random() * (W - 100), -(90 + Math.random() * 60), -1, 'alien2');
+    e2.y = e2.y - e2.h;
+    e2.shmupRoute = SHMUP_ROUTES.SINE_DOWN;
+    e2.routeSpeed = 0.95;
+    e2.routeAmp = 28;
+    e2.baseX = e2.x;
+    e2.routePhase = Math.random() * Math.PI * 2;
+    enemies.push(e2);
+
+  } else {
+    const e1 = createEnemy(40 + Math.random() * (W - 80), -(40 + Math.random() * 50), -1, 'alien1');
+    e1.y = e1.y - e1.h;
+    e1.shmupRoute = SHMUP_ROUTES.STRAIGHT_DOWN;
+    e1.routeSpeed = 1.0 + Math.random() * 0.4;
+    e1.baseX = e1.x;
+    e1.routePhase = Math.random() * Math.PI * 2;
+    enemies.push(e1);
+
+    const e2 = createEnemy(50 + Math.random() * (W - 100), -(90 + Math.random() * 60), -1, 'alien2');
+    e2.y = e2.y - e2.h;
+    e2.shmupRoute = SHMUP_ROUTES.SINE_DOWN;
+    e2.routeSpeed = 0.9 + Math.random() * 0.3;
+    e2.routeAmp = 24 + Math.random() * 16;
+    e2.baseX = e2.x;
+    e2.routePhase = Math.random() * Math.PI * 2;
+    enemies.push(e2);
+
+    const fromRight = Math.random() < 0.5;
+    const e3 = createEnemy(0, 60 + Math.random() * 100, -1, 'alien4');
+    e3.x = fromRight ? W + 20 : -(e3.w + 20);
+    e3.shmupRoute = fromRight ? SHMUP_ROUTES.SWEEP_LEFT : SHMUP_ROUTES.SWEEP_RIGHT;
+    e3.routeSpeed = 0.7;
+    e3.routeSideSpeed = 1.2 + Math.random() * 0.6;
+    e3.baseX = e3.x;
+    e3.routePhase = Math.random() * Math.PI * 2;
+    enemies.push(e3);
+  }
+}
+
 function assignInitialShmupRoutes(enemies, level) {
   if (!Array.isArray(enemies) || enemies.length === 0) return;
 
@@ -765,6 +816,7 @@ function initEnemies() {
     const formation = getFormation(level);
     enemies = createFormation(formation);
     assignInitialShmupRoutes(enemies, level);
+    addInitialExternalShmupWave(enemies, level);
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
     setPieceIntroTimer = 0;
