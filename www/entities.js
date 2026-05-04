@@ -319,6 +319,48 @@ function createImpactBurst(x, y, color, count = 5) {
   }
 }
 
+function createEnemyMuzzleFlash(x, y, sourceType) {
+  var count = 3;
+  var life = 0.12;
+  var col = '#fff';
+  var size = 2;
+
+  if (sourceType === 'alien3') {
+    count = 4;
+    life = 0.16;
+    col = '#ffcc88';
+    size = 3;
+  } else if (sourceType === 'alien4' || sourceType === 'alien5' || sourceType === 'alien_mini') {
+    count = 2;
+    life = 0.08;
+    col = '#ff8899';
+    size = 1.5;
+  } else if (sourceType === 'alien6') {
+    count = 3;
+    life = 0.14;
+    col = '#ff88cc';
+    size = 3;
+  }
+
+  var overflow = (particles.length + count) - MAX_PARTICLES;
+  if (overflow > 0) particles.splice(0, overflow);
+
+  for (var i = 0; i < count; i++) {
+    var angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.8;
+    var speed = 0.5 + Math.random() * 1.5;
+    particles.push({
+      x: x, y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: life + Math.random() * 0.06,
+      gravity: 0.08,
+      color: i === 0 ? '#fff' : col,
+      size: size + Math.random() * 2,
+      isSpark: true
+    });
+  }
+}
+
 function spawnVictoryParticles() {
   for (let i = 0; i < 100; i++) {
     victoryParticles.push({

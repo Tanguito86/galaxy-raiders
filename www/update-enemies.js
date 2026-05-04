@@ -730,6 +730,7 @@ if (!boss.active && activeEnemies.length > 0) {
         { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
       );
       enemyLastShot = globalTime;
+      createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
     }
   }
 
