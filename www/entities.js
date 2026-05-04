@@ -671,13 +671,23 @@ function assignInitialShmupRoutes(enemies, level) {
 
   const maxRoutes = level <= 1 ? 3 : Math.min(5, Math.floor(enemies.length * 0.12));
 
-  const picked = [];
-  for (let i = 0; i < enemies.length && picked.length < maxRoutes; i++) {
-    const e = enemies[i];
-    if (e.alive && !e.diving && !e.shmupRoute && e.row !== undefined) {
-      picked.push(e);
-    }
-  }
+  const candidates = enemies.filter(e =>
+    e.alive && !e.diving && !e.shmupRoute && e.row !== undefined
+  );
+
+  if (candidates.length === 0) return;
+
+  const maxRow = Math.max(...candidates.map(e => e.row));
+  candidates.forEach(e => {
+    const rowNorm = maxRow > 0 ? e.row / maxRow : 0;
+    const distFromMiddle = Math.abs(rowNorm - 0.5);
+    e._shmupScore = 1 - distFromMiddle * 1.5 + (Math.random() * 0.1 - 0.05);
+  });
+
+  candidates.sort((a, b) => b._shmupScore - a._shmupScore);
+
+  const picked = candidates.slice(0, maxRoutes);
+  picked.forEach(e => { delete e._shmupScore; });
 
   picked.forEach((e, i) => {
     e.baseX = e.x;
@@ -705,7 +715,8 @@ function assignInitialShmupRoutes(enemies, level) {
         e.routeSpeed = 0.9 + Math.random() * 0.3;
         e.routeAmp = 24 + Math.random() * 16;
       } else {
-        e.shmupRoute = i % 2 === 0 ? SHMUP_ROUTES.SWEEP_LEFT : SHMUP_ROUTES.SWEEP_RIGHT;
+        const centerX = W / 2;
+        e.shmupRoute = (e.x + e.w / 2) < centerX ? SHMUP_ROUTES.SWEEP_RIGHT : SHMUP_ROUTES.SWEEP_LEFT;
         e.routeSpeed = 0.7;
         e.routeSideSpeed = 1.2 + Math.random() * 0.6;
       }
