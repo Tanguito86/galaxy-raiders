@@ -666,6 +666,41 @@ function createFormation(formation) {
   return newEnemies;
 }
 
+function trimFormationForExternalShmupWave(enemies, level) {
+  if (!Array.isArray(enemies) || enemies.length === 0) return;
+
+  const count = level <= 1 ? 2 : 3;
+
+  const candidates = enemies.filter(e =>
+    e.alive &&
+    !e.diving &&
+    !e.shmupRoute &&
+    e.row !== undefined &&
+    e.row >= 0 &&
+    e.entryTargetX === undefined &&
+    e.entryTargetY === undefined
+  );
+
+  if (candidates.length < count) return;
+
+  // Prefer top rows and edge columns (least visible removal)
+  const maxRow = Math.max(...candidates.map(e => e.row));
+  candidates.forEach(e => {
+    const rowNorm = maxRow > 0 ? e.row / maxRow : 0;
+    const colCenter = (e.x + e.w / 2) / W;
+    const edgeDist = Math.abs(colCenter - 0.5);
+    e._trimScore = (1 - rowNorm) * 0.6 + edgeDist * 0.4 + Math.random() * 0.1;
+  });
+
+  candidates.sort((a, b) => b._trimScore - a._trimScore);
+
+  for (let i = 0; i < Math.min(count, candidates.length); i++) {
+    candidates[i].alive = false;
+  }
+
+  candidates.forEach(e => { delete e._trimScore; });
+}
+
 function addInitialExternalShmupWave(enemies, level) {
   if (!Array.isArray(enemies)) return;
 
@@ -816,6 +851,7 @@ function initEnemies() {
     const formation = getFormation(level);
     enemies = createFormation(formation);
     assignInitialShmupRoutes(enemies, level);
+    trimFormationForExternalShmupWave(enemies, level);
     addInitialExternalShmupWave(enemies, level);
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
