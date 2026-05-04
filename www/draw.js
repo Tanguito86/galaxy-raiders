@@ -1173,7 +1173,47 @@ if (shouldShow) {
           drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffe0e0', size);
           ctx.restore();
         }
-        
+
+        // SHMUP TELEGRAPH: carga visual antes de disparo externo
+        if (e.isExternalShmup && e.shmupShotsRemaining > 0) {
+          const telegraphWindow = Math.min(400, (e.shmupShootCooldown || 3000) * 0.35);
+          if (e.shmupShootTimer > 0 && e.shmupShootTimer < telegraphWindow) {
+            const intens = 1 - (e.shmupShootTimer / telegraphWindow);
+            const pattern = e.shmupShotPattern || 'basic';
+            const chargeMap = {
+              basic:  '#f90',
+              aimed:  '#f80',
+              sweep:  '#f90',
+              heavy:  '#f53',
+              spread: '#fd8'
+            };
+            const chargeColor = chargeMap[pattern] || '#f90';
+            const isHeavy = (pattern === 'heavy');
+            const pulse = Math.sin(globalTime * 0.025 + e.x * 0.01) * 0.35 * intens;
+            const cx = e.x + e.w / 2;
+            const baseY = e.y + e.h;
+
+            ctx.save();
+
+            ctx.globalAlpha = 0.02 + intens * 0.06 + pulse * 0.02;
+            ctx.fillStyle = chargeColor;
+            ctx.fillRect(e.x - 3 - intens, e.y - 3 - intens,
+                         e.w + 6 + intens * 2, e.h + 6 + intens * 2);
+
+            ctx.globalAlpha = 0.05 + intens * 0.16 + pulse * 0.04;
+            ctx.fillStyle = chargeColor;
+            ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
+
+            ctx.globalAlpha = 0.08 + intens * 0.28;
+            ctx.fillStyle = '#fff';
+            const lineW = isHeavy ? 3 : 2;
+            const lineH = 2 + intens * 4;
+            ctx.fillRect(cx - lineW / 2, baseY - 3 - intens * 2, lineW, lineH);
+
+            ctx.restore();
+          }
+        }
+
         // Barra de HP para tanques (hp > 1)
         if (e.maxHp > 1 && e.hp < e.maxHp) {
           const barW = e.w * 0.8;
