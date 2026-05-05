@@ -1621,6 +1621,429 @@ function drawTenienteCore(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// --- EMPERADOR VISUALS ---
+function drawEmperorImperialAura(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isTeleporting = boss.isTeleporting || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitShake = Math.sin(time * 0.3) * hitT * 2.5;
+  var teleFade = isTeleporting ? Math.max(0.15, boss.teleportFlash / 500) : 1;
+
+  var pulse = 0.6 + Math.sin(time * 0.018) * 0.4;
+  var pFast = 0.5 + Math.sin(time * 0.045) * 0.5;
+  var phaseMul = phase === 1 ? 1 : phase === 2 ? 1.4 : 2.1;
+
+  ctx.save();
+
+  ctx.globalAlpha = (0.04 + hitT * 0.1) * pulse * phaseMul * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake, cy, boss.w * 0.68, boss.h * 0.95, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.07 + hitT * 0.15) * pFast * phaseMul * teleFade;
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.7, cy, boss.w * 0.5, boss.h * 0.78, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.11 + hitT * 0.22) * pulse * teleFade;
+  ctx.strokeStyle = '#ffe8a0';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.5, cy, boss.w * 0.4, boss.h * 0.66, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.16 + hitT * 0.25) * pFast * teleFade;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.4, cy, boss.w * 0.32, boss.h * 0.55, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  for (var i = 0; i < 10; i++) {
+    var sa = time * 0.003 + (Math.PI * 2 * i / 10);
+    var sr = boss.w * 0.34 + Math.sin(time * 0.02 + i) * 14;
+    var sx = cx + Math.cos(sa) * sr;
+    var sy = cy + Math.sin(sa) * sr * 0.62;
+    ctx.globalAlpha = (0.14 + Math.sin(time * 0.035 + i) * 0.12) * pFast * phaseMul * teleFade;
+    ctx.fillStyle = i % 3 === 0 ? '#ffffff' : '#ffd700';
+    ctx.fillRect(sx - 1, sy - 1, 2, 2);
+  }
+
+  if (phase >= 2) {
+    for (var j = 0; j < 6; j++) {
+      var ja = -time * 0.005 + (Math.PI * 2 * j / 6);
+      var jr = boss.w * 0.22 + Math.sin(time * 0.03 + j) * 6;
+      var jx = cx + Math.cos(ja) * jr;
+      var jy = cy + Math.sin(ja) * jr * 0.5;
+      ctx.globalAlpha = (0.22 + Math.sin(time * 0.05 + j) * 0.15) * pFast * teleFade;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(jx - 0.5, jy - 0.5, 1, 1);
+    }
+  }
+
+  if (isTeleporting && boss.teleportFlash < 220) {
+    var dispersePct = 1 - boss.teleportFlash / 220;
+    ctx.globalAlpha = 0.14 + dispersePct * 0.25;
+    for (var d = 0; d < 8; d++) {
+      var da = (Math.PI * 2 * d / 8);
+      var dx = cx + Math.cos(da) * dispersePct * boss.w * 0.55;
+      var dy = cy + Math.sin(da) * dispersePct * boss.h * 0.45;
+      ctx.fillStyle = d % 2 === 0 ? '#ffffff' : '#ffd700';
+      ctx.fillRect(dx - 3, dy - 3, 6, 6);
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawEmperorEnergyMantle(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isTeleporting = boss.isTeleporting || false;
+
+  var hitShake = 0;
+  if (flashTimer > 0) {
+    var hitT = Math.min(1, flashTimer / 200);
+    hitShake = Math.sin(time * 0.28) * hitT * 3;
+  }
+  var teleFade = isTeleporting ? Math.max(0.15, boss.teleportFlash / 500) : 1;
+
+  var flow = Math.sin(time * 0.012) * 3;
+  var mantleOpen = phase === 1 ? 0.55 : phase === 2 ? 0.85 : 1.2;
+  var mantleLen = 28 * mantleOpen;
+
+  ctx.save();
+
+  // LEFT MANTLE WING
+  var lBaseX = bx + 8 + hitShake;
+  var lBaseY = by + bh * 0.3;
+  var lMidX = lBaseX - 18 * mantleOpen;
+  var lMidY = lBaseY + flow;
+  var lTipX = lBaseX - mantleLen;
+  var lTipY = lBaseY + 16 + flow * 1.5;
+  var lBotX = lBaseX - 6;
+  var lBotY = lBaseY + bh * 0.4 + flow;
+
+  ctx.globalAlpha = 0.06 * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(lBaseX, lBaseY - 4);
+  ctx.quadraticCurveTo(lMidX, lMidY - 10, lTipX, lTipY - 4);
+  ctx.lineTo(lTipX + 4, lTipY + 2);
+  ctx.quadraticCurveTo(lMidX + 2, lMidY + 12, lBotX, lBotY);
+  ctx.lineTo(lBaseX, lBaseY + 8);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 0.1 * teleFade;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.04 * teleFade;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1;
+  for (var s = 0; s < 3; s++) {
+    ctx.beginPath();
+    var st = (s + 1) / 4;
+    ctx.moveTo(lBaseX + s * 2, lBaseY + s * 2);
+    ctx.quadraticCurveTo(lMidX, lMidY + flow * (s * 0.3), lTipX + s * 3, lTipY + s * 2);
+    ctx.stroke();
+  }
+
+  // RIGHT MANTLE WING
+  var rBaseX = bx + bw - 8 - hitShake;
+  var rBaseY = by + bh * 0.3;
+  var rMidX = rBaseX + 18 * mantleOpen;
+  var rMidY = rBaseY + flow;
+  var rTipX = rBaseX + mantleLen;
+  var rTipY = rBaseY + 16 + flow * 1.5;
+  var rBotX = rBaseX + 6;
+  var rBotY = rBaseY + bh * 0.4 + flow;
+
+  ctx.globalAlpha = 0.06 * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(rBaseX, rBaseY - 4);
+  ctx.quadraticCurveTo(rMidX, rMidY - 10, rTipX, rTipY - 4);
+  ctx.lineTo(rTipX - 4, rTipY + 2);
+  ctx.quadraticCurveTo(rMidX - 2, rMidY + 12, rBotX, rBotY);
+  ctx.lineTo(rBaseX, rBaseY + 8);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 0.1 * teleFade;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.04 * teleFade;
+  for (var s2 = 0; s2 < 3; s2++) {
+    ctx.beginPath();
+    var st2 = (s2 + 1) / 4;
+    ctx.moveTo(rBaseX - s2 * 2, rBaseY + s2 * 2);
+    ctx.quadraticCurveTo(rMidX, rMidY + flow * (s2 * 0.3), rTipX - s2 * 3, rTipY + s2 * 2);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = (0.18 + Math.sin(time * 0.04) * 0.12) * mantleOpen * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(lTipX, lTipY, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(rTipX, rTipY, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.3 * teleFade;
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(lTipX, lTipY, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(rTipX, rTipY, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawEmperorCrownHalo(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isTeleporting = boss.isTeleporting || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var teleFade = isTeleporting ? Math.max(0.15, boss.teleportFlash / 500) : 1;
+  var pulse = 0.55 + Math.sin(time * 0.022) * 0.45;
+  var bob = Math.sin(time * 0.015) * 1.5;
+
+  var cx = bx + bw / 2;
+  var haloY = by - 6 + bob;
+  var haloR = bw * 0.32;
+
+  ctx.save();
+
+  ctx.globalAlpha = (0.14 + hitT * 0.2 + phase * 0.04) * pulse * teleFade;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, haloY, haloR, Math.PI, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.22 + hitT * 0.25 + phase * 0.05) * pulse * teleFade;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, haloY, haloR - 3, Math.PI, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.18 + hitT * 0.3) * pulse * teleFade;
+  ctx.strokeStyle = '#ffe8a0';
+  ctx.lineWidth = 1;
+  for (var a = 0; a < 3; a++) {
+    var startA = Math.PI + a * Math.PI * 0.22;
+    ctx.beginPath();
+    ctx.arc(cx, haloY, haloR - 5, startA, startA + Math.PI * 0.16);
+    ctx.stroke();
+  }
+
+  var spireCount = phase === 1 ? 3 : phase === 2 ? 5 : 7;
+  for (var s = 0; s < spireCount; s++) {
+    var sa = Math.PI + (Math.PI * s / (spireCount - 1));
+    var spireH = 6 + phase * 3 + Math.sin(time * 0.025 + s) * 2;
+    var baseX = cx + Math.cos(sa) * (haloR - 1);
+    var baseY = haloY + Math.sin(sa) * (haloR - 1);
+    var tipX = cx + Math.cos(sa) * (haloR + spireH);
+    var tipY = haloY + Math.sin(sa) * (haloR + spireH);
+
+    ctx.globalAlpha = (0.28 + hitT * 0.3 + phase * 0.08) * pulse * teleFade;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(tipX, tipY);
+    ctx.stroke();
+
+    ctx.globalAlpha = (0.35 + Math.sin(time * 0.04 + s) * 0.2 + phase * 0.1) * teleFade;
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.45 * teleFade;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawEmperorCore(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h * 0.5;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isTeleporting = boss.isTeleporting || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitBright = hitT * 0.45;
+  var teleFade = isTeleporting ? Math.max(0.1, boss.teleportFlash / 500) : 1;
+
+  var pulse = 0.55 + Math.sin(time * 0.025) * 0.45;
+  var pFast = 0.5 + Math.sin(time * 0.05) * 0.5;
+  var phaseMul = phase === 1 ? 1 : phase === 2 ? 1.25 : 1.65;
+
+  ctx.save();
+
+  var coreR = 7 * phaseMul + hitBright * 3;
+
+  ctx.globalAlpha = (0.1 + hitBright) * pulse * phaseMul * teleFade;
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.2 + hitBright) * pFast * phaseMul * teleFade;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 3, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.28 + hitBright) * pFast * teleFade;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1.5;
+  for (var a = 0; a < 5; a++) {
+    var startA = time * 0.005 + a * Math.PI * 0.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreR + 1, startA, startA + Math.PI * 0.3);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = (0.6 + hitBright) * pFast * phaseMul * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.95 * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (phase >= 3) {
+    var crossLen = coreR + 10;
+    ctx.globalAlpha = 0.1 + Math.sin(time * 0.05) * 0.06;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - crossLen, cy);
+    ctx.lineTo(cx + crossLen, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - crossLen);
+    ctx.lineTo(cx, cy + crossLen);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawEmperorPhaseOverload(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var isTeleporting = boss.isTeleporting || false;
+
+  if (phase < 3) return;
+
+  var teleFade = isTeleporting ? Math.max(0.1, boss.teleportFlash / 500) : 1;
+  var cx = bx + bw / 2;
+  var pulse = 0.5 + Math.sin(time * 0.035) * 0.5;
+
+  ctx.save();
+
+  for (var i = 0; i < 12; i++) {
+    var px = bx + 5 + (bw - 10) * ((i + 0.5) / 12);
+    var riseLife = ((time * 0.015 + i * 0.3) % 20);
+    var py = by + bh - 2 + Math.sin(time * 0.02 + i * 0.8) * 8 - riseLife;
+    ctx.globalAlpha = (0.12 + Math.sin(time * 0.04 + i) * 0.08) * teleFade;
+    ctx.fillStyle = i % 3 === 0 ? '#ffffff' : '#ffd700';
+    ctx.fillRect(px, Math.max(by - 8, py), 1, 2);
+  }
+
+  var pillarAlpha = 0.04 + pulse * 0.04;
+  ctx.globalAlpha = pillarAlpha * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(bx - 6, by + bh * 0.2, 3, bh * 0.7);
+
+  ctx.globalAlpha = pillarAlpha * 0.6 * teleFade;
+  ctx.fillStyle = '#ffd700';
+  ctx.fillRect(bx - 4, by + bh * 0.25, 1, bh * 0.6);
+
+  ctx.globalAlpha = pillarAlpha * teleFade;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(bx + bw + 3, by + bh * 0.2, 3, bh * 0.7);
+
+  ctx.globalAlpha = pillarAlpha * 0.6 * teleFade;
+  ctx.fillStyle = '#ffd700';
+  ctx.fillRect(bx + bw + 4, by + bh * 0.25, 1, bh * 0.6);
+
+  var rayCount = 8;
+  ctx.globalAlpha = (0.06 + pulse * 0.06) * teleFade;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  for (var r = 0; r < rayCount; r++) {
+    var ra = time * 0.002 + r * Math.PI * 2 / rayCount;
+    var innerR = bw * 0.15;
+    var outerR = bw * 0.55 + Math.sin(time * 0.03 + r) * 8;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(ra) * innerR, by + bh * 0.5 + Math.sin(ra) * innerR);
+    ctx.lineTo(cx + Math.cos(ra) * outerR, by + bh * 0.5 + Math.sin(ra) * outerR);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = (0.08 + pulse * 0.06) * teleFade;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1.5;
+  var arcY = by - 14 + Math.sin(time * 0.018) * 3;
+  ctx.beginPath();
+  ctx.arc(cx, arcY, bw * 0.35, Math.PI + 0.3, Math.PI * 2 - 0.3);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.14 + pulse * 0.08) * teleFade;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, arcY - 2, bw * 0.35, Math.PI + 0.3, Math.PI * 2 - 0.3);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -2455,6 +2878,9 @@ if (shouldShow) {
       } else if (boss.pattern === 'divebomb') {
         drawTenienteAura(ctx, boss, bossColor, globalTime);
         drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'supreme') {
+        drawEmperorImperialAura(ctx, boss, bossColor, globalTime);
+        drawEmperorEnergyMantle(ctx, boss, bossColor, globalTime);
       }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
@@ -2471,6 +2897,8 @@ if (shouldShow) {
         drawTenienteCannons(ctx, boss, bossColor, globalTime);
         drawTenienteCockpit(ctx, boss, bossColor, globalTime);
         drawTenienteLights(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'supreme') {
+        drawEmperorCrownHalo(ctx, boss, bossColor, globalTime);
       }
 
       ctx.save();
@@ -2490,6 +2918,9 @@ if (shouldShow) {
         drawCrabtronCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
         drawTenienteCore(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'supreme') {
+        drawEmperorCore(ctx, boss, bossColor, globalTime);
+        drawEmperorPhaseOverload(ctx, boss, bossColor, globalTime);
       }
            
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
