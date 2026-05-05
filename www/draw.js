@@ -113,6 +113,164 @@ var FLASH_BY_WEAPON = {
   laser: ['#0ff', '#aff']
 };
 
+// --- BOSS ARM RENDER HELPERS ---
+function drawBossArmSegment(ctx, x1, y1, x2, y2, thickness, color, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = thickness;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x2, y2, thickness * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBossClaw(ctx, x, y, angle, color, time) {
+  var clawLen = 9;
+  var clawSpread = 0.28 + Math.sin(time * 0.018 + angle) * 0.12;
+  ctx.save();
+
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + Math.cos(angle - clawSpread) * clawLen, y + Math.sin(angle - clawSpread) * clawLen);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + Math.cos(angle + clawSpread) * clawLen, y + Math.sin(angle + clawSpread) * clawLen);
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.88;
+  ctx.strokeStyle = '#ffe8e0';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + Math.cos(angle - clawSpread) * clawLen * 0.88, y + Math.sin(angle - clawSpread) * clawLen * 0.88);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + Math.cos(angle + clawSpread) * clawLen * 0.88, y + Math.sin(angle + clawSpread) * clawLen * 0.88);
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.45 + Math.sin(time * 0.025) * 0.12;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(x, y, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawArticulatedBossArms(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+
+  var flashTimer = boss.flashTimer || 0;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  var lShX = bx + 7;
+  var lShY = by + bh * 0.40;
+  var rShX = bx + bw - 7;
+  var rShY = by + bh * 0.40;
+
+  var spreadMul = phase === 1 ? 1 : phase === 2 ? 1.25 : 1.55;
+  var swayMul   = phase === 1 ? 1 : phase === 2 ? 1.4  : 2.0;
+  var thickMul  = phase === 1 ? 1 : phase === 2 ? 1.1  : 1.25;
+  var glowBoost = phase === 1 ? 0 : phase === 2 ? 0.10 : 0.24;
+  var clawAggro = phase === 1 ? 0 : phase === 2 ? 0.10 : 0.22;
+
+  var hitShake = 0;
+  var hitSnap = 0;
+  var hitBright = 0;
+  if (flashTimer > 0) {
+    var hitT = Math.min(1, flashTimer / 200);
+    hitShake  = Math.sin(time * 0.25 + 0.3) * hitT * 3.5;
+    hitSnap   = Math.abs(Math.sin(time * 0.3)) * hitT * 0.38;
+    hitBright = hitT * 0.35;
+  }
+
+  var swayA = Math.sin(time * 0.011 + 0.6) * 0.20 * swayMul;
+  var swayB = Math.sin(time * 0.014 + 1.8) * 0.28 * swayMul;
+  var swayC = Math.sin(time * 0.009) * 0.12 * swayMul;
+
+  var upperLen = 26 * spreadMul;
+  var foreLen  = 22 * spreadMul;
+  var thick    = 5 * thickMul;
+
+  var darkColor = '#2a0000';
+  var segAlpha  = 0.82 + glowBoost * 0.4 + hitBright;
+  var foreAlpha = 0.78 + glowBoost * 0.4 + hitBright;
+
+  var baseLX  = 21 * spreadMul;
+  var baseFWX = 15 * spreadMul;
+
+  // LEFT ARM
+  var lElbowX = lShX - baseLX + swayA * 7 + hitShake;
+  var lElbowY = lShY - 5 + swayB * 8 + hitShake * 0.5;
+  var lWristX = lElbowX - baseFWX + swayB * 5 + hitShake * 1.2;
+  var lWristY = lElbowY + 11 + swayC * 7 + hitShake * 0.8;
+
+  drawBossArmSegment(ctx, lShX + 1, lShY + 1, lElbowX + 1, lElbowY + 1, thick, darkColor, 0.55);
+  drawBossArmSegment(ctx, lElbowX + 1, lElbowY + 1, lWristX + 1, lWristY + 1, Math.round(thick * 0.8), darkColor, 0.55);
+  drawBossArmSegment(ctx, lShX, lShY, lElbowX, lElbowY, thick, color, segAlpha);
+  drawBossArmSegment(ctx, lElbowX, lElbowY, lWristX, lWristY, Math.round(thick * 0.78), color, foreAlpha);
+
+  var lClawBase = Math.PI + swayC * 0.5;
+  lClawBase += clawAggro * Math.sin(time * 0.04);
+  if (hitSnap > 0.08) lClawBase += hitSnap * 0.6;
+  drawBossClaw(ctx, lWristX, lWristY, lClawBase, color, time);
+
+  // RIGHT ARM
+  var rElbowX = rShX + baseLX - swayA * 7 - hitShake;
+  var rElbowY = rShY - 5 + swayB * 8 + hitShake * 0.5;
+  var rWristX = rElbowX + baseFWX - swayB * 5 - hitShake * 1.2;
+  var rWristY = rElbowY + 11 + swayC * 7 + hitShake * 0.8;
+
+  drawBossArmSegment(ctx, rShX + 1, rShY + 1, rElbowX + 1, rElbowY + 1, thick, darkColor, 0.55);
+  drawBossArmSegment(ctx, rElbowX + 1, rElbowY + 1, rWristX + 1, rWristY + 1, Math.round(thick * 0.8), darkColor, 0.55);
+  drawBossArmSegment(ctx, rShX, rShY, rElbowX, rElbowY, thick, color, segAlpha);
+  drawBossArmSegment(ctx, rElbowX, rElbowY, rWristX, rWristY, Math.round(thick * 0.78), color, foreAlpha);
+
+  var rClawBase = 0 + swayC * 0.5;
+  rClawBase += clawAggro * Math.sin(time * 0.04 + 1);
+  if (hitSnap > 0.08) rClawBase -= hitSnap * 0.6;
+  drawBossClaw(ctx, rWristX, rWristY, rClawBase, color, time);
+
+  // Phase 2+ : joint glow
+  if (phase >= 2) {
+    var jointAlpha = 0.10 + Math.sin(time * 0.035) * 0.06;
+    ctx.save();
+    ctx.globalAlpha = jointAlpha;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(lElbowX, lElbowY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rElbowX, rElbowY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // Phase 3 : claw tip energy burst
+  if (phase >= 3) {
+    var tipPulse = 0.28 + Math.sin(time * 0.055) * 0.18;
+    ctx.save();
+    ctx.globalAlpha = tipPulse;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(lWristX, lWristY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rWristX, rWristY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -933,6 +1091,10 @@ if (shouldShow) {
       drawSprite(ctx, bossSprite, boss.x, boss.y - 2, '#120008', 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y + 2, '#120008', 5);
       ctx.restore();
+
+      if (boss.pattern === 'crossfire') {
+        drawArticulatedBossArms(ctx, boss, bossColor, globalTime);
+      }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
 
