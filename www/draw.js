@@ -676,6 +676,267 @@ function drawCrabtronShootTelegraph(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// --- SERPENTRIX VISUALS ---
+function drawSerpentrixAura(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var pulse = 0.55 + Math.sin(time * 0.02) * 0.45;
+  var pFast = 0.5 + Math.sin(time * 0.045) * 0.5;
+  var pm = phase === 1 ? 1 : phase === 2 ? 1.35 : 1.8;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitAlpha = hitT * 0.18;
+  var hitShake = Math.sin(time * 0.3) * hitT * 2.5;
+
+  ctx.save();
+
+  ctx.globalAlpha = (0.05 + hitAlpha) * pulse * pm;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake, cy, boss.w * 0.55, boss.h * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.10 + hitAlpha * 1.3) * pFast * pm;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.7, cy, boss.w * 0.38, boss.h * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.18 + hitAlpha * 1.5) * pFast;
+  ctx.strokeStyle = '#bbffbb';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.5, cy, boss.w * 0.35, boss.h * 0.52, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  for (var i = 0; i < 5; i++) {
+    var a = (Math.PI * 2 * i / 5) + time * 0.0025;
+    var r = boss.w * 0.42 + Math.sin(time * 0.028 + i) * 6;
+    var ox = cx + Math.cos(a) * r;
+    var oy = cy + Math.sin(a) * r * 0.6;
+    ctx.globalAlpha = (0.22 + Math.sin(time * 0.04 + i) * 0.14) * pFast * pm;
+    ctx.fillStyle = '#ccff88';
+    ctx.beginPath();
+    ctx.arc(ox, oy, 2.5 + Math.sin(time * 0.035 + i) * 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (phase >= 3) {
+    ctx.globalAlpha = 0.07 * pFast;
+    ctx.fillStyle = '#44ff44';
+    for (var s = 0; s < 12; s++) {
+      var sa = (Math.PI * 2 * s / 12) + time * 0.001;
+      var sr = boss.w * 0.35 + Math.sin(time * 0.02 + s) * 15;
+      var sx = cx + Math.cos(sa) * sr;
+      var sy = cy + Math.sin(sa) * sr * 0.55;
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawSerpentrixEyes(ctx, boss, color, time) {
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitBlink = flashTimer > 0 && Math.floor(time / 80) % 2 === 0;
+
+  var leftEyeCX = boss.x + 25;
+  var rightEyeCX = boss.x + boss.w - 25;
+  var eyeCY = boss.y + 7.5;
+  var eyeR = 4;
+
+  var pulse = 0.6 + Math.sin(time * 0.03) * 0.4;
+  var aggro = phase === 1 ? 1 : phase === 2 ? 1.2 : 1.5;
+
+  ctx.save();
+
+  [leftEyeCX, rightEyeCX].forEach(function(ecx) {
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = '#0a1a00';
+    ctx.beginPath();
+    ctx.arc(ecx, eyeCY, eyeR + 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = hitBlink ? 0.9 : (0.35 + pulse * 0.3) * aggro;
+    ctx.fillStyle = '#ffff44';
+    ctx.beginPath();
+    ctx.arc(ecx, eyeCY, eyeR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = hitBlink ? 0 : 0.88;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(ecx, eyeCY, 1.2, eyeR * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.45 * pulse * aggro;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(ecx, eyeCY, eyeR * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (phase >= 3) {
+      ctx.globalAlpha = 0.3 + Math.sin(time * 0.06) * 0.2;
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 1;
+      for (var v = 0; v < 3; v++) {
+        var va = (Math.PI * 2 * v / 3) + Math.sin(time * 0.02) * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(ecx - 0.5, eyeCY);
+        ctx.lineTo(ecx + Math.cos(va) * (eyeR + 3), eyeCY + Math.sin(va) * (eyeR + 3));
+        ctx.stroke();
+      }
+    }
+  });
+
+  ctx.restore();
+}
+
+function drawSerpentrixFangs(ctx, boss, color, time) {
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  var mouthY = boss.y + 15;
+  var leftFangX = boss.x + 28;
+  var rightFangX = boss.x + boss.w - 28;
+
+  var fangLen = 6 + phase * 2;
+  var openPct = 0.5 + Math.sin(time * 0.025) * 0.5;
+  var aggro = phase === 1 ? 0.7 : phase === 2 ? 0.85 : 1.0;
+
+  ctx.save();
+
+  ctx.globalAlpha = 0.82 * aggro;
+  ctx.fillStyle = '#eeffdd';
+  ctx.strokeStyle = '#aadd88';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(leftFangX - 1.5, mouthY);
+  ctx.lineTo(leftFangX - 2.5, mouthY + fangLen * openPct);
+  ctx.lineTo(leftFangX + 1, mouthY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(rightFangX + 1.5, mouthY);
+  ctx.lineTo(rightFangX + 2.5, mouthY + fangLen * openPct);
+  ctx.lineTo(rightFangX - 1, mouthY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.9 * aggro;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(leftFangX - 2.5, mouthY + fangLen * openPct, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(rightFangX + 2.5, mouthY + fangLen * openPct, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawSerpentrixVenomDrops(ctx, boss, color, time) {
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+
+  var mouthY = boss.y + 15;
+  var leftFangX = boss.x + 25;
+  var rightFangX = boss.x + boss.w - 25;
+  var fangLen = 6 + phase * 2;
+  var openPct = 0.5 + Math.sin(time * 0.025) * 0.5;
+  var fangTipY = mouthY + fangLen * openPct;
+
+  ctx.save();
+
+  var dripLen = 3 + Math.sin(time * 0.05) * 2 + hitT * 4;
+  ctx.globalAlpha = 0.55 + Math.sin(time * 0.04) * 0.2;
+  ctx.fillStyle = '#88ff44';
+  ctx.beginPath();
+  ctx.ellipse(leftFangX - 2.5, fangTipY + dripLen, 2, dripLen * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.55 + Math.sin(time * 0.05 + 1) * 0.2;
+  ctx.beginPath();
+  ctx.ellipse(rightFangX + 2.5, fangTipY + dripLen * 0.8, 2, dripLen * 0.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (var i = 0; i < 3; i++) {
+    var dropX = boss.x + boss.w * (0.2 + i * 0.3);
+    var dropLife = (time * 0.02 + i * 2.0) % (Math.PI * 2);
+    var dropY = boss.y + boss.h * 0.9 + Math.sin(dropLife) * 10 + i * 4;
+    ctx.globalAlpha = 0.25 + Math.abs(Math.sin(dropLife)) * 0.3;
+    ctx.fillStyle = i === 1 ? '#aaff66' : '#66cc44';
+    ctx.beginPath();
+    ctx.arc(dropX, dropY, 2 + Math.abs(Math.sin(dropLife)) * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (phase >= 3) {
+    for (var v = 0; v < 4; v++) {
+      var vx = boss.x + boss.w * (0.15 + v * 0.23);
+      var vy = boss.y + boss.h * 0.8 + Math.sin(time * 0.04 + v * 1.3) * 6 + v * 3;
+      ctx.globalAlpha = 0.3 + Math.sin(time * 0.06 + v) * 0.2;
+      ctx.fillStyle = '#55cc33';
+      ctx.beginPath();
+      ctx.arc(vx, vy, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawSerpentrixWave(ctx, boss, color, time) {
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  var startX = boss.x + boss.w / 2;
+  var startY = boss.y + 5;
+  var endY = boss.y + boss.h * 0.85;
+  var segments = 8;
+  var waveAmp = 1.5 + phase * 0.8;
+  var waveFreq = 0.02 * (1 + phase * 0.15);
+
+  ctx.save();
+  ctx.globalAlpha = 0.12 + Math.sin(time * 0.018) * 0.05;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  ctx.moveTo(startX + Math.sin(time * waveFreq + startY * 0.02) * waveAmp, startY);
+
+  for (var i = 1; i <= segments; i++) {
+    var t = i / segments;
+    var py = startY + (endY - startY) * t;
+    var px = startX + Math.sin(time * waveFreq + py * 0.02) * waveAmp * (1 - t * 0.3);
+    ctx.lineTo(px, py);
+  }
+
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.06 + Math.sin(time * 0.022) * 0.04;
+  ctx.strokeStyle = '#aaffaa';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1502,9 +1763,18 @@ if (shouldShow) {
         drawCrabtronShootTelegraph(ctx, boss, bossColor, globalTime);
         drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
         drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'zigzag') {
+        drawSerpentrixAura(ctx, boss, bossColor, globalTime);
       }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
+
+      if (boss.pattern === 'zigzag') {
+        drawSerpentrixWave(ctx, boss, bossColor, globalTime);
+        drawSerpentrixEyes(ctx, boss, bossColor, globalTime);
+        drawSerpentrixFangs(ctx, boss, bossColor, globalTime);
+        drawSerpentrixVenomDrops(ctx, boss, bossColor, globalTime);
+      }
 
       ctx.save();
       ctx.globalAlpha = 0.10;
