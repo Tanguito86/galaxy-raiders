@@ -1146,6 +1146,481 @@ function drawOrbitalCore(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// --- TENIENTE VISUALS ---
+function drawTenienteAura(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isCharging = boss.chargeMode || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitShake = Math.sin(time * 0.3) * hitT * 2.2;
+  var chargeBoost = isCharging ? 0.32 : 0;
+
+  var pulse = 0.55 + Math.sin(time * 0.022) * 0.45;
+  var pFast = 0.5 + Math.sin(time * 0.05) * 0.5;
+  var phaseMul = phase === 1 ? 1 : phase === 2 ? 1.3 : 1.7;
+
+  ctx.save();
+
+  ctx.globalAlpha = (0.06 + hitT * 0.12 + chargeBoost * 0.14) * pulse * phaseMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake, cy, boss.w * 0.58, boss.h * 0.82, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.10 + hitT * 0.15 + chargeBoost * 0.16) * pFast * phaseMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.7, cy, boss.w * 0.38, boss.h * 0.65, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.14 + hitT * 0.2) * pFast;
+  ctx.strokeStyle = '#ffe088';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(cx + hitShake * 0.5, cy, boss.w * 0.33, boss.h * 0.58, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  for (var i = 0; i < 6; i++) {
+    var sa = time * 0.005 + (Math.PI * 2 * i / 6);
+    var sr = boss.w * 0.30 + Math.sin(time * 0.025 + i) * 8;
+    var sx = cx + Math.cos(sa) * sr;
+    var sy = cy + Math.sin(sa) * sr * 0.7;
+    ctx.globalAlpha = (0.16 + Math.sin(time * 0.04 + i) * 0.12) * pFast * phaseMul;
+    ctx.fillStyle = '#ffee88';
+    ctx.fillRect(sx - 1, sy - 1, 2, 2);
+  }
+
+  if (isCharging && boss.telegraphTimer > 0) {
+    var telegraphPct = 1 - boss.telegraphTimer / 650;
+    ctx.globalAlpha = 0.16 + telegraphPct * 0.28;
+    ctx.fillStyle = '#ff4400';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, boss.w * 0.42 + telegraphPct * 16, boss.h * 0.75 + telegraphPct * 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawTenienteWings(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var hitShake = 0;
+  if (flashTimer > 0) {
+    var hitT = Math.min(1, flashTimer / 200);
+    hitShake = Math.sin(time * 0.25) * hitT * 2.8;
+  }
+
+  var wingOpen = phase === 1 ? 0.6 : phase === 2 ? 0.9 : 1.3;
+  var bob = Math.sin(time * 0.014 + 0.8) * 2.5 * wingOpen;
+  var outerLen = 18 * wingOpen;
+  var baseYOffset = bh * 0.36;
+
+  ctx.save();
+
+  // LEFT WING
+  var lx = bx + 6 + hitShake;
+  var ly = by + baseYOffset;
+  var lOuterX = lx - outerLen;
+  var lOuterY = ly - 6 + bob;
+  var lBotX = lx - 6;
+  var lBotY = ly + bh * 0.18 + bob * 0.5;
+
+  ctx.globalAlpha = 0.55 + phase * 0.06;
+  ctx.fillStyle = '#1a1000';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(lx, ly - 3);
+  ctx.lineTo(lOuterX, lOuterY);
+  ctx.lineTo(lBotX, lBotY);
+  ctx.lineTo(lx, ly + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 0.72 + phase * 0.08;
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#886600';
+  ctx.beginPath();
+  ctx.moveTo(lx + 1, ly);
+  ctx.lineTo(lOuterX + 6, lOuterY + 2);
+  ctx.lineTo(lBotX + 2, lBotY - 2);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 0.25 + Math.sin(time * 0.035) * 0.18;
+  ctx.fillStyle = '#ff8800';
+  ctx.beginPath();
+  ctx.arc(lOuterX, lOuterY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // RIGHT WING
+  var rx = bx + bw - 6 - hitShake;
+  var ry = by + baseYOffset;
+  var rOuterX = rx + outerLen;
+  var rOuterY = ry - 6 + bob;
+  var rBotX = rx + 6;
+  var rBotY = ry + bh * 0.18 + bob * 0.5;
+
+  ctx.globalAlpha = 0.55 + phase * 0.06;
+  ctx.fillStyle = '#1a1000';
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(rx, ry - 3);
+  ctx.lineTo(rOuterX, rOuterY);
+  ctx.lineTo(rBotX, rBotY);
+  ctx.lineTo(rx, ry + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 0.72 + phase * 0.08;
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#886600';
+  ctx.beginPath();
+  ctx.moveTo(rx - 1, ry);
+  ctx.lineTo(rOuterX - 6, rOuterY + 2);
+  ctx.lineTo(rBotX - 2, rBotY - 2);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 0.25 + Math.sin(time * 0.035 + 1) * 0.18;
+  ctx.fillStyle = '#ff8800';
+  ctx.beginPath();
+  ctx.arc(rOuterX, rOuterY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (phase >= 3) {
+    var scorchFlicker = 0.08 + Math.sin(time * 0.055) * 0.06;
+    ctx.globalAlpha = scorchFlicker;
+    ctx.strokeStyle = '#ff4400';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(lx - 2, ly - 2);
+    ctx.lineTo(lOuterX - 3, lOuterY - 1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rx + 2, ry - 2);
+    ctx.lineTo(rOuterX + 3, rOuterY - 1);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawTenienteCannons(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  var recoil = Math.sin(time * 0.02) * 1.2 * phase;
+  var cannonLen = 9 + phase * 2;
+  var cannonW = 5;
+
+  ctx.save();
+
+  // LEFT CANNON
+  var lcx = bx + 14;
+  var lcy = by + bh - 2;
+  var lmY = lcy + cannonLen + recoil;
+
+  ctx.globalAlpha = 0.65;
+  ctx.fillStyle = '#1a0a00';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(lcx - cannonW / 2, lcy, cannonW, cannonLen + recoil);
+  ctx.strokeRect(lcx - cannonW / 2 + 0.5, lcy + 0.5, cannonW - 1, cannonLen + recoil - 1);
+
+  ctx.globalAlpha = 0.12 + Math.sin(time * 0.03) * 0.08 + phase * 0.04;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(lcx, lmY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.28 + Math.sin(time * 0.04) * 0.18;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(lcx, lmY, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // RIGHT CANNON
+  var rcx = bx + bw - 14;
+  var rcy = by + bh - 2;
+  var rmY = rcy + cannonLen + recoil;
+
+  ctx.globalAlpha = 0.65;
+  ctx.fillStyle = '#1a0a00';
+  ctx.strokeStyle = color;
+  ctx.fillRect(rcx - cannonW / 2, rcy, cannonW, cannonLen + recoil);
+  ctx.strokeRect(rcx - cannonW / 2 + 0.5, rcy + 0.5, cannonW - 1, cannonLen + recoil - 1);
+
+  ctx.globalAlpha = 0.12 + Math.sin(time * 0.03 + 1) * 0.08 + phase * 0.04;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(rcx, rmY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.28 + Math.sin(time * 0.04 + 1) * 0.18;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(rcx, rmY, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawTenienteCockpit(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var visorPulse = 0.5 + Math.sin(time * 0.028) * 0.5;
+  var anger = phase === 1 ? 0.55 : phase === 2 ? 0.78 : 1.0;
+
+  var cx = bx + bw / 2;
+  var cy = by + bh * 0.26;
+
+  ctx.save();
+
+  var visorW = 22 * anger;
+  var visorH = 4.5;
+
+  ctx.globalAlpha = (0.08 + hitT * 0.2) * visorPulse * anger;
+  ctx.fillStyle = '#ff3300';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, visorW * 0.52, visorH + 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.48 + hitT * 0.2;
+  ctx.fillStyle = '#0a0000';
+  ctx.strokeStyle = '#cc4400';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, visorW * 0.46, visorH, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.42 + hitT * 0.35) * visorPulse * anger;
+  ctx.fillStyle = '#ff4400';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, visorW * 0.18, 1.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.7 + hitT * 0.2) * visorPulse;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(cx - 1, cy - 0.5, 2, 1);
+
+  if (phase >= 3) {
+    ctx.globalAlpha = 0.12 + Math.sin(time * 0.06) * 0.1;
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, visorW * 0.42, visorH + 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawTenienteLights(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  ctx.save();
+
+  var lights = [
+    { x: bx + 5, y: by + 4, color: '#ff4400', blink: 0 },
+    { x: bx + bw - 5, y: by + 4, color: '#ff4400', blink: 0.5 },
+    { x: bx + 3, y: by + bh * 0.52, color: '#ff8800', blink: 1.2 },
+    { x: bx + bw - 3, y: by + bh * 0.52, color: '#ff8800', blink: 1.7 },
+    { x: bx + bw * 0.5 - 7, y: by + bh - 2, color: '#ff4400', blink: 2.4 },
+    { x: bx + bw * 0.5 + 7, y: by + bh - 2, color: '#ff4400', blink: 2.9 }
+  ];
+
+  for (var i = 0; i < lights.length; i++) {
+    var l = lights[i];
+    var blinkVal = Math.sin(time * 0.035 + l.blink) * 0.5 + 0.5;
+    var alpha = (0.35 + blinkVal * 0.5) * (0.6 + phase * 0.15);
+
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = l.color;
+    ctx.fillRect(l.x, l.y, 2, 2);
+
+    ctx.globalAlpha = alpha * 0.4;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(l.x, l.y, 1, 1);
+  }
+
+  ctx.restore();
+}
+
+function drawTenienteEngineTrails(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var isCharging = boss.chargeMode || false;
+
+  var thrustIntensity = isCharging ? 1.5 : 0.65 + phase * 0.15;
+  var pulse = 0.6 + Math.sin(time * 0.04) * 0.4;
+
+  ctx.save();
+
+  // Left engine
+  var lex = bx + bw * 0.25;
+  var ley = by + bh;
+  var leLen = (7 + phase * 3) * thrustIntensity * pulse;
+
+  ctx.globalAlpha = 0.07 * thrustIntensity;
+  ctx.fillStyle = '#ff6600';
+  ctx.fillRect(lex - 4, ley, 8, leLen + 8);
+
+  ctx.globalAlpha = 0.20 * thrustIntensity * pulse;
+  ctx.fillStyle = '#ff8800';
+  ctx.fillRect(lex - 2, ley, 4, leLen + 4);
+
+  ctx.globalAlpha = 0.42 * thrustIntensity * pulse;
+  ctx.fillStyle = '#ffff44';
+  ctx.fillRect(lex - 1, ley, 2, leLen);
+
+  // Right engine
+  var rex = bx + bw * 0.75;
+  var rey = by + bh;
+  var reLen = (7 + phase * 3) * thrustIntensity * pulse;
+
+  ctx.globalAlpha = 0.07 * thrustIntensity;
+  ctx.fillStyle = '#ff6600';
+  ctx.fillRect(rex - 4, rey, 8, reLen + 8);
+
+  ctx.globalAlpha = 0.20 * thrustIntensity * pulse;
+  ctx.fillStyle = '#ff8800';
+  ctx.fillRect(rex - 2, rey, 4, reLen + 4);
+
+  ctx.globalAlpha = 0.42 * thrustIntensity * pulse;
+  ctx.fillStyle = '#ffff44';
+  ctx.fillRect(rex - 1, rey, 2, reLen);
+
+  if (isCharging && boss.telegraphTimer > 0) {
+    var telegraphPct = 1 - boss.telegraphTimer / 650;
+    var bigFlame = 10 * telegraphPct * pulse;
+
+    ctx.globalAlpha = 0.1 * telegraphPct;
+    ctx.fillStyle = '#ff2200';
+    ctx.fillRect(lex - 6, ley, 12, bigFlame + 6);
+    ctx.fillRect(rex - 6, ley, 12, bigFlame + 6);
+
+    ctx.globalAlpha = 0.28 * telegraphPct;
+    ctx.fillStyle = '#ff6600';
+    ctx.fillRect(lex - 3, ley, 6, bigFlame);
+    ctx.fillRect(rex - 3, ley, 6, bigFlame);
+
+    ctx.globalAlpha = 0.5 * telegraphPct;
+    ctx.fillStyle = '#ffff66';
+    ctx.fillRect(lex - 1.5, ley, 3, bigFlame * 0.6);
+    ctx.fillRect(rex - 1.5, ley, 3, bigFlame * 0.6);
+  }
+
+  ctx.restore();
+}
+
+function drawTenienteCore(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h * 0.54;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isCharging = boss.chargeMode || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitBright = hitT * 0.4;
+  var chargeBoost = isCharging ? 0.32 : 0;
+
+  var pulse = 0.55 + Math.sin(time * 0.028) * 0.45;
+  var pFast = 0.5 + Math.sin(time * 0.05) * 0.5;
+  var phaseMul = phase === 1 ? 1 : phase === 2 ? 1.2 : 1.55;
+
+  ctx.save();
+
+  var coreR = 5.5 * phaseMul + hitBright * 2;
+
+  ctx.globalAlpha = (0.11 + hitBright + chargeBoost * 0.18) * pulse * phaseMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.26 + hitBright + chargeBoost * 0.14) * pFast * phaseMul;
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 1.5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.32 + hitBright) * pFast;
+  ctx.strokeStyle = '#ffe088';
+  ctx.lineWidth = 1.5;
+  for (var a = 0; a < 4; a++) {
+    var startA = time * 0.004 + a * Math.PI * 0.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, coreR * 1.1, startA, startA + Math.PI * 0.35);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = (0.58 + hitBright + chargeBoost * 0.2) * pFast * phaseMul;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (phase >= 3 || isCharging) {
+    var spikeCount = 6;
+    ctx.globalAlpha = 0.14 + Math.sin(time * 0.06) * 0.08 + chargeBoost * 0.18;
+    ctx.strokeStyle = '#ffffaa';
+    ctx.lineWidth = 1;
+    for (var s = 0; s < spikeCount; s++) {
+      var sa = time * 0.003 + s * Math.PI * 2 / spikeCount;
+      var innerR = coreR * 0.6;
+      var outerR = coreR * 2.2 + Math.sin(time * 0.04 + s) * 3;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(sa) * innerR, cy + Math.sin(sa) * innerR);
+      ctx.lineTo(cx + Math.cos(sa) * outerR, cy + Math.sin(sa) * outerR);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1977,6 +2452,9 @@ if (shouldShow) {
       } else if (boss.pattern === 'rotate') {
         drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
         drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'divebomb') {
+        drawTenienteAura(ctx, boss, bossColor, globalTime);
+        drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
       }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
@@ -1988,6 +2466,11 @@ if (shouldShow) {
         drawSerpentrixVenomDrops(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'rotate') {
         drawOrbitalCore(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'divebomb') {
+        drawTenienteWings(ctx, boss, bossColor, globalTime);
+        drawTenienteCannons(ctx, boss, bossColor, globalTime);
+        drawTenienteCockpit(ctx, boss, bossColor, globalTime);
+        drawTenienteLights(ctx, boss, bossColor, globalTime);
       }
 
       ctx.save();
@@ -2005,6 +2488,8 @@ if (shouldShow) {
 
       if (boss.pattern === 'crossfire') {
         drawCrabtronCore(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'divebomb') {
+        drawTenienteCore(ctx, boss, bossColor, globalTime);
       }
            
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
