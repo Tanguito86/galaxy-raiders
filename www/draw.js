@@ -520,6 +520,82 @@ function drawCrabtronCore(ctx, boss, color, time) {
   ctx.restore();
 }
 
+function drawCrabtronMuzzleFlash(ctx, boss, color, time) {
+  var bx = boss.x, by = boss.y, bw = boss.w, bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  var spreadMul = phase === 1 ? 1 : phase === 2 ? 1.25 : 1.55;
+  var swayMul = phase === 1 ? 1 : phase === 2 ? 1.4 : 2.0;
+  var swayA = Math.sin(time * 0.011 + 0.6) * 0.20 * swayMul;
+  var swayB = Math.sin(time * 0.014 + 1.8) * 0.28 * swayMul;
+  var swayC = Math.sin(time * 0.009) * 0.12 * swayMul;
+  var baseLX = 21 * spreadMul;
+  var baseFWX = 15 * spreadMul;
+
+  var lShX = bx + 7, lShY = by + bh * 0.40;
+  var lElbowX = lShX - baseLX + swayA * 7;
+  var lElbowY = lShY - 5 + swayB * 8;
+  var lwX = lElbowX - baseFWX + swayB * 5;
+  var lwY = lElbowY + 11 + swayC * 7;
+
+  var rShX = bx + bw - 7, rShY = by + bh * 0.40;
+  var rElbowX = rShX + baseLX - swayA * 7;
+  var rElbowY = rShY - 5 + swayB * 8;
+  var rwX = rElbowX + baseFWX - swayB * 5;
+  var rwY = rElbowY + 11 + swayC * 7;
+
+  var shotAge = boss.shootTimer || 9999;
+  var isRecentShot = shotAge < 220;
+  var flashIntensity = isRecentShot ? 1 - shotAge / 220 : 0;
+
+  ctx.save();
+
+  var portAlpha = 0.05 + Math.sin(time * 0.022) * 0.03 + phase * 0.025;
+  ctx.globalAlpha = portAlpha;
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(lwX, lwY, 9, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rwX, rwY, 9, 0, Math.PI * 2); ctx.fill();
+
+  ctx.globalAlpha = portAlpha * 0.8;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(lwX, lwY, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rwX, rwY, 3.5, 0, Math.PI * 2); ctx.fill();
+
+  if (isRecentShot) {
+    var flashR = 4 + flashIntensity * 15;
+
+    ctx.globalAlpha = flashIntensity * 0.32;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(lwX, lwY, flashR, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rwX, rwY, flashR, 0, Math.PI * 2); ctx.fill();
+
+    ctx.globalAlpha = flashIntensity * 0.55;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(lwX, lwY, flashR * 0.6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rwX, rwY, flashR * 0.6, 0, Math.PI * 2); ctx.fill();
+
+    ctx.globalAlpha = flashIntensity * 0.88;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(lwX, lwY, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rwX, rwY, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.globalAlpha = flashIntensity * 0.35;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(lwX, lwY);
+    ctx.lineTo(lwX - flashR * 1.2, lwY + flashR * 0.6);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rwX, rwY);
+    ctx.lineTo(rwX + flashR * 1.2, rwY + flashR * 0.6);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1344,6 +1420,7 @@ if (shouldShow) {
       if (boss.pattern === 'crossfire') {
         drawArticulatedBossArms(ctx, boss, bossColor, globalTime);
         drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
+        drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
       }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
