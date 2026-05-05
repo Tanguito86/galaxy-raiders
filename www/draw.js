@@ -271,6 +271,255 @@ function drawArticulatedBossArms(ctx, boss, color, time) {
   }
 }
 
+function drawCrabtronArmorPlates(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var sway = Math.sin(time * 0.013 + 0.8) * 0.16;
+  var pulse = 0.7 + Math.sin(time * 0.02) * 0.3;
+  var hornSway = Math.sin(time * 0.016 + 0.3) * 0.18;
+
+  var hitShake = 0;
+  if (flashTimer > 0) {
+    var hitT = Math.min(1, flashTimer / 200);
+    hitShake = Math.sin(time * 0.25) * hitT * 2.2;
+  }
+
+  var plateBase = '#2a0000';
+  var plateEdge = color;
+
+  // Phase intensity
+  var plateAlpha = phase === 1 ? 0.58 : phase === 2 ? 0.66 : 0.76;
+  var edgeAlpha  = phase === 1 ? 0.72 : phase === 2 ? 0.80 : 0.90;
+
+  ctx.save();
+
+  // EXTRA OUTER SHADOW GLOW
+  ctx.globalAlpha = 0.14 + Math.sin(time * 0.018) * 0.04;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.rect(bx - 12, by - 10, bw + 24, bh + 20);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.rect(bx - 8, by - 6, bw + 16, bh + 14);
+  ctx.fill();
+
+  // LEFT SHOULDER PLATE
+  ctx.globalAlpha = plateAlpha + sway * 0.10;
+  ctx.fillStyle = plateBase;
+  ctx.strokeStyle = plateEdge;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(bx + 4 + hitShake, by + 5);
+  ctx.lineTo(bx - 12 + sway * 5 + hitShake, by - 3 + sway * 3);
+  ctx.lineTo(bx - 7 + sway * 3 + hitShake, by + 17 + sway * 1.5);
+  ctx.lineTo(bx + 15 + hitShake, by + 13);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = edgeAlpha + sway * 0.08;
+  ctx.stroke();
+
+  // Left plate inner highlight
+  ctx.globalAlpha = 0.14 + pulse * 0.08;
+  ctx.fillStyle = plateEdge;
+  ctx.beginPath();
+  ctx.moveTo(bx + 7 + hitShake, by + 7);
+  ctx.lineTo(bx - 7 + sway * 5 + hitShake, by + 0 + sway * 3);
+  ctx.lineTo(bx - 4 + sway * 3 + hitShake, by + 14 + sway * 1.5);
+  ctx.lineTo(bx + 13 + hitShake, by + 11);
+  ctx.closePath();
+  ctx.fill();
+
+  // RIGHT SHOULDER PLATE
+  ctx.globalAlpha = plateAlpha + sway * 0.10;
+  ctx.fillStyle = plateBase;
+  ctx.strokeStyle = plateEdge;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(bx + bw - 4 - hitShake, by + 5);
+  ctx.lineTo(bx + bw + 12 - sway * 5 - hitShake, by - 3 + sway * 3);
+  ctx.lineTo(bx + bw + 7 - sway * 3 - hitShake, by + 17 + sway * 1.5);
+  ctx.lineTo(bx + bw - 15 - hitShake, by + 13);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = edgeAlpha + sway * 0.08;
+  ctx.stroke();
+
+  // Right plate inner highlight
+  ctx.globalAlpha = 0.14 + pulse * 0.08;
+  ctx.fillStyle = plateEdge;
+  ctx.beginPath();
+  ctx.moveTo(bx + bw - 7 - hitShake, by + 7);
+  ctx.lineTo(bx + bw + 7 - sway * 5 - hitShake, by + 0 + sway * 3);
+  ctx.lineTo(bx + bw + 4 - sway * 3 - hitShake, by + 14 + sway * 1.5);
+  ctx.lineTo(bx + bw - 13 - hitShake, by + 11);
+  ctx.closePath();
+  ctx.fill();
+
+  // LEFT HORN
+  ctx.globalAlpha = 0.70 + sway * 0.12;
+  ctx.fillStyle = plateBase;
+  ctx.strokeStyle = plateEdge;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(bx + 26 + hitShake * 0.6, by + 7);
+  ctx.quadraticCurveTo(bx + 20 + sway * 5 + hitShake * 0.6, by - 2, bx + 12 + sway * 7 + hornSway * 4 + hitShake * 0.6, by - 16 + hornSway * 3);
+  ctx.lineTo(bx + 32 + hitShake * 0.6, by + 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = edgeAlpha;
+  ctx.stroke();
+
+  // Left horn tip glow
+  ctx.globalAlpha = 0.30 + pulse * 0.15;
+  ctx.fillStyle = plateEdge;
+  ctx.beginPath();
+  ctx.arc(bx + 12 + sway * 7 + hornSway * 4 + hitShake * 0.6, by - 16 + hornSway * 3, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // RIGHT HORN
+  ctx.globalAlpha = 0.70 + sway * 0.12;
+  ctx.fillStyle = plateBase;
+  ctx.strokeStyle = plateEdge;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(bx + bw - 26 - hitShake * 0.6, by + 7);
+  ctx.quadraticCurveTo(bx + bw - 20 - sway * 5 - hitShake * 0.6, by - 2, bx + bw - 12 - sway * 7 - hornSway * 4 - hitShake * 0.6, by - 16 + hornSway * 3);
+  ctx.lineTo(bx + bw - 32 - hitShake * 0.6, by + 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = edgeAlpha;
+  ctx.stroke();
+
+  // Right horn tip glow
+  ctx.globalAlpha = 0.30 + pulse * 0.15;
+  ctx.fillStyle = plateEdge;
+  ctx.beginPath();
+  ctx.arc(bx + bw - 12 - sway * 7 - hornSway * 4 - hitShake * 0.6, by - 16 + hornSway * 3, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // BOTTOM SKIRTS
+  ctx.globalAlpha = plateAlpha - 0.08;
+  ctx.fillStyle = plateBase;
+  ctx.strokeStyle = plateEdge;
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(bx + 1 + hitShake * 0.4, by + bh - 1);
+  ctx.lineTo(bx - 4 + hitShake * 0.4, by + bh + 7 + sway * 2);
+  ctx.lineTo(bx + 8 + hitShake * 0.4, by + bh + 5 + sway * 2);
+  ctx.lineTo(bx + 15 + hitShake * 0.4, by + bh - 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = edgeAlpha - 0.08;
+  ctx.stroke();
+
+  ctx.globalAlpha = plateAlpha - 0.08;
+  ctx.fillStyle = plateBase;
+  ctx.beginPath();
+  ctx.moveTo(bx + bw - 1 - hitShake * 0.4, by + bh - 1);
+  ctx.lineTo(bx + bw + 4 - hitShake * 0.4, by + bh + 7 + sway * 2);
+  ctx.lineTo(bx + bw - 8 - hitShake * 0.4, by + bh + 5 + sway * 2);
+  ctx.lineTo(bx + bw - 15 - hitShake * 0.4, by + bh - 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = edgeAlpha - 0.08;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCrabtronCore(ctx, boss, color, time) {
+  var bx = boss.x;
+  var by = boss.y;
+  var bw = boss.w;
+  var bh = boss.h;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+
+  var coreCX = bx + bw * 0.5;
+  var coreCY = by + bh * 0.47;
+  var pulse = 0.65 + Math.sin(time * 0.025) * 0.35;
+  var pulseFast = 0.55 + Math.sin(time * 0.052 + 1.3) * 0.45;
+
+  var sizeMul = phase === 1 ? 1 : phase === 2 ? 1.15 : 1.35;
+  var alphaMul = phase === 1 ? 1 : phase === 2 ? 1.3 : 1.7;
+
+  ctx.save();
+
+  // Outer aura
+  var auraR = 14 * sizeMul + Math.sin(time * 0.018) * 2;
+  ctx.globalAlpha = 0.08 * pulse * alphaMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(coreCX, coreCY, auraR + 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mid glow ring
+  ctx.globalAlpha = 0.16 * pulse * alphaMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(coreCX, coreCY, auraR + 1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer ring
+  ctx.globalAlpha = 0.52 * pulseFast;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(coreCX, coreCY, auraR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner ring
+  ctx.globalAlpha = 0.68 * pulseFast;
+  ctx.strokeStyle = '#ffe8d0';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(coreCX, coreCY, auraR - 3.5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Core fill
+  var fillR = 5 * sizeMul;
+  ctx.globalAlpha = 0.80 * pulseFast * alphaMul;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(coreCX, coreCY, fillR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Core center point
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(coreCX, coreCY, fillR * 0.50, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mechanical slots
+  ctx.globalAlpha = 0.32 * pulse;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  for (var i = 0; i < 6; i++) {
+    var a = (Math.PI * 2 * i) / 6 + time * 0.002;
+    var sl = 5 * sizeMul;
+    var sd = auraR + 7;
+    var sx = coreCX + Math.cos(a) * sd;
+    var sy = coreCY + Math.sin(a) * sd;
+    ctx.beginPath();
+    ctx.moveTo(sx - Math.cos(a + Math.PI * 0.5) * sl * 0.5, sy - Math.sin(a + Math.PI * 0.5) * sl * 0.5);
+    ctx.lineTo(sx + Math.cos(a + Math.PI * 0.5) * sl * 0.5, sy + Math.sin(a + Math.PI * 0.5) * sl * 0.5);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1094,6 +1343,7 @@ if (shouldShow) {
 
       if (boss.pattern === 'crossfire') {
         drawArticulatedBossArms(ctx, boss, bossColor, globalTime);
+        drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
       }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
@@ -1110,7 +1360,11 @@ if (shouldShow) {
         drawSprite(ctx, bossSprite, boss.x, boss.y, '#ffaaaa', 5);
         ctx.restore();
       }
-          
+
+      if (boss.pattern === 'crossfire') {
+        drawCrabtronCore(ctx, boss, bossColor, globalTime);
+      }
+           
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
       
       const _barW = 200;
