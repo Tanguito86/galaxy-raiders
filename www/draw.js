@@ -937,6 +937,215 @@ function drawSerpentrixWave(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// --- ORBITAL VISUALS ---
+function drawOrbitalEnergyField(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isPulseMode = boss.pulseMode || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitShake = Math.sin(time * 0.3) * hitT * 2;
+
+  var pulse = 0.55 + Math.sin(time * 0.022) * 0.45;
+  var pFast = 0.5 + Math.sin(time * 0.05) * 0.5;
+  var phaseMul = phase === 1 ? 1 : phase === 2 ? 1.4 : 2.0;
+
+  ctx.save();
+
+  ctx.globalAlpha = (0.04 + hitT * 0.1) * pulse * phaseMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx + hitShake, cy, boss.w * 0.65, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.08 + hitT * 0.15) * pFast * phaseMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx + hitShake * 0.7, cy, boss.w * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.16 + hitT * 0.22) * pFast;
+  ctx.strokeStyle = '#a0f0ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx + hitShake * 0.5, cy, boss.w * 0.38, 0, Math.PI * 2);
+  ctx.stroke();
+
+  if (isPulseMode) {
+    var pulseBuild = 0.4 + Math.sin(time * 0.06) * 0.35;
+    ctx.globalAlpha = pulseBuild * phaseMul;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, boss.w * 0.42 + Math.sin(time * 0.04) * 6, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = pulseBuild * 0.6;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, boss.w * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (var i = 0; i < 8; i++) {
+    var sa = time * 0.006 + (Math.PI * 2 * i / 8);
+    var sr = boss.w * (0.3 + Math.sin(time * 0.025 + i) * 0.15);
+    var sx = cx + Math.cos(sa) * sr;
+    var sy = cy + Math.sin(sa) * sr;
+    ctx.globalAlpha = (0.2 + Math.sin(time * 0.04 + i) * 0.15) * pFast * phaseMul;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+
+  if (phase >= 3) {
+    for (var e = 0; e < 6; e++) {
+      var ea = time * 0.008 + (Math.PI * 2 * e / 6);
+      var er1 = boss.w * 0.25;
+      var er2 = boss.w * 0.5;
+      var ex1 = cx + Math.cos(ea) * er1;
+      var ey1 = cy + Math.sin(ea) * er1;
+      var ex2 = cx + Math.cos(ea + 0.2) * er2;
+      var ey2 = cy + Math.sin(ea + 0.2) * er2;
+
+      ctx.globalAlpha = 0.25 + Math.sin(time * 0.06 + e) * 0.15;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(ex1, ey1);
+      ctx.lineTo(ex2, ey2);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawOrbitalRingArcs(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitShake = Math.sin(time * 0.35) * hitT * 2;
+
+  var arcCount = phase === 1 ? 2 : phase === 2 ? 3 : 4;
+  var speed = 0.012 + phase * 0.003;
+  var pulse = 0.6 + Math.sin(time * 0.03) * 0.4;
+
+  ctx.save();
+
+  for (var a = 0; a < arcCount; a++) {
+    var baseAngle = time * speed + (Math.PI * 2 * a / arcCount);
+    var radius = boss.w * 0.48 + Math.sin(time * 0.018 + a) * 4;
+
+    for (var seg = 0; seg < 3; seg++) {
+      var arcStart = baseAngle + seg * (Math.PI * 2 / 3 / 3);
+      var arcLen = Math.PI * 0.45;
+
+      ctx.globalAlpha = (0.12 + hitT * 0.15) * pulse * (1 + phase * 0.15);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2 + a * 0.5;
+      ctx.beginPath();
+      ctx.arc(cx + hitShake * (a % 2 === 0 ? 1 : -1), cy, radius, arcStart, arcStart + arcLen);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = (0.25 + hitT * 0.2) * pulse;
+    ctx.strokeStyle = '#e0ffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.72, baseAngle + 0.3, baseAngle + 0.3 + Math.PI * 0.6);
+    ctx.stroke();
+  }
+
+  if (phase >= 3) {
+    ctx.globalAlpha = 0.2 * pulse;
+    ctx.strokeStyle = '#88ffff';
+    ctx.lineWidth = 2;
+    for (var cc = 0; cc < 2; cc++) {
+      var ca = -time * speed * 0.7 + cc * Math.PI;
+      ctx.beginPath();
+      ctx.arc(cx, cy, boss.w * 0.55, ca, ca + Math.PI * 0.55);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawOrbitalCore(ctx, boss, color, time) {
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = boss.phase || (hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3);
+  var flashTimer = boss.flashTimer || 0;
+  var isPulseMode = boss.pulseMode || false;
+
+  var hitT = flashTimer > 0 ? Math.min(1, flashTimer / 200) : 0;
+  var hitBright = hitT * 0.4;
+
+  var pulse = 0.6 + Math.sin(time * 0.028) * 0.4;
+  var pFast = 0.5 + Math.sin(time * 0.055) * 0.5;
+  var phaseMul = phase === 1 ? 1 : phase === 2 ? 1.25 : 1.6;
+
+  ctx.save();
+
+  var coreR = 7 * phaseMul + hitBright * 3;
+  ctx.globalAlpha = (0.15 + hitBright) * pFast * phaseMul;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.35 + hitBright) * pulse * phaseMul;
+  ctx.strokeStyle = '#e0ffff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR + 2, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = (0.65 + hitBright) * pFast * phaseMul;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.95;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, coreR * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = (0.2 + hitBright) * pulse;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  var crossLen = coreR + 8;
+  ctx.beginPath();
+  ctx.moveTo(cx - crossLen, cy);
+  ctx.lineTo(cx + crossLen, cy);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - crossLen);
+  ctx.lineTo(cx, cy + crossLen);
+  ctx.stroke();
+
+  if (phase >= 3 || isPulseMode) {
+    var surgeR = coreR * 1.8 + Math.sin(time * 0.07) * 5;
+    ctx.globalAlpha = 0.18 + Math.sin(time * 0.05) * 0.1;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, surgeR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 // --- DRAW ---
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
@@ -1765,6 +1974,9 @@ if (shouldShow) {
         drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'zigzag') {
         drawSerpentrixAura(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'rotate') {
+        drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
+        drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
       }
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
@@ -1774,6 +1986,8 @@ if (shouldShow) {
         drawSerpentrixEyes(ctx, boss, bossColor, globalTime);
         drawSerpentrixFangs(ctx, boss, bossColor, globalTime);
         drawSerpentrixVenomDrops(ctx, boss, bossColor, globalTime);
+      } else if (boss.pattern === 'rotate') {
+        drawOrbitalCore(ctx, boss, bossColor, globalTime);
       }
 
       ctx.save();
