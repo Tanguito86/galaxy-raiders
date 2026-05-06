@@ -105,6 +105,22 @@ function drawEarthBackground(ctx, time) {
   ctx.fillRect(316 + 6, H - 50 - 44 - 11, 9, 3);
   ctx.globalAlpha = 1;
 
+  // Special silhouettes (dome + irregular structure)
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = '#060810';
+  // Military dome/bunker
+  ctx.beginPath();
+  ctx.arc(145, H - 50, 22, Math.PI, 0);
+  ctx.fillRect(145 - 22, H - 52, 44, 4);
+  ctx.fill();
+  // Irregular damaged building
+  ctx.fillRect(290, H - 50 - 32, 8, 32);
+  ctx.fillRect(290, H - 50 - 38, 20, 8);
+  ctx.fillRect(298, H - 50 - 42, 6, 42);
+  ctx.fillRect(304, H - 50 - 26, 8, 26);
+  ctx.fillRect(316, H - 50 - 30, 5, 30);
+  ctx.globalAlpha = 1;
+
   // Building windows (deterministic on/off pattern)
   ctx.globalAlpha = 0.24;
   for (var i = 0; i < buildings.length; i++) {
@@ -124,10 +140,16 @@ function drawEarthBackground(ctx, time) {
   }
   ctx.globalAlpha = 1;
 
-  // Low smoke clouds (moving horizontally, deterministic)
+  // Subtle upper haze to soften stars over Earth (no tocar sistema global)
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#04080c';
+  ctx.fillRect(0, 0, W, H * 0.62);
+  ctx.globalAlpha = 1;
+
+  // Low smoke clouds (moving horizontally, deterministic, parallax leve)
   ctx.globalAlpha = 0.05;
   ctx.fillStyle = '#777766';
-  var smokeSpeed = time * 0.00007;
+  var smokeSpeed = time * 0.00012;
   for (var s = 0; s < 5; s++) {
     var sx = ((s * 74 + 10 + smokeSpeed * (19 + s * 8)) % (W + 90)) - 45;
     var sy = H - 96 - s * 8;
@@ -136,10 +158,10 @@ function drawEarthBackground(ctx, time) {
     ctx.fill();
   }
 
-  // Second smoke layer (warmer tone, different speed)
+  // Second smoke layer (warmer tone, different speed, parallax leve)
   ctx.globalAlpha = 0.035;
   ctx.fillStyle = '#996644';
-  var smokeSpeed2 = time * 0.00010;
+  var smokeSpeed2 = time * 0.00016;
   for (var s = 0; s < 4; s++) {
     var sx2 = ((s * 88 + 55 + smokeSpeed2 * (25 - s * 5)) % (W + 100)) - 50;
     var sy2 = H - 78 - s * 5;
