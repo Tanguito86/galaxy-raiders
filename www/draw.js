@@ -2,29 +2,179 @@
 // GALAXY RAIDERS - draw.js
 // =====================
 
-function drawBackgroundMood() {
-  const isWarpMood = pendingNextLevel || warpSpeed > 1.5;
-  const isBossMood = boss && boss.active;
+// --- BACKGROUND THEME ENGINE ---
+function getBackgroundThemeForLevel(levelNum) {
+  if (levelNum >= 20) return 'imperial';
+  if (levelNum >= 16) return 'deepSpace';
+  if (levelNum >= 11) return 'orbit';
+  if (levelNum >= 6)  return 'atmosphere';
+  return 'earth';
+}
+
+function drawEarthBackground(ctx, time) {
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#020818');
+  grad.addColorStop(0.6, '#041830');
+  grad.addColorStop(0.85, '#0a2a4a');
+  grad.addColorStop(1, '#0d3a5c');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#1a4a2a';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (var x = 0; x <= W; x += 10) {
+    var y = H - 12 - Math.sin(x * 0.03 + time * 0.0002) * 8 - Math.sin(x * 0.07) * 4;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function drawAtmosphereBackground(ctx, time) {
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#010818');
+  grad.addColorStop(0.45, '#021830');
+  grad.addColorStop(0.7, '#0a3050');
+  grad.addColorStop(0.9, '#0e4a6a');
+  grad.addColorStop(1, '#0a3858');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#4a8aaa';
+  for (var b = 0; b < 4; b++) {
+    var by = H * 0.55 + b * H * 0.1 + Math.sin(time * 0.0005 + b) * 6;
+    ctx.fillRect(0, by, W, Math.max(1, H * 0.04));
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawOrbitBackground(ctx, time) {
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#010412');
+  grad.addColorStop(0.5, '#020c1c');
+  grad.addColorStop(0.8, '#031830');
+  grad.addColorStop(1, '#0a2848');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  var rimGrad = ctx.createLinearGradient(0, H * 0.65, 0, H);
+  rimGrad.addColorStop(0, 'transparent');
+  rimGrad.addColorStop(0.4, '#1a5588');
+  rimGrad.addColorStop(1, '#0d3a5c');
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = rimGrad;
+  ctx.fillRect(0, H * 0.65, W, H * 0.35);
+
+  ctx.globalAlpha = 0.06;
+  ctx.strokeStyle = '#4a8abb';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(W / 2, H + 200, 320, Math.PI + 0.15, Math.PI * 2 - 0.15);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function drawDeepSpaceBackground(ctx, time) {
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#030210');
+  grad.addColorStop(0.3, '#060318');
+  grad.addColorStop(0.6, '#0a0418');
+  grad.addColorStop(1, '#100818');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalAlpha = 0.025;
+  ctx.fillStyle = '#4a1030';
+  ctx.beginPath();
+  ctx.ellipse(W * 0.25, H * 0.35, 80 + Math.sin(time * 0.0003) * 10, 60, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.02;
+  ctx.fillStyle = '#2a1040';
+  ctx.beginPath();
+  ctx.ellipse(W * 0.72, H * 0.55, 70 + Math.sin(time * 0.0004) * 12, 50, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.03;
+  ctx.fillStyle = '#301020';
+  ctx.beginPath();
+  ctx.ellipse(W * 0.5, H * 0.25, 100, 40, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.04 + Math.sin(time * 0.0008) * 0.015;
+  ctx.fillStyle = '#4a2008';
+  ctx.fillRect(0, 0, W * 0.08, H);
+  ctx.fillRect(W * 0.92, 0, W * 0.08, H);
+
+  ctx.globalAlpha = 1;
+}
+
+function drawImperialBackground(ctx, time) {
+  var grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#040208');
+  grad.addColorStop(0.5, '#060410');
+  grad.addColorStop(1, '#0a0410');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  var glowGrad = ctx.createLinearGradient(0, H * 0.5, 0, H);
+  glowGrad.addColorStop(0, 'transparent');
+  glowGrad.addColorStop(1, 'rgba(80, 10, 10, 0.12)');
+  ctx.fillStyle = glowGrad;
+  ctx.fillRect(0, H * 0.5, W, H * 0.5);
+
+  var pillarPulse = 0.5 + Math.sin(time * 0.0015) * 0.5;
+  ctx.globalAlpha = 0.05 + pillarPulse * 0.04;
+  ctx.fillStyle = '#ffd700';
+  ctx.fillRect(8, 0, 3, H);
+  ctx.fillRect(W - 11, 0, 3, H);
+
+  ctx.globalAlpha = 0.03 + pillarPulse * 0.025;
+  ctx.fillStyle = '#8a2020';
+  ctx.fillRect(14, 0, 2, H);
+  ctx.fillRect(W - 16, 0, 2, H);
+
+  ctx.globalAlpha = 0.04 + pillarPulse * 0.03;
+  var topGlow = ctx.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, 160);
+  topGlow.addColorStop(0, '#ffd700');
+  topGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, W, H * 0.6);
+
+  ctx.globalAlpha = 1;
+}
+
+function drawThemedBackground(ctx, levelNum, time) {
+  var isWarpMood = pendingNextLevel || warpSpeed > 1.5;
+  var isBossMood = boss && boss.active;
+  var theme = getBackgroundThemeForLevel(levelNum);
+
+  switch (theme) {
+    case 'earth':      drawEarthBackground(ctx, time);      break;
+    case 'atmosphere': drawAtmosphereBackground(ctx, time); break;
+    case 'orbit':      drawOrbitBackground(ctx, time);      break;
+    case 'deepSpace':  drawDeepSpaceBackground(ctx, time);  break;
+    case 'imperial':   drawImperialBackground(ctx, time);   break;
+    default:           drawEarthBackground(ctx, time);      break;
+  }
 
   if (isWarpMood) {
-    const intensity = Math.min(1, (warpSpeed - 1.5) / 4);
-    ctx.fillStyle = '#050812';
-    ctx.fillRect(0, 0, W, H);
+    var intensity = Math.min(1, (warpSpeed - 1.5) / 4);
     ctx.globalAlpha = 0.08 + intensity * 0.12;
     ctx.fillStyle = '#09f';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
   } else if (isBossMood) {
-    const hpRatio = boss.hp / boss.maxHp;
-    ctx.fillStyle = '#080404';
-    ctx.fillRect(0, 0, W, H);
+    var hpRatio = boss.hp / boss.maxHp;
     ctx.globalAlpha = 0.04 + (1 - hpRatio) * 0.08;
     ctx.fillStyle = '#400';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
-  } else {
-    ctx.fillStyle = '#05050a';
-    ctx.fillRect(0, 0, W, H);
   }
 }
 
@@ -2048,7 +2198,7 @@ function drawEmperorPhaseOverload(ctx, boss, color, time) {
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
   ctx.clearRect(0, 0, W, H);
-  drawBackgroundMood();
+  drawThemedBackground(ctx, level, globalTime);
 
   const mobileControls = document.getElementById('mobile-controls');
   if (mobileControls) {
