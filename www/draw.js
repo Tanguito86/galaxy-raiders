@@ -12,25 +12,142 @@ function getBackgroundThemeForLevel(levelNum) {
 }
 
 function drawEarthBackground(ctx, time) {
+  // Sky: smoky dark with warm horizon (invasion glow)
   var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#020818');
-  grad.addColorStop(0.6, '#041830');
-  grad.addColorStop(0.85, '#0a2a4a');
-  grad.addColorStop(1, '#0d3a5c');
+  grad.addColorStop(0, '#040810');
+  grad.addColorStop(0.4, '#080e18');
+  grad.addColorStop(0.62, '#0c1418');
+  grad.addColorStop(0.78, '#151410');
+  grad.addColorStop(0.90, '#2a1a0e');
+  grad.addColorStop(1, '#1a0c06');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = '#1a4a2a';
+  // Invasion glow near horizon
+  var glowGrad = ctx.createLinearGradient(0, H * 0.80, 0, H * 0.94);
+  glowGrad.addColorStop(0, 'transparent');
+  glowGrad.addColorStop(0.35, 'rgba(220, 70, 15, 0.06)');
+  glowGrad.addColorStop(0.7, 'rgba(200, 55, 10, 0.09)');
+  glowGrad.addColorStop(1, 'rgba(160, 40, 8, 0.04)');
+  ctx.fillStyle = glowGrad;
+  ctx.fillRect(0, H * 0.80, W, H * 0.14);
+
+  // Distant mountains (dark, far background)
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#080810';
   ctx.beginPath();
   ctx.moveTo(0, H);
-  for (var x = 0; x <= W; x += 10) {
-    var y = H - 12 - Math.sin(x * 0.03 + time * 0.0002) * 8 - Math.sin(x * 0.07) * 4;
-    ctx.lineTo(x, y);
+  for (var x = 0; x <= W; x += 6) {
+    ctx.lineTo(x, H - 88 - Math.sin(x * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18);
   }
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Midground mountains/skyline (parallax subtle)
+  var pTime = time * 0.00006;
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#0c0c16';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (var x = 0; x <= W; x += 5) {
+    ctx.lineTo(x, H - 66 - Math.sin(x * 0.016 + 2.3 + pTime) * 26 - Math.sin(x * 0.028 + 0.9) * 14);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Ground base plate
+  ctx.fillStyle = '#060810';
+  ctx.globalAlpha = 0.85;
+  ctx.fillRect(0, H - 50, W, 50);
+  ctx.globalAlpha = 1;
+
+  // City / military base buildings
+  var buildings = [
+    { x: 12, w: 20, h: 35 },
+    { x: 36, w: 16, h: 44 },
+    { x: 58, w: 14, h: 26 },
+    { x: 76, w: 22, h: 52 },
+    { x: 104, w: 16, h: 32 },
+    { x: 126, w: 24, h: 40 },
+    { x: 156, w: 14, h: 24 },
+    { x: 176, w: 18, h: 42 },
+    { x: 200, w: 20, h: 34 },
+    { x: 226, w: 16, h: 50 },
+    { x: 248, w: 14, h: 28 },
+    { x: 268, w: 20, h: 38 },
+    { x: 294, w: 16, h: 30 },
+    { x: 316, w: 22, h: 44 },
+    { x: 342, w: 14, h: 36 }
+  ];
+
+  ctx.fillStyle = '#060810';
+  ctx.globalAlpha = 0.90;
+  for (var i = 0; i < buildings.length; i++) {
+    var b = buildings[i];
+    ctx.fillRect(b.x, H - 50 - b.h, b.w, b.h);
+  }
+  ctx.globalAlpha = 1;
+
+  // Antenna towers on tall buildings
+  ctx.fillStyle = '#080812';
+  ctx.globalAlpha = 0.92;
+  ctx.fillRect(76 + 8, H - 50 - 52 - 20, 3, 20);
+  ctx.fillRect(76 + 5, H - 50 - 52 - 12, 9, 3);
+
+  ctx.fillRect(226 + 6, H - 50 - 50 - 16, 3, 16);
+  ctx.fillRect(226 + 3, H - 50 - 50 - 9, 9, 3);
+
+  ctx.fillRect(316 + 9, H - 50 - 44 - 18, 3, 18);
+  ctx.fillRect(316 + 6, H - 50 - 44 - 11, 9, 3);
+  ctx.globalAlpha = 1;
+
+  // Building windows (deterministic on/off pattern)
+  ctx.globalAlpha = 0.24;
+  for (var i = 0; i < buildings.length; i++) {
+    var b = buildings[i];
+    if (b.w < 13) continue;
+    var rows = Math.floor(b.h / 10);
+    for (var r = 0; r < rows; r++) {
+      var wy = H - 50 - b.h + 5 + r * 10;
+      var lit = ((i + r) % 3 !== 0);
+      ctx.fillStyle = lit ? '#ff9930' : '#331100';
+      ctx.fillRect(b.x + 3, wy, 3, 2);
+      if (b.w > 16) {
+        ctx.fillRect(b.x + b.w / 2 - 1.5, wy, 3, 2);
+      }
+      ctx.fillRect(b.x + b.w - 6, wy, 3, 2);
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Low smoke clouds (moving horizontally, deterministic)
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = '#777766';
+  var smokeSpeed = time * 0.00007;
+  for (var s = 0; s < 5; s++) {
+    var sx = ((s * 74 + 10 + smokeSpeed * (19 + s * 8)) % (W + 90)) - 45;
+    var sy = H - 96 - s * 8;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 26 + s * 5, 12 + s * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Second smoke layer (warmer tone, different speed)
+  ctx.globalAlpha = 0.035;
+  ctx.fillStyle = '#996644';
+  var smokeSpeed2 = time * 0.00010;
+  for (var s = 0; s < 4; s++) {
+    var sx2 = ((s * 88 + 55 + smokeSpeed2 * (25 - s * 5)) % (W + 100)) - 50;
+    var sy2 = H - 78 - s * 5;
+    ctx.beginPath();
+    ctx.ellipse(sx2, sy2, 32 + s * 3, 15 + s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.globalAlpha = 1;
 }
 
