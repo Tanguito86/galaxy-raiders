@@ -2195,6 +2195,7 @@ function drawEmperorPhaseOverload(ctx, boss, color, time) {
 }
 
 // --- DRAW ---
+var _lastControlDeckTheme = '';
 function draw() {
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
   ctx.clearRect(0, 0, W, H);
@@ -2221,6 +2222,12 @@ function draw() {
     if (mobileControls.style.transition !== targetTransition) {
       mobileControls.style.transition = targetTransition;
     }
+  }
+
+  const deckTheme = getBackgroundThemeForLevel(level);
+  if (_lastControlDeckTheme !== deckTheme) {
+    _lastControlDeckTheme = deckTheme;
+    document.body.dataset.theme = deckTheme;
   }
 
   // 2) STAR SHAKE (solo fondo, más fuerte en boss)

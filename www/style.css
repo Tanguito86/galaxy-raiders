@@ -195,6 +195,139 @@ canvas {
   padding: 0 18px;
   z-index: 50;
   pointer-events: auto;
+  /* Panel fondo integrado con el tema */
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 8, 20, 0.88) 0%,
+    rgba(8, 12, 26, 0.94) 50%,
+    rgba(10, 15, 30, 0.96) 100%
+  );
+  border-radius: 0;
+  border-top: 2px solid rgba(0, 150, 255, 0.25);
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Extiende el fondo del panel hasta el borde inferior de pantalla */
+#mobile-controls::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 100%;
+  background: inherit;
+  z-index: -1;
+  pointer-events: none;
+  border-top: inherit;
+  box-shadow: inherit;
+  border-radius: inherit;
+  bottom: -50px;
+  height: auto;
+}
+
+/* ---- THEME VARIANTS: fondo del panel segun capitulo ---- */
+
+/* Earth (levels 1-5): base militar / asfalto oscuro + brillo azul */
+body[data-theme="earth"] #mobile-controls {
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 20, 35, 0.86) 0%,
+    rgba(10, 24, 42, 0.92) 50%,
+    rgba(13, 32, 55, 0.96) 100%
+  );
+  border-top: 2px solid rgba(30, 110, 190, 0.4);
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(30, 120, 200, 0.08),
+    0 0 25px rgba(20, 90, 160, 0.06);
+}
+body[data-theme="earth"] #mobile-controls::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+
+/* Atmosphere (levels 6-10): nubes oscuras / niebla baja */
+body[data-theme="atmosphere"] #mobile-controls {
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 18, 30, 0.84) 0%,
+    rgba(10, 22, 38, 0.90) 50%,
+    rgba(14, 32, 50, 0.95) 100%
+  );
+  border-top: 2px solid rgba(60, 140, 180, 0.35);
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(70, 150, 190, 0.06),
+    0 0 25px rgba(50, 130, 170, 0.05);
+}
+body[data-theme="atmosphere"] #mobile-controls::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+
+/* Orbit (levels 11-15): panel cabina espacial */
+body[data-theme="orbit"] #mobile-controls {
+  background: linear-gradient(
+    to bottom,
+    rgba(4, 12, 24, 0.88) 0%,
+    rgba(8, 18, 32, 0.93) 50%,
+    rgba(12, 28, 48, 0.96) 100%
+  );
+  border-top: 2px solid rgba(40, 120, 200, 0.4);
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(50, 140, 210, 0.07),
+    0 0 30px rgba(30, 100, 180, 0.06);
+}
+body[data-theme="orbit"] #mobile-controls::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+
+/* Deep Space (levels 16-19): nebulosa oscura */
+body[data-theme="deepSpace"] #mobile-controls {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 6, 22, 0.88) 0%,
+    rgba(14, 8, 28, 0.92) 50%,
+    rgba(18, 10, 32, 0.96) 100%
+  );
+  border-top: 2px solid rgba(100, 40, 80, 0.38);
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(120, 50, 100, 0.06),
+    0 0 25px rgba(80, 30, 60, 0.05);
+}
+body[data-theme="deepSpace"] #mobile-controls::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+
+/* Imperial (level 20+): fortaleza final rojo/dorado */
+body[data-theme="imperial"] #mobile-controls {
+  background: linear-gradient(
+    to bottom,
+    rgba(16, 6, 8, 0.88) 0%,
+    rgba(20, 8, 10, 0.93) 50%,
+    rgba(28, 10, 12, 0.96) 100%
+  );
+  border-top: 2px solid rgba(200, 120, 30, 0.4);
+  box-shadow:
+    0 -10px 30px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(220, 160, 40, 0.08),
+    0 0 30px rgba(180, 60, 20, 0.07);
+}
+body[data-theme="imperial"] #mobile-controls::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
 }
 
 /* Joystick virtual - MAS GRANDE */
