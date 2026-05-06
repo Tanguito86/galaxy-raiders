@@ -34,8 +34,8 @@ button {
 canvas {
   width: auto;
   max-width: 100vw;
-  height: calc(100vh - 180px);
-  max-height: calc(100vh - 180px);
+  height: calc(100vh - 150px);
+  max-height: calc(100vh - 150px);
   display: block;
   image-rendering: pixelated;
   touch-action: none;
@@ -46,8 +46,8 @@ canvas {
 /* En movil, ajustar altura */
 @media (pointer: coarse) {
   canvas {
-    height: calc(100vh - 180px);
-    max-height: calc(100vh - 180px);
+    height: calc(100vh - 150px);
+    max-height: calc(100vh - 150px);
   }
 }
 /* Texto informativo */
@@ -186,21 +186,21 @@ canvas {
 #mobile-controls {
   display: none;
   position: fixed;
-  bottom: 50px;
+  bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 420px;
-  justify-content: space-between;
-  padding: 0 18px;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px 8px 12px;
   z-index: 50;
   pointer-events: auto;
   /* Panel fondo integrado con el tema */
   background: linear-gradient(
     to bottom,
-    rgba(5, 8, 20, 0.88) 0%,
-    rgba(8, 12, 26, 0.94) 50%,
-    rgba(10, 15, 30, 0.96) 100%
+    rgba(8, 14, 28, 0.92),
+    rgba(10, 18, 35, 0.96)
   );
   border-radius: 14px 14px 0 0;
   border-top: 2px solid rgba(0, 150, 255, 0.25);
@@ -209,14 +209,14 @@ canvas {
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-/* Extiende el fondo del panel hasta el borde inferior de pantalla */
+/* Extiende el fondo del panel hacia abajo (borde pantalla) */
 #mobile-controls::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: 5px;
   left: 0;
   right: 0;
-  bottom: -50px;
+  bottom: -5px;
   background: inherit;
   z-index: -1;
   pointer-events: none;
@@ -225,21 +225,61 @@ canvas {
   border-radius: inherit;
 }
 
+/* ---- CONTROL DECK HEADER ---- */
+.control-deck-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 2px 6px 1px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 2px;
+}
+
+.control-deck-logo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #e0e8ff;
+  text-shadow: 0 0 8px rgba(80, 160, 255, 0.5);
+  letter-spacing: 1px;
+}
+
+.control-deck-subtitle {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 4px;
+  color: rgba(180, 200, 240, 0.55);
+  letter-spacing: 2px;
+}
+
+.control-deck-badge {
+  font-size: 10px;
+  color: rgba(255, 200, 60, 0.7);
+  text-shadow: 0 0 6px rgba(255, 200, 60, 0.4);
+}
+
+/* ---- CONTROL DECK ROW ---- */
+.control-deck-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 4px;
+}
+
 /* ---- THEME VARIANTS: fondo del panel segun capitulo ---- */
 
 /* Earth (levels 1-5): base militar / asfalto oscuro + brillo azul */
 body[data-theme="earth"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(8, 20, 35, 0.86) 0%,
-    rgba(10, 24, 42, 0.92) 50%,
-    rgba(13, 32, 55, 0.96) 100%
+    rgba(8, 20, 36, 0.92),
+    rgba(12, 26, 44, 0.96)
   );
   border-top: 2px solid rgba(30, 110, 190, 0.4);
   box-shadow:
-    0 -10px 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(30, 120, 200, 0.08),
-    0 0 25px rgba(20, 90, 160, 0.06);
+    0 -8px 20px rgba(0, 0, 0, 0.45);
 }
 body[data-theme="earth"] #mobile-controls::before {
   background: inherit;
@@ -251,15 +291,12 @@ body[data-theme="earth"] #mobile-controls::before {
 body[data-theme="atmosphere"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(8, 18, 30, 0.84) 0%,
-    rgba(10, 22, 38, 0.90) 50%,
-    rgba(14, 32, 50, 0.95) 100%
+    rgba(8, 18, 32, 0.90),
+    rgba(12, 26, 42, 0.95)
   );
   border-top: 2px solid rgba(60, 140, 180, 0.35);
   box-shadow:
-    0 -10px 30px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(70, 150, 190, 0.06),
-    0 0 25px rgba(50, 130, 170, 0.05);
+    0 -8px 20px rgba(0, 0, 0, 0.45);
 }
 body[data-theme="atmosphere"] #mobile-controls::before {
   background: inherit;
@@ -271,15 +308,12 @@ body[data-theme="atmosphere"] #mobile-controls::before {
 body[data-theme="orbit"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(4, 12, 24, 0.88) 0%,
-    rgba(8, 18, 32, 0.93) 50%,
-    rgba(12, 28, 48, 0.96) 100%
+    rgba(4, 12, 24, 0.92),
+    rgba(10, 20, 36, 0.96)
   );
   border-top: 2px solid rgba(40, 120, 200, 0.4);
   box-shadow:
-    0 -10px 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(50, 140, 210, 0.07),
-    0 0 30px rgba(30, 100, 180, 0.06);
+    0 -8px 20px rgba(0, 0, 0, 0.45);
 }
 body[data-theme="orbit"] #mobile-controls::before {
   background: inherit;
@@ -291,15 +325,12 @@ body[data-theme="orbit"] #mobile-controls::before {
 body[data-theme="deepSpace"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(10, 6, 22, 0.88) 0%,
-    rgba(14, 8, 28, 0.92) 50%,
-    rgba(18, 10, 32, 0.96) 100%
+    rgba(10, 6, 22, 0.92),
+    rgba(16, 8, 30, 0.96)
   );
   border-top: 2px solid rgba(100, 40, 80, 0.38);
   box-shadow:
-    0 -10px 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(120, 50, 100, 0.06),
-    0 0 25px rgba(80, 30, 60, 0.05);
+    0 -8px 20px rgba(0, 0, 0, 0.45);
 }
 body[data-theme="deepSpace"] #mobile-controls::before {
   background: inherit;
@@ -311,15 +342,12 @@ body[data-theme="deepSpace"] #mobile-controls::before {
 body[data-theme="imperial"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(16, 6, 8, 0.88) 0%,
-    rgba(20, 8, 10, 0.93) 50%,
-    rgba(28, 10, 12, 0.96) 100%
+    rgba(16, 6, 8, 0.92),
+    rgba(24, 10, 12, 0.96)
   );
   border-top: 2px solid rgba(200, 120, 30, 0.4);
   box-shadow:
-    0 -10px 30px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(220, 160, 40, 0.08),
-    0 0 30px rgba(180, 60, 20, 0.07);
+    0 -8px 20px rgba(0, 0, 0, 0.50);
 }
 body[data-theme="imperial"] #mobile-controls::before {
   background: inherit;
@@ -411,6 +439,100 @@ body[data-theme="imperial"] #mobile-controls::before {
 .pause-btn-center,
 .mute-btn {
   display: block !important;
+}
+
+/* ===================== */
+/* CONTROL DECK SKINS    */
+/* ===================== */
+
+/* --- Classic (default): tech-blue / cian oscuro --- */
+body.deck-skin-classic #mobile-controls,
+#mobile-controls.deck-skin-classic {
+  background: linear-gradient(
+    to bottom,
+    rgba(5, 8, 22, 0.92),
+    rgba(10, 16, 32, 0.96)
+  );
+  border-top: 2px solid rgba(0, 150, 255, 0.35);
+  box-shadow:
+    0 -8px 20px rgba(0, 0, 0, 0.45);
+}
+body.deck-skin-classic #mobile-controls::before,
+#mobile-controls.deck-skin-classic::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+body.deck-skin-classic .control-deck-header {
+  border-bottom-color: rgba(0, 160, 255, 0.15);
+}
+body.deck-skin-classic .control-deck-logo {
+  color: #c8daff;
+  text-shadow: 0 0 10px rgba(60, 140, 255, 0.6);
+}
+body.deck-skin-classic .control-deck-badge {
+  color: rgba(80, 180, 255, 0.8);
+  text-shadow: 0 0 8px rgba(60, 160, 255, 0.5);
+}
+
+/* --- Earth Defense: verde militar / olive tech --- */
+body.deck-skin-earth #mobile-controls,
+#mobile-controls.deck-skin-earth {
+  background: linear-gradient(
+    to bottom,
+    rgba(6, 16, 8, 0.92),
+    rgba(10, 24, 14, 0.96)
+  );
+  border-top: 2px solid rgba(60, 180, 80, 0.35);
+  box-shadow:
+    0 -8px 20px rgba(0, 0, 0, 0.45);
+}
+body.deck-skin-earth #mobile-controls::before,
+#mobile-controls.deck-skin-earth::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+body.deck-skin-earth .control-deck-header {
+  border-bottom-color: rgba(60, 180, 80, 0.14);
+}
+body.deck-skin-earth .control-deck-logo {
+  color: #c0ffc8;
+  text-shadow: 0 0 10px rgba(40, 200, 80, 0.55);
+}
+body.deck-skin-earth .control-deck-badge {
+  color: rgba(80, 220, 100, 0.8);
+  text-shadow: 0 0 8px rgba(50, 200, 80, 0.5);
+}
+
+/* --- Imperial: fortaleza rojo/dorado --- */
+body.deck-skin-imperial #mobile-controls,
+#mobile-controls.deck-skin-imperial {
+  background: linear-gradient(
+    to bottom,
+    rgba(16, 6, 6, 0.92),
+    rgba(24, 10, 10, 0.96)
+  );
+  border-top: 2px solid rgba(200, 80, 30, 0.38);
+  box-shadow:
+    0 -8px 20px rgba(0, 0, 0, 0.48);
+}
+body.deck-skin-imperial #mobile-controls::before,
+#mobile-controls.deck-skin-imperial::before {
+  background: inherit;
+  border-top: inherit;
+  box-shadow: inherit;
+}
+body.deck-skin-imperial .control-deck-header {
+  border-bottom-color: rgba(200, 100, 40, 0.16);
+}
+body.deck-skin-imperial .control-deck-logo {
+  color: #ffe0c8;
+  text-shadow: 0 0 10px rgba(255, 140, 50, 0.6);
+}
+body.deck-skin-imperial .control-deck-badge {
+  color: rgba(255, 180, 60, 0.85);
+  text-shadow: 0 0 8px rgba(255, 160, 40, 0.55);
 }
 
 /* AI_PATCH_CSS: cambio automático desde TASK.md */
