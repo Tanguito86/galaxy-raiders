@@ -12,7 +12,7 @@ function getBackgroundThemeForLevel(levelNum) {
 }
 
 function drawEarthBackground(ctx, time) {
-  // COLD WINTER NIGHT: dark blue-violet gradient with faint invasion glow
+  // SKY: dark blue-violet gradient
   var grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#020510');
   grad.addColorStop(0.25, '#030a18');
@@ -23,43 +23,43 @@ function drawEarthBackground(ctx, time) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // Distant invasion fires: faint orange glow near horizon only
+  // Faint invasion glow near horizon
   var glowGrad = ctx.createLinearGradient(0, H * 0.76, 0, H * 0.96);
   glowGrad.addColorStop(0, 'transparent');
-  glowGrad.addColorStop(0.30, 'rgba(180, 45, 10, 0.04)');
-  glowGrad.addColorStop(0.60, 'rgba(140, 35, 8, 0.06)');
-  glowGrad.addColorStop(1, 'rgba(100, 25, 5, 0.03)');
+  glowGrad.addColorStop(0.30, 'rgba(180, 45, 10, 0.03)');
+  glowGrad.addColorStop(0.60, 'rgba(140, 35, 8, 0.04)');
+  glowGrad.addColorStop(1, 'rgba(100, 25, 5, 0.02)');
   ctx.fillStyle = glowGrad;
   ctx.fillRect(0, H * 0.76, W, H * 0.20);
 
-  // Distant mountains (cold dark silhouettes)
-  ctx.globalAlpha = 0.14;
+  // Distant mountains: cold dark silhouettes with subtle parallax
+  ctx.globalAlpha = 0.12;
   ctx.fillStyle = '#060e1c';
   ctx.beginPath();
   ctx.moveTo(0, H);
+  var distantDrift = Math.sin(time * 0.00003) * 3;
   for (var x = 0; x <= W; x += 6) {
-    ctx.lineTo(x, H - 88 - Math.sin(x * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18);
+    ctx.lineTo(x, H - 88 - Math.sin((x + distantDrift) * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18);
   }
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
-  // Snow dusting on distant peaks
-  ctx.globalAlpha = 0.06;
+  ctx.globalAlpha = 0.05;
   ctx.fillStyle = '#99aacc';
   ctx.beginPath();
   ctx.moveTo(0, H);
   for (var x = 0; x <= W; x += 6) {
-    var peakY = H - 88 - Math.sin(x * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18;
-    ctx.lineTo(x, peakY + 18);
+    var peakY = H - 88 - Math.sin((x + distantDrift) * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18;
+    ctx.lineTo(x, peakY + 16);
   }
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Midground mountains/skyline with snow-dusted ridges
+  // Midground mountains with subtle drift
   var pTime = time * 0.00006;
-  ctx.globalAlpha = 0.18;
+  ctx.globalAlpha = 0.16;
   ctx.fillStyle = '#081020';
   ctx.beginPath();
   ctx.moveTo(0, H);
@@ -69,33 +69,31 @@ function drawEarthBackground(ctx, time) {
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
-  // Snow dusting on midground peaks
-  ctx.globalAlpha = 0.07;
+  ctx.globalAlpha = 0.06;
   ctx.fillStyle = '#aabbcc';
   ctx.beginPath();
   ctx.moveTo(0, H);
   for (var x = 0; x <= W; x += 5) {
     var mpeakY = H - 66 - Math.sin(x * 0.016 + 2.3 + pTime) * 26 - Math.sin(x * 0.028 + 0.9) * 14;
-    ctx.lineTo(x, mpeakY + 14);
+    ctx.lineTo(x, mpeakY + 12);
   }
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Ground base with snow accumulation at the top edge
+  // Ground base
   ctx.fillStyle = '#060e1a';
-  ctx.globalAlpha = 0.88;
+  ctx.globalAlpha = 0.92;
   ctx.fillRect(0, H - 50, W, 50);
-  // Irregular snow line on ground surface
-  ctx.globalAlpha = 0.22;
+  ctx.globalAlpha = 0.18;
   ctx.fillStyle = '#8899bb';
   ctx.beginPath();
   ctx.moveTo(0, H - 50);
   var snowSeed = Math.floor(time * 0.002) % 100;
   for (var gx = 0; gx <= W; gx += 4) {
-    var sy = H - 50 - 2 - Math.abs(Math.sin(gx * 0.04 + snowSeed)) * 5
-              - Math.abs(Math.sin(gx * 0.11 + snowSeed * 1.7)) * 3;
+    var sy = H - 50 - 2 - Math.abs(Math.sin(gx * 0.04 + snowSeed)) * 4
+              - Math.abs(Math.sin(gx * 0.11 + snowSeed * 1.7)) * 2;
     ctx.lineTo(gx, sy);
   }
   ctx.lineTo(W, H - 46);
@@ -104,311 +102,273 @@ function drawEarthBackground(ctx, time) {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // City / military base buildings
+  // --- CITY PARALLAX LAYER: subtle horizontal micro-drift ---
+  var cityDrift = Math.sin(time * 0.00005) * 1;
+  ctx.save();
+  ctx.translate(cityDrift, 0);
+
+  // City buildings: clean pixel-art skyline with 4 building types
   var buildings = [
-    { x: 12, w: 20, h: 35 },
-    { x: 36, w: 16, h: 44 },
-    { x: 58, w: 14, h: 26 },
-    { x: 76, w: 22, h: 52 },
-    { x: 104, w: 16, h: 32 },
-    { x: 126, w: 24, h: 40 },
-    { x: 156, w: 14, h: 24 },
-    { x: 176, w: 18, h: 42 },
-    { x: 200, w: 20, h: 34 },
-    { x: 226, w: 16, h: 50 },
-    { x: 248, w: 14, h: 28 },
-    { x: 268, w: 20, h: 38 },
-    { x: 294, w: 16, h: 30 },
-    { x: 316, w: 22, h: 44 },
-    { x: 342, w: 14, h: 36 }
+    { x: 4,  w: 16, h: 30, t: 0 },
+    { x: 22, w: 12, h: 44, t: 3 },
+    { x: 38, w: 18, h: 36, t: 1 },
+    { x: 60, w: 14, h: 24, t: 0 },
+    { x: 78, w: 20, h: 52, t: 2 },
+    { x: 102, w: 16, h: 34, t: 0 },
+    { x: 122, w: 14, h: 26, t: 0 },
+    { x: 140, w: 22, h: 44, t: 1 },
+    { x: 166, w: 12, h: 20, t: 0 },
+    { x: 182, w: 18, h: 38, t: 0 },
+    { x: 204, w: 16, h: 50, t: 2 },
+    { x: 224, w: 14, h: 28, t: 0 },
+    { x: 242, w: 20, h: 34, t: 1 },
+    { x: 266, w: 12, h: 46, t: 3 },
+    { x: 282, w: 18, h: 32, t: 0 },
+    { x: 304, w: 16, h: 42, t: 2 },
+    { x: 324, w: 14, h: 36, t: 0 },
+    { x: 342, w: 16, h: 28, t: 0 }
   ];
 
   ctx.fillStyle = '#060e1c';
-  ctx.globalAlpha = 0.90;
+  ctx.globalAlpha = 0.92;
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
-    ctx.fillRect(b.x, H - 50 - b.h, b.w, b.h);
+    var bx = b.x, bw = b.w, bh = b.h;
+    var baseY = H - 50;
+    var topY = baseY - bh;
+
+    if (b.t === 0) {
+      ctx.fillRect(bx, topY, bw, bh);
+    } else if (b.t === 1) {
+      var stepH = Math.floor(bh * 0.45);
+      ctx.fillRect(bx, topY + stepH, bw, bh - stepH);
+      ctx.fillRect(bx + 3, topY, bw - 6, stepH + 4);
+    } else if (b.t === 2) {
+      ctx.fillRect(bx, topY, bw, bh);
+      var spireW = 3;
+      var spireH = 14 + (bh > 46 ? 6 : 0);
+      ctx.fillRect(bx + bw / 2 - 1, topY - spireH, spireW, spireH);
+      ctx.fillRect(bx + bw / 2 - 3, topY - spireH + 4, 7, 2);
+    } else if (b.t === 3) {
+      ctx.fillRect(bx + 2, topY, bw - 4, bh);
+      ctx.fillRect(bx, topY + bh - 6, bw, 6);
+    }
   }
 
   // Snow caps on building roofs
-  ctx.globalAlpha = 0.30;
+  ctx.globalAlpha = 0.26;
   ctx.fillStyle = '#bbccee';
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
     var roofY = H - 50 - b.h;
-    var capH = 3 + (i % 3);  // slight variation
+    var capH = 2 + (i % 3);
+    if (b.t === 1) {
+      var stepH = Math.floor(b.h * 0.45);
+      ctx.fillRect(b.x + 3, roofY + stepH - 2, b.w - 6, capH);
+    }
     ctx.fillRect(b.x - 1, roofY - 1, b.w + 2, capH);
-    // Icicle hints on wider buildings
-    if (b.w >= 18) {
-      ctx.globalAlpha = 0.16;
-      ctx.fillRect(b.x + 2, roofY + capH - 1, 2, 4);
-      ctx.fillRect(b.x + b.w - 5, roofY + capH - 1, 2, 4);
-      if (b.w >= 22) {
-        ctx.fillRect(b.x + b.w / 2 - 1, roofY + capH - 1, 2, 5);
-      }
-      ctx.globalAlpha = 0.30;
+  }
+  ctx.globalAlpha = 1;
+
+  // Minimal attack damage: just a few subtle broken edges
+  ctx.globalAlpha = 0.96;
+  ctx.fillStyle = '#02050b';
+  ctx.fillRect(78 + 5, H - 50 - 52, 6, 8);
+  ctx.fillRect(204 + 7, H - 50 - 34, 5, 14);
+  ctx.fillRect(266 + 4, H - 50 - 28, 3, 10);
+  ctx.globalAlpha = 1;
+
+  // Distant radial fires: very subtle warm glows
+  var firePulse = 0.40 + Math.sin(time * 0.005) * 0.12;
+  ctx.globalAlpha = 0.07 + firePulse * 0.05;
+  var fireGrad = ctx.createRadialGradient(46, H - 58, 0, 46, H - 58, 30);
+  fireGrad.addColorStop(0, '#ffaa44');
+  fireGrad.addColorStop(0.35, 'rgba(255, 60, 15, 0.40)');
+  fireGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = fireGrad;
+  ctx.fillRect(16, H - 88, 60, 46);
+
+  ctx.globalAlpha = 0.05 + firePulse * 0.04;
+  var fireGrad2 = ctx.createRadialGradient(298, H - 60, 0, 298, H - 60, 26);
+  fireGrad2.addColorStop(0, '#ffbb55');
+  fireGrad2.addColorStop(0.34, 'rgba(255, 60, 18, 0.35)');
+  fireGrad2.addColorStop(1, 'transparent');
+  ctx.fillStyle = fireGrad2;
+  ctx.fillRect(272, H - 86, 52, 44);
+  ctx.globalAlpha = 1;
+
+  // Subtle ember particles replacing the old triangular flames
+  var emberCount = 10;
+  for (var ei = 0; ei < emberCount; ei++) {
+    var seed = ei * 137.508 + 42.7;
+    var site = ei < 5 ? 0 : 1;
+    var baseX = site === 0 ? 48 : 302;
+    var baseY = H - 50;
+    var riseSpeed = 0.25 + (ei % 4) * 0.12;
+    var life = ((time * 0.0006 * riseSpeed) + seed * 0.013) % 1.0;
+    var drift = Math.sin(time * 0.0012 + seed * 0.09) * (3 + (ei % 3) * 2);
+    var ex = baseX + drift;
+    var ey = baseY - life * 32 - 4;
+    var alpha = (1 - life) * 0.09 * (life < 0.15 ? life / 0.15 : 1);
+    if (alpha > 0.005) {
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = life < 0.35 ? '#ffcc66' : '#ff6618';
+      var es = life < 0.25 ? 2 : 1;
+      ctx.fillRect(ex, ey, es, es);
     }
   }
   ctx.globalAlpha = 1;
 
-  // Antenna towers on tall buildings (with snow on top)
-  ctx.fillStyle = '#080c18';
-  ctx.globalAlpha = 0.92;
-  // Building at x=76 (h=52)
-  ctx.fillRect(76 + 8, H - 50 - 52 - 20, 3, 20);
-  ctx.fillRect(76 + 5, H - 50 - 52 - 12, 9, 3);
-  // Building at x=226 (h=50)
-  ctx.fillRect(226 + 6, H - 50 - 50 - 16, 3, 16);
-  ctx.fillRect(226 + 3, H - 50 - 50 - 9, 9, 3);
-  // Building at x=316 (h=44)
-  ctx.fillRect(316 + 9, H - 50 - 44 - 18, 3, 18);
-  ctx.fillRect(316 + 6, H - 50 - 44 - 11, 9, 3);
-  // Snow blobs on antenna tips
-  ctx.globalAlpha = 0.35;
-  ctx.fillStyle = '#ccddee';
-  ctx.fillRect(76 + 8 - 1, H - 50 - 52 - 21, 5, 3);
-  ctx.fillRect(226 + 6 - 1, H - 50 - 50 - 17, 5, 3);
-  ctx.fillRect(316 + 9 - 1, H - 50 - 44 - 19, 5, 3);
-  ctx.globalAlpha = 1;
-
-  // Attack damage: jagged roof bites and collapsed chunks.
-  ctx.globalAlpha = 0.98;
-  ctx.fillStyle = '#02050b';
-  ctx.beginPath();
-  ctx.moveTo(36, H - 50 - 44);
-  ctx.lineTo(44, H - 50 - 57);
-  ctx.lineTo(51, H - 50 - 44);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillRect(80, H - 50 - 52, 7, 14);
-  ctx.fillRect(232, H - 50 - 31, 8, 31);
-  ctx.fillRect(240, H - 50 - 22, 7, 22);
-  ctx.fillRect(304, H - 50 - 46, 5, 11);
-  ctx.fillRect(309, H - 50 - 37, 7, 8);
-  ctx.globalAlpha = 1;
-
-  // Small distant fires, low on the horizon so gameplay remains readable.
-  var firePulse = 0.45 + Math.sin(time * 0.006) * 0.18;
-  ctx.globalAlpha = 0.10 + firePulse * 0.08;
-  var fireGrad = ctx.createRadialGradient(52, H - 58, 0, 52, H - 58, 34);
-  fireGrad.addColorStop(0, '#ffbd55');
-  fireGrad.addColorStop(0.38, 'rgba(255, 70, 18, 0.50)');
-  fireGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = fireGrad;
-  ctx.fillRect(18, H - 92, 68, 52);
-
-  ctx.globalAlpha = 0.07 + firePulse * 0.05;
-  var fireGrad2 = ctx.createRadialGradient(292, H - 62, 0, 292, H - 62, 30);
-  fireGrad2.addColorStop(0, '#ffcc66');
-  fireGrad2.addColorStop(0.36, 'rgba(255, 70, 20, 0.42)');
-  fireGrad2.addColorStop(1, 'transparent');
-  ctx.fillStyle = fireGrad2;
-  ctx.fillRect(262, H - 92, 60, 50);
-  ctx.globalAlpha = 1;
-
-  // Clearer attack story layer: destroyed foreground silhouettes.
-  ctx.globalAlpha = 0.96;
+  // Simplified destroyed foreground silhouettes
+  ctx.globalAlpha = 0.94;
   ctx.fillStyle = '#020308';
   ctx.beginPath();
-  ctx.moveTo(18, H - 50);
-  ctx.lineTo(18, H - 96);
-  ctx.lineTo(28, H - 112);
-  ctx.lineTo(38, H - 96);
-  ctx.lineTo(38, H - 50);
+  ctx.moveTo(14, H - 50);
+  ctx.lineTo(14, H - 88);
+  ctx.lineTo(24, H - 98);
+  ctx.lineTo(34, H - 88);
+  ctx.lineTo(34, H - 50);
   ctx.closePath();
   ctx.fill();
 
-  ctx.beginPath();
-  ctx.moveTo(265, H - 50);
-  ctx.lineTo(265, H - 86);
-  ctx.lineTo(278, H - 76);
-  ctx.lineTo(286, H - 104);
-  ctx.lineTo(298, H - 90);
-  ctx.lineTo(298, H - 50);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillRect(270, H - 50 - 52, 7, 52);
+  ctx.fillRect(278, H - 50 - 36, 8, 36);
 
-  ctx.fillRect(324, H - 50 - 62, 9, 62);
-  ctx.fillRect(334, H - 50 - 46, 8, 46);
-  ctx.fillRect(342, H - 50 - 30, 7, 30);
-
-  // Snow on broken foreground edges.
-  ctx.globalAlpha = 0.42;
+  ctx.globalAlpha = 0.34;
   ctx.fillStyle = '#c8d8ee';
-  ctx.fillRect(18, H - 96, 20, 3);
-  ctx.fillRect(265, H - 87, 14, 3);
-  ctx.fillRect(285, H - 104, 14, 3);
-  ctx.fillRect(324, H - 50 - 64, 9, 3);
+  ctx.fillRect(14, H - 90, 20, 2);
+  ctx.fillRect(270, H - 50 - 54, 7, 2);
   ctx.globalAlpha = 1;
 
-  // Visible but low fires at impact sites.
-  ctx.globalAlpha = 0.34 + firePulse * 0.18;
-  ctx.fillStyle = '#ff7a18';
-  ctx.beginPath();
-  ctx.moveTo(48, H - 50);
-  ctx.lineTo(53, H - 78 - firePulse * 10);
-  ctx.lineTo(59, H - 50);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#ffd36a';
-  ctx.beginPath();
-  ctx.moveTo(52, H - 50);
-  ctx.lineTo(55, H - 68 - firePulse * 7);
-  ctx.lineTo(58, H - 50);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.globalAlpha = 0.28 + firePulse * 0.14;
-  ctx.fillStyle = '#ff5818';
-  ctx.beginPath();
-  ctx.moveTo(298, H - 50);
-  ctx.lineTo(304, H - 72 - firePulse * 8);
-  ctx.lineTo(311, H - 50);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#ffd36a';
-  ctx.beginPath();
-  ctx.moveTo(302, H - 50);
-  ctx.lineTo(305, H - 64 - firePulse * 5);
-  ctx.lineTo(308, H - 50);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // Special silhouettes (dome + irregular structure)
-  ctx.globalAlpha = 0.92;
-  ctx.fillStyle = '#060e1c';
   // Military dome/bunker
-  ctx.beginPath();
-  ctx.arc(145, H - 50, 22, Math.PI, 0);
-  ctx.fillRect(145 - 22, H - 52, 44, 4);
-  ctx.fill();
-  // Snow cap on dome
-  ctx.globalAlpha = 0.28;
-  ctx.fillStyle = '#ccddef';
-  ctx.beginPath();
-  ctx.arc(145, H - 50, 23, Math.PI + 0.45, Math.PI * 2 - 0.45);
-  ctx.fill();
-  // Irregular damaged building
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 0.90;
   ctx.fillStyle = '#060e1c';
-  ctx.fillRect(290, H - 50 - 32, 8, 32);
-  ctx.fillRect(290, H - 50 - 38, 20, 8);
-  ctx.fillRect(298, H - 50 - 42, 6, 42);
-  ctx.fillRect(304, H - 50 - 26, 8, 26);
-  ctx.fillRect(316, H - 50 - 30, 5, 30);
-  // Snow on irregular structure
-  ctx.globalAlpha = 0.26;
+  ctx.beginPath();
+  ctx.arc(148, H - 50, 20, Math.PI, 0);
+  ctx.fillRect(148 - 20, H - 52, 40, 4);
+  ctx.fill();
+  ctx.globalAlpha = 0.24;
   ctx.fillStyle = '#ccddef';
-  ctx.fillRect(290, H - 50 - 40, 20, 3);
-  ctx.fillRect(298, H - 50 - 44, 6, 3);
-  ctx.fillRect(304, H - 50 - 28, 8, 3);
-  ctx.fillRect(316, H - 50 - 32, 5, 3);
+  ctx.beginPath();
+  ctx.arc(148, H - 50, 21, Math.PI + 0.40, Math.PI * 2 - 0.40);
+  ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Building windows: warm amber light for winter contrast
-  ctx.globalAlpha = 0.28;
+  // Windows: mostly static, ~30% subtle flicker
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
-    if (b.w < 13) continue;
+    if (b.w < 12 || b.t === 3) continue;
     var rows = Math.floor(b.h / 10);
     for (var r = 0; r < rows; r++) {
       var wy = H - 50 - b.h + 5 + r * 10;
-      var damaged = (i === 1 && r > 1) || (i === 3 && r === 0) || (i === 8 && r === 0) || (i === 12 && r < 2);
-      var lit = ((i + r) % 3 !== 0) && !damaged;
+      var isFlickerWindow = ((i * 7 + r * 13) % 10) < 3;
+      var flicker = Math.sin(time * 0.0035 + i * 1.7 + r * 0.9);
+      var lit;
+      if (isFlickerWindow) {
+        lit = flicker > -0.25;
+      } else {
+        lit = ((i + r) % 3 !== 0);
+      }
+      var alpha = lit ? (isFlickerWindow ? 0.18 + (flicker > 0.3 ? 0.08 : 0) : 0.15) : 0.04;
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = lit ? '#ffb840' : '#1a0800';
-      ctx.fillRect(b.x + 3, wy, 3, 2);
-      if (b.w > 16) {
-        ctx.fillRect(b.x + b.w / 2 - 1.5, wy, 3, 2);
+      if (b.t === 1 && r < Math.floor(b.h * 0.45) / 10) {
+        ctx.fillRect(b.x + 5, wy, 2, 2);
+      } else {
+        ctx.fillRect(b.x + 3, wy, 3, 2);
       }
       ctx.fillRect(b.x + b.w - 6, wy, 3, 2);
+      if (b.w >= 18) {
+        var cw = lit && flicker > 0.1 ? 3 : 2;
+        ctx.fillRect(b.x + b.w / 2 - 1, wy, cw, 2);
+      }
     }
   }
   ctx.globalAlpha = 1;
 
-  // Broken glass glints and impact marks, tiny and below the combat area.
-  ctx.globalAlpha = 0.16;
-  ctx.fillStyle = '#cfefff';
-  ctx.fillRect(82, H - 50 - 38, 2, 1);
-  ctx.fillRect(236, H - 50 - 25, 2, 1);
-  ctx.fillRect(306, H - 50 - 33, 2, 1);
-  ctx.globalAlpha = 0.22;
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(94, H - 50 - 17, 6, 3);
-  ctx.fillRect(214, H - 50 - 10, 7, 2);
-  ctx.fillRect(318, H - 50 - 14, 5, 3);
-  ctx.globalAlpha = 1;
-
-  // Subtle upper haze (cold blue tint to soften stars)
-  ctx.globalAlpha = 0.05;
-  ctx.fillStyle = '#020818';
-  ctx.fillRect(0, 0, W, H * 0.62);
-  ctx.globalAlpha = 1;
-
-  // Winter mist / fog clouds (cold gray, slow horizontal drift)
-  ctx.globalAlpha = 0.04;
-  ctx.fillStyle = '#556677';
-  var mistSpeed = time * 0.00010;
-  for (var s = 0; s < 5; s++) {
-    var sx = ((s * 74 + 10 + mistSpeed * (19 + s * 8)) % (W + 90)) - 45;
-    var sy = H - 96 - s * 8;
-    ctx.beginPath();
-    ctx.ellipse(sx, sy, 26 + s * 5, 12 + s * 1.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // Second mist layer (slightly denser near ground)
-  ctx.globalAlpha = 0.03;
-  ctx.fillStyle = '#7788aa';
-  var mistSpeed2 = time * 0.00014;
-  for (var s = 0; s < 4; s++) {
-    var sx2 = ((s * 88 + 55 + mistSpeed2 * (25 - s * 5)) % (W + 100)) - 50;
-    var sy2 = H - 78 - s * 5;
-    ctx.beginPath();
-    ctx.ellipse(sx2, sy2, 32 + s * 3, 15 + s, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // Smoke columns from impact zones, visible but kept low.
+  // Broken glass glints
   ctx.globalAlpha = 0.12;
-  ctx.fillStyle = '#747b88';
-  for (var sm = 0; sm < 6; sm++) {
-    var smokeX = sm < 3 ? 44 + sm * 13 : 288 + (sm - 3) * 12;
-    var smokeY = H - 92 - sm * 10;
+  ctx.fillStyle = '#cfefff';
+  ctx.fillRect(82, H - 50 - 36, 2, 1);
+  ctx.fillRect(208, H - 50 - 24, 2, 1);
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(94, H - 50 - 14, 5, 2);
+  ctx.fillRect(216, H - 50 - 8, 6, 2);
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+  // --- END CITY PARALLAX ---
+
+  // Upper haze: cold blue tint to soften stars
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#020818';
+  ctx.fillRect(0, 0, W, H * 0.60);
+  ctx.globalAlpha = 1;
+
+  // Winter mist/fog: soft slow drift, two layers
+  ctx.globalAlpha = 0.030;
+  ctx.fillStyle = '#556677';
+  var mistSpeed = time * 0.00008;
+  for (var s = 0; s < 7; s++) {
+    var sx = ((s * 58 + 10 + mistSpeed * (17 + s * 6)) % (W + 80)) - 40;
+    var sy = H - 100 - s * 9;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 22 + s * 4, 10 + s * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.globalAlpha = 0.022;
+  ctx.fillStyle = '#7788aa';
+  var mistSpeed2 = time * 0.00011;
+  for (var s = 0; s < 5; s++) {
+    var sx2 = ((s * 82 + 50 + mistSpeed2 * (22 - s * 4)) % (W + 90)) - 45;
+    var sy2 = H - 82 - s * 7;
+    ctx.beginPath();
+    ctx.ellipse(sx2, sy2, 28 + s * 3, 13 + s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Smoke: soft, transparent, well-distributed elliptical puffs
+  ctx.globalAlpha = 0.07;
+  ctx.fillStyle = '#6b7280';
+  for (var sm = 0; sm < 8; sm++) {
+    var smokeX = sm < 4 ? 40 + sm * 14 : 286 + (sm - 4) * 13;
+    var smokeY = H - 88 - sm * 9;
     ctx.beginPath();
     ctx.ellipse(
-      smokeX + Math.sin(time * 0.0007 + sm) * 7,
-      smokeY - Math.sin(time * 0.0005 + sm) * 10,
-      18 + (sm % 3) * 5,
-      24 + (sm % 4) * 6,
-      -0.25,
+      smokeX + Math.sin(time * 0.00055 + sm) * 6,
+      smokeY - Math.sin(time * 0.0004 + sm) * 8,
+      14 + (sm % 3) * 4,
+      18 + (sm % 4) * 5,
+      -0.2,
       0,
       Math.PI * 2
     );
     ctx.fill();
   }
 
-  ctx.globalAlpha = 0.08;
+  ctx.globalAlpha = 0.05;
   ctx.fillStyle = '#353b45';
   ctx.beginPath();
-  ctx.ellipse(54 + Math.sin(time * 0.0004) * 5, H - 142, 28, 54, -0.18, 0, Math.PI * 2);
+  ctx.ellipse(50 + Math.sin(time * 0.00035) * 4, H - 130, 22, 44, -0.14, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(304 + Math.sin(time * 0.0005) * 4, H - 132, 24, 48, 0.14, 0, Math.PI * 2);
+  ctx.ellipse(300 + Math.sin(time * 0.0004) * 3, H - 124, 20, 40, 0.12, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // FALLING SNOW (16 particles, deterministic, subtle, slow)
-  ctx.globalAlpha = 0.14;
+  // Falling snow: subtle, upper half only
+  ctx.globalAlpha = 0.10;
   ctx.fillStyle = '#ffffff';
-  var snowBase = time * 0.018;
-  for (var si = 0; si < 16; si++) {
-    var seed = si * 127.3 + 31.7;
-    var sx = ((Math.sin(snowBase * 0.7 + seed * 0.13) * 0.5 + 0.5) * W + seed * 7.1) % W;
-    var sY = ((snowBase * (1.4 + (si % 5) * 0.25) + seed * 0.09) * 60) % (H + 40) - 20;
-    var sSize = (si % 3 === 0) ? 2 : 1;
-    // Keep snowflakes mostly in upper half to avoid gameplay clutter
-    if (sY < H * 0.55) {
+  var snowBase = time * 0.016;
+  for (var si = 0; si < 18; si++) {
+    var sseed = si * 127.3 + 31.7;
+    var sx = ((Math.sin(snowBase * 0.7 + sseed * 0.13) * 0.5 + 0.5) * W + sseed * 7.1) % W;
+    var sY = ((snowBase * (1.3 + (si % 5) * 0.2) + sseed * 0.09) * 55) % (H + 40) - 20;
+    var sSize = (si % 4 === 0) ? 2 : 1;
+    if (sY < H * 0.52) {
       ctx.fillRect(sx, sY, sSize, sSize);
     }
   }
@@ -4865,4 +4825,3 @@ if (player.weaponType !== 'normal') {
 
   ctx.restore();
 }
-
