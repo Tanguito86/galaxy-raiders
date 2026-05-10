@@ -270,6 +270,7 @@ if (bossDefeated) {
         pushScreenShake('heavy', 20);
         flashScreen = 10;
         player.weaponType = 'normal';
+        resetMedalChain();
         
         isInvincible = true;
         invincibleTimer = INVINCIBLE_DURATION;
@@ -386,6 +387,7 @@ for (let i = mines.length - 1; i >= 0; i--) {
           lives--;
           isInvincible = true;
           invincibleTimer = INVINCIBLE_DURATION;
+          resetMedalChain();
           sfxPlayerHit();
           vibrate('damage');
           
@@ -396,7 +398,7 @@ for (let i = mines.length - 1; i >= 0; i--) {
       }
     }
 
-    // SatÃ©lites orbitantes (Orbital)
+    // Satélites orbitantes (Orbital)
     if (boss.active && boss.pattern === 'rotate') {
       const phase = getBossPhase();
       
@@ -466,6 +468,7 @@ for (let i = mines.length - 1; i >= 0; i--) {
             lives--;
             isInvincible = true;
             invincibleTimer = INVINCIBLE_DURATION;
+            resetMedalChain();
             sfxPlayerHit();
             vibrate('damage');
             
@@ -528,6 +531,7 @@ if (!boss.active && activeEnemies.length > 0) {
       pushScreenShake('heavy', 30);
       flashScreen = 15;
       player.weaponType = 'normal';
+      resetMedalChain();
       isInvincible = true;
       invincibleTimer = INVINCIBLE_DURATION;
       if (lives <= 0) safeEndGame();
@@ -800,6 +804,7 @@ if (!boss.active && activeEnemies.length > 0) {
       pushScreenShake('heavy', 30);
       flashScreen = 15;
       player.weaponType = 'normal';
+      resetMedalChain();
 
       isInvincible = true;
       invincibleTimer = INVINCIBLE_DURATION;
@@ -871,6 +876,7 @@ if (!boss.active && activeEnemies.length > 0) {
         pushScreenShake('heavy', 20);
         flashScreen = 10;
         player.weaponType = 'normal';
+        resetMedalChain();
         
         isInvincible = true;
         invincibleTimer = INVINCIBLE_DURATION;

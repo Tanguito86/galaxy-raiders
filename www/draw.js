@@ -4037,7 +4037,7 @@ ufoRewards.forEach(d => {
     ctx.fillStyle = 'rgba(158,231,255,0.82)';
     ctx.fillText('CHAIN', hudRightX + 6, hudTop + 23);
     ctx.fillStyle = 'rgba(255,217,102,0.78)';
-    ctx.fillText('NEXT', hudRightX + 6, hudTop + 35);
+    ctx.fillText('MEDAL', hudRightX + 6, hudTop + 35);
 
     ctx.textAlign = 'right';
     ctx.font = '7px "Press Start 2P"';

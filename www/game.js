@@ -113,7 +113,7 @@ function drawMedalHUD(ctxRef) {
   drawCtx.fillStyle = '#9ee7ff';
   drawCtx.fillText('CHAIN: ' + medalChain, W - 10, 52);
   drawCtx.fillStyle = '#ffd966';
-  drawCtx.fillText('NEXT: ' + medalValue, W - 10, 67);
+  drawCtx.fillText('MEDAL: ' + medalValue, W - 10, 67);
   drawCtx.restore();
 }
 
