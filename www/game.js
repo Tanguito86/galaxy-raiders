@@ -160,6 +160,8 @@ let waveAnnounceSubTimer = 0;
 let waveRewardText = '';
 let waveRewardTimer = 0;
 let lastMilestoneRewardLevel = 0;
+let debugLevelJumpText = '';
+let debugLevelJumpTimer = 0;
 
 // Cargar high scores al inicio
 loadHighScores();

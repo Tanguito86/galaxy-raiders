@@ -12,29 +12,29 @@ function getBackgroundThemeForLevel(levelNum) {
 }
 
 function drawEarthBackground(ctx, time) {
-  // Sky: smoky dark with warm horizon (invasion glow)
+  // COLD WINTER NIGHT: dark blue-violet gradient with faint invasion glow
   var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#040810');
-  grad.addColorStop(0.4, '#080e18');
-  grad.addColorStop(0.62, '#0c1418');
-  grad.addColorStop(0.78, '#151410');
-  grad.addColorStop(0.90, '#2a1a0e');
-  grad.addColorStop(1, '#1a0c06');
+  grad.addColorStop(0, '#020510');
+  grad.addColorStop(0.25, '#030a18');
+  grad.addColorStop(0.50, '#060f20');
+  grad.addColorStop(0.70, '#081428');
+  grad.addColorStop(0.86, '#0b182c');
+  grad.addColorStop(1, '#0c1420');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // Invasion glow near horizon
-  var glowGrad = ctx.createLinearGradient(0, H * 0.80, 0, H * 0.94);
+  // Distant invasion fires: faint orange glow near horizon only
+  var glowGrad = ctx.createLinearGradient(0, H * 0.76, 0, H * 0.96);
   glowGrad.addColorStop(0, 'transparent');
-  glowGrad.addColorStop(0.35, 'rgba(220, 70, 15, 0.06)');
-  glowGrad.addColorStop(0.7, 'rgba(200, 55, 10, 0.09)');
-  glowGrad.addColorStop(1, 'rgba(160, 40, 8, 0.04)');
+  glowGrad.addColorStop(0.30, 'rgba(180, 45, 10, 0.04)');
+  glowGrad.addColorStop(0.60, 'rgba(140, 35, 8, 0.06)');
+  glowGrad.addColorStop(1, 'rgba(100, 25, 5, 0.03)');
   ctx.fillStyle = glowGrad;
-  ctx.fillRect(0, H * 0.80, W, H * 0.14);
+  ctx.fillRect(0, H * 0.76, W, H * 0.20);
 
-  // Distant mountains (dark, far background)
-  ctx.globalAlpha = 0.16;
-  ctx.fillStyle = '#080810';
+  // Distant mountains (cold dark silhouettes)
+  ctx.globalAlpha = 0.14;
+  ctx.fillStyle = '#060e1c';
   ctx.beginPath();
   ctx.moveTo(0, H);
   for (var x = 0; x <= W; x += 6) {
@@ -43,12 +43,24 @@ function drawEarthBackground(ctx, time) {
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
+  // Snow dusting on distant peaks
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#99aacc';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (var x = 0; x <= W; x += 6) {
+    var peakY = H - 88 - Math.sin(x * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18;
+    ctx.lineTo(x, peakY + 18);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Midground mountains/skyline (parallax subtle)
+  // Midground mountains/skyline with snow-dusted ridges
   var pTime = time * 0.00006;
-  ctx.globalAlpha = 0.22;
-  ctx.fillStyle = '#0c0c16';
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#081020';
   ctx.beginPath();
   ctx.moveTo(0, H);
   for (var x = 0; x <= W; x += 5) {
@@ -57,12 +69,39 @@ function drawEarthBackground(ctx, time) {
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
+  // Snow dusting on midground peaks
+  ctx.globalAlpha = 0.07;
+  ctx.fillStyle = '#aabbcc';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (var x = 0; x <= W; x += 5) {
+    var mpeakY = H - 66 - Math.sin(x * 0.016 + 2.3 + pTime) * 26 - Math.sin(x * 0.028 + 0.9) * 14;
+    ctx.lineTo(x, mpeakY + 14);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Ground base plate
-  ctx.fillStyle = '#060810';
-  ctx.globalAlpha = 0.85;
+  // Ground base with snow accumulation at the top edge
+  ctx.fillStyle = '#060e1a';
+  ctx.globalAlpha = 0.88;
   ctx.fillRect(0, H - 50, W, 50);
+  // Irregular snow line on ground surface
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#8899bb';
+  ctx.beginPath();
+  ctx.moveTo(0, H - 50);
+  var snowSeed = Math.floor(time * 0.002) % 100;
+  for (var gx = 0; gx <= W; gx += 4) {
+    var sy = H - 50 - 2 - Math.abs(Math.sin(gx * 0.04 + snowSeed)) * 5
+              - Math.abs(Math.sin(gx * 0.11 + snowSeed * 1.7)) * 3;
+    ctx.lineTo(gx, sy);
+  }
+  ctx.lineTo(W, H - 46);
+  ctx.lineTo(0, H - 46);
+  ctx.closePath();
+  ctx.fill();
   ctx.globalAlpha = 1;
 
   // City / military base buildings
@@ -84,53 +123,131 @@ function drawEarthBackground(ctx, time) {
     { x: 342, w: 14, h: 36 }
   ];
 
-  ctx.fillStyle = '#060810';
+  ctx.fillStyle = '#060e1c';
   ctx.globalAlpha = 0.90;
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
     ctx.fillRect(b.x, H - 50 - b.h, b.w, b.h);
   }
+
+  // Snow caps on building roofs
+  ctx.globalAlpha = 0.30;
+  ctx.fillStyle = '#bbccee';
+  for (var i = 0; i < buildings.length; i++) {
+    var b = buildings[i];
+    var roofY = H - 50 - b.h;
+    var capH = 3 + (i % 3);  // slight variation
+    ctx.fillRect(b.x - 1, roofY - 1, b.w + 2, capH);
+    // Icicle hints on wider buildings
+    if (b.w >= 18) {
+      ctx.globalAlpha = 0.16;
+      ctx.fillRect(b.x + 2, roofY + capH - 1, 2, 4);
+      ctx.fillRect(b.x + b.w - 5, roofY + capH - 1, 2, 4);
+      if (b.w >= 22) {
+        ctx.fillRect(b.x + b.w / 2 - 1, roofY + capH - 1, 2, 5);
+      }
+      ctx.globalAlpha = 0.30;
+    }
+  }
   ctx.globalAlpha = 1;
 
-  // Antenna towers on tall buildings
-  ctx.fillStyle = '#080812';
+  // Antenna towers on tall buildings (with snow on top)
+  ctx.fillStyle = '#080c18';
   ctx.globalAlpha = 0.92;
+  // Building at x=76 (h=52)
   ctx.fillRect(76 + 8, H - 50 - 52 - 20, 3, 20);
   ctx.fillRect(76 + 5, H - 50 - 52 - 12, 9, 3);
-
+  // Building at x=226 (h=50)
   ctx.fillRect(226 + 6, H - 50 - 50 - 16, 3, 16);
   ctx.fillRect(226 + 3, H - 50 - 50 - 9, 9, 3);
-
+  // Building at x=316 (h=44)
   ctx.fillRect(316 + 9, H - 50 - 44 - 18, 3, 18);
   ctx.fillRect(316 + 6, H - 50 - 44 - 11, 9, 3);
+  // Snow blobs on antenna tips
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = '#ccddee';
+  ctx.fillRect(76 + 8 - 1, H - 50 - 52 - 21, 5, 3);
+  ctx.fillRect(226 + 6 - 1, H - 50 - 50 - 17, 5, 3);
+  ctx.fillRect(316 + 9 - 1, H - 50 - 44 - 19, 5, 3);
+  ctx.globalAlpha = 1;
+
+  // Attack damage: jagged roof bites and collapsed chunks.
+  ctx.globalAlpha = 0.98;
+  ctx.fillStyle = '#02050b';
+  ctx.beginPath();
+  ctx.moveTo(36, H - 50 - 44);
+  ctx.lineTo(44, H - 50 - 57);
+  ctx.lineTo(51, H - 50 - 44);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(80, H - 50 - 52, 7, 14);
+  ctx.fillRect(232, H - 50 - 31, 8, 31);
+  ctx.fillRect(240, H - 50 - 22, 7, 22);
+  ctx.fillRect(304, H - 50 - 46, 5, 11);
+  ctx.fillRect(309, H - 50 - 37, 7, 8);
+  ctx.globalAlpha = 1;
+
+  // Small distant fires, low on the horizon so gameplay remains readable.
+  var firePulse = 0.45 + Math.sin(time * 0.006) * 0.18;
+  ctx.globalAlpha = 0.10 + firePulse * 0.08;
+  var fireGrad = ctx.createRadialGradient(52, H - 58, 0, 52, H - 58, 34);
+  fireGrad.addColorStop(0, '#ffbd55');
+  fireGrad.addColorStop(0.38, 'rgba(255, 70, 18, 0.50)');
+  fireGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = fireGrad;
+  ctx.fillRect(18, H - 92, 68, 52);
+
+  ctx.globalAlpha = 0.07 + firePulse * 0.05;
+  var fireGrad2 = ctx.createRadialGradient(292, H - 62, 0, 292, H - 62, 30);
+  fireGrad2.addColorStop(0, '#ffcc66');
+  fireGrad2.addColorStop(0.36, 'rgba(255, 70, 20, 0.42)');
+  fireGrad2.addColorStop(1, 'transparent');
+  ctx.fillStyle = fireGrad2;
+  ctx.fillRect(262, H - 92, 60, 50);
   ctx.globalAlpha = 1;
 
   // Special silhouettes (dome + irregular structure)
   ctx.globalAlpha = 0.92;
-  ctx.fillStyle = '#060810';
+  ctx.fillStyle = '#060e1c';
   // Military dome/bunker
   ctx.beginPath();
   ctx.arc(145, H - 50, 22, Math.PI, 0);
   ctx.fillRect(145 - 22, H - 52, 44, 4);
   ctx.fill();
+  // Snow cap on dome
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = '#ccddef';
+  ctx.beginPath();
+  ctx.arc(145, H - 50, 23, Math.PI + 0.45, Math.PI * 2 - 0.45);
+  ctx.fill();
   // Irregular damaged building
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = '#060e1c';
   ctx.fillRect(290, H - 50 - 32, 8, 32);
   ctx.fillRect(290, H - 50 - 38, 20, 8);
   ctx.fillRect(298, H - 50 - 42, 6, 42);
   ctx.fillRect(304, H - 50 - 26, 8, 26);
   ctx.fillRect(316, H - 50 - 30, 5, 30);
+  // Snow on irregular structure
+  ctx.globalAlpha = 0.26;
+  ctx.fillStyle = '#ccddef';
+  ctx.fillRect(290, H - 50 - 40, 20, 3);
+  ctx.fillRect(298, H - 50 - 44, 6, 3);
+  ctx.fillRect(304, H - 50 - 28, 8, 3);
+  ctx.fillRect(316, H - 50 - 32, 5, 3);
   ctx.globalAlpha = 1;
 
-  // Building windows (deterministic on/off pattern)
-  ctx.globalAlpha = 0.24;
+  // Building windows: warm amber light for winter contrast
+  ctx.globalAlpha = 0.28;
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
     if (b.w < 13) continue;
     var rows = Math.floor(b.h / 10);
     for (var r = 0; r < rows; r++) {
       var wy = H - 50 - b.h + 5 + r * 10;
-      var lit = ((i + r) % 3 !== 0);
-      ctx.fillStyle = lit ? '#ff9930' : '#331100';
+      var damaged = (i === 1 && r > 1) || (i === 3 && r === 0) || (i === 8 && r === 0) || (i === 12 && r < 2);
+      var lit = ((i + r) % 3 !== 0) && !damaged;
+      ctx.fillStyle = lit ? '#ffb840' : '#1a0800';
       ctx.fillRect(b.x + 3, wy, 3, 2);
       if (b.w > 16) {
         ctx.fillRect(b.x + b.w / 2 - 1.5, wy, 3, 2);
@@ -140,54 +257,132 @@ function drawEarthBackground(ctx, time) {
   }
   ctx.globalAlpha = 1;
 
-  // Subtle upper haze to soften stars over Earth (no tocar sistema global)
-  ctx.globalAlpha = 0.04;
-  ctx.fillStyle = '#04080c';
+  // Broken glass glints and impact marks, tiny and below the combat area.
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#cfefff';
+  ctx.fillRect(82, H - 50 - 38, 2, 1);
+  ctx.fillRect(236, H - 50 - 25, 2, 1);
+  ctx.fillRect(306, H - 50 - 33, 2, 1);
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(94, H - 50 - 17, 6, 3);
+  ctx.fillRect(214, H - 50 - 10, 7, 2);
+  ctx.fillRect(318, H - 50 - 14, 5, 3);
+  ctx.globalAlpha = 1;
+
+  // Subtle upper haze (cold blue tint to soften stars)
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = '#020818';
   ctx.fillRect(0, 0, W, H * 0.62);
   ctx.globalAlpha = 1;
 
-  // Low smoke clouds (moving horizontally, deterministic, parallax leve)
-  ctx.globalAlpha = 0.05;
-  ctx.fillStyle = '#777766';
-  var smokeSpeed = time * 0.00012;
+  // Winter mist / fog clouds (cold gray, slow horizontal drift)
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#556677';
+  var mistSpeed = time * 0.00010;
   for (var s = 0; s < 5; s++) {
-    var sx = ((s * 74 + 10 + smokeSpeed * (19 + s * 8)) % (W + 90)) - 45;
+    var sx = ((s * 74 + 10 + mistSpeed * (19 + s * 8)) % (W + 90)) - 45;
     var sy = H - 96 - s * 8;
     ctx.beginPath();
     ctx.ellipse(sx, sy, 26 + s * 5, 12 + s * 1.5, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // Second smoke layer (warmer tone, different speed, parallax leve)
-  ctx.globalAlpha = 0.035;
-  ctx.fillStyle = '#996644';
-  var smokeSpeed2 = time * 0.00016;
+  // Second mist layer (slightly denser near ground)
+  ctx.globalAlpha = 0.03;
+  ctx.fillStyle = '#7788aa';
+  var mistSpeed2 = time * 0.00014;
   for (var s = 0; s < 4; s++) {
-    var sx2 = ((s * 88 + 55 + smokeSpeed2 * (25 - s * 5)) % (W + 100)) - 50;
+    var sx2 = ((s * 88 + 55 + mistSpeed2 * (25 - s * 5)) % (W + 100)) - 50;
     var sy2 = H - 78 - s * 5;
     ctx.beginPath();
     ctx.ellipse(sx2, sy2, 32 + s * 3, 15 + s, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.globalAlpha = 1;
 
+  // Smoke columns from impact zones, blended into the winter mist.
+  ctx.globalAlpha = 0.055;
+  ctx.fillStyle = '#8b929c';
+  for (var sm = 0; sm < 4; sm++) {
+    var smokeX = sm < 2 ? 50 + sm * 15 : 286 + (sm - 2) * 16;
+    var smokeY = H - 102 - sm * 12;
+    ctx.beginPath();
+    ctx.ellipse(
+      smokeX + Math.sin(time * 0.0007 + sm) * 8,
+      smokeY - Math.sin(time * 0.0005 + sm) * 9,
+      18 + sm * 3,
+      28 + sm * 4,
+      -0.25,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // FALLING SNOW (16 particles, deterministic, subtle, slow)
+  ctx.globalAlpha = 0.14;
+  ctx.fillStyle = '#ffffff';
+  var snowBase = time * 0.018;
+  for (var si = 0; si < 16; si++) {
+    var seed = si * 127.3 + 31.7;
+    var sx = ((Math.sin(snowBase * 0.7 + seed * 0.13) * 0.5 + 0.5) * W + seed * 7.1) % W;
+    var sY = ((snowBase * (1.4 + (si % 5) * 0.25) + seed * 0.09) * 60) % (H + 40) - 20;
+    var sSize = (si % 3 === 0) ? 2 : 1;
+    // Keep snowflakes mostly in upper half to avoid gameplay clutter
+    if (sY < H * 0.55) {
+      ctx.fillRect(sx, sY, sSize, sSize);
+    }
+  }
   ctx.globalAlpha = 1;
 }
 
 function drawAtmosphereBackground(ctx, time) {
   var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#010818');
-  grad.addColorStop(0.45, '#021830');
-  grad.addColorStop(0.7, '#0a3050');
-  grad.addColorStop(0.9, '#0e4a6a');
-  grad.addColorStop(1, '#0a3858');
+  grad.addColorStop(0, '#020816');
+  grad.addColorStop(0.24, '#062248');
+  grad.addColorStop(0.52, '#0a5b8e');
+  grad.addColorStop(0.76, '#24a0c8');
+  grad.addColorStop(1, '#d8853a');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.globalAlpha = 0.04;
-  ctx.fillStyle = '#4a8aaa';
-  for (var b = 0; b < 4; b++) {
-    var by = H * 0.55 + b * H * 0.1 + Math.sin(time * 0.0005 + b) * 6;
-    ctx.fillRect(0, by, W, Math.max(1, H * 0.04));
+  // Curved Earth haze at the bottom: the player is leaving the planet.
+  var horizon = ctx.createLinearGradient(0, H * 0.64, 0, H);
+  horizon.addColorStop(0, 'transparent');
+  horizon.addColorStop(0.34, 'rgba(120, 220, 255, 0.08)');
+  horizon.addColorStop(0.62, 'rgba(255, 185, 95, 0.12)');
+  horizon.addColorStop(1, 'rgba(20, 70, 110, 0.28)');
+  ctx.fillStyle = horizon;
+  ctx.fillRect(0, H * 0.58, W, H * 0.42);
+
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#d8f8ff';
+  ctx.beginPath();
+  ctx.ellipse(W / 2, H + 118, W * 0.78, 158, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = 0.09;
+  ctx.fillStyle = '#ffffff';
+  for (var c = 0; c < 8; c++) {
+    var cx = ((c * 67 + time * 0.012) % (W + 100)) - 50;
+    var cy = H * 0.62 + (c % 4) * 34 + Math.sin(time * 0.0007 + c) * 5;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 52 + (c % 3) * 18, 7 + (c % 2) * 3, -0.08, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Thin ascent streaks sell speed without adding gameplay clutter.
+  ctx.globalAlpha = 0.11;
+  ctx.strokeStyle = '#bff6ff';
+  ctx.lineWidth = 1;
+  for (var s = 0; s < 7; s++) {
+    var sx = (s * 53 + time * 0.035) % (W + 60) - 30;
+    var sy = (s * 91 + time * 0.06) % (H + 120) - 60;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx - 10, sy + 36);
+    ctx.stroke();
   }
   ctx.globalAlpha = 1;
 }
@@ -201,20 +396,41 @@ function drawOrbitBackground(ctx, time) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  var rimGrad = ctx.createLinearGradient(0, H * 0.65, 0, H);
+  var rimGrad = ctx.createLinearGradient(0, H * 0.52, 0, H);
   rimGrad.addColorStop(0, 'transparent');
-  rimGrad.addColorStop(0.4, '#1a5588');
-  rimGrad.addColorStop(1, '#0d3a5c');
-  ctx.globalAlpha = 0.12;
+  rimGrad.addColorStop(0.42, 'rgba(68, 180, 255, 0.10)');
+  rimGrad.addColorStop(0.74, 'rgba(30, 98, 170, 0.20)');
+  rimGrad.addColorStop(1, 'rgba(8, 40, 86, 0.34)');
+  ctx.globalAlpha = 1;
   ctx.fillStyle = rimGrad;
-  ctx.fillRect(0, H * 0.65, W, H * 0.35);
+  ctx.fillRect(0, H * 0.52, W, H * 0.48);
 
-  ctx.globalAlpha = 0.06;
-  ctx.strokeStyle = '#4a8abb';
-  ctx.lineWidth = 2;
+  // Planet limb, larger and lower than gameplay space.
+  ctx.globalAlpha = 0.18;
+  ctx.strokeStyle = '#8fe8ff';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(W / 2, H + 200, 320, Math.PI + 0.15, Math.PI * 2 - 0.15);
+  ctx.arc(W / 2, H + 165, 335, Math.PI + 0.10, Math.PI * 2 - 0.10);
   ctx.stroke();
+
+  ctx.globalAlpha = 0.08;
+  ctx.strokeStyle = '#42ffbd';
+  ctx.lineWidth = 2;
+  for (var a = 0; a < 3; a++) {
+    ctx.beginPath();
+    ctx.arc(W / 2, H + 158 + a * 12, 308 + a * 9, Math.PI + 0.22, Math.PI * 2 - 0.28);
+    ctx.stroke();
+  }
+
+  // Small orbital debris/satellites high in the safe background area.
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#b8d8ff';
+  for (var d = 0; d < 5; d++) {
+    var dx = (d * 83 + time * 0.018) % (W + 80) - 40;
+    var dy = 58 + (d % 3) * 54;
+    ctx.fillRect(dx, dy, 12, 2);
+    ctx.fillRect(dx + 5, dy - 4, 2, 10);
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -227,28 +443,35 @@ function drawDeepSpaceBackground(ctx, time) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.globalAlpha = 0.025;
-  ctx.fillStyle = '#4a1030';
+  ctx.globalAlpha = 0.055;
+  ctx.fillStyle = '#6a2450';
   ctx.beginPath();
-  ctx.ellipse(W * 0.25, H * 0.35, 80 + Math.sin(time * 0.0003) * 10, 60, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.25, H * 0.32, 98 + Math.sin(time * 0.0003) * 10, 46, -0.35, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = 0.02;
-  ctx.fillStyle = '#2a1040';
+  ctx.globalAlpha = 0.045;
+  ctx.fillStyle = '#243a78';
   ctx.beginPath();
-  ctx.ellipse(W * 0.72, H * 0.55, 70 + Math.sin(time * 0.0004) * 12, 50, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.72, H * 0.55, 88 + Math.sin(time * 0.0004) * 12, 38, 0.28, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.globalAlpha = 0.03;
-  ctx.fillStyle = '#301020';
+  ctx.fillStyle = '#103040';
   ctx.beginPath();
-  ctx.ellipse(W * 0.5, H * 0.25, 100, 40, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.52, H * 0.22, 118, 34, 0.05, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = 0.04 + Math.sin(time * 0.0008) * 0.015;
-  ctx.fillStyle = '#4a2008';
-  ctx.fillRect(0, 0, W * 0.08, H);
-  ctx.fillRect(W * 0.92, 0, W * 0.08, H);
+  ctx.globalAlpha = 0.05;
+  ctx.strokeStyle = '#6c335c';
+  ctx.lineWidth = 2;
+  for (var r = 0; r < 4; r++) {
+    var rx = W * 0.5 + Math.sin(time * 0.00018 + r) * 14;
+    var ry = H * (0.18 + r * 0.16);
+    ctx.beginPath();
+    ctx.moveTo(rx - 90, ry);
+    ctx.bezierCurveTo(rx - 34, ry - 20, rx + 34, ry + 22, rx + 100, ry - 4);
+    ctx.stroke();
+  }
 
   ctx.globalAlpha = 1;
 }
@@ -277,6 +500,28 @@ function drawImperialBackground(ctx, time) {
   ctx.fillStyle = '#8a2020';
   ctx.fillRect(14, 0, 2, H);
   ctx.fillRect(W - 16, 0, 2, H);
+
+  // Enemy megastructure silhouettes: final stage feels occupied and hostile.
+  ctx.globalAlpha = 0.34;
+  ctx.fillStyle = '#09060c';
+  for (var p = 0; p < 7; p++) {
+    var pw = 22 + (p % 3) * 9;
+    var ph = 70 + (p % 4) * 28;
+    var px = p * 58 - 18;
+    ctx.fillRect(px, H - ph, pw, ph);
+    ctx.fillRect(px + pw * 0.35, H - ph - 18, pw * 0.30, 18);
+  }
+
+  ctx.globalAlpha = 0.16;
+  ctx.strokeStyle = '#ff4030';
+  ctx.lineWidth = 1;
+  for (var g = 0; g < 6; g++) {
+    var gy = H - 120 - g * 46 + Math.sin(time * 0.0008 + g) * 4;
+    ctx.beginPath();
+    ctx.moveTo(0, gy);
+    ctx.lineTo(W, gy + Math.sin(g) * 10);
+    ctx.stroke();
+  }
 
   ctx.globalAlpha = 0.04 + pillarPulse * 0.03;
   var topGlow = ctx.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, 160);
@@ -3830,6 +4075,18 @@ ufoRewards.forEach(d => {
           ctx.fillText(waveRewardText, W / 2, rwY);
         }
 
+        ctx.restore();
+      }
+
+      if (debugLevelJumpTimer > 0 && debugLevelJumpText) {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = Math.min(1, debugLevelJumpTimer / 300);
+        ctx.fillStyle = '#000';
+        ctx.font = '10px "Press Start 2P"';
+        ctx.fillText(debugLevelJumpText, W / 2 + 1, 106);
+        ctx.fillStyle = '#7cff6b';
+        ctx.fillText(debugLevelJumpText, W / 2, 104);
         ctx.restore();
       }
 

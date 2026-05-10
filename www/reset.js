@@ -37,6 +37,8 @@ function resetProgressionState() {
   levelClearTimer = 0;
   warpSpeed = 1;
   resetWaveRewardTracking();
+  debugLevelJumpText = '';
+  debugLevelJumpTimer = 0;
 }
 
 function startNewGameRun(initialLives) {

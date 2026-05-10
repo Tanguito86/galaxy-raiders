@@ -105,6 +105,7 @@ function update(dt) {
     if (waveAnnounceTimer > 0) waveAnnounceTimer -= dt;
     if (waveAnnounceSubTimer > 0) waveAnnounceSubTimer -= dt;
     if (waveRewardTimer > 0) waveRewardTimer -= dt;
+    if (debugLevelJumpTimer > 0) debugLevelJumpTimer -= dt;
 
     // Vibracion de turbulencia durante warp
     if (warpSpeed > 3 && Math.random() < 0.3) {
@@ -120,6 +121,7 @@ function update(dt) {
   }
 
   if (state === 'playing') {
+    if (debugLevelJumpTimer > 0) debugLevelJumpTimer -= dt;
     updatePlayerFrame(step, dt);
     updateBossStep(step, dt);
     updateEnemiesAndProjectiles(step, dt);
