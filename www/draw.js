@@ -206,6 +206,75 @@ function drawEarthBackground(ctx, time) {
   ctx.fillRect(262, H - 92, 60, 50);
   ctx.globalAlpha = 1;
 
+  // Clearer attack story layer: destroyed foreground silhouettes.
+  ctx.globalAlpha = 0.96;
+  ctx.fillStyle = '#020308';
+  ctx.beginPath();
+  ctx.moveTo(18, H - 50);
+  ctx.lineTo(18, H - 96);
+  ctx.lineTo(28, H - 112);
+  ctx.lineTo(38, H - 96);
+  ctx.lineTo(38, H - 50);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(265, H - 50);
+  ctx.lineTo(265, H - 86);
+  ctx.lineTo(278, H - 76);
+  ctx.lineTo(286, H - 104);
+  ctx.lineTo(298, H - 90);
+  ctx.lineTo(298, H - 50);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillRect(324, H - 50 - 62, 9, 62);
+  ctx.fillRect(334, H - 50 - 46, 8, 46);
+  ctx.fillRect(342, H - 50 - 30, 7, 30);
+
+  // Snow on broken foreground edges.
+  ctx.globalAlpha = 0.42;
+  ctx.fillStyle = '#c8d8ee';
+  ctx.fillRect(18, H - 96, 20, 3);
+  ctx.fillRect(265, H - 87, 14, 3);
+  ctx.fillRect(285, H - 104, 14, 3);
+  ctx.fillRect(324, H - 50 - 64, 9, 3);
+  ctx.globalAlpha = 1;
+
+  // Visible but low fires at impact sites.
+  ctx.globalAlpha = 0.34 + firePulse * 0.18;
+  ctx.fillStyle = '#ff7a18';
+  ctx.beginPath();
+  ctx.moveTo(48, H - 50);
+  ctx.lineTo(53, H - 78 - firePulse * 10);
+  ctx.lineTo(59, H - 50);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd36a';
+  ctx.beginPath();
+  ctx.moveTo(52, H - 50);
+  ctx.lineTo(55, H - 68 - firePulse * 7);
+  ctx.lineTo(58, H - 50);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 0.28 + firePulse * 0.14;
+  ctx.fillStyle = '#ff5818';
+  ctx.beginPath();
+  ctx.moveTo(298, H - 50);
+  ctx.lineTo(304, H - 72 - firePulse * 8);
+  ctx.lineTo(311, H - 50);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd36a';
+  ctx.beginPath();
+  ctx.moveTo(302, H - 50);
+  ctx.lineTo(305, H - 64 - firePulse * 5);
+  ctx.lineTo(308, H - 50);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
   // Special silhouettes (dome + irregular structure)
   ctx.globalAlpha = 0.92;
   ctx.fillStyle = '#060e1c';
@@ -300,24 +369,33 @@ function drawEarthBackground(ctx, time) {
   }
   ctx.globalAlpha = 1;
 
-  // Smoke columns from impact zones, blended into the winter mist.
-  ctx.globalAlpha = 0.055;
-  ctx.fillStyle = '#8b929c';
-  for (var sm = 0; sm < 4; sm++) {
-    var smokeX = sm < 2 ? 50 + sm * 15 : 286 + (sm - 2) * 16;
-    var smokeY = H - 102 - sm * 12;
+  // Smoke columns from impact zones, visible but kept low.
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = '#747b88';
+  for (var sm = 0; sm < 6; sm++) {
+    var smokeX = sm < 3 ? 44 + sm * 13 : 288 + (sm - 3) * 12;
+    var smokeY = H - 92 - sm * 10;
     ctx.beginPath();
     ctx.ellipse(
-      smokeX + Math.sin(time * 0.0007 + sm) * 8,
-      smokeY - Math.sin(time * 0.0005 + sm) * 9,
-      18 + sm * 3,
-      28 + sm * 4,
+      smokeX + Math.sin(time * 0.0007 + sm) * 7,
+      smokeY - Math.sin(time * 0.0005 + sm) * 10,
+      18 + (sm % 3) * 5,
+      24 + (sm % 4) * 6,
       -0.25,
       0,
       Math.PI * 2
     );
     ctx.fill();
   }
+
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#353b45';
+  ctx.beginPath();
+  ctx.ellipse(54 + Math.sin(time * 0.0004) * 5, H - 142, 28, 54, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(304 + Math.sin(time * 0.0005) * 4, H - 132, 24, 48, 0.14, 0, Math.PI * 2);
+  ctx.fill();
   ctx.globalAlpha = 1;
 
   // FALLING SNOW (16 particles, deterministic, subtle, slow)
@@ -4057,24 +4135,6 @@ ufoRewards.forEach(d => {
           ctx.fillText(waveAnnounceSubText, W / 2, waY + 36);
         }
 
-        // Reward text
-        if (waveRewardTimer > 0 && waveRewardText) {
-          var rwAlpha = Math.min(1, waveRewardTimer / 500);
-          var rwY = H / 2 + 30;
-          var rwPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.03);
-
-          ctx.globalAlpha = rwAlpha * 0.12;
-          ctx.fillStyle = '#ffea00';
-          ctx.font = '10px "Press Start 2P"';
-          ctx.fillText(waveRewardText, W / 2 + 1, rwY + 1);
-
-          ctx.globalAlpha = rwAlpha * rwPulse;
-          ctx.fillStyle = '#000';
-          ctx.fillText(waveRewardText, W / 2 + 1, rwY + 2);
-          ctx.fillStyle = '#ffea00';
-          ctx.fillText(waveRewardText, W / 2, rwY);
-        }
-
         ctx.restore();
       }
 
@@ -4370,6 +4430,42 @@ if (player.weaponType !== 'normal') {
       ctx.fillText('WARPING' + _dots, W / 2, H / 2 + 30);
 
       ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    // Reward text must render above the LEVEL CLEAR banner.
+    if (waveRewardTimer > 0 && waveRewardText) {
+      ctx.save();
+      var rwAlpha = Math.min(1, waveRewardTimer / 500);
+      var rwY = H / 2 + 70;
+      var rwPulse = 0.62 + 0.38 * Math.sin(globalTime * 0.03);
+      var rwBoxW = Math.min(W - 34, 248);
+      var rwBoxH = 22;
+
+      ctx.textAlign = 'center';
+      ctx.font = '10px "Press Start 2P"';
+
+      ctx.globalAlpha = rwAlpha * 0.56;
+      ctx.fillStyle = '#020812';
+      ctx.fillRect(W / 2 - rwBoxW / 2, rwY - 15, rwBoxW, rwBoxH);
+
+      ctx.globalAlpha = rwAlpha * 0.70;
+      ctx.strokeStyle = '#ffea00';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(W / 2 - rwBoxW / 2 + 0.5, rwY - 15.5, rwBoxW - 1, rwBoxH);
+
+      ctx.globalAlpha = rwAlpha * 0.30;
+      ctx.shadowColor = '#ffea00';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ffea00';
+      ctx.fillText(waveRewardText, W / 2, rwY);
+
+      ctx.globalAlpha = rwAlpha * rwPulse;
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#000';
+      ctx.fillText(waveRewardText, W / 2 + 1, rwY + 2);
+      ctx.fillStyle = '#ffea00';
+      ctx.fillText(waveRewardText, W / 2, rwY);
       ctx.restore();
     }
 
