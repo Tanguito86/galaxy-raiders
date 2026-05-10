@@ -29,7 +29,11 @@ function getMedalChain() {
 }
 
 function getCurrentMedalValue() {
-  return MEDAL_VALUE_BASE;
+  const tier = Math.min(
+    Math.floor(medalChain / 5),
+    MEDAL_VALUES.length - 1
+  );
+  return MEDAL_VALUES[tier];
 }
 
 function resetMedalChain() {
@@ -121,10 +125,10 @@ function updateMedals(playerRef, step = 1) {
     m.y += m.vy * step;
 
     if (rectOverlap(m, p)) {
-      const gained = MEDAL_VALUE_BASE;
+      const gained = getCurrentMedalValue();
       addScore(gained);
       medalChain += 1;
-      medalValue = MEDAL_VALUE_BASE;
+      medalValue = getCurrentMedalValue();
 
       const tx = m.x + m.w * 0.5;
       const ty = m.y + m.h * 0.5;
@@ -138,6 +142,15 @@ function updateMedals(playerRef, step = 1) {
     }
 
     if (m.y > H + MEDAL_OFFSCREEN_MARGIN) {
+      const prevTier = Math.min(
+        Math.floor(medalChain / 5),
+        MEDAL_VALUES.length - 1
+      );
+      if (prevTier > 0) {
+        medalChain = Math.max(0, medalChain - 5);
+        medalValue = getCurrentMedalValue();
+        spawnPopup(m.x, H - 16, 'MEDAL DOWN', '#ff8866');
+      }
       medals.splice(i, 1);
     }
   }
