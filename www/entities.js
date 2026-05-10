@@ -391,6 +391,12 @@ function startLevel() {
   setPieceBurstShotsRemaining = 0;
   setPieceBurstDelayTimer = 0;
   setPieceBurstVariant = 0;
+  waveAnnounceText = '';
+  waveAnnounceTimer = 0;
+  waveAnnounceSubText = '';
+  waveAnnounceSubTimer = 0;
+  waveRewardText = '';
+  waveRewardTimer = 0;
   initStars();
   powerUpsSpawnedThisLevel = 0;
   satellites = []; // âœ… Agregar

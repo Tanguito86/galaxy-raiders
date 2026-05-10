@@ -236,8 +236,7 @@ if (bossDefeated) {
     }
   
   } else {
-    level++;
-    startLevel();
+    beginWaveTransition(level, level + 1);
   }
 }
 

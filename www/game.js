@@ -150,6 +150,17 @@ let setPieceBurstVariant = 0;
 let levelClearTimer = 0;
 let pendingNextLevel = false;
 
+// Wave announcement system
+let waveAnnounceText = '';
+let waveAnnounceTimer = 0;
+let waveAnnounceSubText = '';
+let waveAnnounceSubTimer = 0;
+
+// Recovery reward display
+let waveRewardText = '';
+let waveRewardTimer = 0;
+let lastMilestoneRewardLevel = 0;
+
 // Cargar high scores al inicio
 loadHighScores();
 

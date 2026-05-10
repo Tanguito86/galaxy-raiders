@@ -282,6 +282,41 @@ function finalizeRunStats(endReason = 'unknown') {
   saveRunQaSnapshot(lastRunTelemetry);
 }
 
+// Wave recovery rewards
+function grantWaveCompletionBonus(completedLevel) {
+  if (completedLevel <= 0) return null;
+
+  const bonusScore = 500 + completedLevel * 200;
+  addScore(bonusScore);
+
+  var rewardText = '+' + bonusScore + ' WAVE BONUS';
+
+  if (completedLevel % 5 === 0 && completedLevel > lastMilestoneRewardLevel) {
+    if (lives < MAX_LIVES) {
+      awardExtraLife();
+      lastMilestoneRewardLevel = completedLevel;
+      rewardText += '  +1 LIFE';
+    } else {
+      var extraScore = completedLevel * 500;
+      addScore(extraScore);
+      rewardText += '  +' + extraScore;
+    }
+    lastMilestoneRewardLevel = completedLevel;
+  }
+
+  return { text: rewardText };
+}
+
+function resetWaveRewardTracking() {
+  waveAnnounceText = '';
+  waveAnnounceTimer = 0;
+  waveAnnounceSubText = '';
+  waveAnnounceSubTimer = 0;
+  waveRewardText = '';
+  waveRewardTimer = 0;
+  lastMilestoneRewardLevel = 0;
+}
+
 // âœ… Sistema de bosses - 5 bosses Ãºnicos en 20 niveles
 const BOSS_LEVELS = [5, 10, 15, 19, 20];
 

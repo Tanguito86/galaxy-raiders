@@ -1,0 +1,38 @@
+{
+  "bossName": "Cranckton",
+  "spriteSheetSize": {
+    "width": 512,
+    "height": 512
+  },
+  "frameSize": {
+    "width": 128,
+    "height": 128
+  },
+  "animations": {
+    "idle": {
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "notes": "Animacion de espera. Cranckton flota con movimiento sutil."
+    },
+    "attack": {
+      "frames": 6,
+      "fps": 12,
+      "loop": false,
+      "notes": "Animacion de ataque. Cranckton abre brazos y dispara."
+    },
+    "hit": {
+      "frames": 2,
+      "fps": 10,
+      "loop": false,
+      "notes": "Animacion de dano recibido. Parpadeo de impacto."
+    },
+    "death": {
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "notes": "Animacion de muerte. Cranckton se desintegra progresivamente."
+    }
+  },
+  "integrationNotes": "PLANIFICACION UNICAMENTE. No se integra todavia al render. No cambia gameplay. No cambia hitboxes. No cambia colisiones. No cambia dano. No cambia velocidades. Futuro uso: reemplazo visual render-only de Cranckton."
+}

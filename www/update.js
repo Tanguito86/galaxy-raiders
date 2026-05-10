@@ -2,6 +2,36 @@
 // GALAXY RAIDERS - update.js
 // =====================
 
+function beginWaveTransition(completedLevel, nextLevel) {
+  pendingNextLevel = true;
+  levelClearTimer = 900;
+  pushScreenShake('medium', 10);
+  sfxConfirm();
+
+  waveAnnounceText = 'WAVE ' + nextLevel;
+  waveAnnounceTimer = 1500;
+  waveAnnounceSubText = '';
+  waveAnnounceSubTimer = 0;
+
+  if (BOSS_LEVELS.indexOf(nextLevel) !== -1) {
+    var bossData = BOSS_DATA[nextLevel];
+    waveAnnounceSubText = bossData ? bossData.name + ' INCOMING' : 'BOSS INCOMING';
+    waveAnnounceSubTimer = 1900;
+  } else if (SET_PIECE_BY_LEVEL[nextLevel]) {
+    waveAnnounceSubText = SET_PIECE_BY_LEVEL[nextLevel].name;
+    waveAnnounceSubTimer = 1900;
+  }
+
+  var reward = grantWaveCompletionBonus(completedLevel);
+  if (reward) {
+    waveRewardText = reward.text;
+    waveRewardTimer = 2000;
+  } else {
+    waveRewardText = '';
+    waveRewardTimer = 0;
+  }
+}
+
 // --- UPDATE ---
 function update(dt) {
   const gameplayFreeze = (state === 'playing' && hitstopTimer > 0);
@@ -26,10 +56,7 @@ function update(dt) {
 
   // No activar warp si hay boss activo
   if (state === 'playing' && !boss.active && aliveCount === 0 && !pendingNextLevel) {
-    pendingNextLevel = true;
-    levelClearTimer = 900;
-    pushScreenShake('medium', 10);
-    sfxConfirm();
+    beginWaveTransition(level, level + 1);
   }
 
   const isWarping = (state === 'playing' && pendingNextLevel);
@@ -75,6 +102,9 @@ function update(dt) {
 
   if (pendingNextLevel) {
     levelClearTimer -= dt;
+    if (waveAnnounceTimer > 0) waveAnnounceTimer -= dt;
+    if (waveAnnounceSubTimer > 0) waveAnnounceSubTimer -= dt;
+    if (waveRewardTimer > 0) waveRewardTimer -= dt;
 
     // Vibracion de turbulencia durante warp
     if (warpSpeed > 3 && Math.random() < 0.3) {

@@ -3773,6 +3773,66 @@ ufoRewards.forEach(d => {
         ctx.fillText('TOUR', W / 2, 36);
       }
 
+      // Wave number announcement
+      if (waveAnnounceTimer > 0) {
+        var waPulse = 0.55 + 0.45 * Math.sin(globalTime * 0.025);
+        var waAlpha = Math.min(1, waveAnnounceTimer / 400);
+        var waY = H / 2 - 60;
+        var waColor = pendingNextLevel ? '#64f5ff' : '#fff36a';
+
+        ctx.save();
+        ctx.textAlign = 'center';
+
+        ctx.globalAlpha = waAlpha * 0.15;
+        ctx.fillStyle = waColor;
+        ctx.font = '28px "Press Start 2P"';
+        ctx.fillText(waveAnnounceText, W / 2 + 2, waY + 2);
+
+        ctx.globalAlpha = waAlpha * waPulse;
+        ctx.fillStyle = '#000';
+        ctx.font = '28px "Press Start 2P"';
+        ctx.fillText(waveAnnounceText, W / 2 + 2, waY + 3);
+        ctx.fillStyle = waColor;
+        ctx.fillText(waveAnnounceText, W / 2, waY);
+
+        // Milestone sub-announcement
+        if (waveAnnounceSubTimer > 0 && waveAnnounceSubText) {
+          var subPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.035);
+          var subAlpha = Math.min(1, waveAnnounceSubTimer / 500);
+
+          ctx.globalAlpha = subAlpha * 0.12;
+          ctx.fillStyle = '#ff4444';
+          ctx.font = '14px "Press Start 2P"';
+          ctx.fillText(waveAnnounceSubText, W / 2 + 1, waY + 36);
+
+          ctx.globalAlpha = subAlpha * subPulse;
+          ctx.fillStyle = '#000';
+          ctx.fillText(waveAnnounceSubText, W / 2 + 1, waY + 37);
+          ctx.fillStyle = '#ff6644';
+          ctx.fillText(waveAnnounceSubText, W / 2, waY + 36);
+        }
+
+        // Reward text
+        if (waveRewardTimer > 0 && waveRewardText) {
+          var rwAlpha = Math.min(1, waveRewardTimer / 500);
+          var rwY = H / 2 + 30;
+          var rwPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.03);
+
+          ctx.globalAlpha = rwAlpha * 0.12;
+          ctx.fillStyle = '#ffea00';
+          ctx.font = '10px "Press Start 2P"';
+          ctx.fillText(waveRewardText, W / 2 + 1, rwY + 1);
+
+          ctx.globalAlpha = rwAlpha * rwPulse;
+          ctx.fillStyle = '#000';
+          ctx.fillText(waveRewardText, W / 2 + 1, rwY + 2);
+          ctx.fillStyle = '#ffea00';
+          ctx.fillText(waveRewardText, W / 2, rwY);
+        }
+
+        ctx.restore();
+      }
+
       if (setPieceIntroTimer > 0 && currentSetPiece) {
         const pulse = 0.45 + 0.55 * Math.sin(globalTime * 0.03);
         ctx.textAlign = 'center';

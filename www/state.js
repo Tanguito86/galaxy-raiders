@@ -339,4 +339,76 @@ function drawSprite(ctx, spriteMap, x, y, color, size = 3) {
   }
 }
 
+// =====================
+// CONTROL DECK SKINS
+// =====================
+
+const CONTROL_DECK_SKINS = {
+  classic: {
+    id: 'classic',
+    label: 'Classic',
+    themeClass: 'deck-skin-classic',
+    unlocked: true
+  },
+  earth: {
+    id: 'earth',
+    label: 'Earth Defense',
+    themeClass: 'deck-skin-earth',
+    unlocked: true
+  },
+  imperial: {
+    id: 'imperial',
+    label: 'Imperial',
+    themeClass: 'deck-skin-imperial',
+    unlocked: false
+  }
+};
+
+const CONTROL_DECK_SKIN_KEY = 'gr_controlDeckSkin';
+let activeControlDeckSkin = 'classic';
+
+function loadControlDeckSkin() {
+  try {
+    const saved = localStorage.getItem(CONTROL_DECK_SKIN_KEY);
+    if (saved && CONTROL_DECK_SKINS[saved]) {
+      activeControlDeckSkin = saved;
+    }
+  } catch (e) {}
+}
+
+function saveControlDeckSkin(skinId) {
+  try {
+    localStorage.setItem(CONTROL_DECK_SKIN_KEY, skinId);
+  } catch (e) {}
+}
+
+function applyControlDeckSkin(skinId) {
+  if (!CONTROL_DECK_SKINS[skinId]) return;
+
+  const body = document.body;
+  const deck = document.getElementById('mobile-controls');
+  if (!deck) return;
+
+  // Remove previous skin classes
+  Object.values(CONTROL_DECK_SKINS).forEach(function(s) {
+    body.classList.remove(s.themeClass);
+    deck.classList.remove(s.themeClass);
+  });
+
+  // Apply new skin class
+  activeControlDeckSkin = skinId;
+  const skin = CONTROL_DECK_SKINS[skinId];
+  body.classList.add(skin.themeClass);
+  deck.classList.add(skin.themeClass);
+
+  saveControlDeckSkin(skinId);
+}
+
+function initControlDeckSkin() {
+  loadControlDeckSkin();
+  applyControlDeckSkin(activeControlDeckSkin);
+}
+
+initControlDeckSkin();
+
 
