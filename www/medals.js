@@ -27,6 +27,38 @@ let popups = [];
 let waveDamageTaken = false;
 let waveKills = 0;
 
+let feverActive = false;
+let feverUntil = 0;
+let feverTriggeredForThisChain = false;
+
+function isMedalFeverActive() {
+  return feverActive;
+}
+
+function getMedalFeverTimeLeft() {
+  if (!feverActive) return 0;
+  return Math.max(0, Math.ceil((feverUntil - globalTime) / 1000));
+}
+
+function updateMedalFever() {
+  if (!feverActive) return;
+  if (globalTime >= feverUntil) {
+    feverActive = false;
+  }
+}
+
+function maybeActivateMedalFever() {
+  if (feverActive) return;
+  if (medalChain < 20) return;
+  if (feverTriggeredForThisChain) return;
+
+  feverActive = true;
+  feverUntil = globalTime + 6000;
+  feverTriggeredForThisChain = true;
+
+  spawnPopup(W / 2, H / 2 - 50, 'FEVER!', '#ff3388');
+}
+
 function markWaveDamageTaken() {
   waveDamageTaken = true;
 }
@@ -66,6 +98,8 @@ function getCurrentMedalValue() {
 function resetMedalChain() {
   medalChain = 0;
   medalValue = MEDAL_VALUE_BASE;
+  feverActive = false;
+  feverTriggeredForThisChain = false;
 }
 
 function clearMedalDrops() {
@@ -146,6 +180,8 @@ function spawnPopup(x, y, text, color = '#fff') {
 }
 
 function updateMedals(playerRef, step = 1) {
+  updateMedalFever();
+
   const p = getRect(playerRef || player);
   const playerMidX = p.x + p.w * 0.5;
   const playerMidY = p.y + p.h * 0.5;
@@ -174,10 +210,12 @@ function updateMedals(playerRef, step = 1) {
     m.y += m.vy * step;
 
     if (rectOverlap(m, p)) {
-      const gained = getCurrentMedalValue();
+      const base = getCurrentMedalValue();
+      const gained = feverActive ? base * 2 : base;
       addScore(gained);
       medalChain += 1;
       medalValue = getCurrentMedalValue();
+      maybeActivateMedalFever();
 
       const tx = m.x + m.w * 0.5;
       const ty = m.y + m.h * 0.5;

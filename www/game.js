@@ -53,6 +53,13 @@ function drawMedals(ctxRef) {
     drawCtx.fillStyle = '#ffe680';
     drawCtx.fillRect(-m.w * 0.5 - 3, -m.h * 0.5 - 3, m.w + 6, m.h + 6);
 
+    if (typeof feverActive !== 'undefined' && feverActive) {
+      var feverPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.04 + i * 0.7);
+      drawCtx.globalAlpha = feverPulse * 0.55;
+      drawCtx.fillStyle = '#ff4488';
+      drawCtx.fillRect(-m.w * 0.5 - 5, -m.h * 0.5 - 5, m.w + 10, m.h + 10);
+    }
+
     drawCtx.globalAlpha = 1;
     drawCtx.fillStyle = '#2b1600';
     drawCtx.fillRect(-m.w * 0.5 - 1, -m.h * 0.5 - 1, m.w + 2, m.h + 2);

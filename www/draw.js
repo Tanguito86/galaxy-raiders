@@ -4056,6 +4056,28 @@ ufoRewards.forEach(d => {
         ctx.fillText('TOUR', W / 2, 36);
       }
 
+      if (typeof isMedalFeverActive === 'function' && isMedalFeverActive()) {
+        var feverLeft = typeof getMedalFeverTimeLeft === 'function' ? getMedalFeverTimeLeft() : 0;
+        var feverPulse = 0.65 + 0.35 * Math.sin(globalTime * 0.012);
+        var feverAlpha = feverPulse;
+
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = feverAlpha * 0.2;
+        ctx.fillStyle = '#ff1166';
+        ctx.font = '16px "Press Start 2P"';
+        ctx.fillText('FEVER', W / 2 + 1, 56);
+        ctx.globalAlpha = feverAlpha;
+        ctx.fillStyle = '#ff4488';
+        ctx.fillText('FEVER', W / 2, 55);
+
+        ctx.globalAlpha = 0.9;
+        ctx.font = '10px "Press Start 2P"';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(('0' + feverLeft).slice(-2), W / 2, 70);
+        ctx.restore();
+      }
+
       // Wave number announcement
       if (waveAnnounceTimer > 0) {
         var waPulse = 0.55 + 0.45 * Math.sin(globalTime * 0.025);
