@@ -63,7 +63,7 @@ function drawMedals(ctxRef) {
 
     if (typeof feverActive !== 'undefined' && feverActive) {
       var feverPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.04 + i * 0.7);
-      drawCtx.globalAlpha = feverPulse * 0.55;
+      drawCtx.globalAlpha = feverPulse * 0.45;
       drawCtx.fillStyle = '#ff4488';
       drawCtx.fillRect(-m.w * 0.5 - 5, -m.h * 0.5 - 5, m.w + 10, m.h + 10);
     }
