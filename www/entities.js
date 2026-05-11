@@ -397,6 +397,7 @@ function startLevel() {
   waveAnnounceSubTimer = 0;
   waveRewardText = '';
   waveRewardTimer = 0;
+  resetWavePerfectTracking();
   initStars();
   powerUpsSpawnedThisLevel = 0;
   satellites = []; // âœ… Agregar

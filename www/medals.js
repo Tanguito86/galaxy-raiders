@@ -24,6 +24,33 @@ let medalChain = 0;
 let medalValue = MEDAL_VALUE_BASE;
 let popups = [];
 
+let waveDamageTaken = false;
+let waveKills = 0;
+
+function markWaveDamageTaken() {
+  waveDamageTaken = true;
+}
+
+function markWaveEnemyKilled() {
+  waveKills++;
+}
+
+function resetWavePerfectTracking() {
+  waveDamageTaken = false;
+  waveKills = 0;
+}
+
+function tryAwardPerfectWaveBonus() {
+  if (waveDamageTaken || waveKills <= 0 || medalChain <= 0) return false;
+
+  const bonus = medalChain * getCurrentMedalValue();
+  addScore(bonus);
+  spawnPopup(W / 2, H / 2 - 30, 'PERFECT WAVE', '#ffee55');
+  spawnPopup(W / 2, H / 2 - 8, '+' + bonus, '#ffee88');
+
+  return true;
+}
+
 function getMedalChain() {
   return medalChain;
 }

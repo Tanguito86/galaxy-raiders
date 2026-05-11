@@ -243,6 +243,7 @@ function recordPlayerDeath(cause = 'unknown', lostLives = 1) {
   const amount = Math.max(1, Math.floor(lostLives || 1));
   gameStats.deaths += amount;
   gameStats.deathByCause[key] += amount;
+  markWaveDamageTaken();
 }
 
 function recordShotsFired(amount = 1) {
@@ -258,6 +259,7 @@ function recordShotHit(amount = 1) {
 function recordEnemyKilled(amount = 1) {
   ensureRunStatsShape();
   gameStats.enemiesKilled += Math.max(0, Math.floor(amount));
+  markWaveEnemyKilled();
 }
 
 function recordPowerupCollected(amount = 1) {

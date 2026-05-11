@@ -30,6 +30,9 @@ function beginWaveTransition(completedLevel, nextLevel) {
     waveRewardText = '';
     waveRewardTimer = 0;
   }
+
+  tryAwardPerfectWaveBonus();
+  resetWavePerfectTracking();
 }
 
 // --- UPDATE ---

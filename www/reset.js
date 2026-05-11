@@ -13,6 +13,7 @@ function clearCombatState() {
   ufoRewards = [];
   victoryParticles = [];
   resetMedalSystemState();
+  resetWavePerfectTracking();
   boss.active = false;
 }
 
