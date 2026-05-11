@@ -111,6 +111,28 @@ function spawnMedal(x, y, guaranteed = false, count = 1) {
   return spawned;
 }
 
+function spawnBossMedalRain(boss, count = 8) {
+  const cx = boss.x + boss.w * 0.5;
+  const cy = boss.y + boss.h * 0.5;
+  const ringCount = Math.min(count, 12);
+
+  for (let i = 0; i < ringCount; i++) {
+    const angle = (Math.PI * 2 * i) / ringCount + (Math.random() - 0.5) * 0.5;
+    const radius = 18 + Math.random() * (Math.max(boss.w, boss.h) * 0.35);
+    const mx = cx + Math.cos(angle) * radius;
+    const my = cy + Math.sin(angle) * radius * 0.6;
+
+    medals.push({
+      x: mx - MEDAL_SIZE * 0.5,
+      y: my - MEDAL_SIZE * 0.5,
+      w: MEDAL_SIZE,
+      h: MEDAL_SIZE,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: MEDAL_VY * 0.2 + Math.random() * 1.4
+    });
+  }
+}
+
 function spawnPopup(x, y, text, color = '#fff') {
   popups.push({
     x,

@@ -209,7 +209,7 @@ if (bossDefeated) {
   pushScreenShake('heavy', 50);
   flashScreen = 30;
   addScore(5000);
-  spawnMedal(boss.x + boss.w / 2, boss.y + boss.h * 0.55, true, 4);
+  spawnBossMedalRain(boss, level === 20 ? 12 : 8);
 
   // âœ… VICTORIA Ã‰PICA si completaste nivel 20
   if (level === 20) {
