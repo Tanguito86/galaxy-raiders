@@ -38,6 +38,14 @@ function updatePopups(step = 1) {
 
 function drawMedals(ctxRef) {
   const drawCtx = ctxRef || ctx;
+  var mc = typeof getMedalChapterColors === 'function' ? getMedalChapterColors() : null;
+  var glowC = mc ? mc.glow : '#ffe680';
+  var borderC = mc ? mc.border : '#2b1600';
+  var outerC = mc ? mc.outer : '#ffb000';
+  var innerC = mc ? mc.inner : '#fff06a';
+  var coreC = mc ? mc.core : '#9b5f00';
+  var crossC = mc ? mc.cross : '#ffd966';
+  var highC = mc ? mc.highlight : '#fff8c6';
 
   for (let i = 0; i < medals.length; i++) {
     const m = medals[i];
@@ -50,7 +58,7 @@ function drawMedals(ctxRef) {
     drawCtx.translate(cx, cy);
 
     drawCtx.globalAlpha = glow;
-    drawCtx.fillStyle = '#ffe680';
+    drawCtx.fillStyle = glowC;
     drawCtx.fillRect(-m.w * 0.5 - 3, -m.h * 0.5 - 3, m.w + 6, m.h + 6);
 
     if (typeof feverActive !== 'undefined' && feverActive) {
@@ -61,24 +69,24 @@ function drawMedals(ctxRef) {
     }
 
     drawCtx.globalAlpha = 1;
-    drawCtx.fillStyle = '#2b1600';
+    drawCtx.fillStyle = borderC;
     drawCtx.fillRect(-m.w * 0.5 - 1, -m.h * 0.5 - 1, m.w + 2, m.h + 2);
 
-    drawCtx.fillStyle = '#ffb000';
+    drawCtx.fillStyle = outerC;
     drawCtx.fillRect(-m.w * 0.5, -m.h * 0.5, m.w, m.h);
 
-    drawCtx.fillStyle = '#fff06a';
+    drawCtx.fillStyle = innerC;
     drawCtx.fillRect(-m.w * 0.5 + 2, -m.h * 0.5 + 2, m.w - 4, m.h - 4);
 
-    drawCtx.fillStyle = '#9b5f00';
+    drawCtx.fillStyle = coreC;
     drawCtx.fillRect(-m.w * 0.5 + 4, -m.h * 0.5 + 4, m.w - 8, m.h - 8);
 
-    drawCtx.fillStyle = '#ffd966';
+    drawCtx.fillStyle = crossC;
     drawCtx.fillRect(-2, -4, 4, 8);
     drawCtx.fillRect(-4, -2, 8, 4);
 
     drawCtx.globalAlpha = 0.35 + pulse * 0.45;
-    drawCtx.fillStyle = '#fff8c6';
+    drawCtx.fillStyle = highC;
     drawCtx.fillRect(-m.w * 0.5 + 3, -m.h * 0.5 + 2, 5, 2);
     drawCtx.fillRect(m.w * 0.5 - 4, m.h * 0.5 - 5, 2, 2);
 

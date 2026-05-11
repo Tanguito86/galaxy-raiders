@@ -19,6 +19,19 @@ const MEDAL_ELITE_TYPES = {
   alien6: true
 };
 
+const MEDAL_CHAPTER_COLORS = [
+  { glow: '#ffe680', border: '#2b1600', outer: '#ffb000', inner: '#fff06a', core: '#9b5f00', cross: '#ffd966', highlight: '#fff8c6' },
+  { glow: '#88ff88', border: '#003300', outer: '#00cc00', inner: '#66ff66', core: '#005500', cross: '#99ff99', highlight: '#ccffcc' },
+  { glow: '#66bbff', border: '#001166', outer: '#0088ff', inner: '#66ccff', core: '#003388', cross: '#99ddff', highlight: '#cceeff' },
+  { glow: '#bb88ff', border: '#110044', outer: '#7700ff', inner: '#aa66ff', core: '#440088', cross: '#cc99ff', highlight: '#eeccff' },
+  { glow: '#ff8888', border: '#330000', outer: '#ff2200', inner: '#ff6666', core: '#880000', cross: '#ff9999', highlight: '#ffcccc' }
+];
+
+function getMedalChapterColors() {
+  const chapter = Math.min(Math.ceil((level || 1) / 4), MEDAL_CHAPTER_COLORS.length) - 1;
+  return MEDAL_CHAPTER_COLORS[Math.max(0, chapter)];
+}
+
 let medals = [];
 let medalChain = 0;
 let medalValue = MEDAL_VALUE_BASE;
