@@ -3,10 +3,8 @@
 // =====================
 
 function stopMusicPlayback() {
-  if (musicInterval) {
-    clearInterval(musicInterval);
-    musicInterval = null;
-  }
+  if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+  if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
 }
 
 function updatePauseButtonForState(nextState = state) {
@@ -26,7 +24,7 @@ function pauseGameplay() {
 function resumeGameplay() {
   if (state !== 'paused') return;
   state = 'playing';
-  startMusic(boss.active ? 'boss' : 'normal');
+  startMusic(getMusicThemeForLevel(level, boss.active));
   updatePauseButtonForState('playing');
 }
 

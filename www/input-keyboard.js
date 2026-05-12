@@ -63,8 +63,9 @@ document.addEventListener('keydown', e => {
     isMuted = !isMuted;
     if (isMuted) {
       if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+      if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
     } else if (!isMuted && state === 'playing') {
-      startMusic(boss.active ? 'boss' : 'normal');
+      startMusic(getMusicThemeForLevel(level, boss.active));
     }
     return;
   }

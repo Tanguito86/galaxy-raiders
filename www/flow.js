@@ -5,10 +5,8 @@
 function endGame() {
   hitstopTimer = 0;
   
-  if (musicInterval) {
-    clearInterval(musicInterval);
-    musicInterval = null;
-  }
+  if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+  if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
 
   // Feedback inmediato
   pushScreenShake('heavy', 40);
@@ -56,7 +54,7 @@ function useContinue() {
   player.y = H - 40;
   
   state = 'playing';
-  startMusic(boss.active ? 'boss' : 'normal');
+  startMusic(getMusicThemeForLevel(level, boss.active));
   
   sfxPowerUp();
   

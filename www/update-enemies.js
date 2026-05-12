@@ -230,10 +230,8 @@ if (bossDefeated) {
       localStorage.setItem('gr_hardcoreUnlocked', 'true');
     } catch (e) {}
 
-    if (musicInterval) {
-      clearInterval(musicInterval);
-      musicInterval = null;
-    }
+    if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+    if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
   
   } else {
     beginWaveTransition(level, level + 1);

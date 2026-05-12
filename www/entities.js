@@ -407,10 +407,10 @@ function startLevel() {
   // âœ… Verificar si este nivel tiene boss
   if (BOSS_LEVELS.includes(level)) {
     initBoss();
-    startMusic('boss');
+    startMusic(getMusicThemeForLevel(level, true));
   } else {
     initEnemies();
-    startMusic('normal');
+    startMusic(getMusicThemeForLevel(level, false));
   }
   
   currentPalette = PALETTES[(level - 1) % PALETTES.length];
