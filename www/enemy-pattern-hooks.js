@@ -72,3 +72,48 @@ function markEnemyPatternReady(enemy) {
   enemy.patternHint = __safeGetEnemyPatternHint(enemy);
   return true;
 }
+
+// ============================================================
+// HARDCORE SNIPER PATTERN (alien2)
+// ============================================================
+
+function getAngleToPlayer(enemy) {
+  if (!enemy || typeof player === 'undefined' || !player) return Math.PI / 2;
+  var ex = enemy.x + (enemy.w || 24) / 2;
+  var ey = enemy.y + (enemy.h || 24);
+  var px = player.x + player.width / 2;
+  var py = player.y + player.height / 2;
+  return Math.atan2(py - ey, px - ex);
+}
+
+function shouldFireHardcoreSniperPattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'sniper') return false;
+  return true;
+}
+
+function fireHardcoreSniperShot(enemy) {
+  if (!enemy) return false;
+
+  var angle = getAngleToPlayer(enemy);
+  var speed = 3.2;
+  var vx = Math.cos(angle) * speed;
+  var vy = Math.sin(angle) * speed;
+
+  var sx = enemy.x + (enemy.w || 24) / 2 - 3;
+  var sy = enemy.y + (enemy.h || 24);
+
+  if (typeof pushEnemyBullet !== 'function') return false;
+
+  pushEnemyBullet(sx, sy, vx, vy, 6, 10, {
+    kind: 'crossfire_a',
+    color: '#ff8844',
+    sourceType: enemy.type || 'alien2'
+  });
+
+  if (typeof createEnemyMuzzleFlash === 'function') {
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien2');
+  }
+
+  return true;
+}

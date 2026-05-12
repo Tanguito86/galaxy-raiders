@@ -808,17 +808,22 @@ if (!boss.active && activeEnemies.length > 0) {
 
     if (shooters.length > 0) {
       const shooter = shooters[Math.floor(Math.random() * shooters.length)];
-      pushEnemyBullet(
-        shooter.x + shooter.w / 2,
-        shooter.y + shooter.h,
-        0,
-        getDifficultySettings(level).bulletSpeed,
-        4,
-        10,
-        { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
-      );
+
+      if (typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(shooter)) {
+        fireHardcoreSniperShot(shooter);
+      } else {
+        pushEnemyBullet(
+          shooter.x + shooter.w / 2,
+          shooter.y + shooter.h,
+          0,
+          getDifficultySettings(level).bulletSpeed,
+          4,
+          10,
+          { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
+        );
+        createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
+      }
       enemyLastShot = globalTime;
-      createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
     }
   }
 
