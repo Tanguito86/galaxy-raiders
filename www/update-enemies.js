@@ -473,6 +473,7 @@ const activeEnemies = enemies.filter(e => e.alive);
   activeEnemies.forEach(e => {
     if (e.spawnFlashTimer > 0) e.spawnFlashTimer = Math.max(0, e.spawnFlashTimer - dt);
     if (e.flashTimer > 0) e.flashTimer -= dt;
+    if (typeof markEnemyPatternReady === 'function' && !e.patternReady) markEnemyPatternReady(e);
   });
 
 // âœ… IMPORTANTÃSIMO: startLevel NO va acÃ¡ (lo maneja el warp)

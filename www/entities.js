@@ -557,7 +557,7 @@ function createEnemy(x, y, row, type) {
   const w = sprite ? sprite[0].length * 3 : 24;
   const h = sprite ? sprite.length * 3 : 24;
   
-  return {
+  const enemy = {
     x, y, w, h, row, type,
     hp: scaledHp,
     maxHp: scaledHp,
@@ -568,8 +568,11 @@ function createEnemy(x, y, row, type) {
     vx: 0, vy: 0,
     movePattern: ENEMY_MOVE_PATTERNS.STRAIGHT_DOWN,
     spawnFlashTimer: ENEMY_SPAWN_FLASH_DURATION,
-    flashTimer: 0  // Para feedback visual de daÃ±o
+    flashTimer: 0  // Para feedback visual de daño
   };
+
+  if (typeof markEnemyPatternReady === 'function') markEnemyPatternReady(enemy);
+  return enemy;
 }
 
 
