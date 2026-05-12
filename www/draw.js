@@ -3410,6 +3410,7 @@ if (shouldShow) {
 
   drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
   ctx.restore();
+  drawHardcorePlayerHitbox(ctx);
 }
 
 

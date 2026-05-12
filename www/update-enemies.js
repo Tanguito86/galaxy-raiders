@@ -252,10 +252,7 @@ if (bossDefeated) {
       // ColisiÃ³n con el jugador
       if (
         !isInvincible &&
-        b.x < player.x + player.width &&
-        b.x + b.w > player.x &&
-        b.y < player.y + player.height &&
-        b.y + b.h > player.y
+        checkPlayerCollisionAABB(b.x, b.y, b.w, b.h)
       ) {
         const deathCause = boss.active ? 'boss' : 'bullet';
         recordPlayerDeath(deathCause);
@@ -368,12 +365,7 @@ for (let i = mines.length - 1; i >= 0; i--) {
   }
       
       // ColisiÃ³n con jugador (si no es invencible)
-      if (!isInvincible) {
-        const dx = (player.x + player.width / 2) - m.x;
-        const dy = (player.y + player.height / 2) - m.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        
-        if (dist < m.radius + 15) {
+      if (!isInvincible && checkPlayerCollisionCircle(m.x, m.y, m.radius, 15)) {
           // Â¡BOOM! Mina explota
           createExplosion(m.x, m.y, '#0f0', 20);
           sfxBigExplosion();
@@ -392,7 +384,6 @@ for (let i = mines.length - 1; i >= 0; i--) {
           if (lives <= 0) {
             safeEndGame();
           }
-        }
       }
     }
 
@@ -451,12 +442,7 @@ for (let i = mines.length - 1; i >= 0; i--) {
         }
         
         // ColisiÃ³n satÃ©lite con jugador
-        if (!isInvincible) {
-          const dx = (player.x + player.width / 2) - satX;
-          const dy = (player.y + player.height / 2) - satY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          if (dist < sat.radius + 12) {
+        if (!isInvincible && checkPlayerCollisionCircle(satX, satY, sat.radius, 12)) {
             createExplosion(satX, satY, '#0ff', 15);
             sfxBigExplosion();
             pushScreenShake('heavy', 12);
@@ -473,7 +459,6 @@ for (let i = mines.length - 1; i >= 0; i--) {
             if (lives <= 0) {
               safeEndGame();
             }
-          }
         }
       });
     }
@@ -514,10 +499,7 @@ if (!boss.active && activeEnemies.length > 0) {
 
     if (
       !isInvincible &&
-      e.x < player.x + player.width &&
-      e.x + e.w > player.x &&
-      e.y < player.y + player.height &&
-      e.y + e.h > player.y
+      checkPlayerCollisionAABB(e.x, e.y, e.w, e.h)
     ) {
       recordPlayerDeath('diving');
       requestHitstop(76);
@@ -786,10 +768,7 @@ if (!boss.active && activeEnemies.length > 0) {
 
     if (
       !isInvincible &&
-      e.x < player.x + player.width &&
-      e.x + e.w > player.x &&
-      e.y < player.y + player.height &&
-      e.y + e.h > player.y
+      checkPlayerCollisionAABB(e.x, e.y, e.w, e.h)
     ) {
       recordPlayerDeath('diving');
       requestHitstop(76);
@@ -858,10 +837,7 @@ if (!boss.active && activeEnemies.length > 0) {
       // ColisiÃ³n con jugador
       if (
         !isInvincible &&
-        e.x < player.x + player.width &&
-        e.x + e.w > player.x &&
-        e.y < player.y + player.height &&
-        e.y + e.h > player.y
+        checkPlayerCollisionAABB(e.x, e.y, e.w, e.h)
       ) {
         recordPlayerDeath('boss');
         requestHitstop(72);

@@ -70,3 +70,87 @@ function getHardcoreDebugConfig() {
   var si = (typeof d.showHardcoreInfo === 'boolean') ? d.showHardcoreInfo : _GALAXY_CONFIG_DEFAULTS.debug.showHardcoreInfo;
   return { showHardcoreInfo: si };
 }
+
+// ============================================================
+// HARDCORE HITBOX — helpers de colision y render
+// ============================================================
+
+function __hardcoreSafePlayer() {
+  return (typeof player !== 'undefined' && player && typeof player.x === 'number');
+}
+
+function isHardcoreHitboxActive() {
+  if (!isHardcoreEnabled()) return false;
+  if (!__hardcoreSafePlayer()) return false;
+  return true;
+}
+
+function getPlayerHitCenter() {
+  if (!__hardcoreSafePlayer()) return { x: 0, y: 0 };
+  return {
+    x: player.x + player.width / 2,
+    y: player.y + player.height / 2
+  };
+}
+
+function checkPlayerCollisionAABB(ox, oy, ow, oh) {
+  if (!__hardcoreSafePlayer()) return false;
+
+  if (!isHardcoreHitboxActive()) {
+    return ox < player.x + player.width &&
+           ox + ow > player.x &&
+           oy < player.y + player.height &&
+           oy + oh > player.y;
+  }
+
+  var cfg = getHardcorePlayerConfig();
+  var r = cfg.hardcoreHitRadius;
+  var cx = player.x + player.width / 2;
+  var cy = player.y + player.height / 2;
+  var closestX = ox < cx ? (ox + ow < cx ? ox + ow : cx) : (ox > cx ? ox : cx);
+  var closestY = oy < cy ? (oy + oh < cy ? oy + oh : cy) : (oy > cy ? oy : cy);
+  var dx = cx - closestX;
+  var dy = cy - closestY;
+  return (dx * dx + dy * dy) < (r * r);
+}
+
+function checkPlayerCollisionCircle(ox, oy, oRadius, normalPlayerRadius) {
+  if (!__hardcoreSafePlayer()) return false;
+
+  var playerR;
+  if (isHardcoreHitboxActive()) {
+    playerR = getHardcorePlayerConfig().hardcoreHitRadius;
+  } else {
+    playerR = (typeof normalPlayerRadius === 'number') ? normalPlayerRadius : 12;
+  }
+
+  var cx = player.x + player.width / 2;
+  var cy = player.y + player.height / 2;
+  var dx = cx - ox;
+  var dy = cy - oy;
+  var combined = playerR + oRadius;
+  return (dx * dx + dy * dy) < (combined * combined);
+}
+
+function drawHardcorePlayerHitbox(ctx) {
+  if (!ctx) return;
+  var cfg = getHardcorePlayerConfig();
+  if (!cfg.showHitbox) return;
+  if (!isHardcoreHitboxActive()) return;
+
+  var center = getPlayerHitCenter();
+  var r = cfg.hardcoreHitRadius;
+
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = '#ff0000';
+  ctx.fill();
+  ctx.restore();
+}
