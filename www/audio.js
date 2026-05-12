@@ -187,46 +187,74 @@ function sfxConfirm() {
   tone({ type:'square', f:randPitch(660), f2:randPitch(990), dur:0.05, vol:VOL.hit, attack:0.002, decay:0.06 });
 }
 
-// === MEDAL SFX ===
-let lastMedalPickupSfx = 0;
+// === MUSICAL HELPERS ===
+function midiToFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+// C minor pentatonic (C, Eb, F, G, Bb) spanning C4(60) to C6(84)
+var PENTATONIC = [60, 63, 65, 67, 70, 72, 75, 77, 79, 82, 84];
+var PENTATONIC_LEN = 5;
+
+// === MEDAL SFX v2 (musical) ===
+var lastMedalPickupSfx = 0;
 
 function sfxMedalPickup(chain) {
-  const now = typeof globalTime !== 'undefined' ? globalTime : Date.now();
+  var now = typeof globalTime !== 'undefined' ? globalTime : Date.now();
   if (now - lastMedalPickupSfx < 70) return;
   lastMedalPickupSfx = now;
 
-  const pitch = 1 + Math.min((chain || 0) * 0.008, 0.3);
-  tone({ type:'sine', f:randPitch(1100 * pitch), f2:randPitch(1450 * pitch), dur:0.04, vol:VOL.ui * 1.1, attack:0.001, decay:0.05 });
+  var idx = (chain || 0) % PENTATONIC_LEN;
+  var oct = Math.min(Math.floor((chain || 0) / 15), 2);
+  var freq = midiToFreq(PENTATONIC[idx] + oct * 12);
+
+  tone({ type:'sine', f:freq, f2:freq * 1.012, dur:0.04, vol:VOL.ui * 1.1, attack:0.002, decay:0.06 });
 }
 
 function sfxMedalTierUp() {
-  tone({ type:'square', f:660, dur:0.04, vol:VOL.power * 0.6, attack:0.002, decay:0.05 });
-  setTimeout(function() { tone({ type:'square', f:880, dur:0.04, vol:VOL.power * 0.55, attack:0.002, decay:0.05 }); }, 35);
-  setTimeout(function() { tone({ type:'sine', f:1100, dur:0.05, vol:VOL.power * 0.5, attack:0.002, decay:0.06 }); }, 70);
+  var notes = [72, 75, 79]; // C5, Eb5, G5
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'square', f:midiToFreq(m), dur:0.06, vol:VOL.power * 0.55, attack:0.003, decay:0.07 });
+    }, i * 65);
+  });
 }
 
 function sfxMedalDown() {
-  tone({ type:'triangle', f:randPitch(500), f2:randPitch(280), dur:0.13, vol:VOL.ui * 0.55, attack:0.004, decay:0.15 });
+  var notes = [67, 63, 60]; // G4, Eb4, C4
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'triangle', f:midiToFreq(m), dur:0.10, vol:VOL.ui * 0.5, attack:0.005, decay:0.12 });
+    }, i * 85);
+  });
 }
 
 function sfxPerfectWave() {
-  tone({ type:'square', f:660, dur:0.05, vol:VOL.power, attack:0.002, decay:0.06 });
-  setTimeout(function() { tone({ type:'square', f:880, dur:0.05, vol:VOL.power, attack:0.002, decay:0.06 }); }, 55);
-  setTimeout(function() { tone({ type:'square', f:1320, dur:0.07, vol:VOL.power * 0.7, attack:0.002, decay:0.08 }); }, 110);
+  var notes = [72, 77, 79, 84]; // C5, F5, G5, C6
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'square', f:midiToFreq(m), dur:0.08, vol:VOL.power * 0.75, attack:0.003, decay:0.09 });
+    }, i * 95);
+  });
 }
 
 function sfxBossMedalRain() {
-  tone({ type:'sine', f:880, dur:0.03, vol:VOL.power * 0.4, attack:0.002, decay:0.04 });
-  setTimeout(function() { tone({ type:'sine', f:1100, dur:0.03, vol:VOL.power * 0.35, attack:0.002, decay:0.04 }); }, 25);
-  setTimeout(function() { tone({ type:'sine', f:1320, dur:0.03, vol:VOL.power * 0.35, attack:0.002, decay:0.04 }); }, 50);
-  setTimeout(function() { tone({ type:'sine', f:1760, dur:0.04, vol:VOL.power * 0.3, attack:0.002, decay:0.05 }); }, 75);
+  var notes = [84, 79, 75, 72]; // C6, G5, Eb5, C5
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'sine', f:midiToFreq(m), dur:0.05, vol:VOL.power * 0.35, attack:0.002, decay:0.06 });
+    }, i * 60);
+  });
 }
 
 function sfxFeverActivated() {
-  tone({ type:'square', f:440, dur:0.04, vol:VOL.power, attack:0.002, decay:0.05 });
-  setTimeout(function() { tone({ type:'square', f:660, dur:0.04, vol:VOL.power, attack:0.002, decay:0.05 }); }, 40);
-  setTimeout(function() { tone({ type:'sine', f:880, dur:0.04, vol:VOL.power * 0.8, attack:0.002, decay:0.05 }); }, 85);
-  setTimeout(function() { tone({ type:'square', f:1100, dur:0.06, vol:VOL.power * 0.7, attack:0.002, decay:0.07 }); }, 125);
+  var notes = [60, 63, 65, 67, 70, 72]; // C4→C5 minor pentatonic
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      var oscType = i >= 4 ? 'sine' : 'square';
+      tone({ type:oscType, f:midiToFreq(m), dur:0.06, vol:VOL.power * 0.65, attack:0.003, decay:0.07 });
+    }, i * 75);
+  });
 }
 
 // Desbloquear audio con primer toque
