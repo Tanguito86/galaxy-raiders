@@ -154,3 +154,81 @@ function drawHardcorePlayerHitbox(ctx) {
   ctx.fill();
   ctx.restore();
 }
+
+// ============================================================
+// HARDCORE GRAZE — sistema de roce de balas
+// ============================================================
+
+var _hardcoreGrazeCount = 0;
+
+function isGrazeActive() {
+  if (!isHardcoreEnabled()) return false;
+  var g = getGrazeConfig();
+  return !!g.enabled;
+}
+
+function getGrazeCount() {
+  return _hardcoreGrazeCount;
+}
+
+function resetGrazeCount() {
+  _hardcoreGrazeCount = 0;
+}
+
+function checkBulletGraze(b) {
+  if (!b) return false;
+  if (b.grazed) return false;
+  if (!isGrazeActive()) return false;
+  if (!__hardcoreSafePlayer()) return false;
+
+  var g = getGrazeConfig();
+  var center = getPlayerHitCenter();
+
+  // Distancia minima entre rectangulo de bala y centro del jugador
+  var closestX = b.x < center.x ? (b.x + b.w < center.x ? b.x + b.w : center.x) : (b.x > center.x ? b.x : center.x);
+  var closestY = b.y < center.y ? (b.y + b.h < center.y ? b.y + b.h : center.y) : (b.y > center.y ? b.y : center.y);
+  var dx = center.x - closestX;
+  var dy = center.y - closestY;
+
+  if ((dx * dx + dy * dy) < (g.radius * g.radius)) {
+    b.grazed = true;
+    return true;
+  }
+  return false;
+}
+
+function registerGraze(bulletRef) {
+  _hardcoreGrazeCount++;
+  var g = getGrazeConfig();
+
+  if (typeof addScore === 'function') {
+    addScore(g.score);
+  }
+
+  if (typeof spawnPopup === 'function') {
+    var gx = bulletRef ? bulletRef.x + (bulletRef.w || 0) / 2 : player.x + player.width / 2;
+    var gy = bulletRef ? bulletRef.y : player.y;
+    spawnPopup(gx, gy, 'GRAZE', '#ffd966');
+  }
+}
+
+function drawHardcoreGrazeHUD(ctx) {
+  if (!ctx) return;
+  if (!isGrazeActive()) return;
+
+  var cfg = getGrazeConfig();
+  var x = 128;
+  var y = 56;
+
+  ctx.save();
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'right';
+  ctx.font = '6px "Press Start 2P"';
+  ctx.fillStyle = 'rgba(255,217,102,0.78)';
+  ctx.fillText('GRAZE', x + 44, y);
+  ctx.textAlign = 'right';
+  ctx.font = '7px "Press Start 2P"';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(_hardcoreGrazeCount, x + 44, y + 12);
+  ctx.restore();
+}

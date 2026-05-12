@@ -31,6 +31,7 @@ function resetRunStats() {
   extraLivesEarned = 0;
   continueCount = 0;
   gameStats = createEmptyRunStats();
+  if (typeof resetGrazeCount === 'function') resetGrazeCount();
 }
 
 function resetProgressionState() {

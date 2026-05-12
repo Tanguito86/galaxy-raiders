@@ -4049,6 +4049,7 @@ ufoRewards.forEach(d => {
     ctx.fillStyle = '#ffd966';
     ctx.fillText(medalValue, hudRightX + hudRightW - 6, hudTop + 35);
     ctx.restore();
+    drawHardcoreGrazeHUD(ctx);
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {
         ctx.textAlign = 'center';

@@ -248,6 +248,10 @@ if (bossDefeated) {
       b.x += (b.vx ?? 0) * step;
       b.y += (b.vy ?? enemyBulletBaseSpeed) * step;
 
+      // Graze (roce de bala)
+      if (checkBulletGraze(b)) {
+        registerGraze(b);
+      }
 
       // ColisiÃ³n con el jugador
       if (
