@@ -43,6 +43,24 @@
     },
     imperialTelegraph: function() {
       if (typeof sfxImperialTelegraph === 'function') sfxImperialTelegraph();
+    },
+    medalPickup: function(data) {
+      if (typeof sfxMedalPickup === 'function') sfxMedalPickup(data && data.chain);
+    },
+    medalTierUp: function() {
+      if (typeof sfxMedalTierUp === 'function') sfxMedalTierUp();
+    },
+    medalDown: function() {
+      if (typeof sfxMedalDown === 'function') sfxMedalDown();
+    },
+    perfectWave: function() {
+      if (typeof sfxPerfectWave === 'function') sfxPerfectWave();
+    },
+    bossMedalRain: function() {
+      if (typeof sfxBossMedalRain === 'function') sfxBossMedalRain();
+    },
+    feverActivated: function() {
+      if (typeof sfxFeverActivated === 'function') sfxFeverActivated();
     }
   };
 

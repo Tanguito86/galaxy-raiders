@@ -70,6 +70,7 @@ function maybeActivateMedalFever() {
   feverTriggeredForThisChain = true;
 
   spawnPopup(W / 2, H / 2 - 50, 'FEVER!', '#ff3388');
+  AudioEngine.playSfx('feverActivated');
 }
 
 function markWaveDamageTaken() {
@@ -92,6 +93,8 @@ function tryAwardPerfectWaveBonus() {
   addScore(bonus);
   spawnPopup(W / 2, H / 2 - 30, 'PERFECT WAVE', '#ffee55');
   spawnPopup(W / 2, H / 2 - 8, '+' + bonus, '#ffee88');
+
+  AudioEngine.playSfx('perfectWave');
 
   return true;
 }
@@ -178,6 +181,8 @@ function spawnBossMedalRain(boss, count = 8) {
       vy: MEDAL_VY * 0.2 + Math.random() * 1.4
     });
   }
+
+  AudioEngine.playSfx('bossMedalRain');
 }
 
 function spawnPopup(x, y, text, color = '#fff') {
@@ -227,8 +232,17 @@ function updateMedals(playerRef, step = 1) {
       const gained = feverActive ? base * 2 : base;
       addScore(gained);
       medalChain += 1;
+
+      const prevTier = Math.min(Math.floor((medalChain - 1) / 5), MEDAL_VALUES.length - 1);
+      const newTier = Math.min(Math.floor(medalChain / 5), MEDAL_VALUES.length - 1);
+      if (newTier > prevTier) {
+        AudioEngine.playSfx('medalTierUp');
+      }
+
       medalValue = getCurrentMedalValue();
       maybeActivateMedalFever();
+
+      AudioEngine.playSfx('medalPickup', { chain: medalChain });
 
       const tx = m.x + m.w * 0.5;
       const ty = m.y + m.h * 0.5;
@@ -250,6 +264,7 @@ function updateMedals(playerRef, step = 1) {
         medalChain = Math.max(0, medalChain - 5);
         medalValue = getCurrentMedalValue();
         spawnPopup(m.x, H - 16, 'MEDAL DOWN', '#ff8866');
+        AudioEngine.playSfx('medalDown');
       }
       medals.splice(i, 1);
     }
