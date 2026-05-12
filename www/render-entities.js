@@ -49,6 +49,8 @@ function drawEnemyBullet(b) {
   const h = b.h || 10;
   ctx.save();
 
+  drawHardcoreBulletEnhancement(ctx, b, kind === 'boss');
+
   if (kind === 'boss') {
     ctx.globalAlpha = 0.16;
     ctx.fillStyle = '#080000';

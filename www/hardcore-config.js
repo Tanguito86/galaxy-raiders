@@ -232,3 +232,68 @@ function drawHardcoreGrazeHUD(ctx) {
   ctx.fillText(_hardcoreGrazeCount, x + 44, y + 12);
   ctx.restore();
 }
+
+// ============================================================
+// HARDCORE BULLET READABILITY — glow y trail visual
+// ============================================================
+
+function drawHardcoreBulletEnhancement(ctx, b, isBoss) {
+  if (!ctx || !b) return;
+  if (!isHardcoreEnabled()) return;
+
+  var bc = getHardcoreBulletConfig();
+  if (isBoss && !bc.bossGlow) return;
+  if (!isBoss && !bc.enemyGlow) return;
+
+  var x = b.x;
+  var y = b.y;
+  var w = b.w || 4;
+  var h = b.h || 10;
+
+  var styleInfo = typeof getEnemyBulletRenderStyle === 'function'
+    ? getEnemyBulletRenderStyle(b)
+    : { color: '#ff5050' };
+  var color = styleInfo.color || '#ff5050';
+
+  var savedAlpha = ctx.globalAlpha;
+
+  if (isBoss) {
+    // Boss: glow expansivo mas grande
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 6, y - 5, w + 12, h + 10);
+
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 4, y - 3, w + 8, h + 6);
+
+    // Trail direccional
+    if (b.vy || b.vx) {
+      var tx = (b.vx || 0) * 1.2;
+      var ty = (b.vy || 0) * 1.2;
+      ctx.globalAlpha = 0.07;
+      ctx.fillRect(x - tx * 1.5, y - ty * 1.5, w, h);
+      ctx.globalAlpha = 0.05;
+      ctx.fillRect(x - tx * 3, y - ty * 3, w, h);
+    }
+  } else {
+    // Enemy: glow externo sutil
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
+
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+
+    // Trail direccional ligero
+    if (b.vy || b.vx) {
+      var tx2 = (b.vx || 0) * 1.0;
+      var ty2 = (b.vy || 0) * 1.0;
+      ctx.globalAlpha = 0.05;
+      ctx.fillRect(x - tx2 * 2, y - ty2 * 2, w, h);
+    }
+  }
+
+  ctx.globalAlpha = savedAlpha;
+}
