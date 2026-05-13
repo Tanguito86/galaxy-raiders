@@ -48,8 +48,9 @@ function _hardcoreRankCalcMultiplier(lvl) {
 
 // Recalcular nivel y multiplicador desde el valor actual
 function _hardcoreRankRecalc() {
-  _hardcoreRank.level = _hardcoreRankCalcLevel(_hardcoreRank.value);
-  _hardcoreRank.multiplier = _hardcoreRankCalcMultiplier(_hardcoreRank.level);
+  _hardcoreRank.value = Math.max(0, Math.min(100, _hardcoreRank.value));
+  _hardcoreRank.level = Math.max(1, Math.min(5, _hardcoreRankCalcLevel(_hardcoreRank.value)));
+  _hardcoreRank.multiplier = Math.max(1.00, Math.min(1.50, _hardcoreRankCalcMultiplier(_hardcoreRank.level)));
 }
 
 // ============================================================
@@ -76,6 +77,12 @@ window.getHardcoreRankLevel = function() {
 
 window.getHardcoreRankMultiplier = function() {
   return _hardcoreRank.multiplier;
+};
+
+window.isHardcoreRankActive = function() {
+  if (typeof isHardcoreEnabled !== 'function') return false;
+  if (!isHardcoreEnabled()) return false;
+  return _hardcoreRankIsEnabled();
 };
 
 window.addHardcoreRank = function(amount, reason) {
@@ -144,11 +151,32 @@ function drawHardcoreRankDebug(ctx) {
   if (!dbg.showRank) return;
   if (typeof H === 'undefined') return;
 
+  var bulletMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
+    ? window.getHardcoreRankBulletSpeedMultiplier() : 1.00;
+  var cdMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function')
+    ? window.getHardcoreRankCooldownMultiplier() : 1.00;
+  var reason = (_hardcoreRank.lastReason && typeof _hardcoreRank.lastReason === 'string' && _hardcoreRank.lastReason.length > 0)
+    ? _hardcoreRank.lastReason : '-';
+
   ctx.save();
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.font = '6px "Press Start 2P"';
-  ctx.fillStyle = 'rgba(255,165,0,0.85)';
-  ctx.fillText('RANK: L' + _hardcoreRank.level + ' ' + _hardcoreRank.value, 6, H - 10);
+
+  ctx.fillStyle = 'rgba(255,165,0,0.88)';
+  ctx.fillText('RANK L' + _hardcoreRank.level, 6, H - 58);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.fillText('VALUE ' + _hardcoreRank.value.toFixed(1), 6, H - 47);
+
+  ctx.fillStyle = 'rgba(255,200,100,0.72)';
+  ctx.fillText('BULLET x' + bulletMult.toFixed(2), 6, H - 36);
+
+  ctx.fillStyle = 'rgba(100,200,255,0.72)';
+  ctx.fillText('CD x' + cdMult.toFixed(2), 6, H - 25);
+
+  ctx.fillStyle = 'rgba(200,200,200,0.55)';
+  ctx.fillText('LAST ' + reason, 6, H - 14);
+
   ctx.restore();
 }
