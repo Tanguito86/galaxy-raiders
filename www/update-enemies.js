@@ -90,7 +90,9 @@ if (
     bossDefeated = true;
     requestHitstop(64);
     recordEnemyKilled();
-    addScore(800);
+    var bRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function') ? window.getHardcoreRankScoreMultiplier() : 1.00;
+    var bComboMult = (typeof window.getHardcoreComboMultiplier === 'function') ? window.getHardcoreComboMultiplier() : 1.00;
+    addScore(Math.round(800 * bRankMult * bComboMult));
   }
   
   // âœ… EFECTO DE GOLPE AL BOSS
@@ -221,7 +223,9 @@ if (bossDefeated) {
   vibrate('explosion');
   pushScreenShake('heavy', 50);
   flashScreen = 30;
-  addScore(5000);
+  var bossRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function') ? window.getHardcoreRankScoreMultiplier() : 1.00;
+  var bossComboMult = (typeof window.getHardcoreComboMultiplier === 'function') ? window.getHardcoreComboMultiplier() : 1.00;
+  addScore(Math.round(5000 * bossRankMult * bossComboMult));
   spawnBossMedalRain(boss, level === 20 ? 12 : 8);
 
   // âœ… VICTORIA Ã‰PICA si completaste nivel 20
