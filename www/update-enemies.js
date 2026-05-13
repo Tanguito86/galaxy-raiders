@@ -826,6 +826,10 @@ if (!boss.active && activeEnemies.length > 0) {
   const diffMode = difficulties[difficultyIndex];
   if (diffMode && diffMode.fireMult) baseCooldown *= diffMode.fireMult;
 
+  if (typeof window.getHardcoreRankCooldownMultiplier === 'function') {
+    baseCooldown *= window.getHardcoreRankCooldownMultiplier();
+  }
+
   const didScriptedSetPieceShot = runSetPieceFirePattern(activeEnemies, dt, baseCooldown);
 
   if (!didScriptedSetPieceShot && globalTime - enemyLastShot > baseCooldown) {
@@ -855,12 +859,16 @@ if (!boss.active && activeEnemies.length > 0) {
   // HC-14: hardcore suppressor pattern (alien4) - independent cooldown
   activeEnemies.forEach(e => {
     if (typeof shouldFireHardcoreSuppressorPattern === 'function' && shouldFireHardcoreSuppressorPattern(e)) {
-      if (e._hcSuppressorCooldown === undefined) e._hcSuppressorCooldown = HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN);
+      if (e._hcSuppressorCooldown === undefined) {
+        var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+        e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult;
+      }
       e._hcSuppressorCooldown -= dt;
       if (e._hcSuppressorCooldown <= 0) {
         if (typeof fireHardcoreSuppressorBurst === 'function') {
           fireHardcoreSuppressorBurst(e);
-          e._hcSuppressorCooldown = HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN);
+          var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+          e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2;
         }
       }
     }
@@ -869,11 +877,15 @@ if (!boss.active && activeEnemies.length > 0) {
   // HC-16: hardcore elite pattern (alien5) - independent cooldown (ticks during dive)
   activeEnemies.forEach(e => {
     if (typeof shouldUseHardcoreElitePattern === 'function' && shouldUseHardcoreElitePattern(e)) {
-      if (e._hcEliteCooldown === undefined) e._hcEliteCooldown = HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN);
+      if (e._hcEliteCooldown === undefined) {
+        var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+        e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult;
+      }
       e._hcEliteCooldown -= dt;
       if (e._hcEliteCooldown <= 0) {
         if (typeof fireHardcoreEliteBurst === 'function' && fireHardcoreEliteBurst(e)) {
-          e._hcEliteCooldown = HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN);
+          var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+          e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2;
         }
       }
     }

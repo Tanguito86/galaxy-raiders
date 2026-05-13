@@ -107,6 +107,32 @@ window.resetHardcoreRank = function() {
 };
 
 // ============================================================
+// HC-27: MODIFICADORES DE DIFICULTAD POR RANK
+// ============================================================
+
+window.getHardcoreRankBulletSpeedMultiplier = function() {
+  if (!_hardcoreRankIsEnabled()) return 1.00;
+  var m = _hardcoreRank.multiplier;
+  if (typeof m !== 'number') return 1.00;
+  return 1.00 + (m - 1.00) * 0.24;
+};
+
+window.getHardcoreRankCooldownMultiplier = function() {
+  if (!_hardcoreRankIsEnabled()) return 1.00;
+  var m = _hardcoreRank.multiplier;
+  if (typeof m !== 'number') return 1.00;
+  return 1.00 - (m - 1.00) * 0.24;
+};
+
+window.getHardcoreRankPatternIntensity = function() {
+  if (!_hardcoreRankIsEnabled()) return 1;
+  var m = _hardcoreRank.multiplier;
+  if (typeof m !== 'number') return 1;
+  var val = Math.round(1 + (m - 1.00) * 2.0);
+  return Math.max(1, Math.min(2, val));
+};
+
+// ============================================================
 // HUD DEBUG OPCIONAL
 // ============================================================
 

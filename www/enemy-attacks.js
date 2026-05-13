@@ -4,7 +4,10 @@
 // =====================
 
 function pushEnemyBullet(x, y, vx, vy, w = 4, h = 10, meta = {}) {
-  enemyBullets.push({ x, y, w, h, vx, vy, ...meta });
+  var speedMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
+    ? window.getHardcoreRankBulletSpeedMultiplier()
+    : 1.00;
+  enemyBullets.push({ x, y, w, h, vx: vx * speedMult, vy: vy * speedMult, ...meta });
 }
 
 function pickVolleyShooters(shooters, maxCount) {
