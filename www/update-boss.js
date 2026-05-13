@@ -204,6 +204,12 @@ function updateBossStep(step, dt) {
   // HC-19: update boss telegraph timers
   if (typeof updateBossTelegraph === 'function') updateBossTelegraph(boss, dt);
 
+  // HC-20: phase transition FX trigger + update
+  if (boss.phaseChanged && (boss.phase === 2 || boss.phase === 3)) {
+    if (typeof triggerBossPhaseTransitionFX === 'function') triggerBossPhaseTransitionFX(boss, boss.phase);
+  }
+  if (typeof updateBossPhaseTransitionFX === 'function') updateBossPhaseTransitionFX(boss, dt);
+
   if (boss.flashTimer > 0) boss.flashTimer -= dt;
 
   const phase = boss.phase;
@@ -752,7 +758,9 @@ if (boss.shootTimer > shootRate) {
       break;
       
     case 'zigzag':
-  
+      // HC-22: Serpentrix hardcore pattern (stub — returns false, attacks unchanged)
+      if (typeof updateSerpentrixHardcorePattern === 'function') updateSerpentrixHardcorePattern(boss, dt);
+   
   // SERPENTRIX: Abanico hacia abajo + rotación sutil
   const fanCount = 5 + phase; // 6, 7, 8 balas
   const fanRotation = Math.sin(globalTime * 0.001) * 0.4; // Oscila más

@@ -374,3 +374,43 @@ function drawBossPhaseTransitionFX(ctx, b) {
 
   ctx.restore();
 }
+
+// ============================================================
+// HARDCORE SERPENTRIX PATTERN (second boss, zigzag, level 10)
+// HC-22: foundation — stub only, attacks unchanged
+// ============================================================
+
+function isSecondHardcoreBoss(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (target.name === 'SERPENTRIX') return true;
+  if (target.pattern === 'zigzag') return true;
+  return false;
+}
+
+function shouldUseSerpentrixHardcorePattern(b) {
+  if (!shouldUseHardcoreBossPatterns()) return false;
+  if (!isSecondHardcoreBoss(b)) return false;
+  return true;
+}
+
+function _markSerpentrixPatternMeta(b) {
+  var target = b || boss;
+  if (!target || !target.active) return;
+  if (target._serpentrixPatternReady) return;
+
+  target._serpentrixPatternReady = true;
+  target._serpentrixPatternPhase = getBossPhaseSafe(target);
+  if (target._serpentrixPatternTimer === undefined) target._serpentrixPatternTimer = 0;
+}
+
+function updateSerpentrixHardcorePattern(b, dt) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+
+  // HC-22: initialize metadata (idempotent)
+  _markSerpentrixPatternMeta(target);
+
+  // HC-23+: actual attacks will go here
+  return false;
+}
