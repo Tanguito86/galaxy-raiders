@@ -8,7 +8,9 @@ var _hardcoreCombo = {
   multiplier: 1.00,
   lastReason: '',
   lastChangeAt: 0,
-  activeUntil: 0
+  activeUntil: 0,
+  lastBreakAt: 0,
+  lastBreakReason: ''
 };
 
 function _hardcoreComboReadConfig() {
@@ -51,6 +53,8 @@ function _hardcoreComboCheckTimeout() {
     _hardcoreCombo.lastReason = 'timeout';
     _hardcoreCombo.lastChangeAt = Date.now();
     _hardcoreCombo.activeUntil = 0;
+    _hardcoreCombo.lastBreakAt = Date.now();
+    _hardcoreCombo.lastBreakReason = 'timeout';
   }
 }
 
@@ -65,7 +69,9 @@ window.getHardcoreComboState = function() {
     multiplier: _hardcoreCombo.multiplier,
     lastReason: _hardcoreCombo.lastReason,
     lastChangeAt: _hardcoreCombo.lastChangeAt,
-    activeUntil: _hardcoreCombo.activeUntil
+    activeUntil: _hardcoreCombo.activeUntil,
+    lastBreakAt: _hardcoreCombo.lastBreakAt,
+    lastBreakReason: _hardcoreCombo.lastBreakReason
   };
 };
 
@@ -105,6 +111,8 @@ window.breakHardcoreCombo = function(reason) {
   _hardcoreCombo.lastChangeAt = Date.now();
   if (reason && typeof reason === 'string') _hardcoreCombo.lastReason = reason;
   _hardcoreCombo.activeUntil = 0;
+  _hardcoreCombo.lastBreakAt = Date.now();
+  _hardcoreCombo.lastBreakReason = (reason && typeof reason === 'string') ? reason : 'break';
 };
 
 window.resetHardcoreCombo = function() {
@@ -113,6 +121,8 @@ window.resetHardcoreCombo = function() {
   _hardcoreCombo.lastReason = '';
   _hardcoreCombo.lastChangeAt = 0;
   _hardcoreCombo.activeUntil = 0;
+  _hardcoreCombo.lastBreakAt = 0;
+  _hardcoreCombo.lastBreakReason = '';
 };
 
 // ============================================================
@@ -122,23 +132,88 @@ window.resetHardcoreCombo = function() {
 window.drawHardcoreComboHUD = function(ctx) {
   if (!ctx) return;
   _hardcoreComboCheckTimeout();
-  if (_hardcoreCombo.count <= 0) return;
   if (typeof H === 'undefined') return;
 
-  var x = 128;
+  var now = Date.now();
+  var count = _hardcoreCombo.count;
+  var mult = _hardcoreCombo.multiplier;
   var y = 56;
+  var breakMs = (count <= 0 && _hardcoreCombo.lastBreakAt > 0) ? now - _hardcoreCombo.lastBreakAt : 9999;
+  var showingBreak = count <= 0 && breakMs < 900;
+  var comboColor = '#fff';
+  var comboAlpha = 1.0;
+  var glowAlpha = 0;
+
+  if (!showingBreak && count <= 0) return;
+
+  if (count >= 40) {
+    comboColor = '#ffdd44';
+    var gPulse = 0.55 + 0.45 * Math.sin(now * 0.012);
+    comboAlpha = gPulse;
+    glowAlpha = 0.14 + 0.06 * Math.sin(now * 0.015);
+  } else if (count >= 20) {
+    comboColor = '#ffaa33';
+    var pPulse = 0.65 + 0.35 * Math.sin(now * 0.01);
+    comboAlpha = pPulse;
+    glowAlpha = 0.06 + 0.04 * Math.sin(now * 0.012);
+  } else if (count >= 10) {
+    comboColor = '#ff77aa';
+    comboAlpha = 0.88;
+  }
 
   ctx.save();
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
 
+  if (showingBreak) {
+    var fadeAlpha = 1.0 - (breakMs / 900);
+    ctx.font = '9px "Press Start 2P"';
+    ctx.globalAlpha = fadeAlpha;
+    ctx.fillStyle = '#ff3355';
+    ctx.fillText('COMBO BREAK', 6, y + 6);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    return;
+  }
+
+  ctx.globalAlpha = comboAlpha;
+
+  // COMBO label
   ctx.font = '6px "Press Start 2P"';
-  ctx.fillStyle = 'rgba(255,120,200,0.82)';
+  ctx.fillStyle = 'rgba(200,120,220,0.82)';
   ctx.fillText('COMBO', 6, y);
 
+  // Count + multiplier
   ctx.font = '7px "Press Start 2P"';
-  ctx.fillStyle = '#fff';
-  ctx.fillText(_hardcoreCombo.count + ' x' + _hardcoreCombo.multiplier.toFixed(2), 6, y + 12);
+  ctx.fillStyle = comboColor;
+  ctx.fillText(count + ' x' + mult.toFixed(2), 6, y + 13);
 
+  // Glow overlay (40+)
+  if (glowAlpha > 0) {
+    ctx.globalAlpha = glowAlpha;
+    ctx.fillStyle = '#ffeebb';
+    ctx.fillText(count + ' x' + mult.toFixed(2), 6 + 1, y + 13 + 1);
+    ctx.fillText(count + ' x' + mult.toFixed(2), 6 - 1, y + 13 - 1);
+  }
+
+  // Timer bar
+  var barX = 6;
+  var barY = y + 22;
+  var barW = 52;
+  var barH = 3;
+  var remaining = Math.max(0, _hardcoreCombo.activeUntil - now);
+  var total = _hardcoreComboReadConfig().timeoutMs;
+  var ratio = Math.min(1, Math.max(0, remaining / total));
+
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = '#444';
+  ctx.fillRect(barX, barY, barW, barH);
+
+  ctx.globalAlpha = 0.72;
+  var barColor = ratio > 0.6 ? '#6f6' : ratio > 0.25 ? '#ff6' : '#f44';
+  ctx.fillStyle = barColor;
+  ctx.fillRect(barX, barY, Math.round(barW * ratio), barH);
+
+  ctx.globalAlpha = 1;
   ctx.restore();
 };
