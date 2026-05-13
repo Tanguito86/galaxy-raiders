@@ -25,7 +25,7 @@ window.GALAXY_CONFIG = {
 
   // ============ RANK (dificultad dinamica) ============
   rank: {
-    enabled: false,
+    enabled: true,
     baseLevel: 0,
     min: 0,
     max: 100,
@@ -48,7 +48,7 @@ window.GALAXY_CONFIG = {
 
   // ============ COMBO (sistema de combo hardcore) ============
   combo: {
-    enabled: false,
+    enabled: true,
     timeoutMs: 2500,
     maxMultiplier: 2.0
   },
