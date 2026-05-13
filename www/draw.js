@@ -3458,6 +3458,9 @@ if (shouldShow) {
       // HC-19: hardcore boss telegraph (all patterns)
       if (typeof drawBossHardcoreTelegraph === 'function') drawBossHardcoreTelegraph(ctx, boss);
 
+      // HC-20: phase transition FX (all patterns)
+      if (typeof drawBossPhaseTransitionFX === 'function') drawBossPhaseTransitionFX(ctx, boss);
+
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
 
       if (boss.pattern === 'zigzag') {
@@ -4045,6 +4048,7 @@ ufoRewards.forEach(d => {
     ctx.fillText(medalValue, hudRightX + hudRightW - 6, hudTop + 35);
     ctx.restore();
     drawHardcoreGrazeHUD(ctx);
+    if (typeof drawHardcoreRankDebug === 'function') drawHardcoreRankDebug(ctx);
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {
         ctx.textAlign = 'center';

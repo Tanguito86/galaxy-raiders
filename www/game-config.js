@@ -42,7 +42,8 @@ window.GALAXY_CONFIG = {
 
   // ============ DEBUG ============
   debug: {
-    showHardcoreInfo: false
+    showHardcoreInfo: false,
+    showRank: false
   }
 
 };

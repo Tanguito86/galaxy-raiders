@@ -10,7 +10,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   rank:      { enabled: false, baseLevel: 0 },
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
-  debug:     { showHardcoreInfo: false }
+  debug:     { showHardcoreInfo: false, showRank: false }
 };
 
 function getGalaxyConfig() {
