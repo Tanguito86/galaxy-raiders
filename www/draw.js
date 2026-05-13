@@ -3439,6 +3439,7 @@ if (shouldShow) {
       if (boss.pattern === 'crossfire') {
         drawArticulatedBossArms(ctx, boss, bossColor, globalTime);
         drawCrabtronShootTelegraph(ctx, boss, bossColor, globalTime);
+        drawBossHardcoreTelegraph(ctx, boss);
         drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
         drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'zigzag') {
@@ -3453,6 +3454,9 @@ if (shouldShow) {
         drawEmperorImperialAura(ctx, boss, bossColor, globalTime);
         drawEmperorEnergyMantle(ctx, boss, bossColor, globalTime);
       }
+
+      // HC-19: hardcore boss telegraph (all patterns)
+      if (typeof drawBossHardcoreTelegraph === 'function') drawBossHardcoreTelegraph(ctx, boss);
 
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
 

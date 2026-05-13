@@ -201,6 +201,9 @@ function updateBossStep(step, dt) {
   // HC-17: mark boss pattern metadata ready
   if (typeof markBossPatternReady === 'function') markBossPatternReady(boss);
 
+  // HC-19: update boss telegraph timers
+  if (typeof updateBossTelegraph === 'function') updateBossTelegraph(boss, dt);
+
   if (boss.flashTimer > 0) boss.flashTimer -= dt;
 
   const phase = boss.phase;

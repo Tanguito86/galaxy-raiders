@@ -117,6 +117,9 @@ function fireCrancktonHardcorePattern(b) {
   }
 
   if (phase === 2) {
+    // HC-19: telegraph before aimed burst
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase2_burst', 380);
+
     // HC-18: Phase 2 — aimed burst (3 bullets with stagger)
     var angle2 = getAngleFromBossToPlayer(target);
     var burstSpeed = speed * 1.08;
@@ -144,6 +147,9 @@ function fireCrancktonHardcorePattern(b) {
   }
 
   if (phase === 3) {
+    // HC-19: telegraph before radial
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase3_radial', 460);
+
     // HC-18: Phase 3 — radial ring (alternating pure vs aimed)
     target._hcCrancktonRadialFlip = !target._hcCrancktonRadialFlip;
     var count = 12;
@@ -170,4 +176,100 @@ function fireCrancktonHardcorePattern(b) {
   }
 
   return false; // fallback to original
+}
+
+// ============================================================
+// HARDCORE BOSS TELEGRAPH LAYER (HC-19)
+// Visual-only warning before strong attacks
+// ============================================================
+
+var HC_TELEGRAPH_COLORS = {
+  phase2_burst: '#ff6655',
+  phase3_radial: '#ff9944',
+  generic_warning: '#ffdd44'
+};
+
+function triggerBossTelegraph(b, type, duration) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+
+  target._hcTelegraphType = type;
+  target._hcTelegraphTimer = duration || 380;
+  target._hcTelegraphDuration = target._hcTelegraphTimer;
+
+  return true;
+}
+
+function updateBossTelegraph(b, dt) {
+  var target = b || boss;
+  if (!target || !target.active) return;
+  if (!target._hcTelegraphTimer || target._hcTelegraphTimer <= 0) {
+    target._hcTelegraphType = null;
+    target._hcTelegraphTimer = 0;
+    return;
+  }
+  target._hcTelegraphTimer -= dt;
+  if (target._hcTelegraphTimer <= 0) {
+    target._hcTelegraphType = null;
+    target._hcTelegraphTimer = 0;
+  }
+}
+
+function drawBossHardcoreTelegraph(ctx, b) {
+  if (!ctx) return;
+  var target = b || boss;
+  if (!target || !target.active) return;
+  if (!target._hcTelegraphType || !target._hcTelegraphTimer || target._hcTelegraphTimer <= 0) return;
+
+  var type = target._hcTelegraphType;
+  var progress = 1 - (target._hcTelegraphTimer / (target._hcTelegraphDuration || 380));
+  progress = Math.max(0, Math.min(1, progress));
+  var color = HC_TELEGRAPH_COLORS[type] || HC_TELEGRAPH_COLORS.generic_warning;
+
+  var cx = target.x + (target.w || 90) / 2;
+  var cy = target.y + (target.h || 45) / 2;
+  var maxR = Math.max(target.w, target.h) * 1.4;
+
+  ctx.save();
+
+  // Expanding ring
+  var ringR = 20 + progress * maxR;
+  var ringAlpha = (1 - progress) * 0.55;
+  ctx.globalAlpha = ringAlpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner core glow
+  var coreAlpha = (1 - progress) * 0.32 + 0.08;
+  ctx.globalAlpha = coreAlpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 14 + Math.sin(progress * Math.PI) * 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Warning indicator — small rotating lines
+  if (type === 'phase3_radial') {
+    var lineCount = 6;
+    var lineAlpha = (1 - progress) * 0.30;
+    var time = typeof globalTime === 'number' ? globalTime : 0;
+    for (var i = 0; i < lineCount; i++) {
+      var a = (Math.PI * 2 * i / lineCount) + time * 0.004;
+      var lx1 = cx + Math.cos(a) * (ringR * 0.5);
+      var ly1 = cy + Math.sin(a) * (ringR * 0.5);
+      var lx2 = cx + Math.cos(a) * ringR;
+      var ly2 = cy + Math.sin(a) * ringR;
+      ctx.globalAlpha = lineAlpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(lx1, ly1);
+      ctx.lineTo(lx2, ly2);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
 }
