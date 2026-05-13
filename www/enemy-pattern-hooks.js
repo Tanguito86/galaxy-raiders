@@ -249,3 +249,59 @@ function updateHardcoreDiverPattern(enemy, dt, step) {
     }
   }
 }
+
+// ============================================================
+// HARDCORE SUPPRESSOR PATTERN (alien4)
+// ============================================================
+
+function shouldFireHardcoreSuppressorPattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'suppressor') return false;
+  if (enemy.diving) return false;
+  return true;
+}
+
+var HC_SUPPRESSOR_COOLDOWN_MIN = 2000;
+var HC_SUPPRESSOR_COOLDOWN_MAX = 3500;
+
+function fireHardcoreSuppressorBurst(enemy) {
+  if (!enemy) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+
+  var sx = enemy.x + (enemy.w || 24) / 2;
+  var sy = enemy.y + (enemy.h || 24);
+  var bulletSpeed = 2.6;
+
+  if (typeof getDifficultySettings === 'function') {
+    var settings = getDifficultySettings(typeof level === 'number' ? level : 1);
+    if (settings && typeof settings.bulletSpeed === 'number') {
+      bulletSpeed = settings.bulletSpeed * 0.82;
+    }
+  }
+
+  // 3-bullet lateral fan: center, left sweep, right sweep
+  var angles = [
+    Math.PI / 2,               // straight down
+    Math.PI / 2 - 0.22,        // left bias
+    Math.PI / 2 + 0.22         // right bias
+  ];
+
+  for (var i = 0; i < angles.length; i++) {
+    var vx = Math.cos(angles[i]) * bulletSpeed;
+    var vy = Math.sin(angles[i]) * bulletSpeed;
+
+    pushEnemyBullet(sx - 2, sy, vx, vy, 5, 9, {
+      kind: 'crossfire_b',
+      color: '#ff6688',
+      sourceType: enemy.type || 'alien4'
+    });
+  }
+
+  if (typeof createEnemyMuzzleFlash === 'function') {
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien4');
+  }
+
+  if (typeof sfxUIClick === 'function') sfxUIClick();
+
+  return true;
+}

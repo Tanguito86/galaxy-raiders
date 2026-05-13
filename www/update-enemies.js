@@ -843,6 +843,19 @@ if (!boss.active && activeEnemies.length > 0) {
     }
   }
 
+  // HC-14: hardcore suppressor pattern (alien4) - independent cooldown
+  activeEnemies.forEach(e => {
+    if (typeof shouldFireHardcoreSuppressorPattern === 'function' && shouldFireHardcoreSuppressorPattern(e)) {
+      if (e._hcSuppressorCooldown === undefined) e._hcSuppressorCooldown = HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN);
+      e._hcSuppressorCooldown -= dt;
+      if (e._hcSuppressorCooldown <= 0) {
+        if (typeof fireHardcoreSuppressorBurst === 'function') {
+          fireHardcoreSuppressorBurst(e);
+          e._hcSuppressorCooldown = HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN);
+        }
+      }
+    }
+  });
 
 
 } // <-- CIERRA: if (!boss.active && activeEnemies.length > 0)
