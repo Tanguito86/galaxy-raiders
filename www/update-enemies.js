@@ -476,6 +476,13 @@ const activeEnemies = enemies.filter(e => e.alive);
     if (typeof markEnemyPatternReady === 'function' && !e.patternReady) markEnemyPatternReady(e);
   });
 
+  // HC-13: hardcore diver pattern (alien3) - independent pass
+  activeEnemies.forEach(e => {
+    if (typeof shouldUseHardcoreDiverPattern === 'function' && shouldUseHardcoreDiverPattern(e)) {
+      if (typeof updateHardcoreDiverPattern === 'function') updateHardcoreDiverPattern(e, dt, step);
+    }
+  });
+
 // âœ… IMPORTANTÃSIMO: startLevel NO va acÃ¡ (lo maneja el warp)
 if (!boss.active && activeEnemies.length > 0) {
   if (setPieceIntroTimer > 0 && currentSetPiece) {
@@ -612,6 +619,8 @@ if (!boss.active && activeEnemies.length > 0) {
 
     activeEnemies.forEach(e => {
       if (e.diving || e._shmupHandled) return;
+      // HC-13: skip hardcore divers in active pattern
+      if (e._hcDiverState && e._hcDiverState !== 'idle') return;
 
       // init per-enemy AI vars
       if (e.aiOffX === undefined) e.aiOffX = 0;
@@ -685,6 +694,8 @@ if (!boss.active && activeEnemies.length > 0) {
   let invasionComplete = false;
   activeEnemies.forEach(e => {
     if (e.diving || invasionComplete || e._shmupHandled) return;
+    // HC-13: skip hardcore divers in active pattern (telegraph/recovering)
+    if (e._hcDiverState && e._hcDiverState !== 'idle') return;
 
     e.x += enemySpeedX * enemyDir * step;
 
@@ -707,6 +718,8 @@ if (!boss.active && activeEnemies.length > 0) {
 
     activeEnemies.forEach(e => {
       if (e.diving || e._shmupHandled) return;
+      // HC-13: skip hardcore divers in active pattern
+      if (e._hcDiverState && e._hcDiverState !== 'idle') return;
       e.y += drop;
       e.x = clamp(e.x, 10, W - 10 - e.w);
     });
@@ -765,10 +778,13 @@ if (!boss.active && activeEnemies.length > 0) {
     updateEnemyBehavior(e, dt, step);
 
     if (e.y > H || e.x < -60 || e.x > W + 60) {
-      e.y = -30;
-      e.x = Math.random() * (W - 30);
-      e.diving = false;
-      resetEnemyMovePattern(e);
+      // HC-13: hardcore divers handle their own off-screen recovery
+      if (e._hcDiverState !== 'diving') {
+        e.y = -30;
+        e.x = Math.random() * (W - 30);
+        e.diving = false;
+        resetEnemyMovePattern(e);
+      }
     }
 
     if (
@@ -804,7 +820,7 @@ if (!boss.active && activeEnemies.length > 0) {
   const didScriptedSetPieceShot = runSetPieceFirePattern(activeEnemies, dt, baseCooldown);
 
   if (!didScriptedSetPieceShot && globalTime - enemyLastShot > baseCooldown) {
-    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots);
+    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots && e._hcDiverState !== 'telegraph');
 
     if (shooters.length > 0) {
       const shooter = shooters[Math.floor(Math.random() * shooters.length)];
