@@ -217,3 +217,84 @@ window.drawHardcoreComboHUD = function(ctx) {
   ctx.globalAlpha = 1;
   ctx.restore();
 };
+
+// ============================================================
+// HC-36: DEBUG PANEL COMBINADO
+// ============================================================
+
+window.drawHardcoreSystemsDebug = function(ctx) {
+  if (!ctx) return;
+  var cfg = window.GALAXY_CONFIG;
+  if (!cfg || typeof cfg !== 'object') return;
+  var dbg = (cfg.debug && typeof cfg.debug === 'object') ? cfg.debug : {};
+  if (!dbg.showHardcoreSystems) return;
+  if (typeof H === 'undefined' || typeof W === 'undefined') return;
+
+  var now = Date.now();
+  var panelX = W - 118;
+  var panelY = 44;
+  var panelW = 112;
+  var lineH = 10;
+  var y = panelY + 8;
+
+  ctx.save();
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 0.62;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(panelX, panelY, panelW, lineH * 11 + 10);
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = '#0ff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(panelX, panelY, panelW, lineH * 11 + 10);
+  ctx.globalAlpha = 1;
+
+  ctx.font = '6px "Press Start 2P"';
+
+  // --- RANK ---
+  var rLevel = (typeof window.getHardcoreRankLevel === 'function') ? window.getHardcoreRankLevel() : 1;
+  var rValue = (typeof window.getHardcoreRankValue === 'function') ? window.getHardcoreRankValue() : 0;
+  var rBullet = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function') ? window.getHardcoreRankBulletSpeedMultiplier() : 1.00;
+  var rCD = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1.00;
+  var rScore = (typeof window.getHardcoreRankScoreMultiplier === 'function') ? window.getHardcoreRankScoreMultiplier() : 1.00;
+
+  ctx.fillStyle = '#f80';
+  ctx.fillText('RANK L' + rLevel, panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#ffb';
+  ctx.fillText('VAL ' + rValue.toFixed(1), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#fb8';
+  ctx.fillText('BUL x' + rBullet.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#8bf';
+  ctx.fillText('CD  x' + rCD.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#ff8';
+  ctx.fillText('SCR x' + rScore.toFixed(2), panelX + 6, y); y += lineH;
+
+  // --- COMBO ---
+  var cCount = (typeof window.getHardcoreComboCount === 'function') ? window.getHardcoreComboCount() : 0;
+  var cMult = (typeof window.getHardcoreComboMultiplier === 'function') ? window.getHardcoreComboMultiplier() : 1.00;
+  var cState = (typeof window.getHardcoreComboState === 'function') ? window.getHardcoreComboState() : { activeUntil: 0, lastBreakReason: '' };
+
+  y += 4;
+  ctx.fillStyle = '#d8f';
+  ctx.fillText('COMBO ' + cCount, panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#faf';
+  ctx.fillText('MULT x' + cMult.toFixed(2), panelX + 6, y); y += lineH;
+
+  // Combo timer bar
+  if (cCount > 0 && cState.activeUntil > 0) {
+    var remaining = Math.max(0, cState.activeUntil - now);
+    var total = 2500;
+    var ratio = Math.min(1, Math.max(0, remaining / total));
+    var barX = panelX + 6;
+    y += 1;
+    ctx.fillStyle = '#333';
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(barX, y, panelW - 12, 3);
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = ratio > 0.5 ? '#6f6' : ratio > 0.2 ? '#ff6' : '#f44';
+    ctx.fillRect(barX, y, Math.round((panelW - 12) * ratio), 3);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+};

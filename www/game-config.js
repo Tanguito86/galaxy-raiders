@@ -56,7 +56,8 @@ window.GALAXY_CONFIG = {
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
-    showRank: false
+    showRank: false,
+    showHardcoreSystems: false
   }
 
 };

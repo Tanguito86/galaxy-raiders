@@ -11,7 +11,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
   combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0 },
-  debug:     { showHardcoreInfo: false, showRank: false }
+  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false }
 };
 
 function getGalaxyConfig() {
