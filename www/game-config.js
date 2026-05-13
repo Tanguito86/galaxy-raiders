@@ -46,6 +46,13 @@ window.GALAXY_CONFIG = {
     comboEnabled: true   // HC-12: active by default
   },
 
+  // ============ COMBO (sistema de combo hardcore) ============
+  combo: {
+    enabled: false,
+    timeoutMs: 2500,
+    maxMultiplier: 2.0
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,

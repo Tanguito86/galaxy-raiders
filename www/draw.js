@@ -4049,6 +4049,7 @@ ufoRewards.forEach(d => {
     ctx.restore();
     drawHardcoreGrazeHUD(ctx);
     if (typeof drawHardcoreRankDebug === 'function') drawHardcoreRankDebug(ctx);
+    if (typeof window.drawHardcoreComboHUD === 'function') window.drawHardcoreComboHUD(ctx);
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {
         ctx.textAlign = 'center';

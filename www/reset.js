@@ -52,6 +52,7 @@ function startNewGameRun(initialLives) {
   flashScreen = 0;
 
   if (typeof window.resetHardcoreRank === 'function') window.resetHardcoreRank();
+  if (typeof window.resetHardcoreCombo === 'function') window.resetHardcoreCombo();
 
   clearCombatState();
   resetPlayerLoadout();

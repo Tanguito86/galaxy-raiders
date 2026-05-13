@@ -10,6 +10,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   rank:      { enabled: false, baseLevel: 0, min: 0, max: 100, maxLevel: 5, bulletSpeedMax: 1.12, cooldownMin: 0.88, multiplierMax: 1.5 },
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
+  combo:     { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0 },
   debug:     { showHardcoreInfo: false, showRank: false }
 };
 
@@ -203,6 +204,10 @@ function registerGraze(bulletRef) {
 
   if (typeof window.addHardcoreRank === 'function') {
     window.addHardcoreRank(0.35, 'graze');
+  }
+
+  if (typeof window.refreshHardcoreComboWindow === 'function') {
+    window.refreshHardcoreComboWindow();
   }
 
   if (typeof addScore === 'function') {

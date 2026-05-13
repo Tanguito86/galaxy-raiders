@@ -149,6 +149,9 @@ if (
             e._rankKillAwarded = true;
             window.addHardcoreRank(0.75, 'enemy_kill');
           }
+          if (typeof window.addHardcoreCombo === 'function') {
+            window.addHardcoreCombo('enemy_kill');
+          }
           requestHitstop(38);
 
           const killScore = calculateEnemyKillScore(e, data, b.type);
