@@ -862,6 +862,19 @@ if (!boss.active && activeEnemies.length > 0) {
     }
   });
 
+  // HC-16: hardcore elite pattern (alien5) - independent cooldown (ticks during dive)
+  activeEnemies.forEach(e => {
+    if (typeof shouldUseHardcoreElitePattern === 'function' && shouldUseHardcoreElitePattern(e)) {
+      if (e._hcEliteCooldown === undefined) e._hcEliteCooldown = HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN);
+      e._hcEliteCooldown -= dt;
+      if (e._hcEliteCooldown <= 0) {
+        if (typeof fireHardcoreEliteBurst === 'function' && fireHardcoreEliteBurst(e)) {
+          e._hcEliteCooldown = HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN);
+        }
+      }
+    }
+  });
+
 
 } // <-- CIERRA: if (!boss.active && activeEnemies.length > 0)
 

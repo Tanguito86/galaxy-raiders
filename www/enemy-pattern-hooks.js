@@ -339,3 +339,72 @@ function updateHardcoreSwarmOscillation(enemy) {
   enemy._hcSwarmOscX = newOscX;
   enemy._hcSwarmOscY = newOscY;
 }
+
+// ============================================================
+// HARDCORE ELITE PATTERN (alien5)
+// ============================================================
+
+function shouldUseHardcoreElitePattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'elite') return false;
+  return true;
+}
+
+var HC_ELITE_COOLDOWN_MIN = 2400;
+var HC_ELITE_COOLDOWN_MAX = 4200;
+
+function fireHardcoreEliteBurst(enemy) {
+  if (!enemy) return false;
+  if (enemy.diving) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+
+  var sx = enemy.x + (enemy.w || 24) / 2;
+  var sy = enemy.y + (enemy.h || 24);
+  var bulletSpeed = 2.8;
+
+  if (typeof getDifficultySettings === 'function') {
+    var settings = getDifficultySettings(typeof level === 'number' ? level : 1);
+    if (settings && typeof settings.bulletSpeed === 'number') {
+      bulletSpeed = settings.bulletSpeed * 0.78;
+    }
+  }
+
+  // Aimed center shot toward player
+  var angleToPlayer = typeof getAngleToPlayer === 'function'
+    ? getAngleToPlayer(enemy)
+    : Math.PI / 2;
+
+  pushEnemyBullet(sx - 3, sy, Math.cos(angleToPlayer) * bulletSpeed, Math.sin(angleToPlayer) * bulletSpeed, 6, 10, {
+    kind: 'crossfire_a',
+    color: '#ffb938',
+    sourceType: enemy.type || 'alien5'
+  });
+
+  // Side shots to restrict escape (±25Â° from down)
+  var sideAngle = 0.44; // ~25Â°
+  var dAngle = Math.PI / 2;
+  var sideVxLeft = Math.cos(dAngle - sideAngle) * bulletSpeed * 0.85;
+  var sideVyLeft = Math.sin(dAngle - sideAngle) * bulletSpeed * 0.85;
+  var sideVxRight = Math.cos(dAngle + sideAngle) * bulletSpeed * 0.85;
+  var sideVyRight = Math.sin(dAngle + sideAngle) * bulletSpeed * 0.85;
+
+  pushEnemyBullet(sx - 2, sy, sideVxLeft, sideVyLeft, 5, 9, {
+    kind: 'basic',
+    color: '#ffcc66',
+    sourceType: enemy.type || 'alien5'
+  });
+
+  pushEnemyBullet(sx - 2, sy, sideVxRight, sideVyRight, 5, 9, {
+    kind: 'basic',
+    color: '#ffcc66',
+    sourceType: enemy.type || 'alien5'
+  });
+
+  if (typeof createEnemyMuzzleFlash === 'function') {
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien5');
+  }
+
+  if (typeof sfxUIClick === 'function') sfxUIClick();
+
+  return true;
+}
