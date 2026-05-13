@@ -10,7 +10,8 @@ var _hardcoreRank = {
   level: 1,
   multiplier: 1.00,
   lastReason: '',
-  lastChangeAt: 0
+  lastChangeAt: 0,
+  lastDecayAt: 0
 };
 
 // Lectura segura de la config de rank desde GALAXY_CONFIG
@@ -111,6 +112,48 @@ window.resetHardcoreRank = function() {
   _hardcoreRank.multiplier = 1.00;
   _hardcoreRank.lastReason = '';
   _hardcoreRank.lastChangeAt = 0;
+  _hardcoreRank.lastDecayAt = 0;
+};
+
+// ============================================================
+// HC-37: RANK DECAY
+// ============================================================
+
+function _hardcoreRankDecayReadConfig() {
+  var cfg = window.GALAXY_CONFIG;
+  if (!cfg || typeof cfg !== 'object') return { decayDelayMs: 6000, decayAmount: 0.15, decayIntervalMs: 1000 };
+  var r = (cfg.rank && typeof cfg.rank === 'object') ? cfg.rank : {};
+  return {
+    decayDelayMs: (typeof r.decayDelayMs === 'number') ? r.decayDelayMs : 6000,
+    decayAmount: (typeof r.decayAmount === 'number') ? r.decayAmount : 0.15,
+    decayIntervalMs: (typeof r.decayIntervalMs === 'number') ? r.decayIntervalMs : 1000
+  };
+}
+
+window.updateHardcoreRankDecay = function() {
+  if (!_hardcoreRankIsEnabled()) return;
+  if (_hardcoreRank.value <= 0) return;
+
+  var now = Date.now();
+  var decayCfg = _hardcoreRankDecayReadConfig();
+  var minDecayAt = _hardcoreRank.lastChangeAt + decayCfg.decayDelayMs;
+  if (now < minDecayAt) {
+    _hardcoreRank.lastDecayAt = 0;
+    return;
+  }
+
+  if (_hardcoreRank.lastDecayAt <= 0) {
+    _hardcoreRank.lastDecayAt = now;
+    return;
+  }
+
+  if (now - _hardcoreRank.lastDecayAt < decayCfg.decayIntervalMs) return;
+
+  _hardcoreRank.lastDecayAt = now;
+  _hardcoreRank.value = Math.max(0, _hardcoreRank.value - decayCfg.decayAmount);
+  _hardcoreRank.lastReason = 'rank_decay';
+  _hardcoreRank.lastChangeAt = now;
+  _hardcoreRankRecalc();
 };
 
 // ============================================================

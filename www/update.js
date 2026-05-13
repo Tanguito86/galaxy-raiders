@@ -132,4 +132,6 @@ function update(dt) {
     updatePopups(step);
     updateVictoryAndParticles(step, dt);
   }
+
+  if (typeof window.updateHardcoreRankDecay === 'function') window.updateHardcoreRankDecay();
 }

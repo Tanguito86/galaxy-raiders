@@ -32,7 +32,10 @@ window.GALAXY_CONFIG = {
     maxLevel: 5,
     bulletSpeedMax: 1.12,
     cooldownMin: 0.88,
-    multiplierMax: 1.5
+    multiplierMax: 1.5,
+    decayDelayMs: 6000,
+    decayAmount: 0.15,
+    decayIntervalMs: 1000
   },
 
   // ============ BULLETS (efectos visuales) ============
