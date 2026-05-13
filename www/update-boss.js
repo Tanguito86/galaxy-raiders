@@ -207,6 +207,7 @@ function updateBossStep(step, dt) {
   // HC-20: phase transition FX trigger + update
   if (boss.phaseChanged && (boss.phase === 2 || boss.phase === 3)) {
     if (typeof triggerBossPhaseTransitionFX === 'function') triggerBossPhaseTransitionFX(boss, boss.phase);
+    if (typeof window.addHardcoreRank === 'function') window.addHardcoreRank(2.5, 'boss_phase');
   }
   if (typeof updateBossPhaseTransitionFX === 'function') updateBossPhaseTransitionFX(boss, dt);
 

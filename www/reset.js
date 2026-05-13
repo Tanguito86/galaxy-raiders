@@ -51,6 +51,8 @@ function startNewGameRun(initialLives) {
   clearScreenShakeLayers();
   flashScreen = 0;
 
+  if (typeof window.resetHardcoreRank === 'function') window.resetHardcoreRank();
+
   clearCombatState();
   resetPlayerLoadout();
   resetPlayerPosition();

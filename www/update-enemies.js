@@ -145,6 +145,10 @@ if (
           /// MUERTE
           e.alive = false;
           recordEnemyKilled();
+          if (!e._rankKillAwarded && typeof window.addHardcoreRank === 'function') {
+            e._rankKillAwarded = true;
+            window.addHardcoreRank(0.75, 'enemy_kill');
+          }
           requestHitstop(38);
 
           const killScore = calculateEnemyKillScore(e, data, b.type);

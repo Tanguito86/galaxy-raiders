@@ -237,6 +237,9 @@ function recordRunLevel(levelNum) {
 }
 
 function recordPlayerDeath(cause = 'unknown', lostLives = 1) {
+  if (typeof window.reduceHardcoreRank === 'function') {
+    window.reduceHardcoreRank(8, 'player_hit');
+  }
   ensureRunStatsShape();
   const key = Object.prototype.hasOwnProperty.call(gameStats.deathByCause, cause) ? cause : 'unknown';
   const amount = Math.max(1, Math.floor(lostLives || 1));

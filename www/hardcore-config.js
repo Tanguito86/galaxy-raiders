@@ -201,6 +201,10 @@ function registerGraze(bulletRef) {
   _hardcoreGrazeCount++;
   var g = getGrazeConfig();
 
+  if (typeof window.addHardcoreRank === 'function') {
+    window.addHardcoreRank(0.35, 'graze');
+  }
+
   if (typeof addScore === 'function') {
     addScore(g.score);
   }
