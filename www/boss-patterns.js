@@ -186,7 +186,11 @@ function fireCrancktonHardcorePattern(b) {
 var HC_TELEGRAPH_COLORS = {
   phase2_burst: '#ff6655',
   phase3_radial: '#ff9944',
-  generic_warning: '#ffdd44'
+  generic_warning: '#ffdd44',
+  // HC-24: Serpentrix green-themed telegraphs
+  serpent_burst: '#44ee44',
+  serpent_mine:  '#33cc33',
+  serpent_arc:   '#22aa22'
 };
 
 function triggerBossTelegraph(b, type, duration) {
@@ -425,11 +429,13 @@ function updateSerpentrixHardcorePattern(b, dt) {
   target._serpentrixCycle++;
 
   if (phase === 1) {
-    // HC-23: Phase 1 — wide poison fan (5 bullets, clear gaps)
+    // HC-24: Phase 1 — wide poison fan (5 bullets, clear gaps)
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_burst', 220);
     var fanCount = 5;
+    var fanSpeed = speed * 0.88; // slightly slower for readability
     for (var i = 0; i < fanCount; i++) {
       var spread = -0.75 + (1.5 * i / (fanCount - 1)); // ±43° spread
-      pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(spread) * speed, Math.cos(spread) * speed, 5, 12, {
+      pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(spread) * fanSpeed, Math.cos(spread) * fanSpeed, 5, 12, {
         kind: 'basic',
         color: '#44dd44',
         sourceType: 'boss_serpentrix'
@@ -440,13 +446,13 @@ function updateSerpentrixHardcorePattern(b, dt) {
   }
 
   if (phase === 2) {
-    // HC-23: Phase 2 — alternating: aimed burst vs mines
+    // HC-24: Phase 2 — alternating: aimed burst vs mine pressure
     if (target._serpentrixCycle % 2 === 0) {
-      // Aimed burst (2 bullets toward player with stagger)
-      if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase2_burst', 320);
+      // Aimed burst (2 bullets toward player, telegraph first)
+      if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_burst', 380);
       var angle = getAngleFromBossToPlayer(target);
-      var burstSpeed = speed * 1.05;
-      var delays = [0, 110];
+      var burstSpeed = speed; // no multiplier — consistent speed
+      var delays = [0, 120]; // wider stagger than phase 1 Cranckton
 
       for (var j = 0; j < delays.length; j++) {
         (function(delay, a, spd) {
@@ -465,26 +471,27 @@ function updateSerpentrixHardcorePattern(b, dt) {
       }
       if (typeof sfxBossWarning === 'function') sfxBossWarning();
     } else {
-      // Deploy 2 mines (slow, forces repositioning)
+      // HC-24: Deploy 1 mine (control pressure, not screen fill)
+      if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_mine', 300);
       if (typeof mines !== 'undefined') {
-        var maxMines = typeof minesMax !== 'undefined' ? minesMax : 8;
+        var maxMines = 6; // hard cap at 6 to avoid screen clutter
         if (mines.length < maxMines) {
           mines.push({
-            x: center.x - 20,
+            x: center.x - 14,
             y: target.y + target.h,
-            radius: 13,
-            vy: 0.45,
-            life: 16000,
+            radius: 12,
+            vy: 0.42,
+            life: 10000, // 10s — long enough to matter, short enough to cycle
             pulseTime: 0
           });
         }
         if (mines.length < maxMines) {
           mines.push({
-            x: center.x + 20,
+            x: center.x + 14,
             y: target.y + target.h,
-            radius: 13,
-            vy: 0.45,
-            life: 16000,
+            radius: 12,
+            vy: 0.42,
+            life: 10000,
             pulseTime: 0
           });
         }
@@ -495,17 +502,18 @@ function updateSerpentrixHardcorePattern(b, dt) {
   }
 
   if (phase === 3) {
-    // HC-23: Phase 3 — serpent double-fan (8 bullets, sinusoidal spread)
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase3_radial', 420);
+    // HC-24: Phase 3 — serpent double-fan (8 bullets, readable wave)
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_arc', 450);
 
     var arcCount = 8;
     var time = typeof globalTime === 'number' ? globalTime : 0;
-    var serpentWave = Math.sin(time * 0.003) * 0.25;
+    var serpentWave = Math.sin(time * 0.0025) * 0.18; // subtler wave, clearer gaps
+    var arcSpeed = speed * 0.84; // slightly slower for dodge windows
 
     for (var k = 0; k < arcCount; k++) {
-      var baseSpread = -0.9 + (1.8 * k / (arcCount - 1)); // ±52° spread
+      var baseSpread = -0.78 + (1.56 * k / (arcCount - 1)); // ±45° — wider gaps
       var waveSpread = baseSpread + serpentWave;
-      pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(waveSpread) * speed, Math.cos(waveSpread) * speed, 5, 10, {
+      pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(waveSpread) * arcSpeed, Math.cos(waveSpread) * arcSpeed, 5, 10, {
         kind: 'basic',
         color: '#22cc22',
         sourceType: 'boss_serpentrix'
