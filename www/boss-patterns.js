@@ -407,10 +407,116 @@ function _markSerpentrixPatternMeta(b) {
 function updateSerpentrixHardcorePattern(b, dt) {
   var target = b || boss;
   if (!target || !target.active) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
 
   // HC-22: initialize metadata (idempotent)
   _markSerpentrixPatternMeta(target);
 
-  // HC-23+: actual attacks will go here
+  var phase = getBossPhaseSafe(target);
+  var center = getBossCenter(target);
+  var speed = 2.8;
+  if (typeof getDifficultySettings === 'function') {
+    var s = getDifficultySettings(typeof level === 'number' ? level : 10);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.82;
+  }
+
+  // HC-23: per-cycle alternating state for phase 2
+  if (target._serpentrixCycle === undefined) target._serpentrixCycle = 0;
+  target._serpentrixCycle++;
+
+  if (phase === 1) {
+    // HC-23: Phase 1 — wide poison fan (5 bullets, clear gaps)
+    var fanCount = 5;
+    for (var i = 0; i < fanCount; i++) {
+      var spread = -0.75 + (1.5 * i / (fanCount - 1)); // ±43° spread
+      pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(spread) * speed, Math.cos(spread) * speed, 5, 12, {
+        kind: 'basic',
+        color: '#44dd44',
+        sourceType: 'boss_serpentrix'
+      });
+    }
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    return true;
+  }
+
+  if (phase === 2) {
+    // HC-23: Phase 2 — alternating: aimed burst vs mines
+    if (target._serpentrixCycle % 2 === 0) {
+      // Aimed burst (2 bullets toward player with stagger)
+      if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase2_burst', 320);
+      var angle = getAngleFromBossToPlayer(target);
+      var burstSpeed = speed * 1.05;
+      var delays = [0, 110];
+
+      for (var j = 0; j < delays.length; j++) {
+        (function(delay, a, spd) {
+          var sx = center.x;
+          var sy = target.y + target.h;
+          setTimeout(function() {
+            if (!target.active) return;
+            pushEnemyBullet(sx - 3, sy, Math.cos(a) * spd, Math.sin(a) * spd, 6, 10, {
+              kind: 'crossfire_a',
+              color: '#44ee44',
+              sourceType: 'boss_serpentrix'
+            });
+            if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+          }, delay);
+        })(delays[j], angle, burstSpeed);
+      }
+      if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    } else {
+      // Deploy 2 mines (slow, forces repositioning)
+      if (typeof mines !== 'undefined') {
+        var maxMines = typeof minesMax !== 'undefined' ? minesMax : 8;
+        if (mines.length < maxMines) {
+          mines.push({
+            x: center.x - 20,
+            y: target.y + target.h,
+            radius: 13,
+            vy: 0.45,
+            life: 16000,
+            pulseTime: 0
+          });
+        }
+        if (mines.length < maxMines) {
+          mines.push({
+            x: center.x + 20,
+            y: target.y + target.h,
+            radius: 13,
+            vy: 0.45,
+            life: 16000,
+            pulseTime: 0
+          });
+        }
+        if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+      }
+    }
+    return true;
+  }
+
+  if (phase === 3) {
+    // HC-23: Phase 3 — serpent double-fan (8 bullets, sinusoidal spread)
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase3_radial', 420);
+
+    var arcCount = 8;
+    var time = typeof globalTime === 'number' ? globalTime : 0;
+    var serpentWave = Math.sin(time * 0.003) * 0.25;
+
+    for (var k = 0; k < arcCount; k++) {
+      var baseSpread = -0.9 + (1.8 * k / (arcCount - 1)); // ±52° spread
+      var waveSpread = baseSpread + serpentWave;
+      pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(waveSpread) * speed, Math.cos(waveSpread) * speed, 5, 10, {
+        kind: 'basic',
+        color: '#22cc22',
+        sourceType: 'boss_serpentrix'
+      });
+    }
+
+    if (typeof pushScreenShake === 'function') pushScreenShake('light', 3);
+    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
+    if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(140, 0.58);
+    return true;
+  }
+
   return false;
 }

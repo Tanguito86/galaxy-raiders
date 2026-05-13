@@ -758,8 +758,12 @@ if (boss.shootTimer > shootRate) {
       break;
       
     case 'zigzag':
-      // HC-22: Serpentrix hardcore pattern (stub — returns false, attacks unchanged)
-      if (typeof updateSerpentrixHardcorePattern === 'function') updateSerpentrixHardcorePattern(boss, dt);
+      // HC-23: Serpentrix hardcore pattern
+      if (typeof shouldUseSerpentrixHardcorePattern === 'function' && shouldUseSerpentrixHardcorePattern(boss)) {
+        if (typeof updateSerpentrixHardcorePattern === 'function' && updateSerpentrixHardcorePattern(boss, dt)) {
+          break;
+        }
+      }
    
   // SERPENTRIX: Abanico hacia abajo + rotación sutil
   const fanCount = 5 + phase; // 6, 7, 8 balas
