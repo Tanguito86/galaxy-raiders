@@ -216,6 +216,13 @@ if (
 if (bossDefeated) {
   bossDefeated = false;
   boss.active = false;
+
+  if (!boss._hardcoreBossClearRewarded) {
+    boss._hardcoreBossClearRewarded = true;
+    if (typeof window.addHardcoreCombo === 'function') window.addHardcoreCombo('boss_clear');
+    if (typeof window.addHardcoreRank === 'function') window.addHardcoreRank(4, 'boss_clear');
+  }
+
   requestHitstop(95);
 
   createBossDeathExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, '#f00');
