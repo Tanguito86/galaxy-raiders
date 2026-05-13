@@ -139,6 +139,15 @@ window.getHardcoreRankPatternIntensity = function() {
   return Math.max(1, Math.min(2, val));
 };
 
+window.getHardcoreRankScoreMultiplier = function() {
+  if (!_hardcoreRankIsEnabled()) return 1.00;
+  var lvl = _hardcoreRank.level;
+  if (typeof lvl !== 'number') return 1.00;
+  var map = [0, 1.00, 1.10, 1.20, 1.35, 1.50];
+  var idx = Math.min(5, Math.max(1, lvl));
+  return map[idx];
+};
+
 // ============================================================
 // HUD DEBUG OPCIONAL
 // ============================================================
@@ -155,6 +164,8 @@ function drawHardcoreRankDebug(ctx) {
     ? window.getHardcoreRankBulletSpeedMultiplier() : 1.00;
   var cdMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function')
     ? window.getHardcoreRankCooldownMultiplier() : 1.00;
+  var scoreMult = (typeof window.getHardcoreRankScoreMultiplier === 'function')
+    ? window.getHardcoreRankScoreMultiplier() : 1.00;
   var reason = (_hardcoreRank.lastReason && typeof _hardcoreRank.lastReason === 'string' && _hardcoreRank.lastReason.length > 0)
     ? _hardcoreRank.lastReason : '-';
 
@@ -164,16 +175,19 @@ function drawHardcoreRankDebug(ctx) {
   ctx.font = '6px "Press Start 2P"';
 
   ctx.fillStyle = 'rgba(255,165,0,0.88)';
-  ctx.fillText('RANK L' + _hardcoreRank.level, 6, H - 58);
+  ctx.fillText('RANK L' + _hardcoreRank.level, 6, H - 69);
 
   ctx.fillStyle = 'rgba(255,255,255,0.72)';
-  ctx.fillText('VALUE ' + _hardcoreRank.value.toFixed(1), 6, H - 47);
+  ctx.fillText('VALUE ' + _hardcoreRank.value.toFixed(1), 6, H - 58);
 
   ctx.fillStyle = 'rgba(255,200,100,0.72)';
-  ctx.fillText('BULLET x' + bulletMult.toFixed(2), 6, H - 36);
+  ctx.fillText('BULLET x' + bulletMult.toFixed(2), 6, H - 47);
 
   ctx.fillStyle = 'rgba(100,200,255,0.72)';
-  ctx.fillText('CD x' + cdMult.toFixed(2), 6, H - 25);
+  ctx.fillText('CD x' + cdMult.toFixed(2), 6, H - 36);
+
+  ctx.fillStyle = 'rgba(255,255,150,0.78)';
+  ctx.fillText('SCORE x' + scoreMult.toFixed(2), 6, H - 25);
 
   ctx.fillStyle = 'rgba(200,200,200,0.55)';
   ctx.fillText('LAST ' + reason, 6, H - 14);

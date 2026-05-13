@@ -152,7 +152,10 @@ if (
           requestHitstop(38);
 
           const killScore = calculateEnemyKillScore(e, data, b.type);
-          addScore(killScore);
+          const scoreMult = (typeof window.getHardcoreRankScoreMultiplier === 'function')
+            ? window.getHardcoreRankScoreMultiplier()
+            : 1.00;
+          addScore(Math.round(killScore * scoreMult));
           spawnMedal(
             e.x + e.w / 2,
             e.y + e.h / 2,
