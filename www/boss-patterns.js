@@ -60,3 +60,114 @@ function markBossPatternReady(b) {
 
   return true;
 }
+
+// ============================================================
+// HARDCORE CRANCKTON PATTERN (first boss, crossfire)
+// ============================================================
+
+function isFirstHardcoreBoss(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (target.name === 'CRABTRON') return true;
+  if (target.pattern === 'crossfire') return true;
+  return false;
+}
+
+function shouldUseCrancktonHardcorePattern(b) {
+  if (!shouldUseHardcoreBossPatterns()) return false;
+  if (!isFirstHardcoreBoss(b)) return false;
+  return true;
+}
+
+function _crancktonBulletSpeed() {
+  var speed = 3.2;
+  if (typeof getDifficultySettings === 'function') {
+    var s = getDifficultySettings(typeof level === 'number' ? level : 5);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.85;
+  }
+  return speed;
+}
+
+function fireCrancktonHardcorePattern(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+  if (target.dashMode) return false; // no shoot during dash
+
+  var phase = getBossPhaseSafe(target);
+  var center = getBossCenter(target);
+  var speed = _crancktonBulletSpeed();
+
+  if (phase === 1) {
+    // HC-18: Phase 1 — 3-bullet aimed spread
+    var angle = getAngleFromBossToPlayer(target);
+    var spread = 0.22; // ~12.6°
+
+    for (var i = -1; i <= 1; i++) {
+      var a = angle + i * spread;
+      pushEnemyBullet(center.x - 3, target.y + target.h, Math.cos(a) * speed, Math.sin(a) * speed, 6, 10, {
+        kind: 'crossfire_a',
+        color: '#ff8844',
+        sourceType: 'boss_cranckton'
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    return true;
+  }
+
+  if (phase === 2) {
+    // HC-18: Phase 2 — aimed burst (3 bullets with stagger)
+    var angle2 = getAngleFromBossToPlayer(target);
+    var burstSpeed = speed * 1.08;
+    var delays = [0, 90, 180];
+
+    for (var j = 0; j < delays.length; j++) {
+      (function(delay, a, spd) {
+        var sx = center.x;
+        var sy = target.y + target.h;
+        setTimeout(function() {
+          if (!target.active) return;
+          pushEnemyBullet(sx - 3, sy, Math.cos(a) * spd, Math.sin(a) * spd, 6, 10, {
+            kind: 'crossfire_b',
+            color: '#ff6655',
+            sourceType: 'boss_cranckton'
+          });
+          if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+        }, delay);
+      })(delays[j], angle2, burstSpeed);
+    }
+
+    if (typeof pushScreenShake === 'function') pushScreenShake('light', 2);
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    return true;
+  }
+
+  if (phase === 3) {
+    // HC-18: Phase 3 — radial ring (alternating pure vs aimed)
+    target._hcCrancktonRadialFlip = !target._hcCrancktonRadialFlip;
+    var count = 12;
+    var ringSpeed = speed * 0.78;
+
+    for (var k = 0; k < count; k++) {
+      var aRing = (Math.PI * 2 * k) / count;
+      if (target._hcCrancktonRadialFlip) {
+        // Aimed radial: all go toward player-relative offset
+        var toPlayer = getAngleFromBossToPlayer(target);
+        aRing += toPlayer - Math.PI / 2;
+      }
+      pushEnemyBullet(center.x - 2, center.y, Math.cos(aRing) * ringSpeed, Math.sin(aRing) * ringSpeed, 5, 8, {
+        kind: 'basic',
+        color: '#ff9944',
+        sourceType: 'boss_cranckton'
+      });
+    }
+
+    if (typeof pushScreenShake === 'function') pushScreenShake('medium', 5);
+    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
+    if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(160, 0.62);
+    return true;
+  }
+
+  return false; // fallback to original
+}

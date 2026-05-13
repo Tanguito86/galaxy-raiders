@@ -667,6 +667,13 @@ if (boss.shootTimer > shootRate) {
     case 'crossfire':
       // CRABTRON: No disparar durante dash
       if (boss.dashMode) break;
+
+      // HC-18: Cranckton hardcore pattern
+      if (typeof shouldUseCrancktonHardcorePattern === 'function' && shouldUseCrancktonHardcorePattern(boss)) {
+        if (typeof fireCrancktonHardcorePattern === 'function' && fireCrancktonHardcorePattern(boss)) {
+          break;
+        }
+      }
       
       const crabCenter = { x: boss.x + boss.w / 2, y: boss.y + boss.h };
       const attackType = Math.random();
