@@ -63,11 +63,9 @@ function applyOptionHorizontalInput(withVibration = false) {
     return true;
   }
 
-  if (optionSelection === 3 && hardcoreUnlocked) {
-    difficultyIndex = (difficultyIndex + 1) % 2;
-    sfxUIClick();
-    if (withVibration) vibrate('tap');
-    return true;
+  if (optionSelection === 3) {
+    // HC-12: difficulty locked to hardcore
+    return false;
   }
 
   if (optionSelection === 4) {

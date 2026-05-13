@@ -111,9 +111,10 @@ if (joystickContainer && joystickStick) {
           joystickInputCooldown = 250;
         }
         
-        if ((x < -threshold * joystickMaxDistance || x > threshold * joystickMaxDistance) && hardcoreUnlocked) {
-          if (cycleMenuDifficulty(true)) joystickInputCooldown = 300;
-        }
+        // HC-12: difficulty cycling disabled (hardcore only)
+        // if ((x < -threshold * joystickMaxDistance || x > threshold * joystickMaxDistance) && hardcoreUnlocked) {
+        //   if (cycleMenuDifficulty(true)) joystickInputCooldown = 300;
+        // }
       }
     }
     else if (state === 'options') {

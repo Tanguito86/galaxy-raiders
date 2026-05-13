@@ -106,10 +106,10 @@ document.addEventListener('keydown', e => {
     if (e.code === 'ArrowUp') moveMenuSelection(-1);
     if (e.code === 'ArrowDown') moveMenuSelection(1);
     
-    // Cambiar dificultad con izq/der
-    if ((e.code === 'ArrowRight' || e.code === 'ArrowLeft') && hardcoreUnlocked) {
-      cycleMenuDifficulty();
-    }
+    // HC-12: difficulty cycling disabled (hardcore only)
+    // if ((e.code === 'ArrowRight' || e.code === 'ArrowLeft') && hardcoreUnlocked) {
+    //   cycleMenuDifficulty();
+    // }
 
     if (e.code === 'Space' || e.code === 'Enter') {
       confirmMenuSelection();

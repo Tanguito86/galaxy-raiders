@@ -8,7 +8,7 @@ const MENU_OPTIONS = ['PLAY', 'SCORES', 'OPTIONS', 'CREDITS'];
 let pauseSelection = 0;  // 0=RESUME, 1=OPTIONS, 2=QUIT
 let scoresTab = 1;  // âœ… GLOBAL por defecto
 
-let optionSelection = 0;  // 0=SOUND, 1=VIBRATION, 2=CONTROLS, 3=DIFFICULTY, 4=BALANCE, 5=RESET
+let optionSelection = 0;  // 0=SOUND, 1=VIBRATION, 2=CONTROLS, 3=DIFFICULTY, 4=BALANCE, 5=RESET  (HC-12: difficulty locked)
 const OPTIONS_COUNT = 6;
 let vibrationEnabled = true;
 let joystickSize = 0;  // 0=NORMAL, 1=LARGE
@@ -120,14 +120,9 @@ const difficulties = [
   { key: 'hardcore', name: 'HARDCORE', lives: 1, continueLives: 2, fireMult: 0.72 }
 ];
 
-let difficultyIndex = 0;
+let difficultyIndex = 1;  // HC-12: forced hardcore only
 
-let hardcoreUnlocked = false;
-
-// Cargar desbloqueo de localStorage
-try {
-  hardcoreUnlocked = localStorage.getItem('gr_hardcoreUnlocked') === 'true';
-} catch (e) {}
+let hardcoreUnlocked = true;  // HC-12: always unlocked
 
 
 // âœ… VibraciÃ³n compatible real (web + hÃ­brido)

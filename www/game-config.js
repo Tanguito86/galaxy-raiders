@@ -7,7 +7,7 @@ window.GALAXY_CONFIG = {
 
   // ============ HARDCORE MASTER SWITCH ============
   hardcore: {
-    enabled: false
+    enabled: true   // HC-12: hardcore only
   },
 
   // ============ PLAYER (hitbox reducida en hardcore) ============
@@ -18,7 +18,7 @@ window.GALAXY_CONFIG = {
 
   // ============ GRAZE (roce de balas) ============
   graze: {
-    enabled: false,
+    enabled: true,   // HC-12: active by default
     radius: 24,
     score: 100
   },
@@ -37,7 +37,7 @@ window.GALAXY_CONFIG = {
 
   // ============ SCORE (combo y multiplicadores) ============
   score: {
-    comboEnabled: false
+    comboEnabled: true   // HC-12: active by default
   },
 
   // ============ DEBUG ============

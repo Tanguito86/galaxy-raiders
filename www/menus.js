@@ -9,11 +9,8 @@ function moveMenuSelection(delta, withVibration = false) {
 }
 
 function cycleMenuDifficulty(withVibration = false) {
-  if (!hardcoreUnlocked) return false;
-  difficultyIndex = (difficultyIndex + 1) % 2;
-  sfxUIClick();
-  if (withVibration) vibrate('tap');
-  return true;
+  // HC-12: hardcore-only mode — difficulty cycling disabled
+  return false;
 }
 
 function confirmMenuSelection() {

@@ -4,12 +4,12 @@
 // ====================================
 
 var _GALAXY_CONFIG_DEFAULTS = {
-  hardcore:  { enabled: false },
+  hardcore:  { enabled: true },   // HC-12: hardcore only
   player:    { hardcoreHitRadius: 3, showHitbox: false },
-  graze:     { enabled: false, radius: 24, score: 100 },
+  graze:     { enabled: true, radius: 24, score: 100 },   // HC-12
   rank:      { enabled: false, baseLevel: 0 },
   bullets:   { enemyGlow: false, bossGlow: false },
-  score:     { comboEnabled: false },
+  score:     { comboEnabled: true },   // HC-12
   debug:     { showHardcoreInfo: false }
 };
 

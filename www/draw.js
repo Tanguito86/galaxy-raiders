@@ -2811,14 +2811,12 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
       ctx.fillText(option, W / 2, y);
     });
     
-    // Dificultad (si está desbloqueado)
+    // Dificultad (HC-12: siempre hardcore)
     let infoY = panelY + panelH - 28;
-    if (hardcoreUnlocked) {
-      ctx.font = '8px "Press Start 2P"';
-      ctx.fillStyle = 'rgba(255,255,255,0.42)';
-      ctx.fillText('MODE: ' + difficulties[difficultyIndex].name, W / 2, infoY);
-      infoY += 18;
-    }
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.fillText('MODE: ' + difficulties[difficultyIndex].name, W / 2, infoY);
+    infoY += 18;
 
     if (typeof getBalanceProfileLabel === 'function') {
       ctx.font = '8px "Press Start 2P"';
@@ -3131,22 +3129,15 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     ctx.stroke();
 
     y = optStartY + optSpacing * 3;
-    if (hardcoreUnlocked) {
-      drawOptionRow(
-        3,
-        'DIFFICULTY',
-        difficulties[difficultyIndex].name,
-        difficultyIndex === 0 ? '#0f0' : '#ff365f',
-        y,
-        false
-      );
-    } else {
-      drawOptionRow(3, 'DIFFICULTY', 'NORMAL', '#586073', y, false);
-      ctx.font = '7px "Press Start 2P"';
-      ctx.fillStyle = '#586073';
-      ctx.textAlign = 'center';
-      ctx.fillText(String.fromCharCode(128274) + ' BEAT GAME TO UNLOCK', W / 2, y + 18);
-    }
+    // HC-12: always hardcore, no unlock needed
+    drawOptionRow(
+      3,
+      'DIFFICULTY',
+      difficulties[difficultyIndex].name,
+      difficultyIndex === 0 ? '#0f0' : '#ff365f',
+      y,
+      false
+    );
 
     y = optStartY + optSpacing * 4;
     const balanceLabel = (typeof getBalanceProfileLabel === 'function') ? getBalanceProfileLabel() : 'ARCADE';
@@ -4806,12 +4797,12 @@ if (player.weaponType !== 'normal') {
       ctx.fillStyle = continueCount === 0 ? '#0f0' : '#f80';
       ctx.fillText(continueCount.toString(), statsX + 200, statsY);
       
-      // Hardcore unlocked
+      // Hardcore mode (HC-12: always active)
       ctx.textAlign = 'center';
       ctx.font = '11px "Press Start 2P"';
       ctx.fillStyle = '#f0f';
       if (globalTime % 1000 < 500) {
-        ctx.fillText('★ HARDCORE UNLOCKED ★', W / 2, statsY + 50);
+        ctx.fillText('★ HARDCORE MODE ★', W / 2, statsY + 50);
       }
       
       // Press fire

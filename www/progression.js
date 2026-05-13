@@ -63,9 +63,8 @@ let lastRunTelemetry = null;
 const RUN_QA_HISTORY_KEY = 'gr_run_qa_history_v1';
 
 function getCurrentDifficultyKey() {
-  if (typeof difficulties === 'undefined' || !Array.isArray(difficulties)) return 'normal';
-  const d = difficulties[difficultyIndex];
-  return d && d.key ? d.key : 'normal';
+  // HC-12: hardcore-only mode — always return 'hardcore'
+  return 'hardcore';
 }
 
 function getCurrentBalanceProfileKey() {
