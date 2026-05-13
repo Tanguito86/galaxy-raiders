@@ -305,3 +305,37 @@ function fireHardcoreSuppressorBurst(enemy) {
 
   return true;
 }
+
+// ============================================================
+// HARDCORE SWARM PATTERN (alien1)
+// ============================================================
+
+function shouldUseHardcoreSwarmPattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'swarm') return false;
+  if (enemy.diving) return false;
+  return true;
+}
+
+function updateHardcoreSwarmOscillation(enemy) {
+  if (enemy._hcSwarmPhase === undefined) {
+    enemy._hcSwarmPhase = enemy.x * 0.14 + enemy.y * 0.11 + (enemy.row || 0) * 1.9 + Math.random() * 0.45;
+    enemy._hcSwarmOscX = 0;
+    enemy._hcSwarmOscY = 0;
+  }
+
+  var time = typeof globalTime === 'number' ? globalTime : 0;
+  var freqX = 0.0055;
+  var freqY = 0.0042;
+  var ampX = 2.2;
+  var ampY = 1.3;
+
+  var newOscX = Math.sin(time * freqX + enemy._hcSwarmPhase) * ampX;
+  var newOscY = Math.cos(time * freqY + enemy._hcSwarmPhase + 1.1) * ampY;
+
+  enemy.x += newOscX - enemy._hcSwarmOscX;
+  enemy.y += newOscY - enemy._hcSwarmOscY;
+
+  enemy._hcSwarmOscX = newOscX;
+  enemy._hcSwarmOscY = newOscY;
+}

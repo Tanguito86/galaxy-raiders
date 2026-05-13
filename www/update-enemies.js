@@ -697,6 +697,11 @@ if (!boss.active && activeEnemies.length > 0) {
     // HC-13: skip hardcore divers in active pattern (telegraph/recovering)
     if (e._hcDiverState && e._hcDiverState !== 'idle') return;
 
+    // HC-15: swarm micro-oscillation (alien1)
+    if (typeof shouldUseHardcoreSwarmPattern === 'function' && shouldUseHardcoreSwarmPattern(e)) {
+      if (typeof updateHardcoreSwarmOscillation === 'function') updateHardcoreSwarmOscillation(e);
+    }
+
     e.x += enemySpeedX * enemyDir * step;
 
     if (e.x <= 10 || e.x + e.w >= W - 10) moveDown = true;
