@@ -11,6 +11,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
   combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 },
+  pressure:  { enabled: true, minMultiplier: 1.00, maxMultiplier: 1.18, levels: { LOW: 1.00, NORMAL: 1.06, HIGH: 1.12, MAX: 1.18 } },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false }
 };
 
@@ -70,6 +71,16 @@ function getHardcoreDebugConfig() {
   var d = (cfg.debug && typeof cfg.debug === 'object') ? cfg.debug : _GALAXY_CONFIG_DEFAULTS.debug;
   var si = (typeof d.showHardcoreInfo === 'boolean') ? d.showHardcoreInfo : _GALAXY_CONFIG_DEFAULTS.debug.showHardcoreInfo;
   return { showHardcoreInfo: si };
+}
+
+function getPressureConfig() {
+  var cfg = getGalaxyConfig();
+  var p = (cfg.pressure && typeof cfg.pressure === 'object') ? cfg.pressure : _GALAXY_CONFIG_DEFAULTS.pressure;
+  var en = (typeof p.enabled === 'boolean') ? p.enabled : true;
+  var minM = (typeof p.minMultiplier === 'number' && p.minMultiplier >= 1.00) ? p.minMultiplier : 1.00;
+  var maxM = (typeof p.maxMultiplier === 'number' && p.maxMultiplier <= 1.18) ? p.maxMultiplier : 1.18;
+  var lvls = (p.levels && typeof p.levels === 'object') ? p.levels : _GALAXY_CONFIG_DEFAULTS.pressure.levels;
+  return { enabled: en, minMultiplier: minM, maxMultiplier: maxM, levels: lvls };
 }
 
 // ============================================================

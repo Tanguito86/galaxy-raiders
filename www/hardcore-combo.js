@@ -346,11 +346,11 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.textAlign = 'left';
   ctx.globalAlpha = 0.62;
   ctx.fillStyle = '#000';
-  ctx.fillRect(panelX, panelY, panelW, lineH * 12 + 10);
+  ctx.fillRect(panelX, panelY, panelW, lineH * 13 + 10);
   ctx.globalAlpha = 0.22;
   ctx.strokeStyle = '#0ff';
   ctx.lineWidth = 1;
-  ctx.strokeRect(panelX, panelY, panelW, lineH * 12 + 10);
+  ctx.strokeRect(panelX, panelY, panelW, lineH * 13 + 10);
   ctx.globalAlpha = 1;
 
   ctx.font = '6px "Press Start 2P"';
@@ -402,10 +402,13 @@ window.drawHardcoreSystemsDebug = function(ctx) {
 
   y += 4;
   var pState = (typeof window.getHardcorePressureState === 'function') ? window.getHardcorePressureState() : { level: '-', multiplier: 1.00 };
+  var pCD = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1.00;
   ctx.fillStyle = '#8f8';
   ctx.fillText('PRESSURE ' + pState.level, panelX + 6, y); y += lineH;
   ctx.fillStyle = '#afa';
-  ctx.fillText('MULT x' + pState.multiplier.toFixed(2), panelX + 6, y);
+  ctx.fillText('PRS x' + pState.multiplier.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#aaf';
+  ctx.fillText('PCD x' + pCD.toFixed(2), panelX + 6, y);
 
   ctx.restore();
 };

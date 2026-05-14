@@ -58,6 +58,19 @@ window.GALAXY_CONFIG = {
     warningMs: 700
   },
 
+  // ============ PRESSURE (HC-43/44: wave pressure director) ============
+  pressure: {
+    enabled: true,
+    minMultiplier: 1.00,
+    maxMultiplier: 1.18,
+    levels: {
+      LOW: 1.00,
+      NORMAL: 1.06,
+      HIGH: 1.12,
+      MAX: 1.18
+    }
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
