@@ -241,7 +241,7 @@ function updateHardcoreDiverPattern(enemy, dt, step) {
       enemy.vy = 0;
       enemy._hcDiverState = 'idle';
       enemy._hcDiverTimer = 0;
-      enemy._hcDiverCooldown = (HC_DIVER_COOLDOWN_MIN + Math.random() * (HC_DIVER_COOLDOWN_MAX - HC_DIVER_COOLDOWN_MIN)) * ((typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1);
+      enemy._hcDiverCooldown = (HC_DIVER_COOLDOWN_MIN + Math.random() * (HC_DIVER_COOLDOWN_MAX - HC_DIVER_COOLDOWN_MIN)) * ((typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1) * ((typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1);
       if (typeof resetEnemyMovePattern === 'function') resetEnemyMovePattern(enemy);
     } else {
       enemy.x += (dx / rdist) * recoverSpeed;

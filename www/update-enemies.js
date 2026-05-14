@@ -850,6 +850,10 @@ if (!boss.active && activeEnemies.length > 0) {
     baseCooldown *= window.getHardcoreRankCooldownMultiplier();
   }
 
+  if (typeof window.getHardcorePressureCooldownScale === 'function') {
+    baseCooldown *= window.getHardcorePressureCooldownScale();
+  }
+
   const didScriptedSetPieceShot = runSetPieceFirePattern(activeEnemies, dt, baseCooldown);
 
   if (!didScriptedSetPieceShot && globalTime - enemyLastShot > baseCooldown) {
@@ -881,14 +885,16 @@ if (!boss.active && activeEnemies.length > 0) {
     if (typeof shouldFireHardcoreSuppressorPattern === 'function' && shouldFireHardcoreSuppressorPattern(e)) {
       if (e._hcSuppressorCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
-        e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult;
+        var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+        e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult * pressScale;
       }
       e._hcSuppressorCooldown -= dt;
       if (e._hcSuppressorCooldown <= 0) {
         if (typeof fireHardcoreSuppressorBurst === 'function') {
           fireHardcoreSuppressorBurst(e);
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
-          e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2;
+          var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+          e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2 * pressScale2;
         }
       }
     }
@@ -899,13 +905,15 @@ if (!boss.active && activeEnemies.length > 0) {
     if (typeof shouldUseHardcoreElitePattern === 'function' && shouldUseHardcoreElitePattern(e)) {
       if (e._hcEliteCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
-        e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult;
+        var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+        e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult * pressScale;
       }
       e._hcEliteCooldown -= dt;
       if (e._hcEliteCooldown <= 0) {
         if (typeof fireHardcoreEliteBurst === 'function' && fireHardcoreEliteBurst(e)) {
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
-          e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2;
+          var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+          e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2;
         }
       }
     }
