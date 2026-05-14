@@ -75,7 +75,8 @@ window.GALAXY_CONFIG = {
   debug: {
     showHardcoreInfo: false,
     showRank: false,
-    showHardcoreSystems: false
+    showHardcoreSystems: false,
+    showEnemyRoles: false
   }
 
 };
