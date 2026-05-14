@@ -3778,6 +3778,40 @@ if (shouldShow) {
           ctx.fillStyle = '#f00';
           ctx.fillRect(barX, barY, barW * (e.hp / e.maxHp), barH);
         }
+
+        // HC-46: SNIPER TELEGRAPH — thin cyan line toward player
+        if (e._sniperTelegraphActive && typeof player !== 'undefined' && player) {
+          var telElapsed = globalTime - (e._sniperTelegraphFiredAt || globalTime);
+          var telProgress = Math.min(1, telElapsed / 280);
+          var telAlpha = 0.10 + 0.12 * Math.sin(telProgress * Math.PI) * (1 - telProgress);
+          var ex = e.x + (e.w || 24) / 2;
+          var ey = e.y + (e.h || 24);
+          var px = player.x + player.width / 2;
+          var py = player.y + player.height / 2;
+          var angle = Math.atan2(py - ey, px - ex);
+          var lineLen = 42 + telProgress * 28;
+          var endX = ex + Math.cos(angle) * lineLen;
+          var endY = ey + Math.sin(angle) * lineLen;
+
+          ctx.save();
+          ctx.globalAlpha = telAlpha;
+          ctx.strokeStyle = '#4ff';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+
+          ctx.globalAlpha = telAlpha * 0.6;
+          ctx.strokeStyle = '#aff';
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(ex + 1, ey);
+          ctx.lineTo(endX + 1, endY);
+          ctx.stroke();
+          ctx.restore();
+        }
+
         ctx.restore();
       }
     });

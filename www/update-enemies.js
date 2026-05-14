@@ -915,9 +915,26 @@ if (!boss.active && activeEnemies.length > 0) {
     }
   });
 
-  // HC-45: hardcore sniper pattern (alien2) - independent cooldown with pressure timing offset
+  // HC-45/46: hardcore sniper pattern (alien2) - independent cooldown with telegraph
   activeEnemies.forEach(e => {
     if (typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(e)) {
+      // HC-46: telegraph active — wait for telegraph to expire, then fire
+      if (e._sniperTelegraphActive) {
+        e._sniperTelegraphTimer -= dt;
+        if (e._sniperTelegraphTimer <= 0) {
+          e._sniperTelegraphActive = false;
+          e._sniperTelegraphTimer = 0;
+          if (typeof fireHardcoreSniperShot === 'function' && fireHardcoreSniperShot(e)) {
+            var sniperBase2 = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
+            var sniperSeed2 = e.x * 7919 + e.y * 65537 + globalTime;
+            var sniperOffset2 = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed2, 50) : 0;
+            e._hcSniperCooldown = sniperBase2 + sniperOffset2;
+            e._sniperTelegraphFiredAt = 0;
+          }
+        }
+        return;
+      }
+
       if (e._hcSniperCooldown === undefined) {
         var sniperBase = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
         var sniperSeed = e.x * 7919 + e.y * 65537;
@@ -925,13 +942,12 @@ if (!boss.active && activeEnemies.length > 0) {
         e._hcSniperCooldown = sniperBase + sniperOffset;
       }
       e._hcSniperCooldown -= dt;
+      // HC-46: when cooldown expires, enter telegraph instead of firing immediately
       if (e._hcSniperCooldown <= 0) {
-        if (typeof fireHardcoreSniperShot === 'function' && fireHardcoreSniperShot(e)) {
-          var sniperBase2 = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
-          var sniperSeed2 = e.x * 7919 + e.y * 65537 + e._hcSniperCooldown;
-          var sniperOffset2 = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed2, 50) : 0;
-          e._hcSniperCooldown = sniperBase2 + sniperOffset2;
-        }
+        e._sniperTelegraphActive = true;
+        e._sniperTelegraphTimer = 280;
+        e._sniperTelegraphFiredAt = globalTime;
+        e._hcSniperCooldown = 999999; // prevent re-trigger during telegraph
       }
     }
   });
