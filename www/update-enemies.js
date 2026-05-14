@@ -896,9 +896,23 @@ if (!boss.active && activeEnemies.length > 0) {
     }
   });
 
-  // HC-16: hardcore elite pattern (alien5) - independent cooldown (ticks during dive)
+  // HC-16/47: hardcore elite pattern (alien5) - independent cooldown with telegraph
   activeEnemies.forEach(e => {
     if (typeof shouldUseHardcoreElitePattern === 'function' && shouldUseHardcoreElitePattern(e)) {
+      // HC-47: telegraph active — wait for telegraph to expire, then fire side shots
+      if (e._eliteTelegraphActive) {
+        e._eliteTelegraphTimer -= dt;
+        if (e._eliteTelegraphTimer <= 0) {
+          e._eliteTelegraphActive = false;
+          e._eliteTelegraphTimer = 0;
+          _fireEliteTelegraphSideShots(e);
+          var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+          var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+          e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2;
+        }
+        return;
+      }
+
       if (e._hcEliteCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
         var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
@@ -907,9 +921,14 @@ if (!boss.active && activeEnemies.length > 0) {
       e._hcEliteCooldown -= dt;
       if (e._hcEliteCooldown <= 0) {
         if (typeof fireHardcoreEliteBurst === 'function' && fireHardcoreEliteBurst(e)) {
-          var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
-          var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-          e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2;
+          // HC-47: telegraph started — prevent re-trigger until telegraph expires
+          if (e._eliteTelegraphActive) {
+            e._hcEliteCooldown = 999999;
+          } else {
+            var rankMult2b = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+            var pressScale2b = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+            e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2b * pressScale2b;
+          }
         }
       }
     }

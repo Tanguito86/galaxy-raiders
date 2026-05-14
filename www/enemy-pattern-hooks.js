@@ -335,12 +335,51 @@ function fireHardcoreSuppressorBurst(enemy) {
   }
 
   if (typeof createEnemyMuzzleFlash === 'function') {
-    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien4');
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien5');
   }
 
   if (typeof sfxUIClick === 'function') sfxUIClick();
 
   return true;
+}
+
+// HC-47: fires elite side shots after telegraph expires (called from update loop)
+function _fireEliteTelegraphSideShots(enemy) {
+  if (!enemy || typeof pushEnemyBullet !== 'function') return;
+
+  var sx = enemy.x + (enemy.w || 24) / 2;
+  var sy = enemy.y + (enemy.h || 24);
+  var bulletSpeed = (typeof enemy._eliteTelegraphBulletSpeed === 'number') ? enemy._eliteTelegraphBulletSpeed : 2.8;
+
+  var sideAngle = 0.44;
+  var dAngle = Math.PI / 2;
+  var sideVxLeft = Math.cos(dAngle - sideAngle) * bulletSpeed * 0.85;
+  var sideVyLeft = Math.sin(dAngle - sideAngle) * bulletSpeed * 0.85;
+  var sideVxRight = Math.cos(dAngle + sideAngle) * bulletSpeed * 0.85;
+  var sideVyRight = Math.sin(dAngle + sideAngle) * bulletSpeed * 0.85;
+
+  var eliteSeed = (typeof enemy._eliteTelegraphSeed === 'number') ? enemy._eliteTelegraphSeed : ((enemy.x * 7919 + enemy.y * 65537) | 0);
+  var eliteOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(eliteSeed, 50) : 0;
+  var eliteAbs = Math.abs(eliteOffset);
+
+  function _push() {
+    pushEnemyBullet(sx - 2, sy, sideVxLeft, sideVyLeft, 5, 9, {
+      kind: 'basic',
+      color: '#ffcc66',
+      sourceType: enemy.type || 'alien5'
+    });
+    pushEnemyBullet(sx - 2, sy, sideVxRight, sideVyRight, 5, 9, {
+      kind: 'basic',
+      color: '#ffcc66',
+      sourceType: enemy.type || 'alien5'
+    });
+  }
+
+  if (eliteAbs > 0) {
+    setTimeout(_push, eliteAbs);
+  } else {
+    _push();
+  }
 }
 
 // ============================================================
@@ -417,37 +456,13 @@ function fireHardcoreEliteBurst(enemy) {
     sourceType: enemy.type || 'alien5'
   });
 
-  // Side shots to restrict escape (±25Â° from down)
-  // HC-45: apply pressure micro-stagger to side-shot timing
-  var sideAngle = 0.44; // ~25Â°
-  var dAngle = Math.PI / 2;
-  var sideVxLeft = Math.cos(dAngle - sideAngle) * bulletSpeed * 0.85;
-  var sideVyLeft = Math.sin(dAngle - sideAngle) * bulletSpeed * 0.85;
-  var sideVxRight = Math.cos(dAngle + sideAngle) * bulletSpeed * 0.85;
-  var sideVyRight = Math.sin(dAngle + sideAngle) * bulletSpeed * 0.85;
-
-  var eliteSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
-  var eliteOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(eliteSeed, 50) : 0;
-  var eliteAbs = Math.abs(eliteOffset);
-
-  function _pushEliteSides() {
-    pushEnemyBullet(sx - 2, sy, sideVxLeft, sideVyLeft, 5, 9, {
-      kind: 'basic',
-      color: '#ffcc66',
-      sourceType: enemy.type || 'alien5'
-    });
-    pushEnemyBullet(sx - 2, sy, sideVxRight, sideVyRight, 5, 9, {
-      kind: 'basic',
-      color: '#ffcc66',
-      sourceType: enemy.type || 'alien5'
-    });
-  }
-
-  if (eliteAbs > 0) {
-    setTimeout(_pushEliteSides, eliteAbs);
-  } else {
-    _pushEliteSides();
-  }
+  // Side shots — delayed by telegraph (HC-47)
+  // Store data for later firing by update loop
+  enemy._eliteTelegraphActive = true;
+  enemy._eliteTelegraphTimer = 220;
+  enemy._eliteTelegraphFiredAt = (typeof globalTime !== 'undefined') ? globalTime : Date.now();
+  enemy._eliteTelegraphBulletSpeed = bulletSpeed;
+  enemy._eliteTelegraphSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
 
   if (typeof createEnemyMuzzleFlash === 'function') {
     createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien5');

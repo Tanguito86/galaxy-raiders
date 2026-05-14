@@ -3812,6 +3812,39 @@ if (shouldShow) {
           ctx.restore();
         }
 
+        // HC-47: ELITE TELEGRAPH — amber side glow / flare before side shots
+        if (e._eliteTelegraphActive) {
+          var elTelElapsed = globalTime - (e._eliteTelegraphFiredAt || globalTime);
+          var elTelProgress = Math.min(1, elTelElapsed / 220);
+          var elTelAlpha = 0.12 + 0.14 * Math.sin(elTelProgress * Math.PI) * (1 - elTelProgress);
+          var ecx = e.x + (e.w || 24) / 2;
+          var ecy = e.y + (e.h || 24);
+
+          ctx.save();
+          ctx.globalAlpha = elTelAlpha;
+          // side glow ellipses
+          ctx.fillStyle = '#fa3';
+          ctx.beginPath();
+          ctx.ellipse(ecx - 14, ecy, 5 + elTelProgress * 4, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(ecx + 14, ecy, 5 + elTelProgress * 4, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // diagonal mini-lines
+          ctx.strokeStyle = '#fb5';
+          ctx.lineWidth = 1;
+          var diagLen = 6 + elTelProgress * 8;
+          ctx.beginPath();
+          ctx.moveTo(ecx - 8, ecy - 2);
+          ctx.lineTo(ecx - 8 - diagLen, ecy - 2 - diagLen * 0.7);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(ecx + 8, ecy - 2);
+          ctx.lineTo(ecx + 8 + diagLen, ecy - 2 - diagLen * 0.7);
+          ctx.stroke();
+          ctx.restore();
+        }
+
         ctx.restore();
       }
     });
