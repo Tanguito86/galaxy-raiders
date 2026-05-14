@@ -161,6 +161,7 @@ function drawHardcorePlayerHitbox(ctx) {
 // ============================================================
 
 var _hardcoreGrazeCount = 0;
+var _hardcoreGrazePulseTimer = 0;
 
 function isGrazeActive() {
   if (!isHardcoreEnabled()) return false;
@@ -174,6 +175,7 @@ function getGrazeCount() {
 
 function resetGrazeCount() {
   _hardcoreGrazeCount = 0;
+  _hardcoreGrazePulseTimer = 0;
 }
 
 function checkBulletGraze(b) {
@@ -210,39 +212,60 @@ function registerGraze(bulletRef) {
     window.refreshHardcoreComboWindow();
   }
 
+  var finalScore = g.score;
   if (typeof addScore === 'function') {
     var grRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function')
       ? window.getHardcoreRankScoreMultiplier() : 1.00;
     var grComboMult = (typeof window.getHardcoreComboMultiplier === 'function')
       ? window.getHardcoreComboMultiplier() : 1.00;
-    addScore(Math.round(g.score * grRankMult * grComboMult));
+    finalScore = Math.round(g.score * grRankMult * grComboMult);
+    addScore(finalScore);
   }
 
-  if (typeof spawnPopup === 'function') {
-    var gx = bulletRef ? bulletRef.x + (bulletRef.w || 0) / 2 : player.x + player.width / 2;
-    var gy = bulletRef ? bulletRef.y : player.y;
-    spawnPopup(gx, gy, 'GRAZE', '#ffd966');
+  var gx = bulletRef ? bulletRef.x + (bulletRef.w || 0) / 2 : player.x + player.width / 2;
+  var gy = bulletRef ? bulletRef.y : player.y;
+
+  // Spark visual
+  if (typeof createExplosion === 'function') {
+    createExplosion(gx, gy, '#5ff', 5);
   }
+
+  // Popup con score
+  if (typeof spawnPopup === 'function') {
+    spawnPopup(gx, gy, '+' + finalScore + ' GRAZE', '#5ff');
+  }
+
+  // HUD pulse
+  _hardcoreGrazePulseTimer = 220;
 }
 
 function drawHardcoreGrazeHUD(ctx) {
   if (!ctx) return;
   if (!isGrazeActive()) return;
 
+  if (_hardcoreGrazePulseTimer > 0) {
+    _hardcoreGrazePulseTimer = Math.max(0, _hardcoreGrazePulseTimer - 16.667);
+  }
+
   var cfg = getGrazeConfig();
   var x = 128;
   var y = 56;
+  var pulse = (_hardcoreGrazePulseTimer > 0)
+    ? (0.6 + 0.4 * Math.sin(_hardcoreGrazePulseTimer * 0.06))
+    : 1.0;
 
   ctx.save();
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'right';
   ctx.font = '6px "Press Start 2P"';
-  ctx.fillStyle = 'rgba(255,217,102,0.78)';
+  ctx.globalAlpha = 0.78 * pulse;
+  ctx.fillStyle = 'rgba(100,255,200,0.78)';
   ctx.fillText('GRAZE', x + 44, y);
   ctx.textAlign = 'right';
   ctx.font = '7px "Press Start 2P"';
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = _hardcoreGrazePulseTimer > 0 ? '#5ff' : '#fff';
   ctx.fillText(_hardcoreGrazeCount, x + 44, y + 12);
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 
