@@ -876,22 +876,37 @@ if (!boss.active && activeEnemies.length > 0) {
     }
   }
 
-  // HC-14: hardcore suppressor pattern (alien4) - independent cooldown
+  // HC-14/48: hardcore suppressor pattern (alien4) - independent cooldown with telegraph
   activeEnemies.forEach(e => {
     if (typeof shouldFireHardcoreSuppressorPattern === 'function' && shouldFireHardcoreSuppressorPattern(e)) {
+      // HC-48: telegraph active — wait for telegraph to expire, then fire burst
+      if (e._suppressorTelegraphActive) {
+        e._suppressorTelegraphTimer -= dt;
+        if (e._suppressorTelegraphTimer <= 0) {
+          e._suppressorTelegraphActive = false;
+          e._suppressorTelegraphTimer = 0;
+          if (typeof fireHardcoreSuppressorBurst === 'function') {
+            fireHardcoreSuppressorBurst(e);
+          }
+          var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+          var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+          e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2 * pressScale2;
+        }
+        return;
+      }
+
       if (e._hcSuppressorCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
         var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
         e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult * pressScale;
       }
       e._hcSuppressorCooldown -= dt;
+      // HC-48: when cooldown expires, enter telegraph instead of firing immediately
       if (e._hcSuppressorCooldown <= 0) {
-        if (typeof fireHardcoreSuppressorBurst === 'function') {
-          fireHardcoreSuppressorBurst(e);
-          var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
-          var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-          e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2 * pressScale2;
-        }
+        e._suppressorTelegraphActive = true;
+        e._suppressorTelegraphTimer = 180;
+        e._suppressorTelegraphFiredAt = (typeof globalTime !== 'undefined') ? globalTime : Date.now();
+        e._hcSuppressorCooldown = 999999; // prevent re-trigger during telegraph
       }
     }
   });

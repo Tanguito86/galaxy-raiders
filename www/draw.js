@@ -3845,6 +3845,34 @@ if (shouldShow) {
           ctx.restore();
         }
 
+        // HC-48: SUPPRESSOR TELEGRAPH — translucent lime cone/fan
+        if (e._suppressorTelegraphActive) {
+          var supTelElapsed = globalTime - (e._suppressorTelegraphFiredAt || globalTime);
+          var supTelProgress = Math.min(1, supTelElapsed / 180);
+          var supTelAlpha = 0.08 + 0.10 * Math.sin(supTelProgress * Math.PI) * (1 - supTelProgress);
+          var scx = e.x + (e.w || 24) / 2;
+          var scy = e.y + (e.h || 24);
+          var fanAngle = 0.25; // slightly wider than bullet spread (0.22)
+          var fanLen = 28 + supTelProgress * 22;
+          var fanTop = -4; // start slightly above muzzle
+
+          ctx.save();
+          ctx.globalAlpha = supTelAlpha;
+          ctx.fillStyle = '#bf4';
+          ctx.beginPath();
+          ctx.moveTo(scx, scy + fanTop);
+          ctx.lineTo(scx - Math.sin(fanAngle) * fanLen, scy + fanTop + Math.cos(fanAngle) * fanLen);
+          ctx.lineTo(scx + Math.sin(fanAngle) * fanLen, scy + fanTop + Math.cos(fanAngle) * fanLen);
+          ctx.closePath();
+          ctx.fill();
+          // thin outline
+          ctx.globalAlpha = supTelAlpha * 1.3;
+          ctx.strokeStyle = '#cf5';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          ctx.restore();
+        }
+
         ctx.restore();
       }
     });
