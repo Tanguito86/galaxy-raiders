@@ -13,7 +13,8 @@ var _hardcoreCombo = {
   lastBreakReason: '',
   lastExpiredAt: 0,
   expiredCount: 0,
-  expiredMultiplier: 1.00
+  expiredMultiplier: 1.00,
+  _breakSfxArmed: false
 };
 
 function _hardcoreComboReadConfig() {
@@ -65,6 +66,7 @@ function _hardcoreComboCheckTimeout() {
     _hardcoreCombo.lastReason = 'timeout';
     _hardcoreCombo.lastChangeAt = now;
     _hardcoreCombo.activeUntil = 0;
+    _hardcoreCombo._breakSfxArmed = true;
   }
 
   // Grace expirado: break definitivo
@@ -73,6 +75,12 @@ function _hardcoreComboCheckTimeout() {
     _hardcoreCombo.expiredMultiplier = 1.00;
     _hardcoreCombo.lastBreakAt = now;
     _hardcoreCombo.lastBreakReason = 'timeout';
+    if (_hardcoreCombo._breakSfxArmed) {
+      _hardcoreCombo._breakSfxArmed = false;
+      if (typeof AudioEngine !== 'undefined' && AudioEngine && typeof AudioEngine.playSfx === 'function') {
+        AudioEngine.playSfx('comboBreak');
+      }
+    }
   }
 }
 
@@ -116,6 +124,7 @@ window.addHardcoreCombo = function(reason) {
     _hardcoreCombo.expiredCount = 0;
     _hardcoreCombo.expiredMultiplier = 1.00;
     _hardcoreCombo.lastExpiredAt = 0;
+    _hardcoreCombo._breakSfxArmed = false;
     _hardcoreComboRefreshWindow();
     if (reason && typeof reason === 'string') _hardcoreCombo.lastReason = reason;
     _hardcoreCombo.lastChangeAt = Date.now();
@@ -140,6 +149,7 @@ window.refreshHardcoreComboWindow = function() {
     _hardcoreCombo.expiredCount = 0;
     _hardcoreCombo.expiredMultiplier = 1.00;
     _hardcoreCombo.lastExpiredAt = 0;
+    _hardcoreCombo._breakSfxArmed = false;
     _hardcoreComboRefreshWindow();
     _hardcoreComboRecalc();
     return;
@@ -163,6 +173,10 @@ window.breakHardcoreCombo = function(reason) {
   _hardcoreCombo.expiredCount = 0;
   _hardcoreCombo.expiredMultiplier = 1.00;
   _hardcoreCombo.lastExpiredAt = 0;
+  _hardcoreCombo._breakSfxArmed = false;
+  if (typeof AudioEngine !== 'undefined' && AudioEngine && typeof AudioEngine.playSfx === 'function') {
+    AudioEngine.playSfx('comboBreak');
+  }
 };
 
 window.resetHardcoreCombo = function() {
@@ -176,6 +190,7 @@ window.resetHardcoreCombo = function() {
   _hardcoreCombo.lastExpiredAt = 0;
   _hardcoreCombo.expiredCount = 0;
   _hardcoreCombo.expiredMultiplier = 1.00;
+  _hardcoreCombo._breakSfxArmed = false;
 };
 
 // ============================================================

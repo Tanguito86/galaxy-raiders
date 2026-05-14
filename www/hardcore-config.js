@@ -237,6 +237,10 @@ function registerGraze(bulletRef) {
 
   // HUD pulse
   _hardcoreGrazePulseTimer = 220;
+
+  if (typeof AudioEngine !== 'undefined' && AudioEngine && typeof AudioEngine.playSfx === 'function') {
+    AudioEngine.playSfx('graze');
+  }
 }
 
 function drawHardcoreGrazeHUD(ctx) {

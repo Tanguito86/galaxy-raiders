@@ -61,6 +61,18 @@
     },
     feverActivated: function() {
       if (typeof sfxFeverActivated === 'function') sfxFeverActivated();
+    },
+    graze: function() {
+      if (typeof sfxGraze === 'function') sfxGraze();
+    },
+    comboBreak: function() {
+      if (typeof sfxComboBreak === 'function') sfxComboBreak();
+    },
+    rankUp: function() {
+      if (typeof sfxRankUp === 'function') sfxRankUp();
+    },
+    rankDown: function() {
+      if (typeof sfxRankDown === 'function') sfxRankDown();
     }
   };
 

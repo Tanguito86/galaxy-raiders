@@ -58,6 +58,10 @@ function _hardcoreRankRecalc() {
     _hardcoreRank.levelChangeDirection = newLevel > _hardcoreRank.lastLevel ? 'up' : 'down';
     _hardcoreRank.lastLevel = newLevel;
     _hardcoreRank.levelChangedAt = Date.now();
+
+    if (typeof AudioEngine !== 'undefined' && AudioEngine && typeof AudioEngine.playSfx === 'function') {
+      AudioEngine.playSfx(_hardcoreRank.levelChangeDirection === 'up' ? 'rankUp' : 'rankDown');
+    }
   }
   _hardcoreRank.level = newLevel;
   _hardcoreRank.multiplier = Math.max(1.00, Math.min(1.50, _hardcoreRankCalcMultiplier(_hardcoreRank.level)));

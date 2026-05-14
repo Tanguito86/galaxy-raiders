@@ -187,6 +187,40 @@ function sfxConfirm() {
   tone({ type:'square', f:randPitch(660), f2:randPitch(990), dur:0.05, vol:VOL.hit, attack:0.002, decay:0.06 });
 }
 
+// === HC-42: HARDCORE SYSTEMS AUDIO FEEDBACK ===
+
+var lastGrazeSfx = 0;
+
+function sfxGraze() {
+  var now = typeof globalTime !== 'undefined' ? globalTime : Date.now();
+  if (now - lastGrazeSfx < 90) return;
+  lastGrazeSfx = now;
+  tone({ type:'sine', f:randPitch(3200, 0.03), dur:0.015, vol:VOL.ui * 0.28, attack:0.001, decay:0.025 });
+}
+
+function sfxComboBreak() {
+  noise({ dur:0.06, vol:VOL.hit * 0.55, attack:0.002, decay:0.07, hp:180, lp:900 });
+  tone({ type:'square', f:randPitch(180), f2:randPitch(80), dur:0.08, vol:VOL.hit * 0.45, attack:0.003, decay:0.10 });
+}
+
+function sfxRankUp() {
+  var notes = [70, 75, 79];
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'square', f:midiToFreq(m), dur:0.05, vol:VOL.power * 0.40, attack:0.002, decay:0.06 });
+    }, i * 50);
+  });
+}
+
+function sfxRankDown() {
+  var notes = [79, 72, 67];
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'triangle', f:midiToFreq(m), dur:0.06, vol:VOL.power * 0.35, attack:0.003, decay:0.07 });
+    }, i * 55);
+  });
+}
+
 // === MUSICAL HELPERS ===
 function midiToFreq(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12);
