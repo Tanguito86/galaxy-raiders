@@ -890,7 +890,7 @@ if (!boss.active && activeEnemies.length > 0) {
           }
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
           var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-          e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2 * pressScale2;
+          e._hcSuppressorCooldown = Math.max(1100, (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult2 * pressScale2);
         }
         return;
       }
@@ -898,7 +898,7 @@ if (!boss.active && activeEnemies.length > 0) {
       if (e._hcSuppressorCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
         var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-        e._hcSuppressorCooldown = (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult * pressScale;
+        e._hcSuppressorCooldown = Math.max(1100, (HC_SUPPRESSOR_COOLDOWN_MIN + Math.random() * (HC_SUPPRESSOR_COOLDOWN_MAX - HC_SUPPRESSOR_COOLDOWN_MIN)) * rankMult * pressScale);
       }
       e._hcSuppressorCooldown -= dt;
       // HC-48: when cooldown expires, enter telegraph instead of firing immediately
@@ -923,7 +923,7 @@ if (!boss.active && activeEnemies.length > 0) {
           _fireEliteTelegraphSideShots(e);
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
           var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-          e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2;
+          e._hcEliteCooldown = Math.max(1300, (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2);
         }
         return;
       }
@@ -931,7 +931,7 @@ if (!boss.active && activeEnemies.length > 0) {
       if (e._hcEliteCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
         var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-        e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult * pressScale;
+        e._hcEliteCooldown = Math.max(1300, (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult * pressScale);
       }
       e._hcEliteCooldown -= dt;
       if (e._hcEliteCooldown <= 0) {
@@ -942,7 +942,7 @@ if (!boss.active && activeEnemies.length > 0) {
           } else {
             var rankMult2b = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
             var pressScale2b = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-            e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2b * pressScale2b;
+            e._hcEliteCooldown = Math.max(1300, (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2b * pressScale2b);
           }
         }
       }
@@ -962,7 +962,7 @@ if (!boss.active && activeEnemies.length > 0) {
             var sniperBase2 = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
             var sniperSeed2 = e.x * 7919 + e.y * 65537 + globalTime;
             var sniperOffset2 = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed2, 50) : 0;
-            e._hcSniperCooldown = sniperBase2 + sniperOffset2;
+            e._hcSniperCooldown = Math.max(1400, sniperBase2 + sniperOffset2);
             e._sniperTelegraphFiredAt = 0;
           }
         }
@@ -973,7 +973,7 @@ if (!boss.active && activeEnemies.length > 0) {
         var sniperBase = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
         var sniperSeed = e.x * 7919 + e.y * 65537;
         var sniperOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed, 50) : 0;
-        e._hcSniperCooldown = sniperBase + sniperOffset;
+        e._hcSniperCooldown = Math.max(1400, sniperBase + sniperOffset);
       }
       e._hcSniperCooldown -= dt;
       // HC-46: when cooldown expires, enter telegraph instead of firing immediately
