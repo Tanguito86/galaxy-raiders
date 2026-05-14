@@ -11,7 +11,10 @@ var _hardcoreRank = {
   multiplier: 1.00,
   lastReason: '',
   lastChangeAt: 0,
-  lastDecayAt: 0
+  lastDecayAt: 0,
+  lastLevel: 1,
+  levelChangedAt: 0,
+  levelChangeDirection: ''
 };
 
 // Lectura segura de la config de rank desde GALAXY_CONFIG
@@ -50,7 +53,13 @@ function _hardcoreRankCalcMultiplier(lvl) {
 // Recalcular nivel y multiplicador desde el valor actual
 function _hardcoreRankRecalc() {
   _hardcoreRank.value = Math.max(0, Math.min(100, _hardcoreRank.value));
-  _hardcoreRank.level = Math.max(1, Math.min(5, _hardcoreRankCalcLevel(_hardcoreRank.value)));
+  var newLevel = Math.max(1, Math.min(5, _hardcoreRankCalcLevel(_hardcoreRank.value)));
+  if (newLevel !== _hardcoreRank.lastLevel) {
+    _hardcoreRank.levelChangeDirection = newLevel > _hardcoreRank.lastLevel ? 'up' : 'down';
+    _hardcoreRank.lastLevel = newLevel;
+    _hardcoreRank.levelChangedAt = Date.now();
+  }
+  _hardcoreRank.level = newLevel;
   _hardcoreRank.multiplier = Math.max(1.00, Math.min(1.50, _hardcoreRankCalcMultiplier(_hardcoreRank.level)));
 }
 
@@ -113,6 +122,9 @@ window.resetHardcoreRank = function() {
   _hardcoreRank.lastReason = '';
   _hardcoreRank.lastChangeAt = 0;
   _hardcoreRank.lastDecayAt = 0;
+  _hardcoreRank.lastLevel = 1;
+  _hardcoreRank.levelChangedAt = 0;
+  _hardcoreRank.levelChangeDirection = '';
 };
 
 // ============================================================
@@ -235,5 +247,34 @@ function drawHardcoreRankDebug(ctx) {
   ctx.fillStyle = 'rgba(200,200,200,0.55)';
   ctx.fillText('LAST ' + reason, 6, H - 14);
 
+  ctx.restore();
+}
+
+// ============================================================
+// HC-41: RANK LEVEL CHANGE FEEDBACK
+// ============================================================
+
+function drawHardcoreRankLevelFeedback(ctx) {
+  if (!ctx) return;
+  if (typeof H === 'undefined' || typeof W === 'undefined') return;
+  if (_hardcoreRank.levelChangedAt <= 0) return;
+
+  var now = Date.now();
+  var elapsed = now - _hardcoreRank.levelChangedAt;
+  if (elapsed >= 900) return;
+
+  var fadeAlpha = 1.0 - (elapsed / 900);
+  var isUp = _hardcoreRank.levelChangeDirection === 'up';
+  var text = isUp ? 'RANK UP L' + _hardcoreRank.lastLevel : 'RANK DOWN L' + _hardcoreRank.lastLevel;
+  var color = isUp ? '#5ff' : '#f55';
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.globalAlpha = fadeAlpha;
+  ctx.font = '10px "Press Start 2P"';
+  ctx.fillStyle = color;
+  ctx.fillText(text, W / 2, 90);
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
