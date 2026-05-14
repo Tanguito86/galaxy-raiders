@@ -3873,6 +3873,74 @@ if (shouldShow) {
           ctx.restore();
         }
 
+        // HC-49: DIVER TELEGRAPH — afterimage, red/orange glow, direction to target
+        if (e._hcDiverState === 'telegraph') {
+          var dTelProgress = Math.min(1, e._hcDiverTimer / 380);
+          var dTelAlpha = 0.10 + 0.12 * Math.sin(dTelProgress * Math.PI) * (1 - dTelProgress);
+          var dcx = e.x + (e.w || 24) / 2;
+          var dcy = e.y + (e.h || 24) / 2;
+
+          ctx.save();
+          // afterimage (ghost copy offset slightly back)
+          ctx.globalAlpha = dTelAlpha * 0.40;
+          var aiOffX = (dcx - (e._hcDiverTargetX || dcx)) * 0.08;
+          var aiOffY = (dcy - (e._hcDiverTargetY || dcy)) * 0.08;
+          drawSprite(ctx, SPRITES[spriteKey], e.x - aiOffX, e.y - aiOffY, '#f52', size);
+
+          // pulsating red/orange glow
+          ctx.globalAlpha = dTelAlpha;
+          ctx.fillStyle = '#f42';
+          ctx.beginPath();
+          ctx.arc(dcx, dcy, 12 + dTelProgress * 8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // direction line toward target
+          if (typeof e._hcDiverTargetX === 'number' && typeof e._hcDiverTargetY === 'number') {
+            var dLineLen = 16 + dTelProgress * 20;
+            var dAngle = Math.atan2(e._hcDiverTargetY - dcy, e._hcDiverTargetX - dcx);
+            var dEndX = dcx + Math.cos(dAngle) * dLineLen;
+            var dEndY = dcy + Math.sin(dAngle) * dLineLen;
+            ctx.globalAlpha = dTelAlpha * 0.8;
+            ctx.strokeStyle = '#f52';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(dcx, dcy);
+            ctx.lineTo(dEndX, dEndY);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // HC-49: DIVER DIVE TRAIL — fading position trail during dive
+        if (e.diving && Array.isArray(e._hcDiverTrail) && e._hcDiverTrail.length > 0) {
+          ctx.save();
+          for (var ti = 0; ti < e._hcDiverTrail.length; ti++) {
+            var tp = e._hcDiverTrail[ti];
+            var tAlpha = (ti + 1) / e._hcDiverTrail.length * 0.14;
+            ctx.globalAlpha = tAlpha;
+            ctx.fillStyle = '#f64';
+            ctx.fillRect(tp.x - 6, tp.y - 6, 12, 12);
+          }
+          ctx.restore();
+        }
+
+        // HC-49: DIVER RECOVERY FEEDBACK — brief fade/flash on recovery entry
+        if (e._hcDiverState === 'recovering' && typeof e._hcDiverRecoveryFlash === 'number' && e._hcDiverRecoveryFlash > 0) {
+          e._hcDiverRecoveryFlash = Math.max(0, e._hcDiverRecoveryFlash - 16.667);
+          var recProgress = Math.min(1, e._hcDiverTimer / 200);
+          var recAlpha = 0.18 * (1 - recProgress);
+          var dcx2 = e.x + (e.w || 24) / 2;
+          var dcy2 = e.y + (e.h || 24) / 2;
+
+          ctx.save();
+          ctx.globalAlpha = recAlpha;
+          ctx.fillStyle = '#82f';
+          ctx.beginPath();
+          ctx.arc(dcx2, dcy2, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
         ctx.restore();
       }
     });

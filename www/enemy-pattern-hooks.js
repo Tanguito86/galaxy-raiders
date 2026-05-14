@@ -212,9 +212,15 @@ function updateHardcoreDiverPattern(enemy, dt, step) {
 
   // ---- diving (off-screen detection for recovery transition) ----
   if (st === 'diving') {
+    // HC-49: dive trail tracking
+    if (!enemy._hcDiverTrail) enemy._hcDiverTrail = [];
+    enemy._hcDiverTrail.push({ x: enemy.x + (enemy.w || 24) / 2, y: enemy.y + (enemy.h || 24) / 2 });
+    if (enemy._hcDiverTrail.length > 5) enemy._hcDiverTrail.shift();
+
     if (enemy.y > H + 40 || enemy.x < -80 || enemy.x > W + 80) {
       enemy._hcDiverState = 'recovering';
       enemy._hcDiverTimer = 0;
+      enemy._hcDiverRecoveryFlash = 280; // ms for recovery fade visual
       enemy.diving = false;
       enemy.vx = 0;
       enemy.vy = 0;
@@ -244,6 +250,7 @@ function updateHardcoreDiverPattern(enemy, dt, step) {
       enemy.vy = 0;
       enemy._hcDiverState = 'idle';
       enemy._hcDiverTimer = 0;
+      enemy._hcDiverTrail = [];
       enemy._hcDiverCooldown = (HC_DIVER_COOLDOWN_MIN + Math.random() * (HC_DIVER_COOLDOWN_MAX - HC_DIVER_COOLDOWN_MIN)) * ((typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1) * ((typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1);
       var diverSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
       var diverOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(diverSeed, 50) : 0;
