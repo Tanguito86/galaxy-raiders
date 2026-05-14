@@ -6,7 +6,7 @@
 var _GALAXY_CONFIG_DEFAULTS = {
   hardcore:  { enabled: true },   // HC-12: hardcore only
   player:    { hardcoreHitRadius: 3, showHitbox: false },
-  graze:     { enabled: true, radius: 24, score: 100 },   // HC-12
+  graze:     { enabled: true, radius: 24, score: 5 },   // HC-12
   rank:      { enabled: true, baseLevel: 0, min: 0, max: 100, maxLevel: 5, bulletSpeedMax: 1.12, cooldownMin: 0.88, multiplierMax: 1.5, decayDelayMs: 6000, decayAmount: 0.15, decayIntervalMs: 1000 },
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
@@ -211,7 +211,11 @@ function registerGraze(bulletRef) {
   }
 
   if (typeof addScore === 'function') {
-    addScore(g.score);
+    var grRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function')
+      ? window.getHardcoreRankScoreMultiplier() : 1.00;
+    var grComboMult = (typeof window.getHardcoreComboMultiplier === 'function')
+      ? window.getHardcoreComboMultiplier() : 1.00;
+    addScore(Math.round(g.score * grRankMult * grComboMult));
   }
 
   if (typeof spawnPopup === 'function') {
