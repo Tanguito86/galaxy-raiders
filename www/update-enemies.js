@@ -857,25 +857,21 @@ if (!boss.active && activeEnemies.length > 0) {
   const didScriptedSetPieceShot = runSetPieceFirePattern(activeEnemies, dt, baseCooldown);
 
   if (!didScriptedSetPieceShot && globalTime - enemyLastShot > baseCooldown) {
-    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots && e._hcDiverState !== 'telegraph');
+    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots && e._hcDiverState !== 'telegraph' && !(typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(e)));
 
     if (shooters.length > 0) {
       const shooter = shooters[Math.floor(Math.random() * shooters.length)];
 
-      if (typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(shooter)) {
-        fireHardcoreSniperShot(shooter);
-      } else {
-        pushEnemyBullet(
-          shooter.x + shooter.w / 2,
-          shooter.y + shooter.h,
-          0,
-          getDifficultySettings(level).bulletSpeed,
-          4,
-          10,
-          { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
-        );
-        createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
-      }
+      pushEnemyBullet(
+        shooter.x + shooter.w / 2,
+        shooter.y + shooter.h,
+        0,
+        getDifficultySettings(level).bulletSpeed,
+        4,
+        10,
+        { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
+      );
+      createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
       enemyLastShot = globalTime;
     }
   }
@@ -914,6 +910,27 @@ if (!boss.active && activeEnemies.length > 0) {
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
           var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
           e._hcEliteCooldown = (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2;
+        }
+      }
+    }
+  });
+
+  // HC-45: hardcore sniper pattern (alien2) - independent cooldown with pressure timing offset
+  activeEnemies.forEach(e => {
+    if (typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(e)) {
+      if (e._hcSniperCooldown === undefined) {
+        var sniperBase = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
+        var sniperSeed = e.x * 7919 + e.y * 65537;
+        var sniperOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed, 50) : 0;
+        e._hcSniperCooldown = sniperBase + sniperOffset;
+      }
+      e._hcSniperCooldown -= dt;
+      if (e._hcSniperCooldown <= 0) {
+        if (typeof fireHardcoreSniperShot === 'function' && fireHardcoreSniperShot(e)) {
+          var sniperBase2 = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
+          var sniperSeed2 = e.x * 7919 + e.y * 65537 + e._hcSniperCooldown;
+          var sniperOffset2 = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed2, 50) : 0;
+          e._hcSniperCooldown = sniperBase2 + sniperOffset2;
         }
       }
     }

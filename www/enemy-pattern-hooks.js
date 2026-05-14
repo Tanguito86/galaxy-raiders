@@ -92,6 +92,9 @@ function shouldFireHardcoreSniperPattern(enemy) {
   return true;
 }
 
+var HC_SNIPER_COOLDOWN_MIN = 2000;
+var HC_SNIPER_COOLDOWN_MAX = 3500;
+
 function fireHardcoreSniperShot(enemy) {
   if (!enemy) return false;
 
@@ -242,6 +245,10 @@ function updateHardcoreDiverPattern(enemy, dt, step) {
       enemy._hcDiverState = 'idle';
       enemy._hcDiverTimer = 0;
       enemy._hcDiverCooldown = (HC_DIVER_COOLDOWN_MIN + Math.random() * (HC_DIVER_COOLDOWN_MAX - HC_DIVER_COOLDOWN_MIN)) * ((typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1) * ((typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1);
+      var diverSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
+      var diverOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(diverSeed, 50) : 0;
+      enemy._hcDiverCooldown += diverOffset;
+      if (enemy._hcDiverCooldown < 800) enemy._hcDiverCooldown = 800;
       if (typeof resetEnemyMovePattern === 'function') resetEnemyMovePattern(enemy);
     } else {
       enemy.x += (dx / rdist) * recoverSpeed;
@@ -280,17 +287,47 @@ function fireHardcoreSuppressorBurst(enemy) {
   }
 
   // 3-bullet lateral fan: center, left sweep, right sweep
+  // HC-45: apply pressure micro-stagger to fan timing
+  var fanSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
+  var fanOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(fanSeed, 50) : 0;
+  var fanAbs = Math.abs(fanOffset);
+
   var angles = [
-    Math.PI / 2,               // straight down
-    Math.PI / 2 - 0.22,        // left bias
+    Math.PI / 2,               // straight down (center, fires at 0)
+    Math.PI / 2 - 0.22,        // left bias (fires at +offset if positive)
     Math.PI / 2 + 0.22         // right bias
   ];
 
-  for (var i = 0; i < angles.length; i++) {
-    var vx = Math.cos(angles[i]) * bulletSpeed;
-    var vy = Math.sin(angles[i]) * bulletSpeed;
+  // center bullet: fires immediately
+  pushEnemyBullet(sx - 2, sy, Math.cos(angles[0]) * bulletSpeed, Math.sin(angles[0]) * bulletSpeed, 5, 9, {
+    kind: 'crossfire_b',
+    color: '#ff6688',
+    sourceType: enemy.type || 'alien4'
+  });
 
-    pushEnemyBullet(sx - 2, sy, vx, vy, 5, 9, {
+  // side bullets: staggered by fanAbs ms
+  if (fanAbs > 0) {
+    setTimeout(function() {
+      pushEnemyBullet(sx - 2, sy, Math.cos(angles[1]) * bulletSpeed, Math.sin(angles[1]) * bulletSpeed, 5, 9, {
+        kind: 'crossfire_b',
+        color: '#ff6688',
+        sourceType: enemy.type || 'alien4'
+      });
+    }, fanAbs);
+    setTimeout(function() {
+      pushEnemyBullet(sx - 2, sy, Math.cos(angles[2]) * bulletSpeed, Math.sin(angles[2]) * bulletSpeed, 5, 9, {
+        kind: 'crossfire_b',
+        color: '#ff6688',
+        sourceType: enemy.type || 'alien4'
+      });
+    }, fanAbs);
+  } else {
+    pushEnemyBullet(sx - 2, sy, Math.cos(angles[1]) * bulletSpeed, Math.sin(angles[1]) * bulletSpeed, 5, 9, {
+      kind: 'crossfire_b',
+      color: '#ff6688',
+      sourceType: enemy.type || 'alien4'
+    });
+    pushEnemyBullet(sx - 2, sy, Math.cos(angles[2]) * bulletSpeed, Math.sin(angles[2]) * bulletSpeed, 5, 9, {
       kind: 'crossfire_b',
       color: '#ff6688',
       sourceType: enemy.type || 'alien4'
@@ -369,7 +406,7 @@ function fireHardcoreEliteBurst(enemy) {
     }
   }
 
-  // Aimed center shot toward player
+  // Aimed center shot toward player — fires immediately
   var angleToPlayer = typeof getAngleToPlayer === 'function'
     ? getAngleToPlayer(enemy)
     : Math.PI / 2;
@@ -381,6 +418,7 @@ function fireHardcoreEliteBurst(enemy) {
   });
 
   // Side shots to restrict escape (±25Â° from down)
+  // HC-45: apply pressure micro-stagger to side-shot timing
   var sideAngle = 0.44; // ~25Â°
   var dAngle = Math.PI / 2;
   var sideVxLeft = Math.cos(dAngle - sideAngle) * bulletSpeed * 0.85;
@@ -388,17 +426,28 @@ function fireHardcoreEliteBurst(enemy) {
   var sideVxRight = Math.cos(dAngle + sideAngle) * bulletSpeed * 0.85;
   var sideVyRight = Math.sin(dAngle + sideAngle) * bulletSpeed * 0.85;
 
-  pushEnemyBullet(sx - 2, sy, sideVxLeft, sideVyLeft, 5, 9, {
-    kind: 'basic',
-    color: '#ffcc66',
-    sourceType: enemy.type || 'alien5'
-  });
+  var eliteSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
+  var eliteOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(eliteSeed, 50) : 0;
+  var eliteAbs = Math.abs(eliteOffset);
 
-  pushEnemyBullet(sx - 2, sy, sideVxRight, sideVyRight, 5, 9, {
-    kind: 'basic',
-    color: '#ffcc66',
-    sourceType: enemy.type || 'alien5'
-  });
+  function _pushEliteSides() {
+    pushEnemyBullet(sx - 2, sy, sideVxLeft, sideVyLeft, 5, 9, {
+      kind: 'basic',
+      color: '#ffcc66',
+      sourceType: enemy.type || 'alien5'
+    });
+    pushEnemyBullet(sx - 2, sy, sideVxRight, sideVyRight, 5, 9, {
+      kind: 'basic',
+      color: '#ffcc66',
+      sourceType: enemy.type || 'alien5'
+    });
+  }
+
+  if (eliteAbs > 0) {
+    setTimeout(_pushEliteSides, eliteAbs);
+  } else {
+    _pushEliteSides();
+  }
 
   if (typeof createEnemyMuzzleFlash === 'function') {
     createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien5');

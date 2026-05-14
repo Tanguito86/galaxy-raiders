@@ -100,3 +100,22 @@ window.getHardcorePressureCooldownScale = function() {
   if (typeof mult !== 'number' || !isFinite(mult) || mult <= 0) return 1.00;
   return _hardcorePressureClampCooldownScale(1.00 / mult);
 };
+
+window.getHardcorePressureTimingOffset = function(seed, maxMs) {
+  if (!window.isHardcorePressureActive()) return 0;
+  var level = window.getHardcorePressureLevel();
+  var range = 0;
+  switch (level) {
+    case 'LOW':    range = 0;  break;
+    case 'NORMAL': range = 20; break;
+    case 'HIGH':   range = 35; break;
+    case 'MAX':    range = 50; break;
+    default:       return 0;
+  }
+  if (range <= 0) return 0;
+  if (typeof maxMs === 'number' && maxMs > 0 && maxMs < range) range = maxMs;
+  var n = typeof seed === 'number' ? Math.abs(Math.floor(seed)) : 0;
+  n = (n * 1103515245 + 12345) & 0x7fffffff;
+  var t = (n % 10001) / 10000;
+  return Math.round((t * 2 - 1) * range);
+};
