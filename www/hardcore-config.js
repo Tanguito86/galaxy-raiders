@@ -10,7 +10,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   rank:      { enabled: true, baseLevel: 0, min: 0, max: 100, maxLevel: 5, bulletSpeedMax: 1.12, cooldownMin: 0.88, multiplierMax: 1.5, decayDelayMs: 6000, decayAmount: 0.15, decayIntervalMs: 1000 },
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
-  combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0 },
+  combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false }
 };
 

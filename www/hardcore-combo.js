@@ -10,17 +10,22 @@ var _hardcoreCombo = {
   lastChangeAt: 0,
   activeUntil: 0,
   lastBreakAt: 0,
-  lastBreakReason: ''
+  lastBreakReason: '',
+  lastExpiredAt: 0,
+  expiredCount: 0,
+  expiredMultiplier: 1.00
 };
 
 function _hardcoreComboReadConfig() {
   var cfg = window.GALAXY_CONFIG;
-  if (!cfg || typeof cfg !== 'object') return { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0 };
-  var c = (cfg.combo && typeof cfg.combo === 'object') ? cfg.combo : { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0 };
+  if (!cfg || typeof cfg !== 'object') return { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 };
+  var c = (cfg.combo && typeof cfg.combo === 'object') ? cfg.combo : { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 };
   return {
     enabled: !!(c.enabled),
     timeoutMs: (typeof c.timeoutMs === 'number') ? c.timeoutMs : 2500,
-    maxMultiplier: (typeof c.maxMultiplier === 'number') ? c.maxMultiplier : 2.0
+    maxMultiplier: (typeof c.maxMultiplier === 'number') ? c.maxMultiplier : 2.0,
+    graceMs: (typeof c.graceMs === 'number') ? c.graceMs : 350,
+    warningMs: (typeof c.warningMs === 'number') ? c.warningMs : 700
   };
 }
 
@@ -47,13 +52,26 @@ function _hardcoreComboRecalc() {
 }
 
 function _hardcoreComboCheckTimeout() {
-  if (_hardcoreCombo.count > 0 && Date.now() > _hardcoreCombo.activeUntil) {
+  var now = Date.now();
+  var cfg = _hardcoreComboReadConfig();
+
+  // Combo activo expirado: entrar en grace
+  if (_hardcoreCombo.count > 0 && now > _hardcoreCombo.activeUntil) {
+    _hardcoreCombo.expiredCount = _hardcoreCombo.count;
+    _hardcoreCombo.expiredMultiplier = _hardcoreCombo.multiplier;
+    _hardcoreCombo.lastExpiredAt = now;
     _hardcoreCombo.count = 0;
     _hardcoreCombo.multiplier = 1.00;
     _hardcoreCombo.lastReason = 'timeout';
-    _hardcoreCombo.lastChangeAt = Date.now();
+    _hardcoreCombo.lastChangeAt = now;
     _hardcoreCombo.activeUntil = 0;
-    _hardcoreCombo.lastBreakAt = Date.now();
+  }
+
+  // Grace expirado: break definitivo
+  if (_hardcoreCombo.expiredCount > 0 && now - _hardcoreCombo.lastExpiredAt >= cfg.graceMs) {
+    _hardcoreCombo.expiredCount = 0;
+    _hardcoreCombo.expiredMultiplier = 1.00;
+    _hardcoreCombo.lastBreakAt = now;
     _hardcoreCombo.lastBreakReason = 'timeout';
   }
 }
@@ -71,7 +89,10 @@ window.getHardcoreComboState = function() {
     lastChangeAt: _hardcoreCombo.lastChangeAt,
     activeUntil: _hardcoreCombo.activeUntil,
     lastBreakAt: _hardcoreCombo.lastBreakAt,
-    lastBreakReason: _hardcoreCombo.lastBreakReason
+    lastBreakReason: _hardcoreCombo.lastBreakReason,
+    lastExpiredAt: _hardcoreCombo.lastExpiredAt,
+    expiredCount: _hardcoreCombo.expiredCount,
+    expiredMultiplier: _hardcoreCombo.expiredMultiplier
   };
 };
 
@@ -88,6 +109,20 @@ window.getHardcoreComboMultiplier = function() {
 window.addHardcoreCombo = function(reason) {
   if (!_hardcoreComboIsEnabled()) return;
   _hardcoreComboCheckTimeout();
+
+  // Grace recovery: kill within grace window recovers combo
+  if (_hardcoreCombo.expiredCount > 0 && _hardcoreCombo.count === 0) {
+    _hardcoreCombo.count = _hardcoreCombo.expiredCount + 1;
+    _hardcoreCombo.expiredCount = 0;
+    _hardcoreCombo.expiredMultiplier = 1.00;
+    _hardcoreCombo.lastExpiredAt = 0;
+    _hardcoreComboRefreshWindow();
+    if (reason && typeof reason === 'string') _hardcoreCombo.lastReason = reason;
+    _hardcoreCombo.lastChangeAt = Date.now();
+    _hardcoreComboRecalc();
+    return;
+  }
+
   _hardcoreCombo.count++;
   _hardcoreComboRefreshWindow();
   if (reason && typeof reason === 'string') _hardcoreCombo.lastReason = reason;
@@ -98,6 +133,18 @@ window.addHardcoreCombo = function(reason) {
 window.refreshHardcoreComboWindow = function() {
   if (!_hardcoreComboIsEnabled()) return;
   _hardcoreComboCheckTimeout();
+
+  // Grace recovery via graze: restore expired combo without adding count
+  if (_hardcoreCombo.expiredCount > 0 && _hardcoreCombo.count === 0) {
+    _hardcoreCombo.count = _hardcoreCombo.expiredCount;
+    _hardcoreCombo.expiredCount = 0;
+    _hardcoreCombo.expiredMultiplier = 1.00;
+    _hardcoreCombo.lastExpiredAt = 0;
+    _hardcoreComboRefreshWindow();
+    _hardcoreComboRecalc();
+    return;
+  }
+
   if (_hardcoreCombo.count > 0) {
     _hardcoreComboRefreshWindow();
   }
@@ -105,7 +152,7 @@ window.refreshHardcoreComboWindow = function() {
 
 window.breakHardcoreCombo = function(reason) {
   if (!_hardcoreComboIsEnabled()) return;
-  if (_hardcoreCombo.count === 0) return;
+  if (_hardcoreCombo.count === 0 && _hardcoreCombo.expiredCount === 0) return;
   _hardcoreCombo.count = 0;
   _hardcoreCombo.multiplier = 1.00;
   _hardcoreCombo.lastChangeAt = Date.now();
@@ -113,6 +160,9 @@ window.breakHardcoreCombo = function(reason) {
   _hardcoreCombo.activeUntil = 0;
   _hardcoreCombo.lastBreakAt = Date.now();
   _hardcoreCombo.lastBreakReason = (reason && typeof reason === 'string') ? reason : 'break';
+  _hardcoreCombo.expiredCount = 0;
+  _hardcoreCombo.expiredMultiplier = 1.00;
+  _hardcoreCombo.lastExpiredAt = 0;
 };
 
 window.resetHardcoreCombo = function() {
@@ -123,6 +173,9 @@ window.resetHardcoreCombo = function() {
   _hardcoreCombo.activeUntil = 0;
   _hardcoreCombo.lastBreakAt = 0;
   _hardcoreCombo.lastBreakReason = '';
+  _hardcoreCombo.lastExpiredAt = 0;
+  _hardcoreCombo.expiredCount = 0;
+  _hardcoreCombo.expiredMultiplier = 1.00;
 };
 
 // ============================================================
@@ -135,16 +188,18 @@ window.drawHardcoreComboHUD = function(ctx) {
   if (typeof H === 'undefined') return;
 
   var now = Date.now();
+  var cfg = _hardcoreComboReadConfig();
   var count = _hardcoreCombo.count;
   var mult = _hardcoreCombo.multiplier;
   var y = 56;
-  var breakMs = (count <= 0 && _hardcoreCombo.lastBreakAt > 0) ? now - _hardcoreCombo.lastBreakAt : 9999;
-  var showingBreak = count <= 0 && breakMs < 900;
+  var breakMs = (count <= 0 && _hardcoreCombo.expiredCount <= 0 && _hardcoreCombo.lastBreakAt > 0) ? now - _hardcoreCombo.lastBreakAt : 9999;
+  var showingBreak = count <= 0 && _hardcoreCombo.expiredCount <= 0 && breakMs < 900;
+  var inGrace = _hardcoreCombo.expiredCount > 0;
   var comboColor = '#fff';
   var comboAlpha = 1.0;
   var glowAlpha = 0;
 
-  if (!showingBreak && count <= 0) return;
+  if (!showingBreak && count <= 0 && !inGrace) return;
 
   if (count >= 40) {
     comboColor = '#ffdd44';
@@ -176,6 +231,36 @@ window.drawHardcoreComboHUD = function(ctx) {
     return;
   }
 
+  // Grace state: flash the combo label
+  if (inGrace) {
+    var gracePulse = 0.45 + 0.55 * Math.sin(now * 0.018);
+    ctx.font = '6px "Press Start 2P"';
+    ctx.globalAlpha = gracePulse;
+    ctx.fillStyle = '#ff8855';
+    ctx.fillText('GRACE', 6, y);
+    ctx.font = '7px "Press Start 2P"';
+    ctx.globalAlpha = gracePulse * 0.8;
+    ctx.fillStyle = '#ffcc88';
+    ctx.fillText(_hardcoreCombo.expiredCount + ' x' + _hardcoreCombo.expiredMultiplier.toFixed(2), 6, y + 13);
+
+    // Grace timer bar
+    var graceRemaining = cfg.graceMs - (now - _hardcoreCombo.lastExpiredAt);
+    var graceRatio = Math.min(1, Math.max(0, graceRemaining / cfg.graceMs));
+    var barX = 6;
+    var barY = y + 22;
+    var barW = 52;
+    var barH = 3;
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#444';
+    ctx.fillRect(barX, barY, barW, barH);
+    ctx.globalAlpha = 0.55 + 0.25 * gracePulse;
+    ctx.fillStyle = '#f84';
+    ctx.fillRect(barX, barY, Math.round(barW * graceRatio), barH);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    return;
+  }
+
   ctx.globalAlpha = comboAlpha;
 
   // COMBO label
@@ -202,15 +287,19 @@ window.drawHardcoreComboHUD = function(ctx) {
   var barW = 52;
   var barH = 3;
   var remaining = Math.max(0, _hardcoreCombo.activeUntil - now);
-  var total = _hardcoreComboReadConfig().timeoutMs;
+  var total = cfg.timeoutMs;
   var ratio = Math.min(1, Math.max(0, remaining / total));
+
+  // Warning pulse when below warningMs
+  var inWarning = remaining > 0 && remaining < cfg.warningMs;
+  var barAlpha = inWarning ? (0.45 + 0.55 * Math.sin(now * 0.025)) : 0.72;
 
   ctx.globalAlpha = 0.25;
   ctx.fillStyle = '#444';
   ctx.fillRect(barX, barY, barW, barH);
 
-  ctx.globalAlpha = 0.72;
-  var barColor = ratio > 0.6 ? '#6f6' : ratio > 0.25 ? '#ff6' : '#f44';
+  ctx.globalAlpha = barAlpha;
+  var barColor = inWarning ? '#f80' : (ratio > 0.6 ? '#6f6' : ratio > 0.25 ? '#ff6' : '#f44');
   ctx.fillStyle = barColor;
   ctx.fillRect(barX, barY, Math.round(barW * ratio), barH);
 

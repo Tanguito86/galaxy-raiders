@@ -53,7 +53,9 @@ window.GALAXY_CONFIG = {
   combo: {
     enabled: true,
     timeoutMs: 2500,
-    maxMultiplier: 2.0
+    maxMultiplier: 2.0,
+    graceMs: 350,
+    warningMs: 700
   },
 
   // ============ DEBUG ============
