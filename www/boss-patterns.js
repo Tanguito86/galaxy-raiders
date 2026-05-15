@@ -576,10 +576,10 @@ function updateThirdBossHardcorePattern(b, dt) {
     var center = getBossCenter(target);
     var speed = _orbitalBulletSpeed();
     var arcCount = 6;
-    var arcSpan = Math.PI; // 180° arc
+    var arcSpan = 2.4; // ~137° — slightly narrower for cleaner gaps
     var angleToPlayer = getAngleFromBossToPlayer(target);
 
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 320);
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 340);
 
     for (var i = 0; i < arcCount; i++) {
       var t = arcCount > 1 ? i / (arcCount - 1) : 0.5;
@@ -598,13 +598,13 @@ function updateThirdBossHardcorePattern(b, dt) {
   // HC-55: Phase 2 — alternating left/right mini-arcs (4 bullets each, clear central gap)
   if (phase === 2) {
     var center2 = getBossCenter(target);
-    var speed2 = _orbitalBulletSpeed() * 0.92;
+    var speed2 = _orbitalBulletSpeed() * 0.88;
     var angleToPlayer2 = getAngleFromBossToPlayer(target);
 
     if (target._orbitalArcSide === undefined) target._orbitalArcSide = 0;
     target._orbitalArcSide = 1 - target._orbitalArcSide; // toggle 0↔1
 
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 360);
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 380);
 
     var arcCount = 4;
     var arcSpan = 0.52; // ~30° mini-arc
@@ -629,7 +629,7 @@ function updateThirdBossHardcorePattern(b, dt) {
   // HC-56: Phase 3 — rotating double arc (2 opposite arcs, 4 bullets each, slow rotation)
   if (phase === 3) {
     var center3 = getBossCenter(target);
-    var speed3 = Math.min(4.0, _orbitalBulletSpeed());
+    var speed3 = Math.min(3.2, _orbitalBulletSpeed());
     if (target._orbitalPhase3Angle === undefined) target._orbitalPhase3Angle = 0;
     target._orbitalPhase3Angle += 0.32; // slow rotation per volley (~18°)
 
@@ -663,8 +663,8 @@ function updateThirdBossHardcorePattern(b, dt) {
       });
     }
 
-    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
-    if (typeof pushScreenShake === 'function') pushScreenShake('light', 3);
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    if (typeof pushScreenShake === 'function') pushScreenShake('light', 2);
     return true;
   }
 
