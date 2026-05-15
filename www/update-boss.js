@@ -812,6 +812,12 @@ if (Math.random() < 0.5 && mines.length < 8) {
   break;
       
      case 'rotate':
+       // HC-53: Orbital hardcore foundation (stub — returns false, no override yet)
+       if (typeof shouldUseThirdBossHardcorePattern === 'function' && shouldUseThirdBossHardcorePattern(boss)) {
+         if (typeof updateThirdBossHardcorePattern === 'function' && updateThirdBossHardcorePattern(boss, dt)) {
+           break;
+         }
+       }
        fireBossOrbitalPattern(step);
        break;
        

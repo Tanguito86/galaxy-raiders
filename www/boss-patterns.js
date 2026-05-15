@@ -529,3 +529,43 @@ function updateSerpentrixHardcorePattern(b, dt) {
 
   return false;
 }
+
+// ============================================================
+// HARDCORE ORBITAL PATTERN (third boss, rotate, level 15)
+// HC-53: foundation only — metadata + guard, no pattern override yet
+// ============================================================
+
+function isThirdHardcoreBoss(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (target.name === 'ORBITAL') return true;
+  if (target.pattern === 'rotate') return true;
+  return false;
+}
+
+function shouldUseThirdBossHardcorePattern(b) {
+  if (!shouldUseHardcoreBossPatterns()) return false;
+  if (!isThirdHardcoreBoss(b)) return false;
+  return true;
+}
+
+function _markOrbitalPatternMeta(b) {
+  var target = b || boss;
+  if (!target || !target.active) return;
+  if (target._orbitalPatternReady) return;
+
+  target._orbitalPatternReady = true;
+  target._orbitalPatternPhase = getBossPhaseSafe(target);
+  if (target._orbitalPatternTimer === undefined) target._orbitalPatternTimer = 0;
+  if (target._orbitalPatternSeed === undefined) target._orbitalPatternSeed = Math.random() * 1000;
+}
+
+function updateThirdBossHardcorePattern(b, dt) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+
+  _markOrbitalPatternMeta(target);
+
+  // HC-53: stub — no pattern override yet, returns false to keep legacy behavior
+  return false;
+}
