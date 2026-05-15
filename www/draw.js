@@ -11,8 +11,11 @@ function getBackgroundThemeForLevel(levelNum) {
   return 'earth';
 }
 
-function drawEarthBackground(ctx, time) {
-  // Sky: smoky dark with warm horizon (invasion glow)
+// ---- EARTH BACKGROUND (Levels 1-5): Night invasion, city under attack ----
+function drawEarthBackground(ctx, time, lv) {
+  lv = lv || 1;
+
+  // Sky gradient — gets smokier and redder each level
   var grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#040810');
   grad.addColorStop(0.4, '#080e18');
@@ -23,97 +26,140 @@ function drawEarthBackground(ctx, time) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // Invasion glow near horizon
-  var glowGrad = ctx.createLinearGradient(0, H * 0.80, 0, H * 0.94);
+  // Invasion glow — grows stronger with level
+  var gi = 0.05 + (lv - 1) * 0.022;
+  var glowGrad = ctx.createLinearGradient(0, H * 0.76, 0, H);
   glowGrad.addColorStop(0, 'transparent');
-  glowGrad.addColorStop(0.35, 'rgba(220, 70, 15, 0.06)');
-  glowGrad.addColorStop(0.7, 'rgba(200, 55, 10, 0.09)');
-  glowGrad.addColorStop(1, 'rgba(160, 40, 8, 0.04)');
+  glowGrad.addColorStop(0.3, 'rgba(220,70,15,' + gi + ')');
+  glowGrad.addColorStop(0.7, 'rgba(200,55,10,' + (gi + 0.04) + ')');
+  glowGrad.addColorStop(1, 'rgba(160,40,8,' + (gi * 0.5) + ')');
   ctx.fillStyle = glowGrad;
-  ctx.fillRect(0, H * 0.80, W, H * 0.14);
+  ctx.fillRect(0, H * 0.76, W, H * 0.24);
 
-  // Distant mountains (dark, far background)
-  ctx.globalAlpha = 0.16;
-  ctx.fillStyle = '#080810';
+  // Moon / pale planetary glow (levels 1-2 only, disappears in smoke)
+  if (lv <= 2) {
+    var moonA = 0.06 - (lv - 1) * 0.02;
+    var mg = ctx.createRadialGradient(W * 0.82, H * 0.14, 0, W * 0.82, H * 0.14, 42);
+    mg.addColorStop(0, 'rgba(180,180,155,' + moonA + ')');
+    mg.addColorStop(0.5, 'rgba(140,140,120,' + (moonA * 0.35) + ')');
+    mg.addColorStop(1, 'transparent');
+    ctx.fillStyle = mg;
+    ctx.fillRect(0, 0, W, H * 0.35);
+  }
+
+  // Searchlight beams sweeping across sky (level 2+)
+  if (lv >= 2) {
+    var numLights = Math.min(lv - 1, 3);
+    for (var sl = 0; sl < numLights; sl++) {
+      var slBX = 55 + sl * 108;
+      var slAng = Math.sin(time * 0.00045 + sl * 1.9) * 0.38 + (sl % 2 === 0 ? 0.12 : -0.12);
+      var slEX = slBX + Math.sin(slAng) * H * 0.82;
+      var slEY = H - 50 - Math.cos(slAng) * H * 0.82;
+      var slG = ctx.createLinearGradient(slBX, H - 50, slEX, slEY);
+      slG.addColorStop(0, 'rgba(200,200,160,0.05)');
+      slG.addColorStop(0.6, 'rgba(180,180,140,0.018)');
+      slG.addColorStop(1, 'transparent');
+      ctx.fillStyle = slG;
+      var sw = 14 + sl * 3;
+      ctx.beginPath();
+      var dx = slEX - slBX, dy = slEY - (H - 50);
+      var len = Math.sqrt(dx * dx + dy * dy);
+      var nx = -dy / len * sw, ny = dx / len * sw;
+      ctx.moveTo(slBX - nx * 0.12, H - 50 - ny * 0.12);
+      ctx.lineTo(slBX + nx * 0.12, H - 50 + ny * 0.12);
+      ctx.lineTo(slEX + nx, slEY + ny);
+      ctx.lineTo(slEX - nx, slEY - ny);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Distant explosion flashes in the sky (level 3+)
+  if (lv >= 3) {
+    var numFl = lv - 2;
+    for (var f = 0; f < numFl; f++) {
+      var fX = W * (0.12 + f * 0.22);
+      var fY = H * (0.28 + f * 0.06);
+      var fp = Math.sin(time * 0.0022 + f * 2.7 + f * f * 0.3);
+      if (fp > 0.82) {
+        var fa = (fp - 0.82) / 0.18 * 0.10;
+        var fG = ctx.createRadialGradient(fX, fY, 0, fX, fY, 18 + f * 6);
+        fG.addColorStop(0, 'rgba(255,160,50,' + fa + ')');
+        fG.addColorStop(0.5, 'rgba(200,80,20,' + (fa * 0.4) + ')');
+        fG.addColorStop(1, 'transparent');
+        ctx.fillStyle = fG;
+        ctx.fillRect(fX - 28, fY - 28, 56, 56);
+      }
+    }
+  }
+
+  // Far mountains (dark silhouette)
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#070710';
   ctx.beginPath();
   ctx.moveTo(0, H);
   for (var x = 0; x <= W; x += 6) {
-    ctx.lineTo(x, H - 88 - Math.sin(x * 0.012 + 0.6) * 34 - Math.sin(x * 0.025 + 1.3) * 18);
+    ctx.lineTo(x, H - 96 - Math.sin(x * 0.011 + 0.6) * 38 - Math.sin(x * 0.024 + 1.3) * 20);
   }
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Midground mountains/skyline (parallax subtle)
-  var pTime = time * 0.00006;
-  ctx.globalAlpha = 0.22;
-  ctx.fillStyle = '#0c0c16';
+  // Midground mountains (slow parallax)
+  var pt = time * 0.00006;
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = '#0a0a15';
   ctx.beginPath();
   ctx.moveTo(0, H);
   for (var x = 0; x <= W; x += 5) {
-    ctx.lineTo(x, H - 66 - Math.sin(x * 0.016 + 2.3 + pTime) * 26 - Math.sin(x * 0.028 + 0.9) * 14);
+    ctx.lineTo(x, H - 72 - Math.sin(x * 0.015 + 2.3 + pt) * 28 - Math.sin(x * 0.027 + 0.9) * 15);
   }
   ctx.lineTo(W, H);
   ctx.closePath();
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Ground base plate
+  // Ground plate
   ctx.fillStyle = '#060810';
-  ctx.globalAlpha = 0.85;
+  ctx.globalAlpha = 0.90;
   ctx.fillRect(0, H - 50, W, 50);
   ctx.globalAlpha = 1;
 
-  // City / military base buildings
+  // City buildings
   var buildings = [
-    { x: 12, w: 20, h: 35 },
-    { x: 36, w: 16, h: 44 },
-    { x: 58, w: 14, h: 26 },
-    { x: 76, w: 22, h: 52 },
-    { x: 104, w: 16, h: 32 },
-    { x: 126, w: 24, h: 40 },
-    { x: 156, w: 14, h: 24 },
-    { x: 176, w: 18, h: 42 },
-    { x: 200, w: 20, h: 34 },
-    { x: 226, w: 16, h: 50 },
-    { x: 248, w: 14, h: 28 },
-    { x: 268, w: 20, h: 38 },
-    { x: 294, w: 16, h: 30 },
-    { x: 316, w: 22, h: 44 },
-    { x: 342, w: 14, h: 36 }
+    { x: 12, w: 20, h: 35 }, { x: 36, w: 16, h: 44 }, { x: 58, w: 14, h: 26 },
+    { x: 76, w: 22, h: 52 }, { x: 104, w: 16, h: 32 }, { x: 126, w: 24, h: 40 },
+    { x: 156, w: 14, h: 24 }, { x: 176, w: 18, h: 42 }, { x: 200, w: 20, h: 34 },
+    { x: 226, w: 16, h: 50 }, { x: 248, w: 14, h: 28 }, { x: 268, w: 20, h: 38 },
+    { x: 294, w: 16, h: 30 }, { x: 316, w: 22, h: 44 }, { x: 342, w: 14, h: 36 }
   ];
-
   ctx.fillStyle = '#060810';
-  ctx.globalAlpha = 0.90;
+  ctx.globalAlpha = 0.92;
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
     ctx.fillRect(b.x, H - 50 - b.h, b.w, b.h);
   }
   ctx.globalAlpha = 1;
 
-  // Antenna towers on tall buildings
+  // Antenna towers
   ctx.fillStyle = '#080812';
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 0.94;
   ctx.fillRect(76 + 8, H - 50 - 52 - 20, 3, 20);
   ctx.fillRect(76 + 5, H - 50 - 52 - 12, 9, 3);
-
   ctx.fillRect(226 + 6, H - 50 - 50 - 16, 3, 16);
   ctx.fillRect(226 + 3, H - 50 - 50 - 9, 9, 3);
-
   ctx.fillRect(316 + 9, H - 50 - 44 - 18, 3, 18);
   ctx.fillRect(316 + 6, H - 50 - 44 - 11, 9, 3);
   ctx.globalAlpha = 1;
 
-  // Special silhouettes (dome + irregular structure)
+  // Special structures (dome + damaged building)
   ctx.globalAlpha = 0.92;
   ctx.fillStyle = '#060810';
-  // Military dome/bunker
   ctx.beginPath();
   ctx.arc(145, H - 50, 22, Math.PI, 0);
-  ctx.fillRect(145 - 22, H - 52, 44, 4);
   ctx.fill();
-  // Irregular damaged building
+  ctx.fillRect(145 - 22, H - 52, 44, 4);
   ctx.fillRect(290, H - 50 - 32, 8, 32);
   ctx.fillRect(290, H - 50 - 38, 20, 8);
   ctx.fillRect(298, H - 50 - 42, 6, 42);
@@ -121,8 +167,8 @@ function drawEarthBackground(ctx, time) {
   ctx.fillRect(316, H - 50 - 30, 5, 30);
   ctx.globalAlpha = 1;
 
-  // Building windows (deterministic on/off pattern)
-  ctx.globalAlpha = 0.24;
+  // Windows (deterministic pattern)
+  ctx.globalAlpha = 0.22;
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
     if (b.w < 13) continue;
@@ -132,160 +178,670 @@ function drawEarthBackground(ctx, time) {
       var lit = ((i + r) % 3 !== 0);
       ctx.fillStyle = lit ? '#ff9930' : '#331100';
       ctx.fillRect(b.x + 3, wy, 3, 2);
-      if (b.w > 16) {
-        ctx.fillRect(b.x + b.w / 2 - 1.5, wy, 3, 2);
-      }
+      if (b.w > 16) ctx.fillRect(b.x + b.w / 2 - 1.5, wy, 3, 2);
       ctx.fillRect(b.x + b.w - 6, wy, 3, 2);
     }
   }
   ctx.globalAlpha = 1;
 
-  // Subtle upper haze to soften stars over Earth (no tocar sistema global)
+  // Rooftop alert lights — blink red (level 2+)
+  if (lv >= 2) {
+    var blink = Math.max(0, 0.28 + Math.sin(time * 0.0032) * 0.28) * 0.45;
+    ctx.fillStyle = '#ff2200';
+    ctx.globalAlpha = blink;
+    ctx.fillRect(76 + 9, H - 50 - 52 - 3, 3, 2);
+    ctx.fillRect(226 + 7, H - 50 - 50 - 3, 3, 2);
+    if (lv >= 3) ctx.fillRect(316 + 10, H - 50 - 44 - 3, 3, 2);
+    ctx.globalAlpha = 1;
+  }
+
+  // Smoke columns rising from damaged buildings (level 4+)
+  if (lv >= 4) {
+    var cols = Math.min(lv - 2, 3);
+    var colX = [58, 176, 248];
+    for (var ci = 0; ci < cols; ci++) {
+      var cspd = time * (0.00028 + ci * 0.00008);
+      for (var p = 0; p < 6; p++) {
+        var py = H - 50 - ((cspd * 28 + p * 22) % 140);
+        var pa = 0.05 * (1 - (H - 50 - py) / 140);
+        ctx.fillStyle = '#886655';
+        ctx.globalAlpha = Math.max(0, pa);
+        ctx.beginPath();
+        ctx.arc(colX[ci] + Math.sin(cspd + p * 0.8) * 5, py, 8 + p * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Upper atmospheric haze
   ctx.globalAlpha = 0.04;
   ctx.fillStyle = '#04080c';
-  ctx.fillRect(0, 0, W, H * 0.62);
+  ctx.fillRect(0, 0, W, H * 0.60);
   ctx.globalAlpha = 1;
 
-  // Low smoke clouds (moving horizontally, deterministic, parallax leve)
-  ctx.globalAlpha = 0.05;
+  // Low smoke layer 1
+  ctx.globalAlpha = 0.06;
   ctx.fillStyle = '#777766';
-  var smokeSpeed = time * 0.00012;
+  var ss1 = time * 0.00012;
   for (var s = 0; s < 5; s++) {
-    var sx = ((s * 74 + 10 + smokeSpeed * (19 + s * 8)) % (W + 90)) - 45;
+    var sx = ((s * 74 + 10 + ss1 * (19 + s * 8)) % (W + 90)) - 45;
     var sy = H - 96 - s * 8;
     ctx.beginPath();
     ctx.ellipse(sx, sy, 26 + s * 5, 12 + s * 1.5, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // Second smoke layer (warmer tone, different speed, parallax leve)
-  ctx.globalAlpha = 0.035;
+  // Low smoke layer 2 (warmer)
+  ctx.globalAlpha = 0.04;
   ctx.fillStyle = '#996644';
-  var smokeSpeed2 = time * 0.00016;
+  var ss2 = time * 0.00016;
   for (var s = 0; s < 4; s++) {
-    var sx2 = ((s * 88 + 55 + smokeSpeed2 * (25 - s * 5)) % (W + 100)) - 50;
+    var sx2 = ((s * 88 + 55 + ss2 * (25 - s * 5)) % (W + 100)) - 50;
     var sy2 = H - 78 - s * 5;
     ctx.beginPath();
     ctx.ellipse(sx2, sy2, 32 + s * 3, 15 + s, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-
   ctx.globalAlpha = 1;
 }
 
-function drawAtmosphereBackground(ctx, time) {
+// ---- ATMOSPHERE BACKGROUND (Levels 6-10): Breaking through the clouds ----
+function drawAtmosphereBackground(ctx, time, lv) {
+  lv = lv || 6;
+  var t = time;
+
+  // Deep space-to-atmosphere gradient
   var grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#010818');
-  grad.addColorStop(0.45, '#021830');
-  grad.addColorStop(0.7, '#0a3050');
-  grad.addColorStop(0.9, '#0e4a6a');
+  grad.addColorStop(0.35, '#021a2e');
+  grad.addColorStop(0.62, '#093050');
+  grad.addColorStop(0.82, '#0e4a6a');
   grad.addColorStop(1, '#0a3858');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
+  // Aurora bands — northern lights shimmer (level 6-7)
+  if (lv <= 7) {
+    var auroraAlpha = 0.035 - (lv - 6) * 0.012;
+    var aColors = ['#00ff88', '#00ccff', '#8844ff'];
+    for (var a = 0; a < 3; a++) {
+      var aY = H * 0.12 + a * H * 0.09;
+      var aWave = Math.sin(t * 0.0004 + a * 1.4) * 18;
+      var aG = ctx.createLinearGradient(0, aY + aWave - 12, 0, aY + aWave + 12);
+      aG.addColorStop(0, 'transparent');
+      aG.addColorStop(0.5, aColors[a]);
+      aG.addColorStop(1, 'transparent');
+      ctx.fillStyle = aG;
+      ctx.globalAlpha = auroraAlpha + Math.sin(t * 0.0006 + a * 2.1) * 0.012;
+      // Wavy horizontal band
+      ctx.beginPath();
+      ctx.moveTo(0, aY + aWave);
+      for (var ax = 0; ax <= W; ax += 8) {
+        ctx.lineTo(ax, aY + Math.sin(ax * 0.022 + t * 0.0005 + a) * 14 + aWave);
+      }
+      ctx.lineTo(W, aY + aWave + 24);
+      ctx.lineTo(0, aY + aWave + 24);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Planet horizon curve at bottom (large arc — we are flying above atmosphere)
+  var pCY = H + 260 - (lv - 6) * 18;
+  var pR = 310 + (lv - 6) * 12;
+  var horizG = ctx.createRadialGradient(W / 2, pCY, pR - 28, W / 2, pCY, pR + 8);
+  horizG.addColorStop(0, 'rgba(30,100,160,0.18)');
+  horizG.addColorStop(0.6, 'rgba(15,70,110,0.08)');
+  horizG.addColorStop(1, 'transparent');
+  ctx.fillStyle = horizG;
+  ctx.globalAlpha = 1;
+  ctx.fillRect(0, 0, W, H);
+
+  // Atmosphere limb glow (bright blue-white edge)
+  ctx.globalAlpha = 0.09;
+  ctx.strokeStyle = '#60b8e8';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(W / 2, pCY, pR, Math.PI + 0.25, Math.PI * 2 - 0.25);
+  ctx.stroke();
   ctx.globalAlpha = 0.04;
-  ctx.fillStyle = '#4a8aaa';
-  for (var b = 0; b < 4; b++) {
-    var by = H * 0.55 + b * H * 0.1 + Math.sin(time * 0.0005 + b) * 6;
-    ctx.fillRect(0, by, W, Math.max(1, H * 0.04));
+  ctx.strokeStyle = '#a0d8ff';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(W / 2, pCY, pR, Math.PI + 0.28, Math.PI * 2 - 0.28);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.lineWidth = 1;
+
+  // Cloud bands — multiple parallax layers
+  var cloudColors = ['rgba(200,220,240,1)', 'rgba(160,190,220,1)', 'rgba(120,160,200,1)', 'rgba(80,130,180,1)'];
+  for (var c = 0; c < 4; c++) {
+    var cY = H * 0.50 + c * H * 0.11;
+    var cSpd = t * (0.00028 + c * 0.00010);
+    var cH = 18 + c * 6;
+    ctx.globalAlpha = 0.05 + c * 0.012;
+    ctx.fillStyle = cloudColors[c];
+    // Draw cloud band as wavy strip
+    ctx.beginPath();
+    ctx.moveTo(-10, cY);
+    for (var cx = -10; cx <= W + 10; cx += 6) {
+      ctx.lineTo(cx, cY + Math.sin(cx * 0.018 + cSpd + c * 1.2) * (cH * 0.4));
+    }
+    for (var cx = W + 10; cx >= -10; cx -= 6) {
+      ctx.lineTo(cx, cY + cH + Math.sin(cx * 0.022 + cSpd * 0.7 + c) * (cH * 0.3));
+    }
+    ctx.closePath();
+    ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  // Storm cell/turbulence glow (level 8+)
+  if (lv >= 8) {
+    var stormAlpha = (lv - 7) * 0.018;
+    for (var st = 0; st < 2; st++) {
+      var stX = W * (0.28 + st * 0.44);
+      var stY = H * (0.62 + st * 0.08);
+      var stG = ctx.createRadialGradient(stX, stY, 0, stX, stY, 48 + st * 20);
+      stG.addColorStop(0, 'rgba(100,160,220,' + stormAlpha + ')');
+      stG.addColorStop(1, 'transparent');
+      ctx.fillStyle = stG;
+      ctx.fillRect(stX - 70, stY - 70, 140, 140);
+    }
+
+    // Lightning flashes in storm cells
+    var lFlash = Math.sin(t * 0.0038 + 1.7);
+    if (lFlash > 0.90) {
+      var lA = (lFlash - 0.90) / 0.10 * 0.12;
+      ctx.globalAlpha = lA;
+      ctx.fillStyle = '#c0e8ff';
+      ctx.fillRect(W * 0.15, H * 0.55, W * 0.7, H * 0.2);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // High-altitude debris/ice crystals streaking (level 9+)
+  if (lv >= 9) {
+    ctx.globalAlpha = 0.06;
+    ctx.strokeStyle = '#88ccee';
+    ctx.lineWidth = 1;
+    for (var d = 0; d < 5; d++) {
+      var dT = (t * (0.00018 + d * 0.00004) + d * 0.19) % 1;
+      var dX = (d * 73 + dT * (W + 40)) % (W + 40) - 20;
+      var dY = H * (0.22 + d * 0.08);
+      ctx.beginPath();
+      ctx.moveTo(dX, dY);
+      ctx.lineTo(dX - 12 - d * 3, dY + 4);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+  }
+
+  // Level 10 energy grid (approaching orbit)
+  if (lv >= 10) {
+    ctx.globalAlpha = 0.025;
+    ctx.strokeStyle = '#4488cc';
+    ctx.lineWidth = 1;
+    var gSpd = t * 0.0002;
+    for (var g = 0; g < 5; g++) {
+      var gY = (H * 0.4 + g * H * 0.14 + gSpd * 60) % H;
+      ctx.beginPath();
+      ctx.moveTo(0, gY);
+      ctx.lineTo(W, gY);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+  }
 }
 
-function drawOrbitBackground(ctx, time) {
+// ---- ORBIT BACKGROUND (Levels 11-15): Space above the planet, orbital war ----
+function drawOrbitBackground(ctx, time, lv) {
+  lv = lv || 11;
+  var t = time;
+
+  // Deep space base
   var grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#010412');
-  grad.addColorStop(0.5, '#020c1c');
-  grad.addColorStop(0.8, '#031830');
-  grad.addColorStop(1, '#0a2848');
+  grad.addColorStop(0.45, '#020b1c');
+  grad.addColorStop(0.78, '#031828');
+  grad.addColorStop(1, '#051e34');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  var rimGrad = ctx.createLinearGradient(0, H * 0.65, 0, H);
-  rimGrad.addColorStop(0, 'transparent');
-  rimGrad.addColorStop(0.4, '#1a5588');
-  rimGrad.addColorStop(1, '#0d3a5c');
-  ctx.globalAlpha = 0.12;
-  ctx.fillStyle = rimGrad;
-  ctx.fillRect(0, H * 0.65, W, H * 0.35);
+  // Planet body — large sphere occupying lower portion
+  var pCY = H + 320 - (lv - 11) * 20;
+  var pRad = 340 + (lv - 11) * 15;
 
-  ctx.globalAlpha = 0.06;
-  ctx.strokeStyle = '#4a8abb';
-  ctx.lineWidth = 2;
+  // Planet surface glow (outer halo)
+  var pOuter = ctx.createRadialGradient(W / 2, pCY, pRad - 40, W / 2, pCY, pRad + 30);
+  pOuter.addColorStop(0, 'rgba(20,80,140,0.14)');
+  pOuter.addColorStop(0.5, 'rgba(10,50,90,0.06)');
+  pOuter.addColorStop(1, 'transparent');
+  ctx.fillStyle = pOuter;
+  ctx.fillRect(0, 0, W, H);
+
+  // Planet disc (filled)
+  var pDisc = ctx.createRadialGradient(W / 2 - 60, pCY - 80, 40, W / 2, pCY, pRad);
+  pDisc.addColorStop(0, '#1a5080');
+  pDisc.addColorStop(0.35, '#0e3a60');
+  pDisc.addColorStop(0.7, '#082840');
+  pDisc.addColorStop(1, '#041020');
+  ctx.fillStyle = pDisc;
+  ctx.globalAlpha = 0.20;
   ctx.beginPath();
-  ctx.arc(W / 2, H + 200, 320, Math.PI + 0.15, Math.PI * 2 - 0.15);
-  ctx.stroke();
+  ctx.arc(W / 2, pCY, pRad, 0, Math.PI * 2);
+  ctx.fill();
   ctx.globalAlpha = 1;
+
+  // Planet cloud bands (slowly rotating)
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(W / 2, pCY, pRad, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.globalAlpha = 0.06;
+  var bandColors = ['#3080c0', '#204870', '#285898', '#183860'];
+  for (var b = 0; b < 4; b++) {
+    var bY = pCY - pRad * 0.6 + b * pRad * 0.38;
+    var bOff = Math.sin(t * 0.00008 + b * 1.3) * 14;
+    ctx.fillStyle = bandColors[b];
+    ctx.fillRect(0, bY + bOff, W, pRad * 0.15);
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  // Atmosphere rim (bright edge of planet)
+  ctx.globalAlpha = 0.12;
+  ctx.strokeStyle = '#4aaae8';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(W / 2, pCY, pRad, Math.PI + 0.18, Math.PI * 2 - 0.18);
+  ctx.stroke();
+  ctx.globalAlpha = 0.05;
+  ctx.strokeStyle = '#8ed4ff';
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.arc(W / 2, pCY, pRad, Math.PI + 0.22, Math.PI * 2 - 0.22);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 1;
+
+  // Orbital debris ring (level 12+)
+  if (lv >= 12) {
+    var ringAlpha = (lv - 11) * 0.012;
+    ctx.globalAlpha = ringAlpha;
+    ctx.strokeStyle = '#607080';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(W / 2, pCY, pRad + 55, 28, 0, Math.PI + 0.05, Math.PI * 2 - 0.05);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 1;
+
+    // Debris particles in ring
+    ctx.globalAlpha = ringAlpha * 0.6;
+    ctx.fillStyle = '#8090a0';
+    for (var d = 0; d < 12; d++) {
+      var dAngle = (d / 12) * Math.PI + t * 0.00003 * (d % 2 === 0 ? 1 : -0.7);
+      var dRx = pRad + 40 + Math.sin(d * 1.7) * 20;
+      var dRy = 22 + Math.sin(d * 0.8) * 8;
+      var dX = W / 2 + Math.cos(dAngle) * dRx;
+      var dY = pCY + Math.sin(dAngle) * dRy;
+      if (dY < pCY) {
+        ctx.fillRect(dX - 1, dY - 1, 2 + (d % 3), 2);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Satellite/station silhouettes drifting across (level 11+)
+  var satCount = Math.min(lv - 10, 3);
+  for (var sa = 0; sa < satCount; sa++) {
+    var saT = (t * (0.000055 + sa * 0.000018) + sa * 0.31) % 1;
+    var saX = saT * (W + 60) - 30;
+    var saY = H * (0.18 + sa * 0.12);
+    ctx.globalAlpha = 0.06 + sa * 0.01;
+    ctx.fillStyle = '#708090';
+    // Satellite body
+    ctx.fillRect(saX - 5, saY - 3, 10, 6);
+    // Solar panels
+    ctx.fillRect(saX - 16, saY - 1, 10, 2);
+    ctx.fillRect(saX + 6, saY - 1, 10, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Battle flashes — orbital bombardment (level 13+)
+  if (lv >= 13) {
+    for (var bf = 0; bf < lv - 12; bf++) {
+      var bfX = W * (0.2 + bf * 0.3);
+      var bfY = H * (0.25 + bf * 0.12);
+      var bfP = Math.sin(t * 0.0025 + bf * 3.1 + bf * bf * 0.4);
+      if (bfP > 0.88) {
+        var bfA = (bfP - 0.88) / 0.12 * 0.09;
+        var bfG = ctx.createRadialGradient(bfX, bfY, 0, bfX, bfY, 22);
+        bfG.addColorStop(0, 'rgba(255,180,60,' + bfA + ')');
+        bfG.addColorStop(1, 'transparent');
+        ctx.fillStyle = bfG;
+        ctx.fillRect(bfX - 26, bfY - 26, 52, 52);
+      }
+    }
+  }
+
+  // Space station/mega structure silhouette (level 14-15)
+  if (lv >= 14) {
+    var ssAlpha = (lv - 13) * 0.028;
+    ctx.globalAlpha = ssAlpha;
+    ctx.fillStyle = '#303848';
+    // Station body
+    ctx.fillRect(W * 0.62, H * 0.08, 40, 16);
+    ctx.fillRect(W * 0.67, H * 0.06, 12, 24);
+    // Docking arms
+    ctx.fillRect(W * 0.60, H * 0.13, 8, 3);
+    ctx.fillRect(W * 0.72, H * 0.13, 8, 3);
+    // Antenna array
+    ctx.fillRect(W * 0.685, H * 0.04, 2, 14);
+    ctx.fillRect(W * 0.680, H * 0.05, 12, 1);
+    // Station glow
+    var ssG = ctx.createRadialGradient(W * 0.67, H * 0.12, 0, W * 0.67, H * 0.12, 30);
+    ssG.addColorStop(0, 'rgba(80,160,255,0.12)');
+    ssG.addColorStop(1, 'transparent');
+    ctx.fillStyle = ssG;
+    ctx.fillRect(W * 0.58, H * 0.04, 60, 24);
+    ctx.globalAlpha = 1;
+  }
 }
 
-function drawDeepSpaceBackground(ctx, time) {
+// ---- DEEP SPACE BACKGROUND (Levels 16-19): The void between galaxies ----
+function drawDeepSpaceBackground(ctx, time, lv) {
+  lv = lv || 16;
+  var t = time;
+
+  // True void — near-black with subtle tint shift per level
+  var voidColors = ['#030210', '#040218', '#060218', '#080218'];
   var grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#030210');
-  grad.addColorStop(0.3, '#060318');
-  grad.addColorStop(0.6, '#0a0418');
+  grad.addColorStop(0, voidColors[lv - 16] || '#030210');
+  grad.addColorStop(0.4, '#060318');
+  grad.addColorStop(0.75, '#090418');
   grad.addColorStop(1, '#100818');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.globalAlpha = 0.025;
-  ctx.fillStyle = '#4a1030';
+  // Large nebula cloud — main feature (behind everything)
+  // Nebula 1: crimson/magenta (far left)
+  ctx.globalAlpha = 0.030 + (lv - 16) * 0.005;
+  ctx.fillStyle = '#5a1035';
   ctx.beginPath();
-  ctx.ellipse(W * 0.25, H * 0.35, 80 + Math.sin(time * 0.0003) * 10, 60, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.22, H * 0.38, 90 + Math.sin(t * 0.00028) * 12, 65, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.018;
+  ctx.fillStyle = '#8a1848';
+  ctx.beginPath();
+  ctx.ellipse(W * 0.18, H * 0.30, 55 + Math.sin(t * 0.00035) * 8, 38, 0.2, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = 0.02;
-  ctx.fillStyle = '#2a1040';
+  // Nebula 2: deep blue/indigo (right side)
+  ctx.globalAlpha = 0.025 + (lv - 16) * 0.004;
+  ctx.fillStyle = '#1a1060';
   ctx.beginPath();
-  ctx.ellipse(W * 0.72, H * 0.55, 70 + Math.sin(time * 0.0004) * 12, 50, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.75, H * 0.55, 82 + Math.sin(t * 0.00032) * 10, 58, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.015;
+  ctx.fillStyle = '#2820a0';
+  ctx.beginPath();
+  ctx.ellipse(W * 0.80, H * 0.48, 48, 32, -0.2, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = 0.03;
-  ctx.fillStyle = '#301020';
+  // Nebula 3: teal/cyan wisp (center-top)
+  ctx.globalAlpha = 0.020;
+  ctx.fillStyle = '#083848';
   ctx.beginPath();
-  ctx.ellipse(W * 0.5, H * 0.25, 100, 40, 0, 0, Math.PI * 2);
+  ctx.ellipse(W * 0.50, H * 0.20, 110, 38, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.globalAlpha = 0.04 + Math.sin(time * 0.0008) * 0.015;
-  ctx.fillStyle = '#4a2008';
-  ctx.fillRect(0, 0, W * 0.08, H);
-  ctx.fillRect(W * 0.92, 0, W * 0.08, H);
+  // Nebula wisps — thin streaks drifting
+  ctx.globalAlpha = 0.012;
+  ctx.fillStyle = '#3a1850';
+  for (var w = 0; w < 3; w++) {
+    var wX = W * (0.15 + w * 0.32);
+    var wY = H * (0.42 + w * 0.12) + Math.sin(t * 0.0002 + w * 1.8) * 10;
+    ctx.beginPath();
+    ctx.ellipse(wX, wY, 60 + w * 20, 8 + w * 3, 0.1 + w * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
+  // Distant galaxy smudge (level 17+)
+  if (lv >= 17) {
+    var gA = (lv - 16) * 0.008;
+    ctx.globalAlpha = gA;
+    ctx.fillStyle = '#f8f0e0';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.85, H * 0.10, 22, 8, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = gA * 0.5;
+    ctx.fillStyle = '#c8b890';
+    ctx.beginPath();
+    ctx.ellipse(W * 0.85, H * 0.10, 34, 12, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Star cluster — dense patch in nebula
+  ctx.globalAlpha = 0.04 + (lv - 16) * 0.008;
+  ctx.fillStyle = '#dde8ff';
+  for (var sc = 0; sc < 18; sc++) {
+    var scX = W * 0.22 + Math.sin(sc * 2.3) * 45;
+    var scY = H * 0.28 + Math.cos(sc * 1.7) * 35;
+    var scR = 0.6 + (sc % 3) * 0.4;
+    ctx.beginPath();
+    ctx.arc(scX, scY, scR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Shooting stars (frequent in deep space)
+  for (var ss = 0; ss < 3; ss++) {
+    var ssPeriod = 3200 + ss * 1800;
+    var ssT = (t + ss * 1200) % ssPeriod;
+    var ssProgress = ssT / ssPeriod;
+    if (ssProgress < 0.06) {
+      var ssA = ssProgress < 0.03 ? ssProgress / 0.03 : (0.06 - ssProgress) / 0.03;
+      var ssX = (ss * W * 0.33 + ssProgress * W * 0.55) % W;
+      var ssY = H * (0.05 + ss * 0.12) + ssProgress * H * 0.18;
+      ctx.globalAlpha = ssA * 0.55;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(ssX, ssY);
+      ctx.lineTo(ssX - 22, ssY - 8);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Energy tendrils / cosmic wisps (level 18+)
+  if (lv >= 18) {
+    var tendrilAlpha = (lv - 17) * 0.022;
+    ctx.globalAlpha = tendrilAlpha;
+    ctx.strokeStyle = '#4020c0';
+    ctx.lineWidth = 1;
+    for (var td = 0; td < 4; td++) {
+      var tdX = W * (0.1 + td * 0.24);
+      var tdPhase = t * 0.0003 + td * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(tdX, H * 0.3);
+      for (var tp = 0; tp < 6; tp++) {
+        var tpX = tdX + Math.sin(tdPhase + tp * 0.9) * (12 + tp * 4);
+        var tpY = H * 0.3 + tp * H * 0.08;
+        ctx.lineTo(tpX, tpY);
+      }
+      ctx.stroke();
+    }
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 1;
+  }
+
+  // Galactic core glow bleeding in from the side (level 19 only)
+  if (lv >= 19) {
+    var coreG = ctx.createLinearGradient(0, 0, W * 0.45, 0);
+    coreG.addColorStop(0, 'rgba(255,180,60,0.04)');
+    coreG.addColorStop(0.5, 'rgba(255,120,40,0.02)');
+    coreG.addColorStop(1, 'transparent');
+    ctx.fillStyle = coreG;
+    ctx.fillRect(0, 0, W, H);
+
+    // Core light pulse
+    var cPulse = 0.5 + Math.sin(t * 0.0009) * 0.5;
+    var cG2 = ctx.createRadialGradient(0, H * 0.5, 0, 0, H * 0.5, 130);
+    cG2.addColorStop(0, 'rgba(255,200,80,' + (0.04 + cPulse * 0.03) + ')');
+    cG2.addColorStop(1, 'transparent');
+    ctx.fillStyle = cG2;
+    ctx.fillRect(0, H * 0.2, 140, H * 0.6);
+  }
+
+  // Edge vignettes (darkness closing in)
+  var vigA = 0.05 + Math.sin(t * 0.0007) * 0.018;
+  ctx.globalAlpha = vigA;
+  ctx.fillStyle = '#200820';
+  ctx.fillRect(0, 0, W * 0.07, H);
+  ctx.fillRect(W * 0.93, 0, W * 0.07, H);
   ctx.globalAlpha = 1;
 }
 
-function drawImperialBackground(ctx, time) {
+// ---- IMPERIAL BACKGROUND (Level 20+): Heart of the enemy empire ----
+function drawImperialBackground(ctx, time, lv) {
+  lv = lv || 20;
+  var t = time;
+  var pulse = 0.5 + Math.sin(t * 0.0016) * 0.5;
+  var pulse2 = 0.5 + Math.sin(t * 0.0024 + 1.4) * 0.5;
+
+  // Deep imperial void
   var grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#040208');
-  grad.addColorStop(0.5, '#060410');
-  grad.addColorStop(1, '#0a0410');
+  grad.addColorStop(0.35, '#06040e');
+  grad.addColorStop(0.68, '#080412');
+  grad.addColorStop(1, '#0c0414');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  var glowGrad = ctx.createLinearGradient(0, H * 0.5, 0, H);
-  glowGrad.addColorStop(0, 'transparent');
-  glowGrad.addColorStop(1, 'rgba(80, 10, 10, 0.12)');
-  ctx.fillStyle = glowGrad;
-  ctx.fillRect(0, H * 0.5, W, H * 0.5);
+  // Deep red underlay — power source glow from beneath
+  var redG = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  redG.addColorStop(0, 'transparent');
+  redG.addColorStop(0.5, 'rgba(90,8,8,0.14)');
+  redG.addColorStop(1, 'rgba(60,4,4,0.20)');
+  ctx.fillStyle = redG;
+  ctx.fillRect(0, H * 0.55, W, H * 0.45);
 
-  var pillarPulse = 0.5 + Math.sin(time * 0.0015) * 0.5;
-  ctx.globalAlpha = 0.05 + pillarPulse * 0.04;
-  ctx.fillStyle = '#ffd700';
-  ctx.fillRect(8, 0, 3, H);
-  ctx.fillRect(W - 11, 0, 3, H);
+  // Central power core radial glow (pulsing)
+  var coreG = ctx.createRadialGradient(W / 2, H * 0.82, 0, W / 2, H * 0.82, 180);
+  coreG.addColorStop(0, 'rgba(200,10,10,' + (0.06 + pulse * 0.05) + ')');
+  coreG.addColorStop(0.4, 'rgba(120,6,6,' + (0.03 + pulse * 0.02) + ')');
+  coreG.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreG;
+  ctx.fillRect(0, H * 0.4, W, H * 0.6);
 
-  ctx.globalAlpha = 0.03 + pillarPulse * 0.025;
-  ctx.fillStyle = '#8a2020';
-  ctx.fillRect(14, 0, 2, H);
-  ctx.fillRect(W - 16, 0, 2, H);
-
-  ctx.globalAlpha = 0.04 + pillarPulse * 0.03;
-  var topGlow = ctx.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, 160);
-  topGlow.addColorStop(0, '#ffd700');
-  topGlow.addColorStop(1, 'transparent');
-  ctx.fillStyle = topGlow;
-  ctx.fillRect(0, 0, W, H * 0.6);
-
+  // Imperial architecture lines — massive vertical pylons
+  var pylonPairs = [
+    { x: 6, w: 5 }, { x: W - 11, w: 5 },
+    { x: 16, w: 3 }, { x: W - 19, w: 3 },
+    { x: 28, w: 2 }, { x: W - 30, w: 2 }
+  ];
+  for (var py = 0; py < pylonPairs.length; py++) {
+    var pp = pylonPairs[py];
+    var pyA = 0.05 + pulse * 0.045 - py * 0.008;
+    ctx.globalAlpha = Math.max(0.01, pyA);
+    ctx.fillStyle = py < 2 ? '#ffd700' : (py < 4 ? '#cc8800' : '#884400');
+    ctx.fillRect(pp.x, 0, pp.w, H);
+  }
   ctx.globalAlpha = 1;
+
+  // Pylon glow halos (inner glow on main pillars)
+  ctx.globalAlpha = 0.03 + pulse * 0.02;
+  var pylonGlowL = ctx.createLinearGradient(0, 0, 40, 0);
+  pylonGlowL.addColorStop(0, '#ffd700');
+  pylonGlowL.addColorStop(1, 'transparent');
+  ctx.fillStyle = pylonGlowL;
+  ctx.fillRect(0, 0, 40, H);
+  var pylonGlowR = ctx.createLinearGradient(W, 0, W - 40, 0);
+  pylonGlowR.addColorStop(0, '#ffd700');
+  pylonGlowR.addColorStop(1, 'transparent');
+  ctx.fillStyle = pylonGlowR;
+  ctx.fillRect(W - 40, 0, 40, H);
+  ctx.globalAlpha = 1;
+
+  // Imperial arch structure top (crown of the palace/station)
+  ctx.globalAlpha = 0.06 + pulse2 * 0.04;
+  var archG = ctx.createRadialGradient(W / 2, -30, 0, W / 2, -30, 200);
+  archG.addColorStop(0, '#ffd700');
+  archG.addColorStop(0.5, '#aa6600');
+  archG.addColorStop(1, 'transparent');
+  ctx.fillStyle = archG;
+  ctx.fillRect(0, 0, W, H * 0.45);
+  ctx.globalAlpha = 1;
+
+  // Energy conduits — horizontal power lines
+  var conduitCount = 5;
+  for (var ec = 0; ec < conduitCount; ec++) {
+    var ecY = H * (0.15 + ec * 0.16);
+    var ecPhase = Math.sin(t * 0.0008 + ec * 1.2) * 0.5 + 0.5;
+    ctx.globalAlpha = 0.025 + ecPhase * 0.018;
+    ctx.fillStyle = ec % 2 === 0 ? '#ffd700' : '#cc4400';
+    ctx.fillRect(20, ecY, W - 40, 1);
+    // Pulse dot traveling along conduit
+    var dotPos = (t * 0.00012 + ec * 0.2) % 1;
+    var dotX = 20 + dotPos * (W - 40);
+    ctx.globalAlpha = 0.08 + ecPhase * 0.04;
+    ctx.fillRect(dotX - 2, ecY - 1, 4, 3);
+  }
+  ctx.globalAlpha = 1;
+
+  // Weapon charge ring (pulsing circles — power surge)
+  for (var wr = 0; wr < 3; wr++) {
+    var wrPhase = (t * 0.0005 + wr * 0.33) % 1;
+    var wrR = wrPhase * 120;
+    var wrA = (1 - wrPhase) * 0.04;
+    ctx.globalAlpha = wrA;
+    ctx.strokeStyle = '#ff4400';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(W / 2, H * 0.85, wrR, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 1;
+
+  // Imperial sigil / hex pattern (subtle overlay)
+  ctx.globalAlpha = 0.016 + pulse * 0.008;
+  ctx.strokeStyle = '#cc6600';
+  ctx.lineWidth = 1;
+  var hexCX = W / 2, hexCY = H * 0.42, hexR = 50;
+  ctx.beginPath();
+  for (var h6 = 0; h6 < 6; h6++) {
+    var h6a = (h6 / 6) * Math.PI * 2 - Math.PI / 6;
+    var h6x = hexCX + Math.cos(h6a) * hexR;
+    var h6y = hexCY + Math.sin(h6a) * hexR;
+    h6 === 0 ? ctx.moveTo(h6x, h6y) : ctx.lineTo(h6x, h6y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 1;
+
+  // Battle scarring flashes in the sky (emperor's last stand)
+  for (var ef = 0; ef < 3; ef++) {
+    var efP = Math.sin(t * 0.0028 + ef * 2.3);
+    if (efP > 0.86) {
+      var efA = (efP - 0.86) / 0.14 * 0.07;
+      var efX = W * (0.25 + ef * 0.25);
+      var efY = H * (0.20 + ef * 0.08);
+      var efG = ctx.createRadialGradient(efX, efY, 0, efX, efY, 28);
+      efG.addColorStop(0, 'rgba(255,120,30,' + efA + ')');
+      efG.addColorStop(1, 'transparent');
+      ctx.fillStyle = efG;
+      ctx.fillRect(efX - 32, efY - 32, 64, 64);
+    }
+  }
 }
 
 function drawThemedBackground(ctx, levelNum, time) {
@@ -294,12 +850,12 @@ function drawThemedBackground(ctx, levelNum, time) {
   var theme = getBackgroundThemeForLevel(levelNum);
 
   switch (theme) {
-    case 'earth':      drawEarthBackground(ctx, time);      break;
-    case 'atmosphere': drawAtmosphereBackground(ctx, time); break;
-    case 'orbit':      drawOrbitBackground(ctx, time);      break;
-    case 'deepSpace':  drawDeepSpaceBackground(ctx, time);  break;
-    case 'imperial':   drawImperialBackground(ctx, time);   break;
-    default:           drawEarthBackground(ctx, time);      break;
+    case 'earth':      drawEarthBackground(ctx, time, levelNum);      break;
+    case 'atmosphere': drawAtmosphereBackground(ctx, time, levelNum); break;
+    case 'orbit':      drawOrbitBackground(ctx, time, levelNum);      break;
+    case 'deepSpace':  drawDeepSpaceBackground(ctx, time, levelNum);  break;
+    case 'imperial':   drawImperialBackground(ctx, time, levelNum);   break;
+    default:           drawEarthBackground(ctx, time, levelNum);      break;
   }
 
   if (isWarpMood) {
