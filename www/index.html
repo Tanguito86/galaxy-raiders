@@ -51,26 +51,44 @@
     </button>
 
      
-    <!-- CONTROLES MOVIL -->
+     <!-- CONTROLES MOVIL -->
     <div id="mobile-controls">
 
-      <!-- Joystick virtual -->
-      <div id="joystick-container">
-        <div id="joystick-base"></div>
-        <div id="joystick-stick"></div>
+      <!-- Control deck header / branding -->
+      <div class="control-deck-header">
+        <span class="control-deck-badge">&#9733;</span>
+        <span class="control-deck-logo">GALAXY RAIDERS</span>
+        <span class="control-deck-subtitle">CONTROL DECK</span>
+        <span class="control-deck-badge">&#9733;</span>
       </div>
 
-      <!-- Boton de pausa EN EL MEDIO -->
-      <button id="btn-pause" class="pause-btn-center" title="Pausar">&#10074;&#10074;</button>
+      <!-- Fila de controles -->
+      <div class="control-deck-row">
 
-      <button id="btn-mute" class="mute-btn" title="Silenciar">&#128266;</button>
+        <!-- Joystick virtual -->
+        <div id="joystick-container">
+          <div id="joystick-base"></div>
+          <div id="joystick-stick"></div>
+        </div>
 
-      <!-- Disparo -->
-      <button id="btn-fire"
-              class="fire"
-              aria-label="Disparar">
-        FIRE
-      </button>
+        <!-- Boton de pausa EN EL MEDIO -->
+        <button id="btn-pause" class="pause-btn-center" title="Pausar">&#10074;&#10074;</button>
+
+        <button id="btn-mute" class="mute-btn" title="Silenciar">&#128266;</button>
+
+        <button id="btn-debug-next-level"
+                class="debug-next-level-btn"
+                title="Debug: avanzar nivel">
+          +LVL
+        </button>
+
+        <!-- Disparo -->
+        <button id="btn-fire"
+                class="fire"
+                aria-label="Disparar">
+          FIRE
+        </button>
+      </div>
     </div>
   </div>
 

@@ -168,6 +168,8 @@ let extraLivesEarned = 0;
 // === SISTEMA DE CONTINUE ===
 let continueTimer = 0;
 let continueCount = 0;  // Cuántas veces usó continue
+let debugLevelJumpText = '';
+let debugLevelJumpTimer = 0;
 
 
 

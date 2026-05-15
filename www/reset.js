@@ -36,6 +36,8 @@ function resetProgressionState() {
   pendingNextLevel = false;
   levelClearTimer = 0;
   warpSpeed = 1;
+  debugLevelJumpText = '';
+  debugLevelJumpTimer = 0;
 }
 
 function startNewGameRun(initialLives) {

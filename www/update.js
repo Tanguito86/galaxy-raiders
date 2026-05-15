@@ -73,6 +73,8 @@ function update(dt) {
     }
   });
 
+  if (debugLevelJumpTimer > 0) debugLevelJumpTimer -= dt;
+
   if (pendingNextLevel) {
     levelClearTimer -= dt;
 

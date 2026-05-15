@@ -104,7 +104,8 @@ canvas {
 
 /* Base compartida */
 .pause-btn-center,
-.mute-btn {
+.mute-btn,
+.debug-next-level-btn {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -140,9 +141,22 @@ canvas {
   bottom: calc(var(--fire-center) - 35px);
 }
 
+.debug-next-level-btn {
+  bottom: calc(var(--fire-center) + 96px);
+  width: 62px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(124, 255, 107, 0.16);
+  border-color: #7cff6b;
+  color: #7cff6b;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+}
+
 /* Feedback al presionar */
 .pause-btn-center:active,
-.mute-btn:active {
+.mute-btn:active,
+.debug-next-level-btn:active {
   background: #00b4ff;
   color: #000;
 }
@@ -157,7 +171,8 @@ canvas {
 /* Solo dispositivos tactiles */
 @media (pointer: coarse) {
   .pause-btn-center,
-  .mute-btn {
+  .mute-btn,
+  .debug-next-level-btn {
     display: block;
   }
 }
@@ -437,7 +452,8 @@ body[data-theme="imperial"] #mobile-controls::before {
 }
 
 .pause-btn-center,
-.mute-btn {
+.mute-btn,
+.debug-next-level-btn {
   display: block !important;
 }
 

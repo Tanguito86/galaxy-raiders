@@ -287,6 +287,40 @@ if (muteBtn) {
   });
 }
 
+// TEMP DEBUG: quick level advance for background/story validation.
+// Remove before release.
+const debugNextLevelBtn = document.getElementById('btn-debug-next-level');
+
+function debugJumpToNextLevel() {
+  if (state !== 'playing' && state !== 'paused') return;
+  if (level >= 20) return;
+
+  state = 'playing';
+  pendingNextLevel = false;
+  levelClearTimer = 0;
+  boss.active = false;
+  enemies = [];
+  bullets = [];
+  enemyBullets = [];
+  powerUps = [];
+  mines = [];
+  satellites = [];
+  ufoRewards = [];
+
+  level++;
+  debugLevelJumpText = 'DEBUG LEVEL ' + level;
+  debugLevelJumpTimer = 1200;
+  startLevel();
+}
+
+if (debugNextLevelBtn) {
+  debugNextLevelBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    debugJumpToNextLevel();
+  });
+}
+
 
 
 
