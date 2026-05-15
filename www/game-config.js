@@ -76,7 +76,8 @@ window.GALAXY_CONFIG = {
     showHardcoreInfo: false,
     showRank: false,
     showHardcoreSystems: false,
-    showEnemyRoles: false
+    showEnemyRoles: false,
+    showBossPattern: false
   }
 
 };

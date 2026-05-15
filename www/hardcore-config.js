@@ -12,7 +12,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   score:     { comboEnabled: true },   // HC-12
   combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 },
   pressure:  { enabled: true, minMultiplier: 1.00, maxMultiplier: 1.18, levels: { LOW: 1.00, NORMAL: 1.06, HIGH: 1.12, MAX: 1.18 } },
-  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false }
+  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false }
 };
 
 function getGalaxyConfig() {
@@ -71,7 +71,8 @@ function getHardcoreDebugConfig() {
   var d = (cfg.debug && typeof cfg.debug === 'object') ? cfg.debug : _GALAXY_CONFIG_DEFAULTS.debug;
   var si = (typeof d.showHardcoreInfo === 'boolean') ? d.showHardcoreInfo : _GALAXY_CONFIG_DEFAULTS.debug.showHardcoreInfo;
   var ser = (typeof d.showEnemyRoles === 'boolean') ? d.showEnemyRoles : false;
-  return { showHardcoreInfo: si, showEnemyRoles: ser };
+  var sbp = (typeof d.showBossPattern === 'boolean') ? d.showBossPattern : false;
+  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp };
 }
 
 function getPressureConfig() {

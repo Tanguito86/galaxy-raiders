@@ -3461,6 +3461,33 @@ if (shouldShow) {
       // HC-20: phase transition FX (all patterns)
       if (typeof drawBossPhaseTransitionFX === 'function') drawBossPhaseTransitionFX(ctx, boss);
 
+      // HC-58: BOSS IDENTITY DEBUG OVERLAY
+      if (typeof getHardcoreDebugConfig === 'function' && getHardcoreDebugConfig().showBossPattern) {
+        ctx.save();
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'center';
+        ctx.font = '5px "Press Start 2P"';
+        var bx = boss.x + (boss.w || 90) / 2;
+        var by = boss.y - 18;
+        var bName = boss.name || '-';
+        var bPhase = (typeof getBossPhaseSafe === 'function') ? getBossPhaseSafe(boss) : getBossPhase ? getBossPhase() : 1;
+        var bReady = (boss.patternReady) ? 'RDY' : '---';
+        var bPattern = boss.pattern || '-';
+        var bTelegraph = (boss._hcTelegraphType && boss._hcTelegraphTimer > 0) ? 'TG:' + boss._hcTelegraphType : '';
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#ff0';
+        ctx.fillText(bName + ' P' + bPhase + ' ' + bReady, bx, by);
+        ctx.globalAlpha = 0.72;
+        ctx.fillStyle = '#ff8';
+        ctx.fillText(bPattern, bx, by + 8);
+        if (bTelegraph) {
+          ctx.globalAlpha = 0.65;
+          ctx.fillStyle = '#f88';
+          ctx.fillText(bTelegraph, bx, by + 16);
+        }
+        ctx.restore();
+      }
+
       drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
 
       if (boss.pattern === 'zigzag') {
