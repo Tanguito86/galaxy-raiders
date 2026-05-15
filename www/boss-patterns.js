@@ -595,7 +595,38 @@ function updateThirdBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-54: Phases 2 and 3 — not yet implemented, fall through to legacy
+  // HC-55: Phase 2 — alternating left/right mini-arcs (4 bullets each, clear central gap)
+  if (phase === 2) {
+    var center2 = getBossCenter(target);
+    var speed2 = _orbitalBulletSpeed() * 0.92;
+    var angleToPlayer2 = getAngleFromBossToPlayer(target);
+
+    if (target._orbitalArcSide === undefined) target._orbitalArcSide = 0;
+    target._orbitalArcSide = 1 - target._orbitalArcSide; // toggle 0↔1
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 360);
+
+    var arcCount = 4;
+    var arcSpan = 0.52; // ~30° mini-arc
+    var sideOffset = 0.48; // ~27.5° from center — clear middle gap
+    var baseAngle = angleToPlayer2 + (target._orbitalArcSide === 0 ? -sideOffset : sideOffset);
+    var color = '#4477dd'; // deeper blue for phase 2
+
+    for (var j = 0; j < arcCount; j++) {
+      var tj = arcCount > 1 ? j / (arcCount - 1) : 0.5;
+      var aj = baseAngle - arcSpan / 2 + tj * arcSpan;
+      pushEnemyBullet(center2.x - 2, center2.y, Math.cos(aj) * speed2, Math.sin(aj) * speed2, 5, 9, {
+        kind: 'basic',
+        color: color,
+        sourceType: 'boss_orbital'
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    return true;
+  }
+
+  // HC-54/55: Phase 3 — not yet implemented, fall through to legacy
   return false;
 }
 
