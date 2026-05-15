@@ -626,7 +626,49 @@ function updateThirdBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-54/55: Phase 3 — not yet implemented, fall through to legacy
+  // HC-56: Phase 3 — rotating double arc (2 opposite arcs, 4 bullets each, slow rotation)
+  if (phase === 3) {
+    var center3 = getBossCenter(target);
+    var speed3 = Math.min(4.0, _orbitalBulletSpeed());
+    if (target._orbitalPhase3Angle === undefined) target._orbitalPhase3Angle = 0;
+    target._orbitalPhase3Angle += 0.32; // slow rotation per volley (~18°)
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 420);
+
+    var arcCount3 = Math.min(4, 4); // 4 bullets per arc (clamped)
+    var arcSpan3 = 0.48; // ~27.5° per mini-arc
+    var baseAngle3 = target._orbitalPhase3Angle;
+    var color3 = '#3366ff'; // bright blue for phase 3
+
+    // Arc 1: at baseAngle
+    for (var k = 0; k < arcCount3; k++) {
+      var tk = arcCount3 > 1 ? k / (arcCount3 - 1) : 0.5;
+      var ak = baseAngle3 - arcSpan3 / 2 + tk * arcSpan3;
+      pushEnemyBullet(center3.x - 2, center3.y, Math.cos(ak) * speed3, Math.sin(ak) * speed3, 5, 9, {
+        kind: 'basic',
+        color: color3,
+        sourceType: 'boss_orbital'
+      });
+    }
+
+    // Arc 2: opposite — at baseAngle + π
+    var oppositeAngle3 = baseAngle3 + Math.PI;
+    for (var m = 0; m < arcCount3; m++) {
+      var tm = arcCount3 > 1 ? m / (arcCount3 - 1) : 0.5;
+      var am = oppositeAngle3 - arcSpan3 / 2 + tm * arcSpan3;
+      pushEnemyBullet(center3.x - 2, center3.y, Math.cos(am) * speed3, Math.sin(am) * speed3, 5, 9, {
+        kind: 'basic',
+        color: color3,
+        sourceType: 'boss_orbital'
+      });
+    }
+
+    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
+    if (typeof pushScreenShake === 'function') pushScreenShake('light', 3);
+    return true;
+  }
+
+  // Fallback: should not reach here
   return false;
 }
 
