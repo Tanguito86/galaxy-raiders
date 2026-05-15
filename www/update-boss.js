@@ -822,6 +822,12 @@ if (Math.random() < 0.5 && mines.length < 8) {
        break;
        
       case 'divebomb':
+       // HC-60: Teniente hardcore foundation (stub — returns false, no override yet)
+       if (typeof shouldUseFourthBossHardcorePattern === 'function' && shouldUseFourthBossHardcorePattern(boss)) {
+         if (typeof updateFourthBossHardcorePattern === 'function' && updateFourthBossHardcorePattern(boss, dt)) {
+           break;
+         }
+       }
        fireBossDivebombPattern(step, phase);
        break;
       

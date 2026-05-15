@@ -682,3 +682,43 @@ function _orbitalBulletSpeed() {
   speed = Math.min(4.0, speed);
   return speed;
 }
+
+// ============================================================
+// HARDCORE TENIENTE PATTERN (fourth boss, divebomb, level 19)
+// HC-60: foundation only — metadata + guard, no pattern override yet
+// ============================================================
+
+function isFourthHardcoreBoss(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (target.name === 'TENIENTE') return true;
+  if (target.pattern === 'divebomb') return true;
+  return false;
+}
+
+function shouldUseFourthBossHardcorePattern(b) {
+  if (!shouldUseHardcoreBossPatterns()) return false;
+  if (!isFourthHardcoreBoss(b)) return false;
+  return true;
+}
+
+function _markTenientePatternMeta(b) {
+  var target = b || boss;
+  if (!target || !target.active) return;
+  if (target._tenientePatternReady) return;
+
+  target._tenientePatternReady = true;
+  target._tenientePatternPhase = getBossPhaseSafe(target);
+  if (target._tenientePatternTimer === undefined) target._tenientePatternTimer = 0;
+  if (target._tenientePatternSeed === undefined) target._tenientePatternSeed = Math.random() * 1000;
+}
+
+function updateFourthBossHardcorePattern(b, dt) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+
+  _markTenientePatternMeta(target);
+
+  // HC-60: stub — no pattern override yet, returns false to keep legacy behavior
+  return false;
+}
