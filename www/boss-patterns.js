@@ -85,7 +85,7 @@ function _crancktonBulletSpeed() {
     var s = getDifficultySettings(typeof level === 'number' ? level : 5);
     if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.85;
   }
-  return speed;
+  return Math.min(4.5, speed);
 }
 
 function fireCrancktonHardcorePattern(b) {
@@ -152,7 +152,7 @@ function fireCrancktonHardcorePattern(b) {
 
     // HC-21: Phase 3 — radial ring (8 bullets, alternating pure vs aimed every 3rd volley)
     target._hcCrancktonVolleyCount = (target._hcCrancktonVolleyCount || 0) + 1;
-    var count = 8; // down from 12 — wider gaps at level 5
+    var count = Math.min(14, 8); // down from 12 — wider gaps at level 5
     var ringSpeed = speed * 0.78; // slow enough to dodge
 
     for (var k = 0; k < count; k++) {
@@ -197,9 +197,10 @@ function triggerBossTelegraph(b, type, duration) {
   var target = b || boss;
   if (!target || !target.active) return false;
 
+  var dur = Math.max(220, (typeof duration === 'number') ? duration : 380);
   target._hcTelegraphType = type;
-  target._hcTelegraphTimer = duration || 380;
-  target._hcTelegraphDuration = target._hcTelegraphTimer;
+  target._hcTelegraphTimer = dur;
+  target._hcTelegraphDuration = dur;
 
   return true;
 }
@@ -421,7 +422,7 @@ function updateSerpentrixHardcorePattern(b, dt) {
   var speed = 2.8;
   if (typeof getDifficultySettings === 'function') {
     var s = getDifficultySettings(typeof level === 'number' ? level : 10);
-    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.82;
+    if (s && typeof s.bulletSpeed === 'number') speed = Math.min(4.2, s.bulletSpeed * 0.82);
   }
 
   // HC-23: per-cycle alternating state for phase 2
@@ -474,14 +475,14 @@ function updateSerpentrixHardcorePattern(b, dt) {
       // HC-24: Deploy 1 mine (control pressure, not screen fill)
       if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_mine', 300);
       if (typeof mines !== 'undefined') {
-        var maxMines = 6; // hard cap at 6 to avoid screen clutter
+        var maxMines = Math.min(6, (typeof mines !== 'undefined' && Array.isArray(mines)) ? 6 : 6); // hard cap at 6
         if (mines.length < maxMines) {
           mines.push({
             x: center.x - 14,
             y: target.y + target.h,
             radius: 12,
             vy: 0.42,
-            life: 10000, // 10s — long enough to matter, short enough to cycle
+            life: Math.min(10000, 10000), // capped at 10s
             pulseTime: 0
           });
         }
@@ -491,7 +492,7 @@ function updateSerpentrixHardcorePattern(b, dt) {
             y: target.y + target.h,
             radius: 12,
             vy: 0.42,
-            life: 10000,
+            life: Math.min(10000, 10000),
             pulseTime: 0
           });
         }
@@ -505,7 +506,7 @@ function updateSerpentrixHardcorePattern(b, dt) {
     // HC-24: Phase 3 — serpent double-fan (8 bullets, readable wave)
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_arc', 450);
 
-    var arcCount = 8;
+    var arcCount = Math.min(12, 8);
     var time = typeof globalTime === 'number' ? globalTime : 0;
     var serpentWave = Math.sin(time * 0.0025) * 0.18; // subtler wave, clearer gaps
     var arcSpeed = speed * 0.84; // slightly slower for dodge windows
