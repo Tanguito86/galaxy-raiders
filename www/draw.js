@@ -844,6 +844,102 @@ function drawImperialBackground(ctx, time, lv) {
   }
 }
 
+// ---- AMBIENT PARTICLE HELPERS (level-appropriate) ----
+
+// Snow / ash / debris falling — Earth invasion levels (1-5)
+function drawEarthSnow(ctx, time, lv) {
+  lv = lv || 1;
+  var count = 14 + lv * 2;
+  var snowBase = time * 0.016;
+  ctx.fillStyle = '#ffffff';
+  for (var i = 0; i < count; i++) {
+    var seed = i * 127.3 + 31.7;
+    var sx = ((Math.sin(snowBase * 0.7 + seed * 0.13) * 0.5 + 0.5) * W + seed * 7.1) % W;
+    var sy = ((snowBase * (1.2 + (i % 5) * 0.22) + seed * 0.09) * 55) % (H + 40) - 20;
+    var sz = (i % 3 === 0) ? 2 : 1;
+    // Slight horizontal drift
+    sx += Math.sin(time * 0.0008 + i * 0.7) * 8;
+    // Upper-screen bias: full opacity above 40%, fade out below
+    var fade = sy < H * 0.40 ? 1.0 : Math.max(0, 1 - (sy - H * 0.40) / (H * 0.30));
+    ctx.globalAlpha = 0.13 * fade;
+    ctx.fillRect(sx, sy, sz, sz);
+  }
+  // Ash particles near ground (from fires, level 3+)
+  if (lv >= 3) {
+    ctx.fillStyle = '#ffaa55';
+    var ashCount = (lv - 2) * 3;
+    for (var a = 0; a < ashCount; a++) {
+      var aseed = a * 89.1 + 47.3;
+      var ax = ((time * 0.00025 * (1 + a * 0.3) + aseed * 0.08) * 50) % W;
+      var ay = H * 0.50 + ((aseed * 0.12 + time * 0.00015) * 30) % (H * 0.30);
+      ctx.globalAlpha = 0.08 + Math.sin(time * 0.003 + a) * 0.04;
+      ctx.fillRect(ax, ay, 1, 1);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// High-altitude dust / ice crystals — Atmosphere levels (6-10)
+function drawAtmosphereParticles(ctx, time, lv) {
+  lv = lv || 6;
+  var count = 10 - (lv - 6);
+  var drift = time * 0.012;
+  ctx.fillStyle = '#aaccee';
+  for (var i = 0; i < count; i++) {
+    var seed = i * 91.7 + 23.4;
+    var px = ((Math.sin(drift * 0.5 + seed * 0.11) * 0.5 + 0.5) * W + seed * 9.3) % W;
+    var py = ((drift * (0.8 + (i % 4) * 0.15) + seed * 0.07) * 40) % (H + 30) - 15;
+    px += Math.sin(time * 0.001 + i * 1.3) * 12;
+    var fade = py < H * 0.55 ? 1.0 : Math.max(0, 1 - (py - H * 0.55) / (H * 0.25));
+    ctx.globalAlpha = 0.07 * fade;
+    ctx.fillRect(px, py, 1, 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Cosmic dust — Deep Space levels (16-19)
+function drawCosmicDust(ctx, time, lv) {
+  lv = lv || 16;
+  var count = 8 + (lv - 16) * 2;
+  ctx.fillStyle = '#886699';
+  for (var i = 0; i < count; i++) {
+    var seed = i * 71.9 + 13.8;
+    var cx = (seed * 5.3 + Math.sin(time * 0.00015 + seed) * 20) % W;
+    var cy = (seed * 3.7 + time * 0.006 * (0.6 + (i % 3) * 0.2)) % H;
+    var pulse = 0.06 + Math.sin(time * 0.0015 + i * 1.6) * 0.03;
+    ctx.globalAlpha = pulse;
+    ctx.fillRect(cx, cy, 1, 1);
+    // Some particles glow a bit wider
+    if (i % 4 === 0) {
+      ctx.globalAlpha = pulse * 0.3;
+      ctx.fillRect(cx - 1, cy, 3, 1);
+      ctx.fillRect(cx, cy - 1, 1, 3);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Energy debris / sparks — Imperial levels (20+)
+function drawImperialDebris(ctx, time) {
+  var count = 10;
+  for (var i = 0; i < count; i++) {
+    var seed = i * 53.7 + 8.2;
+    var dx = (seed * 6.1 + Math.sin(time * 0.0002 + seed * 0.3) * 28) % W;
+    var dy = (seed * 4.5 + time * 0.008 * (0.5 + (i % 4) * 0.18)) % H;
+    var isGold = i % 3 === 0;
+    ctx.fillStyle = isGold ? '#ffd700' : '#ff4422';
+    var pulse = 0.09 + Math.sin(time * 0.002 + i * 2.1) * 0.05;
+    ctx.globalAlpha = pulse;
+    ctx.fillRect(dx, dy, 1 + (i % 2), 1);
+    // Tiny trail on some
+    if (i % 3 === 1) {
+      ctx.globalAlpha = pulse * 0.4;
+      ctx.fillRect(dx, dy - 2, 1, 2);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawThemedBackground(ctx, levelNum, time) {
   var isWarpMood = pendingNextLevel || warpSpeed > 1.5;
   var isBossMood = boss && boss.active;
@@ -856,6 +952,15 @@ function drawThemedBackground(ctx, levelNum, time) {
     case 'deepSpace':  drawDeepSpaceBackground(ctx, time, levelNum);  break;
     case 'imperial':   drawImperialBackground(ctx, time, levelNum);   break;
     default:           drawEarthBackground(ctx, time, levelNum);      break;
+  }
+
+  // Ambient particles — level-appropriate, drawn AFTER background, BEFORE stars
+  switch (theme) {
+    case 'earth':      drawEarthSnow(ctx, time, levelNum);            break;
+    case 'atmosphere': drawAtmosphereParticles(ctx, time, levelNum);  break;
+    // orbit (11-15): stars dominate — no ambient particles
+    case 'deepSpace':  drawCosmicDust(ctx, time, levelNum);           break;
+    case 'imperial':   drawImperialDebris(ctx, time);                 break;
   }
 
   if (isWarpMood) {
