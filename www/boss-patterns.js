@@ -190,7 +190,9 @@ var HC_TELEGRAPH_COLORS = {
   // HC-24: Serpentrix green-themed telegraphs
   serpent_burst: '#44ee44',
   serpent_mine:  '#33cc33',
-  serpent_arc:   '#22aa22'
+  serpent_arc:   '#22aa22',
+  // HC-54: Orbital blue/violet telegraphs
+  orbital_arc:   '#4488ff'
 };
 
 function triggerBossTelegraph(b, type, duration) {
@@ -563,9 +565,45 @@ function _markOrbitalPatternMeta(b) {
 function updateThirdBossHardcorePattern(b, dt) {
   var target = b || boss;
   if (!target || !target.active) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
 
   _markOrbitalPatternMeta(target);
 
-  // HC-53: stub — no pattern override yet, returns false to keep legacy behavior
+  var phase = getBossPhaseSafe(target);
+
+  // HC-54: Phase 1 — orbital aimed partial ring (6 bullets, 180° arc toward player)
+  if (phase === 1) {
+    var center = getBossCenter(target);
+    var speed = _orbitalBulletSpeed();
+    var arcCount = 6;
+    var arcSpan = Math.PI; // 180° arc
+    var angleToPlayer = getAngleFromBossToPlayer(target);
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 320);
+
+    for (var i = 0; i < arcCount; i++) {
+      var t = arcCount > 1 ? i / (arcCount - 1) : 0.5;
+      var a = angleToPlayer - arcSpan / 2 + t * arcSpan;
+      pushEnemyBullet(center.x - 2, center.y, Math.cos(a) * speed, Math.sin(a) * speed, 5, 9, {
+        kind: 'basic',
+        color: '#5588ee',
+        sourceType: 'boss_orbital'
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    return true;
+  }
+
+  // HC-54: Phases 2 and 3 — not yet implemented, fall through to legacy
   return false;
+}
+
+function _orbitalBulletSpeed() {
+  var speed = 2.6;
+  if (typeof getDifficultySettings === 'function') {
+    var s = getDifficultySettings(typeof level === 'number' ? level : 15);
+    if (s && typeof s.bulletSpeed === 'number') speed = Math.min(4.0, s.bulletSpeed * 0.78);
+  }
+  return speed;
 }
