@@ -424,8 +424,9 @@ function updateSerpentrixHardcorePattern(b, dt) {
   var speed = 2.8;
   if (typeof getDifficultySettings === 'function') {
     var s = getDifficultySettings(typeof level === 'number' ? level : 10);
-    if (s && typeof s.bulletSpeed === 'number') speed = Math.min(4.2, s.bulletSpeed * 0.82);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.82;
   }
+  speed = Math.min(4.2, speed);
 
   // HC-23: per-cycle alternating state for phase 2
   if (target._serpentrixCycle === undefined) target._serpentrixCycle = 0;
@@ -676,7 +677,8 @@ function _orbitalBulletSpeed() {
   var speed = 2.6;
   if (typeof getDifficultySettings === 'function') {
     var s = getDifficultySettings(typeof level === 'number' ? level : 15);
-    if (s && typeof s.bulletSpeed === 'number') speed = Math.min(4.0, s.bulletSpeed * 0.78);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.78;
   }
+  speed = Math.min(4.0, speed);
   return speed;
 }
