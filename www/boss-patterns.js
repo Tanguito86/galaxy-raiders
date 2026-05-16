@@ -727,7 +727,7 @@ function updateFourthBossHardcorePattern(b, dt) {
   // HC-61: Phase 1 — aimed slow vertical burst (3 bullets, wide vertical bias, clear gaps)
   if (phase === 1) {
     var center = getBossCenter(target);
-    var speed = _tenienteBulletSpeed();
+    var speed = _tenienteBulletSpeed() * 0.94;
     var angleToPlayer = getAngleFromBossToPlayer(target);
     var downBias = Math.PI / 2;
     var maxDeviation = 0.55;
@@ -735,7 +735,7 @@ function updateFourthBossHardcorePattern(b, dt) {
     if (clampedAngle < downBias - maxDeviation) clampedAngle = downBias - maxDeviation;
     if (clampedAngle > downBias + maxDeviation) clampedAngle = downBias + maxDeviation;
 
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 360);
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 380);
 
     var bulletCount = 3;
     var spread = 0.32;
@@ -767,10 +767,10 @@ function updateFourthBossHardcorePattern(b, dt) {
     // Toggle lateral side per volley
     if (target._tenienteLaneSide === undefined) target._tenienteLaneSide = 0;
     target._tenienteLaneSide = 1 - target._tenienteLaneSide;
-    var laneOffset = 44; // ~44px lateral offset — creates closure without blocking entire screen
+    var laneOffset = 48; // lateral offset — wider for clearer gaps
     var laneX = (target._tenienteLaneSide === 0) ? center2.x - laneOffset : center2.x + laneOffset;
 
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 400);
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 420);
 
     var colCount = 3;
     var spread2 = 0.34;
@@ -851,8 +851,8 @@ function updateFourthBossHardcorePattern(b, dt) {
       });
     }
 
-    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
-    if (typeof pushScreenShake === 'function') pushScreenShake('medium', 4);
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    if (typeof pushScreenShake === 'function') pushScreenShake('light', 3);
     return true;
   }
 
