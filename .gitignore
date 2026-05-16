@@ -25,3 +25,5 @@ android/app/release/
 release/*.apk
 release/*.aab
 release/*.apks
+
+agent-sprite-forge/
