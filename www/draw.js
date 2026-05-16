@@ -2664,6 +2664,9 @@ function draw() {
   drawHC90Nebula(ctx, level, globalTime);
   applyHC90ColorGrading(ctx, level);
 
+  // 2.5) HC-97: atmospheric effects (dust, speed lines, ambient flash)
+  drawHC97Atmosphere(ctx, level, globalTime);
+
   // 3) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
   const shakeAmt = Math.max(0, screenShakeBg) * SHAKE_CONFIG.bgStrength * bgShakeMult;
