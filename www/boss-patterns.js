@@ -1,9 +1,11 @@
 // ==============================================
 // GALAXY RAIDERS - boss-patterns.js
-// Foundation for hardcore boss patterns (HC-17)
+// Hardcore boss patterns (HC-17 onwards)
 // ==============================================
 
-// --- safe existence checks ---
+// ============================================================
+// SHARED HELPERS — safe existence checks, phase, center, angle
+// ============================================================
 
 function __bossExists() {
   return typeof boss !== 'undefined' && boss && boss.active === true;
@@ -12,8 +14,6 @@ function __bossExists() {
 function __playerExists() {
   return typeof player !== 'undefined' && player && typeof player.x === 'number';
 }
-
-// --- safe helpers ---
 
 function getBossPhaseSafe(b) {
   var target = b || boss;
@@ -59,123 +59,6 @@ function markBossPatternReady(b) {
   if (target.patternSeed === undefined) target.patternSeed = Math.random() * 1000;
 
   return true;
-}
-
-// ============================================================
-// HARDCORE CRANCKTON PATTERN (first boss, crossfire)
-// ============================================================
-
-function isFirstHardcoreBoss(b) {
-  var target = b || boss;
-  if (!target || !target.active) return false;
-  if (target.name === 'CRABTRON') return true;
-  if (target.pattern === 'crossfire') return true;
-  return false;
-}
-
-function shouldUseCrancktonHardcorePattern(b) {
-  if (!shouldUseHardcoreBossPatterns()) return false;
-  if (!isFirstHardcoreBoss(b)) return false;
-  return true;
-}
-
-function _crancktonBulletSpeed() {
-  var speed = 3.2;
-  if (typeof getDifficultySettings === 'function') {
-    var s = getDifficultySettings(typeof level === 'number' ? level : 5);
-    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.85;
-  }
-  return Math.min(4.5, speed);
-}
-
-function fireCrancktonHardcorePattern(b) {
-  var target = b || boss;
-  if (!target || !target.active) return false;
-  if (typeof pushEnemyBullet !== 'function') return false;
-  if (target.dashMode) return false; // no shoot during dash
-
-  var phase = getBossPhaseSafe(target);
-  var center = getBossCenter(target);
-  var speed = _crancktonBulletSpeed();
-
-  if (phase === 1) {
-    // HC-21: Phase 1 — 3-bullet aimed spread (tighter, gaps readable)
-    var angle = getAngleFromBossToPlayer(target);
-    var spread = 0.18; // ~10.3° — clean gaps at level 5 distance
-
-    for (var i = -1; i <= 1; i++) {
-      var a = angle + i * spread;
-      pushEnemyBullet(center.x - 3, target.y + target.h, Math.cos(a) * speed, Math.sin(a) * speed, 6, 10, {
-        kind: 'crossfire_a',
-        color: '#ff8844',
-        sourceType: 'boss_cranckton'
-      });
-    }
-
-    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
-    return true;
-  }
-
-  if (phase === 2) {
-    // HC-21: telegraph before aimed burst (420ms for player reaction)
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase2_burst', 420);
-
-    // HC-21: Phase 2 — aimed burst (3 bullets, same speed as phase 1)
-    var angle2 = getAngleFromBossToPlayer(target);
-    var burstSpeed = speed; // no multiplier — readable at level 5
-    var delays = [0, 100, 200]; // wider stagger for clearer dodge windows
-
-    for (var j = 0; j < delays.length; j++) {
-      (function(delay, a, spd) {
-        var sx = center.x;
-        var sy = target.y + target.h;
-        setTimeout(function() {
-          if (!target.active) return;
-          pushEnemyBullet(sx - 3, sy, Math.cos(a) * spd, Math.sin(a) * spd, 6, 10, {
-            kind: 'crossfire_b',
-            color: '#ff6655',
-            sourceType: 'boss_cranckton'
-          });
-          if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
-        }, delay);
-      })(delays[j], angle2, burstSpeed);
-    }
-
-    if (typeof pushScreenShake === 'function') pushScreenShake('light', 2);
-    if (typeof sfxBossWarning === 'function') sfxBossWarning();
-    return true;
-  }
-
-  if (phase === 3) {
-    // HC-21: telegraph before radial (500ms — wide enough to react)
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase3_radial', 500);
-
-    // HC-21: Phase 3 — radial ring (8 bullets, alternating pure vs aimed every 3rd volley)
-    target._hcCrancktonVolleyCount = (target._hcCrancktonVolleyCount || 0) + 1;
-    var count = Math.min(14, 8); // down from 12 — wider gaps at level 5
-    var ringSpeed = speed * 0.78; // slow enough to dodge
-
-    for (var k = 0; k < count; k++) {
-      var aRing = (Math.PI * 2 * k) / count;
-      if (target._hcCrancktonVolleyCount % 3 === 0) {
-        // Aimed radial (every 3rd volley): rotate ring toward player
-        var toPlayer = getAngleFromBossToPlayer(target);
-        aRing += toPlayer - Math.PI / 2;
-      }
-      pushEnemyBullet(center.x - 2, center.y, Math.cos(aRing) * ringSpeed, Math.sin(aRing) * ringSpeed, 5, 8, {
-        kind: 'basic',
-        color: '#ff9944',
-        sourceType: 'boss_cranckton'
-      });
-    }
-
-    if (typeof pushScreenShake === 'function') pushScreenShake('medium', 5);
-    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
-    if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(160, 0.62);
-    return true;
-  }
-
-  return false; // fallback to original
 }
 
 // ============================================================
@@ -243,7 +126,7 @@ function drawBossHardcoreTelegraph(ctx, b) {
 
   ctx.save();
 
-  // HC-21: Expanding ring (higher alpha for clear readability)
+  // Expanding ring
   var ringR = 20 + progress * maxR;
   var ringAlpha = (1 - progress) * 0.65;
   ctx.globalAlpha = ringAlpha;
@@ -261,7 +144,7 @@ function drawBossHardcoreTelegraph(ctx, b) {
   ctx.arc(cx, cy, 14 + Math.sin(progress * Math.PI) * 8, 0, Math.PI * 2);
   ctx.fill();
 
-  // HC-21: Pulsing secondary ring for phase 3 (replaces rotating lines)
+  // Pulsing secondary ring for phase 3
   if (type === 'phase3_radial') {
     var pulseR = 18 + Math.sin(progress * Math.PI * 3) * 6;
     ctx.globalAlpha = (1 - progress) * 0.28;
@@ -277,7 +160,6 @@ function drawBossHardcoreTelegraph(ctx, b) {
 
 // ============================================================
 // HARDCORE BOSS PHASE TRANSITION FX (HC-20)
-// Visual celebration when boss changes phase
 // ============================================================
 
 function triggerBossPhaseTransitionFX(b, newPhase) {
@@ -341,7 +223,6 @@ function drawBossPhaseTransitionFX(ctx, b) {
     ctx.fillStyle = color;
     ctx.fillText(newPhase === 3 ? 'FINAL PHASE' : 'PHASE ' + newPhase, cx, textY);
 
-    // Subtle shadow
     ctx.globalAlpha = textAlpha * 0.35;
     ctx.fillStyle = '#000';
     ctx.fillText(newPhase === 3 ? 'FINAL PHASE' : 'PHASE ' + newPhase, cx + 1, textY + 1);
@@ -387,8 +268,118 @@ function drawBossPhaseTransitionFX(ctx, b) {
 }
 
 // ============================================================
-// HARDCORE SERPENTRIX PATTERN (second boss, zigzag, level 10)
-// HC-22: foundation — stub only, attacks unchanged
+// BOSS 1 — CRANCKTON (crossfire, level 5)
+// ============================================================
+
+function isFirstHardcoreBoss(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (target.name === 'CRABTRON') return true;
+  if (target.pattern === 'crossfire') return true;
+  return false;
+}
+
+function shouldUseCrancktonHardcorePattern(b) {
+  if (!shouldUseHardcoreBossPatterns()) return false;
+  if (!isFirstHardcoreBoss(b)) return false;
+  return true;
+}
+
+function _crancktonBulletSpeed() {
+  var speed = 3.2;
+  if (typeof getDifficultySettings === 'function') {
+    var s = getDifficultySettings(typeof level === 'number' ? level : 5);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.85;
+  }
+  return Math.min(4.5, speed);
+}
+
+function fireCrancktonHardcorePattern(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+  if (target.dashMode) return false;
+
+  var phase = getBossPhaseSafe(target);
+  var center = getBossCenter(target);
+  var speed = _crancktonBulletSpeed();
+
+  if (phase === 1) {
+    var angle = getAngleFromBossToPlayer(target);
+    var spread = 0.18;
+
+    for (var i = -1; i <= 1; i++) {
+      var a = angle + i * spread;
+      pushEnemyBullet(center.x - 3, target.y + target.h, Math.cos(a) * speed, Math.sin(a) * speed, 6, 10, {
+        kind: 'crossfire_a',
+        color: '#ff8844',
+        sourceType: 'boss_cranckton'
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    return true;
+  }
+
+  if (phase === 2) {
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase2_burst', 420);
+
+    var angle2 = getAngleFromBossToPlayer(target);
+    var burstSpeed = speed;
+    var delays = [0, 100, 200];
+
+    for (var j = 0; j < delays.length; j++) {
+      (function(delay, a, spd) {
+        var sx = center.x;
+        var sy = target.y + target.h;
+        setTimeout(function() {
+          if (!target.active) return;
+          pushEnemyBullet(sx - 3, sy, Math.cos(a) * spd, Math.sin(a) * spd, 6, 10, {
+            kind: 'crossfire_b',
+            color: '#ff6655',
+            sourceType: 'boss_cranckton'
+          });
+          if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+        }, delay);
+      })(delays[j], angle2, burstSpeed);
+    }
+
+    if (typeof pushScreenShake === 'function') pushScreenShake('light', 2);
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    return true;
+  }
+
+  if (phase === 3) {
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'phase3_radial', 500);
+
+    target._hcCrancktonVolleyCount = (target._hcCrancktonVolleyCount || 0) + 1;
+    var count = Math.min(14, 8);
+    var ringSpeed = speed * 0.78;
+
+    for (var k = 0; k < count; k++) {
+      var aRing = (Math.PI * 2 * k) / count;
+      if (target._hcCrancktonVolleyCount % 3 === 0) {
+        var toPlayer = getAngleFromBossToPlayer(target);
+        aRing += toPlayer - Math.PI / 2;
+      }
+      pushEnemyBullet(center.x - 2, center.y, Math.cos(aRing) * ringSpeed, Math.sin(aRing) * ringSpeed, 5, 8, {
+        kind: 'basic',
+        color: '#ff9944',
+        sourceType: 'boss_cranckton'
+      });
+    }
+
+    if (typeof pushScreenShake === 'function') pushScreenShake('medium', 5);
+    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
+    if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(160, 0.62);
+    return true;
+  }
+
+  return false;
+}
+
+// ============================================================
+// BOSS 2 — SERPENTRIX (zigzag, level 10)
 // ============================================================
 
 function isSecondHardcoreBoss(b) {
@@ -420,7 +411,6 @@ function updateSerpentrixHardcorePattern(b, dt) {
   if (!target || !target.active) return false;
   if (typeof pushEnemyBullet !== 'function') return false;
 
-  // HC-22: initialize metadata (idempotent)
   _markSerpentrixPatternMeta(target);
 
   var phase = getBossPhaseSafe(target);
@@ -432,17 +422,15 @@ function updateSerpentrixHardcorePattern(b, dt) {
   }
   speed = Math.min(4.2, speed);
 
-  // HC-23: per-cycle alternating state for phase 2
   if (target._serpentrixCycle === undefined) target._serpentrixCycle = 0;
   target._serpentrixCycle++;
 
   if (phase === 1) {
-    // HC-24: Phase 1 — wide poison fan (5 bullets, clear gaps)
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_burst', 220);
     var fanCount = 5;
-    var fanSpeed = speed * 0.88; // slightly slower for readability
+    var fanSpeed = speed * 0.88;
     for (var i = 0; i < fanCount; i++) {
-      var spread = -0.75 + (1.5 * i / (fanCount - 1)); // ±43° spread
+      var spread = -0.75 + (1.5 * i / (fanCount - 1));
       pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(spread) * fanSpeed, Math.cos(spread) * fanSpeed, 5, 12, {
         kind: 'basic',
         color: '#44dd44',
@@ -454,13 +442,11 @@ function updateSerpentrixHardcorePattern(b, dt) {
   }
 
   if (phase === 2) {
-    // HC-24: Phase 2 — alternating: aimed burst vs mine pressure
     if (target._serpentrixCycle % 2 === 0) {
-      // Aimed burst (2 bullets toward player, telegraph first)
       if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_burst', 380);
       var angle = getAngleFromBossToPlayer(target);
-      var burstSpeed = speed; // no multiplier — consistent speed
-      var delays = [0, 120]; // wider stagger than phase 1 Cranckton
+      var burstSpeed = speed;
+      var delays = [0, 120];
 
       for (var j = 0; j < delays.length; j++) {
         (function(delay, a, spd) {
@@ -479,17 +465,16 @@ function updateSerpentrixHardcorePattern(b, dt) {
       }
       if (typeof sfxBossWarning === 'function') sfxBossWarning();
     } else {
-      // HC-24: Deploy 1 mine (control pressure, not screen fill)
       if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_mine', 300);
       if (typeof mines !== 'undefined') {
-        var maxMines = Math.min(6, (typeof mines !== 'undefined' && Array.isArray(mines)) ? 6 : 6); // hard cap at 6
+        var maxMines = Math.min(6, (typeof mines !== 'undefined' && Array.isArray(mines)) ? 6 : 6);
         if (mines.length < maxMines) {
           mines.push({
             x: center.x - 14,
             y: target.y + target.h,
             radius: 12,
             vy: 0.42,
-            life: Math.min(10000, 10000), // capped at 10s
+            life: Math.min(10000, 10000),
             pulseTime: 0
           });
         }
@@ -510,16 +495,15 @@ function updateSerpentrixHardcorePattern(b, dt) {
   }
 
   if (phase === 3) {
-    // HC-24: Phase 3 — serpent double-fan (8 bullets, readable wave)
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'serpent_arc', 450);
 
     var arcCount = Math.min(12, 8);
     var time = typeof globalTime === 'number' ? globalTime : 0;
-    var serpentWave = Math.sin(time * 0.0025) * 0.18; // subtler wave, clearer gaps
-    var arcSpeed = speed * 0.84; // slightly slower for dodge windows
+    var serpentWave = Math.sin(time * 0.0025) * 0.18;
+    var arcSpeed = speed * 0.84;
 
     for (var k = 0; k < arcCount; k++) {
-      var baseSpread = -0.78 + (1.56 * k / (arcCount - 1)); // ±45° — wider gaps
+      var baseSpread = -0.78 + (1.56 * k / (arcCount - 1));
       var waveSpread = baseSpread + serpentWave;
       pushEnemyBullet(center.x - 2, target.y + target.h, Math.sin(waveSpread) * arcSpeed, Math.cos(waveSpread) * arcSpeed, 5, 10, {
         kind: 'basic',
@@ -538,8 +522,7 @@ function updateSerpentrixHardcorePattern(b, dt) {
 }
 
 // ============================================================
-// HARDCORE ORBITAL PATTERN (third boss, rotate, level 15)
-// HC-53: foundation only — metadata + guard, no pattern override yet
+// BOSS 3 — ORBITAL (rotate, level 15)
 // ============================================================
 
 function isThirdHardcoreBoss(b) {
@@ -576,12 +559,11 @@ function updateThirdBossHardcorePattern(b, dt) {
 
   var phase = getBossPhaseSafe(target);
 
-  // HC-54: Phase 1 — orbital aimed partial ring (6 bullets, 180° arc toward player)
   if (phase === 1) {
     var center = getBossCenter(target);
     var speed = _orbitalBulletSpeed();
     var arcCount = 6;
-    var arcSpan = 2.4; // ~137° — slightly narrower for cleaner gaps
+    var arcSpan = 2.4;
     var angleToPlayer = getAngleFromBossToPlayer(target);
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 340);
@@ -600,29 +582,28 @@ function updateThirdBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-55: Phase 2 — alternating left/right mini-arcs (4 bullets each, clear central gap)
   if (phase === 2) {
     var center2 = getBossCenter(target);
     var speed2 = _orbitalBulletSpeed() * 0.88;
     var angleToPlayer2 = getAngleFromBossToPlayer(target);
 
     if (target._orbitalArcSide === undefined) target._orbitalArcSide = 0;
-    target._orbitalArcSide = 1 - target._orbitalArcSide; // toggle 0↔1
+    target._orbitalArcSide = 1 - target._orbitalArcSide;
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 380);
 
-    var arcCount = 4;
-    var arcSpan = 0.52; // ~30° mini-arc
-    var sideOffset = 0.48; // ~27.5° from center — clear middle gap
-    var baseAngle = angleToPlayer2 + (target._orbitalArcSide === 0 ? -sideOffset : sideOffset);
-    var color = '#4477dd'; // deeper blue for phase 2
+    var arcCount2 = 4;
+    var arcSpan2 = 0.52;
+    var sideOffset = 0.48;
+    var baseAngle2 = angleToPlayer2 + (target._orbitalArcSide === 0 ? -sideOffset : sideOffset);
+    var color2 = '#4477dd';
 
-    for (var j = 0; j < arcCount; j++) {
-      var tj = arcCount > 1 ? j / (arcCount - 1) : 0.5;
-      var aj = baseAngle - arcSpan / 2 + tj * arcSpan;
-      pushEnemyBullet(center2.x - 2, center2.y, Math.cos(aj) * speed2, Math.sin(aj) * speed2, 5, 9, {
+    for (var j = 0; j < arcCount2; j++) {
+      var tj = arcCount2 > 1 ? j / (arcCount2 - 1) : 0.5;
+      var aj2 = baseAngle2 - arcSpan2 / 2 + tj * arcSpan2;
+      pushEnemyBullet(center2.x - 2, center2.y, Math.cos(aj2) * speed2, Math.sin(aj2) * speed2, 5, 9, {
         kind: 'basic',
-        color: color,
+        color: color2,
         sourceType: 'boss_orbital'
       });
     }
@@ -631,21 +612,20 @@ function updateThirdBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-56: Phase 3 — rotating double arc (2 opposite arcs, 4 bullets each, slow rotation)
   if (phase === 3) {
     var center3 = getBossCenter(target);
     var speed3 = Math.min(3.2, _orbitalBulletSpeed());
     if (target._orbitalPhase3Angle === undefined) target._orbitalPhase3Angle = 0;
-    target._orbitalPhase3Angle += 0.32; // slow rotation per volley (~18°)
+    target._orbitalPhase3Angle += 0.32;
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 420);
 
-    var arcCount3 = Math.min(4, 4); // 4 bullets per arc (clamped)
-    var arcSpan3 = 0.48; // ~27.5° per mini-arc
+    var arcCount3 = Math.min(4, 4);
+    var arcSpan3 = 0.48;
     var baseAngle3 = target._orbitalPhase3Angle;
-    var color3 = '#3366ff'; // bright blue for phase 3
+    var color3 = '#3366ff';
 
-    // Arc 1: at baseAngle
+    // Arc 1
     for (var k = 0; k < arcCount3; k++) {
       var tk = arcCount3 > 1 ? k / (arcCount3 - 1) : 0.5;
       var ak = baseAngle3 - arcSpan3 / 2 + tk * arcSpan3;
@@ -656,7 +636,7 @@ function updateThirdBossHardcorePattern(b, dt) {
       });
     }
 
-    // Arc 2: opposite — at baseAngle + π
+    // Arc 2 (opposite)
     var oppositeAngle3 = baseAngle3 + Math.PI;
     for (var m = 0; m < arcCount3; m++) {
       var tm = arcCount3 > 1 ? m / (arcCount3 - 1) : 0.5;
@@ -673,7 +653,6 @@ function updateThirdBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // Fallback: should not reach here
   return false;
 }
 
@@ -688,8 +667,7 @@ function _orbitalBulletSpeed() {
 }
 
 // ============================================================
-// HARDCORE TENIENTE PATTERN (fourth boss, divebomb, level 19)
-// HC-60: foundation only — metadata + guard, no pattern override yet
+// BOSS 4 — TENIENTE (divebomb, level 19)
 // ============================================================
 
 function isFourthHardcoreBoss(b) {
@@ -726,7 +704,6 @@ function updateFourthBossHardcorePattern(b, dt) {
 
   var phase = getBossPhaseSafe(target);
 
-  // HC-61: Phase 1 — aimed slow vertical burst (3 bullets, wide vertical bias, clear gaps)
   if (phase === 1) {
     var center = getBossCenter(target);
     var speed = Math.min(3.5, _tenienteBulletSpeed() * 0.94);
@@ -755,7 +732,6 @@ function updateFourthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-62: Phase 2 — double dive lane: 2 columns, one aimed near player, one lateral closure
   if (phase === 2) {
     var center2 = getBossCenter(target);
     var speed2 = Math.min(3.5, _tenienteBulletSpeed() * 0.88);
@@ -766,19 +742,18 @@ function updateFourthBossHardcorePattern(b, dt) {
     if (clampedAngle2 < downBias2 - maxDeviation2) clampedAngle2 = downBias2 - maxDeviation2;
     if (clampedAngle2 > downBias2 + maxDeviation2) clampedAngle2 = downBias2 + maxDeviation2;
 
-    // Toggle lateral side per volley
     if (target._tenienteLaneSide === undefined) target._tenienteLaneSide = 0;
     target._tenienteLaneSide = 1 - target._tenienteLaneSide;
-    var laneOffset = 48; // lateral offset — wider for clearer gaps
+    var laneOffset = 48;
     var laneX = (target._tenienteLaneSide === 0) ? center2.x - laneOffset : center2.x + laneOffset;
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 420);
 
     var colCount = 3;
     var spread2 = 0.34;
-    var color2 = '#ee4422'; // deeper red for phase 2
+    var color2 = '#ee4422';
 
-    // Column 1: aimed near player (center)
+    // Column 1 — aimed near player
     for (var j = 0; j < colCount; j++) {
       var tj = colCount > 1 ? j / (colCount - 1) : 0.5;
       var aj = clampedAngle2 - spread2 / 2 + tj * spread2;
@@ -789,7 +764,7 @@ function updateFourthBossHardcorePattern(b, dt) {
       });
     }
 
-    // Column 2: lateral closure (same angle, offset horizontally)
+    // Column 2 — lateral closure
     for (var k = 0; k < colCount; k++) {
       var tk = colCount > 1 ? k / (colCount - 1) : 0.5;
       var ak2 = clampedAngle2 - spread2 / 2 + tk * spread2;
@@ -804,7 +779,6 @@ function updateFourthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-63: Phase 3 — aggressive dive crossfire: 2 lateral columns + 1 aimed center burst (max 7 bullets)
   if (phase === 3) {
     var center3 = getBossCenter(target);
     var speed3 = Math.min(3.5, _tenienteBulletSpeed() * 0.85);
@@ -817,36 +791,36 @@ function updateFourthBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 450);
 
-    var color3 = '#dd3311'; // bright red for phase 3
-    var laneOff3 = 38; // lateral column offset
+    var color3 = '#dd3311';
+    var laneOff3 = 38;
 
-    // Center burst: 3 bullets aimed at player
-    for (var i = 0; i < 3; i++) {
-      var ti = 2 > 0 ? i / 2 : 0.5;
-      var ai = clampedAngle3 - 0.28 / 2 + ti * 0.28;
-      pushEnemyBullet(center3.x - 2, target.y + target.h, Math.cos(ai) * speed3, Math.sin(ai) * speed3, 5, 10, {
+    // Center burst
+    for (var i3 = 0; i3 < 3; i3++) {
+      var ti3 = 2 > 0 ? i3 / 2 : 0.5;
+      var ai3 = clampedAngle3 - 0.28 / 2 + ti3 * 0.28;
+      pushEnemyBullet(center3.x - 2, target.y + target.h, Math.cos(ai3) * speed3, Math.sin(ai3) * speed3, 5, 10, {
         kind: 'basic',
         color: color3,
         sourceType: 'boss_teniente'
       });
     }
 
-    // Left column: 2 bullets
-    for (var j = 0; j < 2; j++) {
-      var tj = 1 > 0 ? j / 1 : 0.5;
-      var aj = clampedAngle3 - 0.24 / 2 + tj * 0.24;
-      pushEnemyBullet(center3.x - laneOff3 - 2, target.y + target.h, Math.cos(aj) * speed3, Math.sin(aj) * speed3, 5, 10, {
+    // Left column
+    for (var j3 = 0; j3 < 2; j3++) {
+      var tj3 = 1 > 0 ? j3 / 1 : 0.5;
+      var aj3 = clampedAngle3 - 0.24 / 2 + tj3 * 0.24;
+      pushEnemyBullet(center3.x - laneOff3 - 2, target.y + target.h, Math.cos(aj3) * speed3, Math.sin(aj3) * speed3, 5, 10, {
         kind: 'basic',
         color: color3,
         sourceType: 'boss_teniente'
       });
     }
 
-    // Right column: 2 bullets
-    for (var k = 0; k < 2; k++) {
-      var tk = 1 > 0 ? k / 1 : 0.5;
-      var ak = clampedAngle3 - 0.24 / 2 + tk * 0.24;
-      pushEnemyBullet(center3.x + laneOff3 - 2, target.y + target.h, Math.cos(ak) * speed3, Math.sin(ak) * speed3, 5, 10, {
+    // Right column
+    for (var k3 = 0; k3 < 2; k3++) {
+      var tk3 = 1 > 0 ? k3 / 1 : 0.5;
+      var ak3 = clampedAngle3 - 0.24 / 2 + tk3 * 0.24;
+      pushEnemyBullet(center3.x + laneOff3 - 2, target.y + target.h, Math.cos(ak3) * speed3, Math.sin(ak3) * speed3, 5, 10, {
         kind: 'basic',
         color: color3,
         sourceType: 'boss_teniente'
@@ -871,8 +845,7 @@ function _tenienteBulletSpeed() {
 }
 
 // ============================================================
-// HARDCORE EMPERADOR PATTERN (fifth boss, supreme, level 20)
-// HC-66: foundation only — metadata + guard, no pattern override yet
+// BOSS 5 — EMPERADOR (supreme, level 20)
 // ============================================================
 
 function isFifthHardcoreBoss(b) {
@@ -904,19 +877,18 @@ function updateFifthBossHardcorePattern(b, dt) {
   var target = b || boss;
   if (!target || !target.active) return false;
   if (typeof pushEnemyBullet !== 'function') return false;
-  if (target.isTeleporting) return false; // no shoot during teleport
+  if (target.isTeleporting) return false;
 
   _markEmperadorPatternMeta(target);
 
   var phase = getBossPhaseSafe(target);
 
-  // HC-67: Phase 1 — wide imperial spread (7 bullets, wide fan, slow speed, clear gaps)
   if (phase === 1) {
     var center = getBossCenter(target);
     var speed = Math.min(3.6, _emperadorBulletSpeed() * 0.92);
     var downBias = Math.PI / 2;
     var arcCount = 7;
-    var arcSpan = 1.3; // ~74° — tighter imperial fan, cleaner gaps
+    var arcSpan = 1.3;
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 440);
 
@@ -934,7 +906,6 @@ function updateFifthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-68: Phase 2 — imperial cross pressure (5 aimed spread + 2 delayed lateral, max 7)
   if (phase === 2) {
     var center2 = getBossCenter(target);
     var speed2 = Math.min(3.6, _emperadorBulletSpeed() * 0.86);
@@ -946,22 +917,21 @@ function updateFifthBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 480);
 
-    var color2 = '#9966dd'; // deeper purple for phase 2
-
-    // Aimed spread: 5 bullets
+    var color2 = '#9966dd';
     var aimCount = 5;
-    var aimSpan = 0.8; // ~46° aimed fan
-    for (var i = 0; i < aimCount; i++) {
-      var ti = aimCount > 1 ? i / (aimCount - 1) : 0.5;
-      var ai = clampedAngle2 - aimSpan / 2 + ti * aimSpan;
-      pushEnemyBullet(center2.x - 2, target.y + target.h, Math.cos(ai) * speed2, Math.sin(ai) * speed2, 5, 10, {
+    var aimSpan = 0.8;
+
+    for (var i2 = 0; i2 < aimCount; i2++) {
+      var ti2 = aimCount > 1 ? i2 / (aimCount - 1) : 0.5;
+      var ai2 = clampedAngle2 - aimSpan / 2 + ti2 * aimSpan;
+      pushEnemyBullet(center2.x - 2, target.y + target.h, Math.cos(ai2) * speed2, Math.sin(ai2) * speed2, 5, 10, {
         kind: 'crossfire_a',
         color: color2,
         sourceType: 'boss_emperador'
       });
     }
 
-    // Lateral delayed: 2 bullets, one left one right, delayed 150ms
+    // Lateral delayed: 2 bullets, 150ms
     var latAngle = downBias2;
     var latOffset = 60;
     var latDelay = 150;
@@ -987,7 +957,6 @@ function updateFifthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-69: Phase 3 — imperial final decree (5 aimed + 4 outer delayed, max 9 bullets)
   if (phase === 3) {
     var center3 = getBossCenter(target);
     var speed3 = Math.min(3.6, _emperadorBulletSpeed() * 0.86);
@@ -999,24 +968,23 @@ function updateFifthBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 520);
 
-    var color3 = '#9977ee'; // imperial gold-purple for final phase
-
-    // Aimed spread: 5 bullets
+    var color3 = '#9977ee';
     var aimCount3 = 5;
     var aimSpan3 = 0.85;
-    for (var i = 0; i < aimCount3; i++) {
-      var ti = aimCount3 > 1 ? i / (aimCount3 - 1) : 0.5;
-      var ai = clampedAngle3 - aimSpan3 / 2 + ti * aimSpan3;
-      pushEnemyBullet(center3.x - 2, target.y + target.h, Math.cos(ai) * speed3, Math.sin(ai) * speed3, 5, 10, {
+
+    for (var i3 = 0; i3 < aimCount3; i3++) {
+      var ti3 = aimCount3 > 1 ? i3 / (aimCount3 - 1) : 0.5;
+      var ai3 = clampedAngle3 - aimSpan3 / 2 + ti3 * aimSpan3;
+      pushEnemyBullet(center3.x - 2, target.y + target.h, Math.cos(ai3) * speed3, Math.sin(ai3) * speed3, 5, 10, {
         kind: 'crossfire_a',
         color: color3,
         sourceType: 'boss_emperador'
       });
     }
 
-    // Outer delayed: 4 bullets (2 left, 2 right) at 200ms delay
+    // Outer delayed: 4 bullets (2 per side) at 200ms
     var latAngle3 = downBias3;
-    var latOffsets3 = [54, 76]; // two distances per side
+    var latOffsets3 = [54, 76];
     var latDelay3 = 200;
     var sx3 = center3.x;
     var sy3 = target.y + target.h;
@@ -1057,8 +1025,10 @@ function _emperadorBulletSpeed() {
 }
 
 // ============================================================
-// HC-72: FULL BOSS HARDCORE REGISTRY
-// Central lookup for all hardcore-converted bosses
+// BOSS HARDCORE REGISTRY & DISPATCH
+// ============================================================
+
+// HC-72: Full boss hardcore registry
 // ============================================================
 
 window.HARDCORE_BOSS_REGISTRY = [
@@ -1134,9 +1104,7 @@ window.getHardcoreBossId = function(b) {
   return -1;
 };
 
-// ============================================================
-// HC-74: BOSS REGISTRY DISPATCH
-// Central dispatcher — routes to correct hardcore update per boss
+// HC-74: Central boss dispatch
 // ============================================================
 
 window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
@@ -1152,7 +1120,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
   var result = false;
 
   switch (bossId) {
-    case 1: // CRABTRON / crossfire
+    case 1:
       if (typeof shouldUseCrancktonHardcorePattern === 'function' && shouldUseCrancktonHardcorePattern(target)) {
         if (typeof fireCrancktonHardcorePattern === 'function') {
           result = fireCrancktonHardcorePattern(target);
@@ -1160,7 +1128,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
       }
       break;
 
-    case 2: // SERPENTRIX / zigzag
+    case 2:
       if (typeof shouldUseSerpentrixHardcorePattern === 'function' && shouldUseSerpentrixHardcorePattern(target)) {
         if (typeof updateSerpentrixHardcorePattern === 'function') {
           result = updateSerpentrixHardcorePattern(target, dt);
@@ -1168,7 +1136,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
       }
       break;
 
-    case 3: // ORBITAL / rotate
+    case 3:
       if (typeof shouldUseThirdBossHardcorePattern === 'function' && shouldUseThirdBossHardcorePattern(target)) {
         if (typeof updateThirdBossHardcorePattern === 'function') {
           result = updateThirdBossHardcorePattern(target, dt);
@@ -1176,7 +1144,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
       }
       break;
 
-    case 4: // TENIENTE / divebomb
+    case 4:
       if (typeof shouldUseFourthBossHardcorePattern === 'function' && shouldUseFourthBossHardcorePattern(target)) {
         if (typeof updateFourthBossHardcorePattern === 'function') {
           result = updateFourthBossHardcorePattern(target, dt);
@@ -1184,7 +1152,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
       }
       break;
 
-    case 5: // EMPERADOR / supreme
+    case 5:
       if (typeof shouldUseFifthBossHardcorePattern === 'function' && shouldUseFifthBossHardcorePattern(target)) {
         if (typeof updateFifthBossHardcorePattern === 'function') {
           result = updateFifthBossHardcorePattern(target, dt);
