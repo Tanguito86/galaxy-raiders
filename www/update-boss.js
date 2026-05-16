@@ -678,11 +678,9 @@ if (boss.shootTimer > shootRate) {
       // CRABTRON: No disparar durante dash
       if (boss.dashMode) break;
 
-      // HC-18: Cranckton hardcore pattern
-      if (typeof shouldUseCrancktonHardcorePattern === 'function' && shouldUseCrancktonHardcorePattern(boss)) {
-        if (typeof fireCrancktonHardcorePattern === 'function' && fireCrancktonHardcorePattern(boss)) {
-          break;
-        }
+      // HC-75: central hardcore boss dispatch
+      if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
+        break;
       }
       
       const crabCenter = { x: boss.x + boss.w / 2, y: boss.y + boss.h };
@@ -759,11 +757,9 @@ if (boss.shootTimer > shootRate) {
       break;
       
     case 'zigzag':
-      // HC-23: Serpentrix hardcore pattern
-      if (typeof shouldUseSerpentrixHardcorePattern === 'function' && shouldUseSerpentrixHardcorePattern(boss)) {
-        if (typeof updateSerpentrixHardcorePattern === 'function' && updateSerpentrixHardcorePattern(boss, dt)) {
-          break;
-        }
+      // HC-75: central hardcore boss dispatch
+      if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
+        break;
       }
    
   // SERPENTRIX: Abanico hacia abajo + rotación sutil
@@ -812,31 +808,25 @@ if (Math.random() < 0.5 && mines.length < 8) {
   break;
       
      case 'rotate':
-       // HC-53: Orbital hardcore foundation (stub — returns false, no override yet)
-       if (typeof shouldUseThirdBossHardcorePattern === 'function' && shouldUseThirdBossHardcorePattern(boss)) {
-         if (typeof updateThirdBossHardcorePattern === 'function' && updateThirdBossHardcorePattern(boss, dt)) {
-           break;
-         }
+       // HC-75: central hardcore boss dispatch
+       if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
+         break;
        }
        fireBossOrbitalPattern(step);
        break;
        
       case 'divebomb':
-       // HC-60: Teniente hardcore foundation (stub — returns false, no override yet)
-       if (typeof shouldUseFourthBossHardcorePattern === 'function' && shouldUseFourthBossHardcorePattern(boss)) {
-         if (typeof updateFourthBossHardcorePattern === 'function' && updateFourthBossHardcorePattern(boss, dt)) {
-           break;
-         }
+       // HC-75: central hardcore boss dispatch
+       if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
+         break;
        }
        fireBossDivebombPattern(step, phase);
        break;
       
     case 'supreme':
-      // HC-66: Emperador hardcore foundation (stub — returns false, no override yet)
-      if (typeof shouldUseFifthBossHardcorePattern === 'function' && shouldUseFifthBossHardcorePattern(boss)) {
-        if (typeof updateFifthBossHardcorePattern === 'function' && updateFifthBossHardcorePattern(boss, dt)) {
-          break;
-        }
+      // HC-75: central hardcore boss dispatch
+      if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
+        break;
       }
       // EMPERADOR: No disparar durante teletransporte
       if (boss.isTeleporting) break;
