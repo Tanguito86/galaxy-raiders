@@ -12,6 +12,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   score:     { comboEnabled: true },   // HC-12
   combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 },
   pressure:  { enabled: true, minMultiplier: 1.00, maxMultiplier: 1.18, levels: { LOW: 1.00, NORMAL: 1.06, HIGH: 1.12, MAX: 1.18 } },
+  rhythm:    { enabled: true, wavePauseMinScale: 0.75, introMinScale: 0.72, entryDelayMinScale: 0.70 },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false }
 };
 
@@ -84,6 +85,16 @@ function getPressureConfig() {
   var maxM = (typeof p.maxMultiplier === 'number' && p.maxMultiplier <= 1.18) ? p.maxMultiplier : 1.18;
   var lvls = (p.levels && typeof p.levels === 'object') ? p.levels : _GALAXY_CONFIG_DEFAULTS.pressure.levels;
   return { enabled: en, minMultiplier: minM, maxMultiplier: maxM, levels: lvls };
+}
+
+function getRhythmConfig() {
+  var cfg = getGalaxyConfig();
+  var r = (cfg.rhythm && typeof cfg.rhythm === 'object') ? cfg.rhythm : _GALAXY_CONFIG_DEFAULTS.rhythm;
+  var en = (typeof r.enabled === 'boolean') ? r.enabled : true;
+  var wps = (typeof r.wavePauseMinScale === 'number' && r.wavePauseMinScale > 0 && r.wavePauseMinScale <= 1) ? r.wavePauseMinScale : 0.75;
+  var ims = (typeof r.introMinScale === 'number' && r.introMinScale > 0 && r.introMinScale <= 1) ? r.introMinScale : 0.72;
+  var eds = (typeof r.entryDelayMinScale === 'number' && r.entryDelayMinScale > 0 && r.entryDelayMinScale <= 1) ? r.entryDelayMinScale : 0.70;
+  return { enabled: en, wavePauseMinScale: wps, introMinScale: ims, entryDelayMinScale: eds };
 }
 
 // ============================================================

@@ -346,11 +346,11 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.textAlign = 'left';
   ctx.globalAlpha = 0.62;
   ctx.fillStyle = '#000';
-  ctx.fillRect(panelX, panelY, panelW, lineH * 13 + 10);
+  ctx.fillRect(panelX, panelY, panelW, lineH * 17 + 10);
   ctx.globalAlpha = 0.22;
   ctx.strokeStyle = '#0ff';
   ctx.lineWidth = 1;
-  ctx.strokeRect(panelX, panelY, panelW, lineH * 13 + 10);
+  ctx.strokeRect(panelX, panelY, panelW, lineH * 17 + 10);
   ctx.globalAlpha = 1;
 
   ctx.font = '6px "Press Start 2P"';
@@ -409,6 +409,17 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.fillText('PRS x' + pState.multiplier.toFixed(2), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#aaf';
   ctx.fillText('PCD x' + pCD.toFixed(2), panelX + 6, y);
+
+  y += 4;
+  var rState = (typeof window.getHardcoreRhythmState === 'function') ? window.getHardcoreRhythmState() : { active: false, wavePauseScale: 1.00, introScale: 1.00, entryDelayScale: 1.00 };
+  ctx.fillStyle = '#f8f';
+  ctx.fillText('RHYTHM ' + (rState.active ? 'ON' : 'OFF'), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#faf';
+  ctx.fillText('WAVE x' + rState.wavePauseScale.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#fad';
+  ctx.fillText('INTRO x' + rState.introScale.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#fcc';
+  ctx.fillText('ENTRY x' + rState.entryDelayScale.toFixed(2), panelX + 6, y);
 
   ctx.restore();
 };

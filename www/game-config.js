@@ -71,6 +71,14 @@ window.GALAXY_CONFIG = {
     }
   },
 
+  // ============ RHYTHM (HC-78/79: stage wave rhythm) ============
+  rhythm: {
+    enabled: true,
+    wavePauseMinScale: 0.75,
+    introMinScale: 0.72,
+    entryDelayMinScale: 0.70
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
