@@ -3468,16 +3468,19 @@ if (shouldShow) {
     drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
   }
 
-  if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player')) {
-    const playerSprite = window.SpriteSystem.getSprite('player');
-    const playerFrameCount = playerSprite && playerSprite.image
-      ? Math.max(1, Math.floor(playerSprite.image.width / playerSprite.frameWidth) * Math.floor(playerSprite.image.height / playerSprite.frameHeight))
-      : 1;
-    const playerSpriteFrame = playerFrameCount > 1 ? animationFrame % playerFrameCount : 0;
+  function getAnimatedPlayerFrame() {
+    const bankFrame = Math.floor(globalTime / 100) % 3;
+    const idleFrame = Math.floor(globalTime / 140) % 3;
 
+    if (player.movingLeft || tilt < 0) return 3 + bankFrame;
+    if (player.movingRight || tilt > 0) return 6 + bankFrame;
+    return idleFrame;
+  }
+
+  function drawPlayerSprite(spriteId, frameIndex) {
     ctx.globalAlpha = 0.18 + corePulse * 0.06;
-    window.drawSpriteFrame(ctx, 'player', player.x - 1, player.y, {
-      frame: playerSpriteFrame,
+    window.drawSpriteFrame(ctx, spriteId, player.x - 1, player.y, {
+      frame: frameIndex,
       rotation: 0,
       scale: 1,
       anchorX: 0,
@@ -3485,8 +3488,8 @@ if (shouldShow) {
       tint: '#48f'
     });
     ctx.globalAlpha = 0.10 + corePulse * 0.04;
-    window.drawSpriteFrame(ctx, 'player', player.x + 1, player.y, {
-      frame: playerSpriteFrame,
+    window.drawSpriteFrame(ctx, spriteId, player.x + 1, player.y, {
+      frame: frameIndex,
       rotation: 0,
       scale: 1,
       anchorX: 0,
@@ -3494,8 +3497,8 @@ if (shouldShow) {
       tint: '#6cf'
     });
     ctx.globalAlpha = 0.06 + corePulse * 0.03;
-    window.drawSpriteFrame(ctx, 'player', player.x, player.y - 1, {
-      frame: playerSpriteFrame,
+    window.drawSpriteFrame(ctx, spriteId, player.x, player.y - 1, {
+      frame: frameIndex,
       rotation: 0,
       scale: 1,
       anchorX: 0,
@@ -3504,14 +3507,20 @@ if (shouldShow) {
     });
 
     ctx.globalAlpha = 1;
-    window.drawSpriteFrame(ctx, 'player', player.x, player.y, {
-      frame: playerSpriteFrame,
+    window.drawSpriteFrame(ctx, spriteId, player.x, player.y, {
+      frame: frameIndex,
       rotation: 0,
       scale: 1,
       anchorX: 0,
       anchorY: 0,
       fallback: drawLegacyPlayerShip
     });
+  }
+
+  if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_ship_3x3')) {
+    drawPlayerSprite('player_ship_3x3', getAnimatedPlayerFrame());
+  } else if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player')) {
+    drawPlayerSprite('player', 0);
   } else {
     drawLegacyPlayerShip();
   }
@@ -3798,30 +3807,55 @@ if (shouldShow) {
       const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
       const row = e.row || 0;
       const phase = e.x * 0.13 + e.y * 0.07 + row * 2.1;
-      var ampX = 2;
-      var ampY = 3;
-      var speedX = 0.003;
-      var speedY = 0.0035;
-      if (data.hp >= 2 && data.speed < 1.0) {
-        ampX = 1.2;
-        ampY = 1.8;
-        speedX = 0.0018;
-        speedY = 0.002;
-      } else if (data.speed >= 1.5 || data.kamikaze) {
-        ampX = 2.8;
-        ampY = 2.2;
-        speedX = 0.004;
+      var ampX = 1.8;
+      var ampY = 2.4;
+      var speedX = 0.0026;
+      var speedY = 0.003;
+      var tensionX = 0;
+      var tensionY = 0;
+
+      if (e.type === 'alien2') {
+        ampX = 0.45;
+        ampY = 0.65;
+        speedX = 0.0012;
+        speedY = 0.0014;
+      } else if (e.type === 'alien3' || data.kamikaze) {
+        ampX = 1.35;
+        ampY = 1.15;
+        speedX = 0.0038;
         speedY = 0.003;
-      } else if (data.splits) {
+        if (e._hcDiverTargetX || e._hcDiverTargetY) {
+          tensionX = ((e._hcDiverTargetX || e.x) - (e.x + (e.w || 24) / 2)) * 0.015;
+          tensionY = ((e._hcDiverTargetY || e.y) - (e.y + (e.h || 24) / 2)) * 0.015;
+        } else if (e.diving) {
+          tensionY = 1.1;
+        }
+      } else if (e.type === 'alien4' || (data.hp >= 2 && data.speed < 1.0)) {
+        ampX = 0.55;
+        ampY = 0.9;
+        speedX = 0.0014;
+        speedY = 0.0017;
+      } else if (e.type === 'alien5') {
+        ampX = 1;
+        ampY = 1.8;
+        speedX = 0.0019;
+        speedY = 0.0023;
+      } else if (e.type === 'alien6' || data.splits) {
+        ampX = 1.9;
+        ampY = 1.35;
+        speedX = 0.0034;
+        speedY = 0.0022;
+      } else if (data.speed >= 1.5) {
         ampX = 2.2;
-        ampY = 2.5;
-        speedX = 0.0032;
-        speedY = 0.0038;
+        ampY = 1.8;
+        speedX = 0.0035;
+        speedY = 0.0028;
       }
+
       ampY += row * 0.15;
       return {
-        ox: Math.sin(time * speedX + phase) * ampX,
-        oy: Math.cos(time * speedY + phase) * ampY
+        ox: Math.sin(time * speedX + phase) * ampX + tensionX,
+        oy: Math.cos(time * speedY + phase) * ampY + tensionY
       };
     }
 
@@ -3834,6 +3868,19 @@ if (shouldShow) {
       return null;
     }
 
+    function getEnemyAnimatedSpriteId(e) {
+      var spriteId = getEnemySpriteId(e);
+      return spriteId ? (spriteId + '_strip') : null;
+    }
+
+    function getEnemyAnimationTimeOffset(e) {
+      if (!e) return 0;
+      var row = e.row || 0;
+      var px = Math.round(Number(e.x) || 0);
+      var py = Math.round(Number(e.y) || 0);
+      return (px * 37 + py * 23 + row * 131) % 700;
+    }
+
     function getEnemySpriteFrame(spriteId, fallbackFrame) {
       if (!window.SpriteSystem || !spriteId) return fallbackFrame;
 
@@ -3844,6 +3891,29 @@ if (shouldShow) {
       var rows = Math.max(1, Math.floor(sprite.image.height / sprite.frameHeight));
       var frameCount = Math.max(1, columns * rows);
       return frameCount > 1 ? fallbackFrame % frameCount : 0;
+    }
+
+    function getEnemyAnimatedSpriteFrame(e, spriteId, fallbackFrame) {
+      if (!window.SpriteSystem || !spriteId) return fallbackFrame;
+      if (typeof window.SpriteSystem.getAnimationFrame === 'function') {
+        return window.SpriteSystem.getAnimationFrame(spriteId, 'idle', globalTime, {
+          timeOffset: getEnemyAnimationTimeOffset(e)
+        });
+      }
+      return getEnemySpriteFrame(spriteId, fallbackFrame);
+    }
+
+    function isEnemyAnimatedSpriteReady(e) {
+      var animatedSpriteId = getEnemyAnimatedSpriteId(e);
+      return !!(window.SpriteSystem && animatedSpriteId && window.SpriteSystem.isSpriteReady(animatedSpriteId));
+    }
+
+    function getEnemySpriteReadabilityScale(e, spriteId) {
+      if (!spriteId || spriteId.indexOf('_strip') === -1) return 1;
+      if (e.type === 'alien2') return 1.25;
+      if (e.type === 'alien4') return 1.16;
+      if (e.type === 'alien5') return 1.2;
+      return 1.18;
     }
 
     function getEnemySpriteVisualBounds(spriteId) {
@@ -3861,8 +3931,16 @@ if (shouldShow) {
     function drawEnemySpriteOrLegacy(ctx, e, spriteKey, color, size, options) {
       options = options || {};
 
-      var spriteId = getEnemySpriteId(e);
-      if (!spriteId || !window.SpriteSystem || !window.SpriteSystem.isSpriteReady(spriteId)) {
+      var staticSpriteId = getEnemySpriteId(e);
+      var animatedSpriteId = getEnemyAnimatedSpriteId(e);
+      var spriteId = null;
+      if (window.SpriteSystem && animatedSpriteId && window.SpriteSystem.isSpriteReady(animatedSpriteId)) {
+        spriteId = animatedSpriteId;
+      } else if (window.SpriteSystem && staticSpriteId && window.SpriteSystem.isSpriteReady(staticSpriteId)) {
+        spriteId = staticSpriteId;
+      }
+
+      if (!spriteId || !window.SpriteSystem) {
         var legacyX = (typeof options.x === 'number') ? options.x : e.x;
         var legacyY = (typeof options.y === 'number') ? options.y : e.y;
         drawSprite(ctx, SPRITES[spriteKey], legacyX, legacyY, color, size);
@@ -3877,6 +3955,7 @@ if (shouldShow) {
       var visualH = visualBounds ? visualBounds.height : sprite.frameHeight;
       var scale = Math.min(targetW / visualW, targetH / visualH);
       if (!isFinite(scale) || scale <= 0) scale = 1;
+      scale *= getEnemySpriteReadabilityScale(e, spriteId);
 
       var drawX = (typeof options.x === 'number') ? options.x : e.x;
       var drawY = (typeof options.y === 'number') ? options.y : e.y;
@@ -3886,7 +3965,9 @@ if (shouldShow) {
         cx -= (visualBounds.x + visualBounds.width / 2 - sprite.frameWidth / 2) * scale;
         cy -= (visualBounds.y + visualBounds.height / 2 - sprite.frameHeight / 2) * scale;
       }
-      var frame = getEnemySpriteFrame(spriteId, animationFrame);
+      var frame = (spriteId === animatedSpriteId)
+        ? getEnemyAnimatedSpriteFrame(e, spriteId, animationFrame)
+        : getEnemySpriteFrame(spriteId, 0);
 
       window.drawSpriteFrame(ctx, spriteId, cx, cy, {
         frame: frame,
@@ -3944,11 +4025,13 @@ if (shouldShow) {
     const size = (e.type === 'alien_mini') ? 2 : 3;
 
     ctx.save();
-    ctx.globalAlpha = 0.04;
-    ctx.fillStyle = color;
-    ctx.fillRect(e.x - 2, e.y - 2, e.w + 4, e.h + 4);
-    ctx.globalAlpha = 0.07;
-    ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
+    if (!isEnemyAnimatedSpriteReady(e)) {
+      ctx.globalAlpha = 0.015;
+      ctx.fillStyle = color;
+      ctx.fillRect(e.x - 2, e.y - 2, e.w + 4, e.h + 4);
+      ctx.globalAlpha = 0.025;
+      ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
+    }
 
     if (e.spawnFlashTimer > 0) {
       ctx.globalAlpha = 1 - spawnT * 0.42;
