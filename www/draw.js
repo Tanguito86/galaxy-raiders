@@ -3469,9 +3469,15 @@ if (shouldShow) {
   }
 
   if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player')) {
+    const playerSprite = window.SpriteSystem.getSprite('player');
+    const playerFrameCount = playerSprite && playerSprite.image
+      ? Math.max(1, Math.floor(playerSprite.image.width / playerSprite.frameWidth) * Math.floor(playerSprite.image.height / playerSprite.frameHeight))
+      : 1;
+    const playerSpriteFrame = playerFrameCount > 1 ? animationFrame % playerFrameCount : 0;
+
     ctx.globalAlpha = 0.18 + corePulse * 0.06;
     window.drawSpriteFrame(ctx, 'player', player.x - 1, player.y, {
-      frame: animationFrame,
+      frame: playerSpriteFrame,
       rotation: 0,
       scale: 1,
       anchorX: 0,
@@ -3480,7 +3486,7 @@ if (shouldShow) {
     });
     ctx.globalAlpha = 0.10 + corePulse * 0.04;
     window.drawSpriteFrame(ctx, 'player', player.x + 1, player.y, {
-      frame: animationFrame,
+      frame: playerSpriteFrame,
       rotation: 0,
       scale: 1,
       anchorX: 0,
@@ -3489,7 +3495,7 @@ if (shouldShow) {
     });
     ctx.globalAlpha = 0.06 + corePulse * 0.03;
     window.drawSpriteFrame(ctx, 'player', player.x, player.y - 1, {
-      frame: animationFrame,
+      frame: playerSpriteFrame,
       rotation: 0,
       scale: 1,
       anchorX: 0,
@@ -3499,7 +3505,7 @@ if (shouldShow) {
 
     ctx.globalAlpha = 1;
     window.drawSpriteFrame(ctx, 'player', player.x, player.y, {
-      frame: animationFrame,
+      frame: playerSpriteFrame,
       rotation: 0,
       scale: 1,
       anchorX: 0,
