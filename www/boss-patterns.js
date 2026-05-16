@@ -1055,3 +1055,81 @@ function _emperadorBulletSpeed() {
   }
   return Math.min(3.6, speed);
 }
+
+// ============================================================
+// HC-72: FULL BOSS HARDCORE REGISTRY
+// Central lookup for all hardcore-converted bosses
+// ============================================================
+
+window.HARDCORE_BOSS_REGISTRY = [
+  {
+    id: 1,
+    name: 'CRABTRON',
+    pattern: 'crossfire',
+    level: 5,
+    isEnabled: function() {
+      return typeof shouldUseCrancktonHardcorePattern === 'function' && shouldUseCrancktonHardcorePattern(boss);
+    },
+    updateFnName: 'fireCrancktonHardcorePattern',
+    phaseCount: 3
+  },
+  {
+    id: 2,
+    name: 'SERPENTRIX',
+    pattern: 'zigzag',
+    level: 10,
+    isEnabled: function() {
+      return typeof shouldUseSerpentrixHardcorePattern === 'function' && shouldUseSerpentrixHardcorePattern(boss);
+    },
+    updateFnName: 'updateSerpentrixHardcorePattern',
+    phaseCount: 3
+  },
+  {
+    id: 3,
+    name: 'ORBITAL',
+    pattern: 'rotate',
+    level: 15,
+    isEnabled: function() {
+      return typeof shouldUseThirdBossHardcorePattern === 'function' && shouldUseThirdBossHardcorePattern(boss);
+    },
+    updateFnName: 'updateThirdBossHardcorePattern',
+    phaseCount: 3
+  },
+  {
+    id: 4,
+    name: 'TENIENTE',
+    pattern: 'divebomb',
+    level: 19,
+    isEnabled: function() {
+      return typeof shouldUseFourthBossHardcorePattern === 'function' && shouldUseFourthBossHardcorePattern(boss);
+    },
+    updateFnName: 'updateFourthBossHardcorePattern',
+    phaseCount: 3
+  },
+  {
+    id: 5,
+    name: 'EMPERADOR',
+    pattern: 'supreme',
+    level: 20,
+    isEnabled: function() {
+      return typeof shouldUseFifthBossHardcorePattern === 'function' && shouldUseFifthBossHardcorePattern(boss);
+    },
+    updateFnName: 'updateFifthBossHardcorePattern',
+    phaseCount: 3
+  }
+];
+
+window.getHardcoreBossRegistry = function() {
+  return window.HARDCORE_BOSS_REGISTRY;
+};
+
+window.getHardcoreBossId = function(b) {
+  var target = b || boss;
+  if (!target) return -1;
+  var reg = window.HARDCORE_BOSS_REGISTRY;
+  for (var i = 0; i < reg.length; i++) {
+    if (target.pattern === reg[i].pattern) return reg[i].id;
+    if (target.name === reg[i].name) return reg[i].id;
+  }
+  return -1;
+};
