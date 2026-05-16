@@ -855,7 +855,7 @@ function initEnemies() {
     enemies = createSetPieceFormation(setPiece.key);
     setPieceBannerText = setPiece.name;
     setPieceBannerTimer = 3200;
-    setPieceIntroTimer = 2200;
+    setPieceIntroTimer = (typeof window.getHardcoreRhythmIntro === 'function') ? window.getHardcoreRhythmIntro(2200) : 2200;
     setPieceIntroResolved = false;
     setPiecePatternTimer = 0;
     setPieceFireTimer = 0;
@@ -873,7 +873,7 @@ function initEnemies() {
 
       e.entryTargetX = targetX;
       e.entryTargetY = targetY;
-      e.entryDelay = e.row * 120 + (idx % 5) * 45;
+      e.entryDelay = (typeof window.getHardcoreRhythmEntryDelay === 'function') ? window.getHardcoreRhythmEntryDelay(e.row * 120 + (idx % 5) * 45) : (e.row * 120 + (idx % 5) * 45);
       e.entryDone = false;
 
       e.x = side < 0 ? -e.w - 80 - e.row * 12 : W + 80 + e.row * 12;

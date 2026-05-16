@@ -4,7 +4,7 @@
 
 function beginWaveTransition(completedLevel, nextLevel) {
   pendingNextLevel = true;
-  levelClearTimer = 900;
+  levelClearTimer = (typeof window.getHardcoreRhythmWavePause === 'function') ? window.getHardcoreRhythmWavePause(900) : 900;
   pushScreenShake('medium', 10);
   sfxConfirm();
 
