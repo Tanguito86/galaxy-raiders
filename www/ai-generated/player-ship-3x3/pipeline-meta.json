@@ -1,0 +1,176 @@
+﻿{
+    "asset_type":  "player",
+    "action":  "engine_atlas",
+    "view":  "topdown",
+    "art_style":  "pixel_art",
+    "rows":  3,
+    "cols":  3,
+    "frame_width":  32,
+    "frame_height":  32,
+    "sheet_width":  96,
+    "sheet_height":  96,
+    "source":  "C:\\Users\\Deposito\\.codex\\generated_images\\019e32b8-03ce-7070-87e2-05e5e16df90d\\ig_0ccefa5fe28a87cf016a08e585ec0081978244f735c47445ea.png",
+    "final":  "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\player-ship-3x3.png",
+    "transparent_background":  true,
+    "shared_scale":  0.086567164179104483,
+    "source_cell_width":  418,
+    "source_cell_height":  418,
+    "edge_touch_frames":  [
+
+                          ],
+    "frames":  [
+                   {
+                       "row":  1,
+                       "col":  1,
+                       "source_bounds":  {
+                                             "y":  77,
+                                             "width":  303,
+                                             "height":  334,
+                                             "x":  72
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  1,
+                                            "width":  26,
+                                            "height":  29,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  1,
+                       "col":  2,
+                       "source_bounds":  {
+                                             "y":  77,
+                                             "width":  304,
+                                             "height":  335,
+                                             "x":  470
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  1,
+                                            "width":  26,
+                                            "height":  29,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  1,
+                       "col":  3,
+                       "source_bounds":  {
+                                             "y":  77,
+                                             "width":  304,
+                                             "height":  335,
+                                             "x":  867
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  1,
+                                            "width":  26,
+                                            "height":  29,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  2,
+                       "col":  1,
+                       "source_bounds":  {
+                                             "y":  482,
+                                             "width":  288,
+                                             "height":  300,
+                                             "x":  85
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  3,
+                                            "width":  25,
+                                            "height":  26,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  2,
+                       "col":  2,
+                       "source_bounds":  {
+                                             "y":  482,
+                                             "width":  288,
+                                             "height":  300,
+                                             "x":  484
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  3,
+                                            "width":  25,
+                                            "height":  26,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  2,
+                       "col":  3,
+                       "source_bounds":  {
+                                             "y":  482,
+                                             "width":  286,
+                                             "height":  300,
+                                             "x":  888
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  3,
+                                            "width":  25,
+                                            "height":  26,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  3,
+                       "col":  1,
+                       "source_bounds":  {
+                                             "y":  855,
+                                             "width":  285,
+                                             "height":  306,
+                                             "x":  72
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  3,
+                                            "width":  25,
+                                            "height":  26,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  3,
+                       "col":  2,
+                       "source_bounds":  {
+                                             "y":  855,
+                                             "width":  284,
+                                             "height":  306,
+                                             "x":  473
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  3,
+                                            "width":  25,
+                                            "height":  26,
+                                            "x":  3
+                                        },
+                       "source_edge_touch":  false
+                   },
+                   {
+                       "row":  3,
+                       "col":  3,
+                       "source_bounds":  {
+                                             "y":  855,
+                                             "width":  283,
+                                             "height":  306,
+                                             "x":  875
+                                         },
+                       "drawn_bounds":  {
+                                            "y":  3,
+                                            "width":  24,
+                                            "height":  26,
+                                            "x":  4
+                                        },
+                       "source_edge_touch":  false
+                   }
+               ]
+}

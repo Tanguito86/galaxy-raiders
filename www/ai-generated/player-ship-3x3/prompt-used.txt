@@ -1,0 +1,9 @@
+﻿Create one pixel-art sprite sheet for the Galaxy Raiders player spaceship. Exact layout: 3 columns by 3 rows, nine equal square frames, each frame contains the same top-down player ship centered. Use a solid #FF00FF magenta background across the full sheet for chroma key removal. Do not include labels, text, UI, grid lines, borders, stars, smoke, shadows, or any background art.
+
+Each frame should be a 32x32 game sprite concept scaled up for visibility, with generous magenta padding and the ship fully inside the central 70% safe area. Keep ship size, bounding box, silhouette, cockpit location, wing length, and pixel scale consistent across all 9 frames. Modern arcade shmup pixel art, strong dark navy outline, cyan/white/blue body, cyan cockpit glow, orange/yellow rear thruster flame, subtle shading, readable on dark space backgrounds. Match a clean arcade enemy-sprite style: crisp blocky pixels, high contrast, compact readable forms.
+
+Row 1: idle animation. Frame 1 neutral engine pulse, frame 2 slightly brighter orange thruster and cockpit cyan glow, frame 3 returns slightly dimmer. No movement except subtle glow/flame variation.
+Row 2: banking left animation. Ship leans subtly left in all three frames with tiny progression, no exaggerated motion; rear thruster flame bends right. Keep the body centered in each frame.
+Row 3: banking right animation. Ship leans subtly right in all three frames with tiny progression, no exaggerated motion; rear thruster flame bends left. Keep the body centered in each frame.
+
+Transparent-background workflow source: output on solid #FF00FF only. No anti-aliased background edges. Nothing may touch cell edges. No text. No UI.
