@@ -1,5 +1,5 @@
 // =====================
-// GALAXY RAIDERS - render-entities.js
+// GALAXY RAIDERS - render-entities.js (HC-94 pass)
 // =====================
 
 function getEnemyBulletRenderStyle(b) {
@@ -38,6 +38,24 @@ function getEnemyBulletRenderStyle(b) {
   return { kind: 'basic', color: '#ff5050', style: 'default' };
 }
 
+// --- HC-94: directional trail helper ---
+function _drawEnemyTrail(b, color, steps, maxAlpha, lenMul) {
+  var vx = b.vx || 0;
+  var vy = b.vy || 0;
+  if (vx === 0 && vy === 0) return;
+  var w = b.w || 4;
+  var h = b.h || 10;
+  var mul = lenMul || 1.5;
+  for (var s = 0; s < steps; s++) {
+    var t = (s + 1) / steps;
+    var ox = -vx * mul * t;
+    var oy = -vy * mul * t;
+    ctx.globalAlpha = maxAlpha * (1 - t) * 0.6;
+    ctx.fillStyle = color;
+    ctx.fillRect(b.x + ox, b.y + oy, w, h);
+  }
+}
+
 function drawEnemyBullet(b) {
   var _rs = getEnemyBulletRenderStyle(b);
   var kind = _rs.kind;
@@ -52,31 +70,35 @@ function drawEnemyBullet(b) {
   drawHardcoreBulletEnhancement(ctx, b, kind === 'boss');
 
   if (kind === 'boss') {
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = '#080000';
-    ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 5, y - 5, w + 10, h + 10);
 
+    // --- INNER GLOW ---
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = color;
     ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
 
-    ctx.globalAlpha = 0.48;
-    ctx.fillStyle = color;
-    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+    // --- DIRECTIONAL TRAIL ---
+    _drawEnemyTrail(b, color, 3, 0.10, 2.0);
 
+    // --- BODY ---
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
 
-    ctx.globalAlpha = 0.60;
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.65;
     ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(2, h - 2));
 
-    ctx.globalAlpha = 0.34;
-    ctx.fillStyle = '#000';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    // --- CORE PULSE ---
+    var bp = 0.5 + 0.5 * Math.sin(globalTime * 0.05 + x * 0.01);
+    ctx.globalAlpha = 0.30 + bp * 0.15;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + Math.floor(w * 0.25), y + Math.floor(h * 0.25), Math.max(2, Math.floor(w * 0.5)), Math.max(2, Math.floor(h * 0.5)));
+
     ctx.globalAlpha = 1;
     ctx.restore();
     return;
@@ -87,122 +109,233 @@ function drawEnemyBullet(b) {
     const cx = x + w * 0.5;
     const cy = y + h * 0.5;
 
-    ctx.globalAlpha = 0.14;
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.10;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.32;
+    // --- INNER GLOW ---
+    ctx.globalAlpha = 0.22;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.95;
+    // --- TRAIL ---
+    _drawEnemyTrail(b, color, 2, 0.12, 2.5);
+
+    // --- BODY ---
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(1, r * 0.45), 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.globalAlpha = 1;
     ctx.restore();
     return;
   }
 
+  // --- SHARED TRAIL for rect-based bullets ---
+  _drawEnemyTrail(b, color, 2, 0.08, 2.0);
+
   if (kind === 'fortress') {
-    ctx.globalAlpha = 0.16;
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    // --- INNER GLOW ---
+    ctx.globalAlpha = 0.20;
     ctx.fillStyle = color;
     ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
 
+    // --- BODY ---
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
-    ctx.fillRect(x + 1, y, Math.max(1, w - 2), h);
-    ctx.fillStyle = 'rgba(255,240,180,0.72)';
+    ctx.fillRect(x, y, w, h);
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+
+    // --- SCORCH MARK ---
+    ctx.globalAlpha = 0.40;
+    ctx.fillStyle = '#ffe4b0';
     ctx.fillRect(x + Math.max(1, Math.floor(w * 0.5)), y, 1, h);
+
     ctx.restore();
     return;
   }
 
   if (kind === 'split_fan') {
-    ctx.globalAlpha = 0.15;
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    // --- INNER GLOW ---
+    ctx.globalAlpha = 0.20;
     ctx.fillStyle = color;
     ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
 
+    // --- BODY ---
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.42;
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+
+    // --- VELOCITY SMEAR ---
+    ctx.globalAlpha = 0.30;
     ctx.fillRect(x - (b.vx || 0) * 0.6, y - 3, w, 3);
+
     ctx.globalAlpha = 1;
     ctx.restore();
     return;
   }
 
   if (kind === 'crossfire_a' || kind === 'crossfire_b') {
-    ctx.globalAlpha = 0.15;
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    // --- INNER GLOW ---
+    ctx.globalAlpha = 0.20;
     ctx.fillStyle = color;
     ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
 
+    // --- BODY ---
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.46;
-    ctx.fillRect(x, y - 2, w, 2);
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+
+    // --- TIP HIGHLIGHT ---
+    ctx.globalAlpha = 0.40;
+    ctx.fillRect(x, y - 2, w, 3);
+
     ctx.globalAlpha = 1;
     ctx.restore();
     return;
   }
 
   if (style === 'tank') {
-    ctx.globalAlpha = 0.24;
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 4, y - 4, w + 8, h + 8);
+
+    // --- MID GLOW ---
+    ctx.globalAlpha = 0.20;
     ctx.fillStyle = color;
     ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+
+    // --- BODY ---
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(2, h - 2));
+
+    ctx.globalAlpha = 0.45;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + Math.floor(h * 0.5) - 1, Math.max(1, w - 2), 2);
+
+  } else if (style === 'fast') {
+    // --- OUTER HALO ---
     ctx.globalAlpha = 0.10;
     ctx.fillStyle = color;
-    ctx.fillRect(x - 4, y - 3, w + 8, h + 6);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 1, y + h * 0.5 - 1, Math.max(1, w - 2), 2);
-  } else if (style === 'fast') {
-    ctx.globalAlpha = 0.14;
-    ctx.fillStyle = color;
-    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
-    ctx.globalAlpha = 0.09;
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y + h, w, 4);
-    ctx.globalAlpha = 0.05;
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y + h + 4, w, 3);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = color;
-    ctx.fillRect(x + 1, y, Math.max(1, w - 2), h);
-    ctx.globalAlpha = 0.40;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 1, y + h * 0.5 - 0.5, Math.max(1, w - 2), 1);
-  } else if (style === 'splitter') {
-    var _pa = 0.5 + 0.5 * Math.sin(globalTime * 0.016 + b.x * 0.1);
-    ctx.globalAlpha = 0.14 + _pa * 0.08;
-    ctx.fillStyle = color;
-    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
-    ctx.globalAlpha = 0.8 + _pa * 0.2;
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.35 + _pa * 0.2;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 1, y + h * 0.5 - 0.5, Math.max(1, w - 2), 1);
-  } else {
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    // --- INNER GLOW ---
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = color;
     ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    // --- BODY (offset for speed feel) ---
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(x + 1, y, Math.max(1, w - 2), h);
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+
+    // --- SPEED LINES ---
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y + h + 1, w, 2);
+
+  } else if (style === 'splitter') {
+    var _pa = 0.5 + 0.5 * Math.sin(globalTime * 0.016 + b.x * 0.1);
+
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.10 + _pa * 0.06;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    // --- INNER GLOW ---
+    ctx.globalAlpha = 0.18 + _pa * 0.08;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    // --- BODY ---
+    ctx.globalAlpha = 0.85 + _pa * 0.15;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.4 + _pa * 0.15;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
+
+  } else {
+    // DEFAULT / basic bullets
+
+    // --- OUTER HALO ---
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+    // --- INNER GLOW ---
+    ctx.globalAlpha = 0.20;
+    ctx.fillStyle = color;
+    ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+    // --- BODY ---
     ctx.globalAlpha = 1;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.42;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x + 1, y + h * 0.5 - 0.5, Math.max(1, w - 2), 1);
+
+    // --- BRIGHT CORE ---
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
   }
+
   ctx.globalAlpha = 1;
   ctx.restore();
 }

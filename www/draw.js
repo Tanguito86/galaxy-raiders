@@ -4174,31 +4174,61 @@ if (shouldShow) {
     // Enemy bullets
     enemyBullets.forEach(drawEnemyBullet);
 
-    // Minas flotantes (Serpentrix)
+    // Minas flotantes (Serpentrix) — HC-94 visual upgrade
     mines.forEach(m => {
-      const pulse = Math.sin(m.pulseTime * 0.01) * 0.3 + 0.7; // Pulsa entre 0.4 y 1.0
-      const warningPulse = m.life < 2000 ? Math.sin(m.pulseTime * 0.03) > 0 : true; // Parpadea si le queda poca vida
+      const pulse = Math.sin(m.pulseTime * 0.01) * 0.3 + 0.7;
+      const warning = m.life < 2000 ? Math.sin(m.pulseTime * 0.03) > 0 : true;
       
-      if (warningPulse) {
-        // Círculo exterior (glow)
+      if (warning) {
+        var mx = m.x;
+        var my = m.y;
+        var mr = m.radius;
+
+        // Outer danger halo (larger, low alpha)
         ctx.beginPath();
-        ctx.arc(m.x, m.y, m.radius + 4, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 0, ${0.2 * pulse})`;
+        ctx.arc(mx, my, mr + 8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,255,0,' + (0.08 * pulse) + ')';
         ctx.fill();
-        
-        // Círculo principal
+
+        // Mid glow ring
         ctx.beginPath();
-        ctx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 0, ${0.6 * pulse})`;
+        ctx.arc(mx, my, mr + 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,255,0,' + (0.18 * pulse) + ')';
         ctx.fill();
-        
-        /// Centro brillante
+
+        // Main body
         ctx.beginPath();
-        ctx.arc(m.x, m.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#0f0';
+        ctx.arc(mx, my, mr, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,255,0,' + (0.55 * pulse) + ')';
         ctx.fill();
+
+        // Bright border ring
+        ctx.globalAlpha = 0.35 * pulse;
+        ctx.strokeStyle = '#8f8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(mx, my, mr - 1, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Bright core
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(mx, my, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+
+        // Danger flash overlay when low life
+        if (m.life < 1200) {
+          var dangerPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.08);
+          ctx.globalAlpha = dangerPulse * 0.15;
+          ctx.fillStyle = '#f00';
+          ctx.beginPath();
+          ctx.arc(mx, my, mr + 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     });
+    ctx.globalAlpha = 1;
 
     // Satélites orbitantes (Orbital)
     if (boss.active && boss.pattern === 'rotate') {
