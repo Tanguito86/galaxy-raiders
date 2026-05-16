@@ -314,31 +314,37 @@
     fallbackColor: "#ff4d5e"
   });
 
+  // HC-117 boss sprite hook: single-frame registrations (assets TBD)
   registerSprite("boss_crabtron", {
+    src: "assets/sprites/boss_crabtron.png",
     frameWidth: 96,
     frameHeight: 96,
     fallbackColor: "#ff375f"
   });
 
   registerSprite("boss_serpentrix", {
+    src: "assets/sprites/boss_serpentrix.png",
     frameWidth: 96,
     frameHeight: 96,
     fallbackColor: "#35ff9a"
   });
 
   registerSprite("boss_orbital", {
+    src: "assets/sprites/boss_orbital.png",
     frameWidth: 96,
     frameHeight: 96,
     fallbackColor: "#46d9ff"
   });
 
   registerSprite("boss_teniente", {
+    src: "assets/sprites/boss_teniente.png",
     frameWidth: 96,
     frameHeight: 96,
     fallbackColor: "#ffc857"
   });
 
   registerSprite("boss_emperador", {
+    src: "assets/sprites/boss_emperador.png",
     frameWidth: 128,
     frameHeight: 128,
     fallbackColor: "#ffffff"

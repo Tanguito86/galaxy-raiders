@@ -3532,18 +3532,53 @@ if (shouldShow) {
     // UFO
     if (ufo.active) drawSprite(ctx, SPRITES.ufo, ufo.x, ufo.y, currentPalette[3], 3);
 
-      // Boss
+    // HC-117: boss sprite hook foundation
+    var _BOSS_SPRITE_ID_MAP = {
+      crossfire: 'boss_crabtron',
+      zigzag: 'boss_serpentrix',
+      rotate: 'boss_orbital',
+      divebomb: 'boss_teniente',
+      supreme: 'boss_emperador'
+    };
+
+    function getBossSpriteId(boss) {
+      return _BOSS_SPRITE_ID_MAP[boss.pattern] || 'boss_crabtron';
+    }
+
+    function getBossLegacySprite(boss) {
+      switch (boss.pattern) {
+        case 'crossfire': return SPRITES.boss_crabtron;
+        case 'zigzag':    return SPRITES.boss_serpentrix;
+        case 'rotate':    return SPRITES.boss_orbital;
+        case 'divebomb':  return SPRITES.boss_teniente;
+        case 'supreme':   return SPRITES.boss_emperador;
+        default:          return SPRITES.boss_crabtron;
+      }
+    }
+
+    function drawBossSpriteOrLegacy(ctx, boss, bossColor, size) {
+      var spriteId = getBossSpriteId(boss);
+      var sx = size || 5;
+      if (window.SpriteSystem && window.SpriteSystem.isSpriteReady(spriteId)) {
+        var sprite = window.SpriteSystem.getSprite(spriteId);
+        var scale = Math.min(boss.w / sprite.frameWidth, boss.h / sprite.frameHeight);
+        if (!isFinite(scale) || scale <= 0) scale = 1;
+        window.drawSpriteFrame(ctx, spriteId, boss.x + boss.w / 2, boss.y + boss.h / 2, {
+          frame: 0,
+          scale: scale,
+          anchorX: 0.5,
+          anchorY: 0.5
+        });
+        return true;
+      }
+      var bossSprite = getBossLegacySprite(boss);
+      drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, sx);
+      return false;
+    }
+
+    // Boss
     if (boss.active) {
-      const bossSprite = (() => {
-        switch(boss.pattern) {
-          case 'crossfire': return SPRITES.boss_crabtron;
-          case 'zigzag':    return SPRITES.boss_serpentrix;
-          case 'rotate':    return SPRITES.boss_orbital;
-          case 'divebomb':  return SPRITES.boss_teniente;
-          case 'supreme':   return SPRITES.boss_emperador;
-          default:          return SPRITES.boss_crabtron;
-        }
-      })();
+      const bossSprite = getBossLegacySprite(boss);
       
       const bossColor = boss.color || '#f00';
       const bossGlow = 0.08 + 0.03 * Math.sin(globalTime * 0.018);
@@ -3637,7 +3672,7 @@ if (shouldShow) {
         ctx.restore();
       }
 
-      drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
+      drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
       if (boss.pattern === 'zigzag') {
         drawSerpentrixWave(ctx, boss, bossColor, globalTime);
@@ -3664,7 +3699,7 @@ if (shouldShow) {
         const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
         ctx.save();
         ctx.globalAlpha = flicker;
-        drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
+      drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
         ctx.globalAlpha = flicker * 0.35;
         drawSprite(ctx, bossSprite, boss.x, boss.y, '#ffffff', 5);
         ctx.restore();
