@@ -3455,15 +3455,60 @@ if (shouldShow) {
     ctx.globalAlpha = 1;
   }
 
-  // --- HC-92: SILHOUETTE GLOW ---
-  ctx.globalAlpha = 0.18 + corePulse * 0.06;
-  drawSprite(ctx, SPRITES[shipKey], player.x - 1, player.y, '#48f', 3);
-  ctx.globalAlpha = 0.10 + corePulse * 0.04;
-  drawSprite(ctx, SPRITES[shipKey], player.x + 1, player.y, '#6cf', 3);
-  ctx.globalAlpha = 0.06 + corePulse * 0.03;
-  drawSprite(ctx, SPRITES[shipKey], player.x, player.y - 1, '#8df', 3);
+  function drawLegacyPlayerShip() {
+    // --- HC-92: SILHOUETTE GLOW ---
+    ctx.globalAlpha = 0.18 + corePulse * 0.06;
+    drawSprite(ctx, SPRITES[shipKey], player.x - 1, player.y, '#48f', 3);
+    ctx.globalAlpha = 0.10 + corePulse * 0.04;
+    drawSprite(ctx, SPRITES[shipKey], player.x + 1, player.y, '#6cf', 3);
+    ctx.globalAlpha = 0.06 + corePulse * 0.03;
+    drawSprite(ctx, SPRITES[shipKey], player.x, player.y - 1, '#8df', 3);
 
-  drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
+    ctx.globalAlpha = 1;
+    drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
+  }
+
+  if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player')) {
+    ctx.globalAlpha = 0.18 + corePulse * 0.06;
+    window.drawSpriteFrame(ctx, 'player', player.x - 1, player.y, {
+      frame: animationFrame,
+      rotation: 0,
+      scale: 1,
+      anchorX: 0,
+      anchorY: 0,
+      tint: '#48f'
+    });
+    ctx.globalAlpha = 0.10 + corePulse * 0.04;
+    window.drawSpriteFrame(ctx, 'player', player.x + 1, player.y, {
+      frame: animationFrame,
+      rotation: 0,
+      scale: 1,
+      anchorX: 0,
+      anchorY: 0,
+      tint: '#6cf'
+    });
+    ctx.globalAlpha = 0.06 + corePulse * 0.03;
+    window.drawSpriteFrame(ctx, 'player', player.x, player.y - 1, {
+      frame: animationFrame,
+      rotation: 0,
+      scale: 1,
+      anchorX: 0,
+      anchorY: 0,
+      tint: '#8df'
+    });
+
+    ctx.globalAlpha = 1;
+    window.drawSpriteFrame(ctx, 'player', player.x, player.y, {
+      frame: animationFrame,
+      rotation: 0,
+      scale: 1,
+      anchorX: 0,
+      anchorY: 0,
+      fallback: drawLegacyPlayerShip
+    });
+  } else {
+    drawLegacyPlayerShip();
+  }
   ctx.restore();
   drawHardcorePlayerHitbox(ctx);
 }

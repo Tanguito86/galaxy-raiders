@@ -84,7 +84,7 @@
     return !!(isEnabled() && sprite && sprite.loaded && sprite.image);
   }
 
-  function drawTint(ctx, sprite, sx, sy, sw, sh, dw, dh, tint) {
+  function drawTint(ctx, sprite, sx, sy, sw, sh, dx, dy, dw, dh, tint) {
     var canvas = document.createElement("canvas");
     var tintCtx = canvas.getContext("2d");
 
@@ -95,7 +95,7 @@
     tintCtx.fillStyle = tint;
     tintCtx.fillRect(0, 0, sw, sh);
 
-    ctx.drawImage(canvas, -dw / 2, -dh / 2, dw, dh);
+    ctx.drawImage(canvas, dx, dy, dw, dh);
   }
 
   function runFallback(ctx, sprite, x, y, options) {
@@ -140,11 +140,17 @@
 
     var dw = sw * scale;
     var dh = sh * scale;
+    var anchorX = Number(options.anchorX);
+    var anchorY = Number(options.anchorY);
+    if (!isFinite(anchorX)) anchorX = 0.5;
+    if (!isFinite(anchorY)) anchorY = 0.5;
+    var dx = -dw * anchorX;
+    var dy = -dh * anchorY;
 
     if (options.tint) {
-      drawTint(ctx, sprite, sx, sy, sw, sh, dw, dh, options.tint);
+      drawTint(ctx, sprite, sx, sy, sw, sh, dx, dy, dw, dh, options.tint);
     } else {
-      ctx.drawImage(sprite.image, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh);
+      ctx.drawImage(sprite.image, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
     ctx.restore();
