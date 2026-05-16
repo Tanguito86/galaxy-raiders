@@ -753,7 +753,56 @@ function updateFourthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-61: Phases 2 and 3 — not yet implemented, fall through to legacy
+  // HC-62: Phase 2 — double dive lane: 2 columns, one aimed near player, one lateral closure
+  if (phase === 2) {
+    var center2 = getBossCenter(target);
+    var speed2 = _tenienteBulletSpeed() * 0.88;
+    var angleToPlayer2 = getAngleFromBossToPlayer(target);
+    var downBias2 = Math.PI / 2;
+    var maxDeviation2 = 0.55;
+    var clampedAngle2 = angleToPlayer2;
+    if (clampedAngle2 < downBias2 - maxDeviation2) clampedAngle2 = downBias2 - maxDeviation2;
+    if (clampedAngle2 > downBias2 + maxDeviation2) clampedAngle2 = downBias2 + maxDeviation2;
+
+    // Toggle lateral side per volley
+    if (target._tenienteLaneSide === undefined) target._tenienteLaneSide = 0;
+    target._tenienteLaneSide = 1 - target._tenienteLaneSide;
+    var laneOffset = 44; // ~44px lateral offset — creates closure without blocking entire screen
+    var laneX = (target._tenienteLaneSide === 0) ? center2.x - laneOffset : center2.x + laneOffset;
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 400);
+
+    var colCount = 3;
+    var spread2 = 0.34;
+    var color2 = '#ee4422'; // deeper red for phase 2
+
+    // Column 1: aimed near player (center)
+    for (var j = 0; j < colCount; j++) {
+      var tj = colCount > 1 ? j / (colCount - 1) : 0.5;
+      var aj = clampedAngle2 - spread2 / 2 + tj * spread2;
+      pushEnemyBullet(center2.x - 2, target.y + target.h, Math.cos(aj) * speed2, Math.sin(aj) * speed2, 5, 10, {
+        kind: 'basic',
+        color: color2,
+        sourceType: 'boss_teniente'
+      });
+    }
+
+    // Column 2: lateral closure (same angle, offset horizontally)
+    for (var k = 0; k < colCount; k++) {
+      var tk = colCount > 1 ? k / (colCount - 1) : 0.5;
+      var ak2 = clampedAngle2 - spread2 / 2 + tk * spread2;
+      pushEnemyBullet(laneX - 2, target.y + target.h, Math.cos(ak2) * speed2, Math.sin(ak2) * speed2, 5, 10, {
+        kind: 'basic',
+        color: color2,
+        sourceType: 'boss_teniente'
+      });
+    }
+
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    return true;
+  }
+
+  // HC-61/62: Phase 3 — not yet implemented, fall through to legacy
   return false;
 }
 
