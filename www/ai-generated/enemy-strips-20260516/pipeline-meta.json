@@ -32,7 +32,8 @@
         "idle-2.png",
         "idle-3.png"
       ],
-      "edge_touch_frames": []
+      "edge_touch_frames": [],
+      "redesigned": "2026-05-16 sniper readability pass"
     },
     {
       "name": "alien3",
