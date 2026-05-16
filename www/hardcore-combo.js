@@ -346,14 +346,25 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.textAlign = 'left';
   ctx.globalAlpha = 0.62;
   ctx.fillStyle = '#000';
-  ctx.fillRect(panelX, panelY, panelW, lineH * 17 + 10);
+  ctx.fillRect(panelX, panelY, panelW, lineH * 18 + 10);
   ctx.globalAlpha = 0.22;
   ctx.strokeStyle = '#0ff';
   ctx.lineWidth = 1;
-  ctx.strokeRect(panelX, panelY, panelW, lineH * 17 + 10);
+  ctx.strokeRect(panelX, panelY, panelW, lineH * 18 + 10);
   ctx.globalAlpha = 1;
 
   ctx.font = '6px "Press Start 2P"';
+
+  // Safe formatter — never NaN
+  function _sfmt(v, d) {
+    if (typeof v !== 'number' || !isFinite(v)) return '--';
+    return v.toFixed(typeof d === 'number' ? d : 2);
+  }
+
+  // --- HARDCORE STATUS ---
+  var hcOn = (typeof isHardcoreEnabled === 'function') ? isHardcoreEnabled() : false;
+  ctx.fillStyle = hcOn ? '#0f0' : '#f44';
+  ctx.fillText('HARDCORE ' + (hcOn ? 'ON' : 'OFF'), panelX + 6, y); y += lineH;
 
   // --- RANK ---
   var rLevel = (typeof window.getHardcoreRankLevel === 'function') ? window.getHardcoreRankLevel() : 1;
@@ -365,13 +376,13 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.fillStyle = '#f80';
   ctx.fillText('RANK L' + rLevel, panelX + 6, y); y += lineH;
   ctx.fillStyle = '#ffb';
-  ctx.fillText('VAL ' + rValue.toFixed(1), panelX + 6, y); y += lineH;
+  ctx.fillText('VAL ' + _sfmt(rValue, 1), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#fb8';
-  ctx.fillText('BUL x' + rBullet.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('BUL x' + _sfmt(rBullet, 2), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#8bf';
-  ctx.fillText('CD  x' + rCD.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('CD  x' + _sfmt(rCD, 2), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#ff8';
-  ctx.fillText('SCR x' + rScore.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('SCR x' + _sfmt(rScore, 2), panelX + 6, y); y += lineH;
 
   // --- COMBO ---
   var cCount = (typeof window.getHardcoreComboCount === 'function') ? window.getHardcoreComboCount() : 0;
@@ -382,7 +393,7 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.fillStyle = '#d8f';
   ctx.fillText('COMBO ' + cCount, panelX + 6, y); y += lineH;
   ctx.fillStyle = '#faf';
-  ctx.fillText('MULT x' + cMult.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('MULT x' + _sfmt(cMult, 2), panelX + 6, y); y += lineH;
 
   // Combo timer bar
   if (cCount > 0 && cState.activeUntil > 0) {
@@ -406,20 +417,20 @@ window.drawHardcoreSystemsDebug = function(ctx) {
   ctx.fillStyle = '#8f8';
   ctx.fillText('PRESSURE ' + pState.level, panelX + 6, y); y += lineH;
   ctx.fillStyle = '#afa';
-  ctx.fillText('PRS x' + pState.multiplier.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('PRS x' + _sfmt(pState.multiplier, 2), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#aaf';
-  ctx.fillText('PCD x' + pCD.toFixed(2), panelX + 6, y);
+  ctx.fillText('PCD x' + _sfmt(pCD, 2), panelX + 6, y);
 
   y += 4;
   var rState = (typeof window.getHardcoreRhythmState === 'function') ? window.getHardcoreRhythmState() : { active: false, wavePauseScale: 1.00, introScale: 1.00, entryDelayScale: 1.00 };
   ctx.fillStyle = '#f8f';
   ctx.fillText('RHYTHM ' + (rState.active ? 'ON' : 'OFF'), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#faf';
-  ctx.fillText('WAVE x' + rState.wavePauseScale.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('WAVE x' + _sfmt(rState.wavePauseScale, 2), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#fad';
-  ctx.fillText('INTRO x' + rState.introScale.toFixed(2), panelX + 6, y); y += lineH;
+  ctx.fillText('INTRO x' + _sfmt(rState.introScale, 2), panelX + 6, y); y += lineH;
   ctx.fillStyle = '#fcc';
-  ctx.fillText('ENTRY x' + rState.entryDelayScale.toFixed(2), panelX + 6, y);
+  ctx.fillText('ENTRY x' + _sfmt(rState.entryDelayScale, 2), panelX + 6, y);
 
   ctx.restore();
 };
