@@ -194,7 +194,9 @@ var HC_TELEGRAPH_COLORS = {
   // HC-54: Orbital blue/violet telegraphs
   orbital_arc:   '#4488ff',
   // HC-61: Teniente red/orange telegraphs
-  teniente_dive: '#ff5533'
+  teniente_dive: '#ff5533',
+  // HC-67: Emperador purple/gold telegraphs
+  emperador_spread: '#bb88ff'
 };
 
 function triggerBossTelegraph(b, type, duration) {
@@ -901,9 +903,46 @@ function _markEmperadorPatternMeta(b) {
 function updateFifthBossHardcorePattern(b, dt) {
   var target = b || boss;
   if (!target || !target.active) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+  if (target.isTeleporting) return false; // no shoot during teleport
 
   _markEmperadorPatternMeta(target);
 
-  // HC-66: stub — no pattern override yet, returns false to keep legacy behavior
+  var phase = getBossPhaseSafe(target);
+
+  // HC-67: Phase 1 — wide imperial spread (7 bullets, wide fan, slow speed, clear gaps)
+  if (phase === 1) {
+    var center = getBossCenter(target);
+    var speed = _emperadorBulletSpeed();
+    var downBias = Math.PI / 2;
+    var arcCount = 7;
+    var arcSpan = 1.5; // ~86° wide fan — imperial presence, readable gaps
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 420);
+
+    for (var i = 0; i < arcCount; i++) {
+      var t = arcCount > 1 ? i / (arcCount - 1) : 0.5;
+      var a = downBias - arcSpan / 2 + t * arcSpan;
+      pushEnemyBullet(center.x - 2, target.y + target.h, Math.cos(a) * speed, Math.sin(a) * speed, 5, 12, {
+        kind: 'basic',
+        color: '#aa77dd',
+        sourceType: 'boss_emperador'
+      });
+    }
+
+    if (typeof sfxImperialTelegraph === 'function') sfxImperialTelegraph();
+    return true;
+  }
+
+  // HC-67: Phases 2 and 3 — not yet implemented, fall through to legacy
   return false;
+}
+
+function _emperadorBulletSpeed() {
+  var speed = 2.0;
+  if (typeof getDifficultySettings === 'function') {
+    var s = getDifficultySettings(typeof level === 'number' ? level : 20);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.65;
+  }
+  return Math.min(3.6, speed);
 }
