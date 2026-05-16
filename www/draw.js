@@ -3846,6 +3846,18 @@ if (shouldShow) {
       return frameCount > 1 ? fallbackFrame % frameCount : 0;
     }
 
+    function getEnemySpriteVisualBounds(spriteId) {
+      var bounds = {
+        alien1: { x: 8,  y: 6, width: 17, height: 18 },
+        alien2: { x: 12, y: 1, width: 8,  height: 26 },
+        alien3: { x: 6,  y: 4, width: 21, height: 25 },
+        alien4: { x: 6,  y: 7, width: 20, height: 17 },
+        alien5: { x: 10, y: 0, width: 12, height: 27 },
+        alien6: { x: 8,  y: 4, width: 17, height: 24 }
+      };
+      return bounds[spriteId] || null;
+    }
+
     function drawEnemySpriteOrLegacy(ctx, e, spriteKey, color, size, options) {
       options = options || {};
 
@@ -3860,13 +3872,20 @@ if (shouldShow) {
       var sprite = window.SpriteSystem.getSprite(spriteId);
       var targetW = e.w || (sprite.frameWidth * size);
       var targetH = e.h || (sprite.frameHeight * size);
-      var scale = Math.min(targetW / sprite.frameWidth, targetH / sprite.frameHeight);
+      var visualBounds = getEnemySpriteVisualBounds(spriteId);
+      var visualW = visualBounds ? visualBounds.width : sprite.frameWidth;
+      var visualH = visualBounds ? visualBounds.height : sprite.frameHeight;
+      var scale = Math.min(targetW / visualW, targetH / visualH);
       if (!isFinite(scale) || scale <= 0) scale = 1;
 
       var drawX = (typeof options.x === 'number') ? options.x : e.x;
       var drawY = (typeof options.y === 'number') ? options.y : e.y;
       var cx = drawX + targetW / 2;
       var cy = drawY + targetH / 2;
+      if (visualBounds) {
+        cx -= (visualBounds.x + visualBounds.width / 2 - sprite.frameWidth / 2) * scale;
+        cy -= (visualBounds.y + visualBounds.height / 2 - sprite.frameHeight / 2) * scale;
+      }
       var frame = getEnemySpriteFrame(spriteId, animationFrame);
 
       window.drawSpriteFrame(ctx, spriteId, cx, cy, {
