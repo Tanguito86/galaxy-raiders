@@ -5,9 +5,40 @@
 const MAX_PARTICLES = 100;
 const ENEMY_SPAWN_FLASH_DURATION = 220;
 
-// --- STARS (HC-90 multi-layer) ---
+// --- STARS (HC-90 multi-layer with fallback) ---
 function initStars() {
-  initHC90Stars();
+  if (typeof initHC90Stars === 'function') {
+    initHC90Stars();
+    return;
+  }
+
+  // Fallback: legacy starfield
+  stars = [];
+
+  function addStar(count, speed, size, color, depth) {
+    for (var i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        speed: speed + (Math.random() - 0.5) * speed * 0.3,
+        size: size,
+        color: color,
+        depth: depth,
+        tw: Math.random() * 6.28,
+        drift: (Math.random() - 0.5) * 0.25,
+        phase: Math.random() * 1000
+      });
+    }
+  }
+
+  addStar(40, 0.4, 1, '#222', 0.05);
+  addStar(60, 0.8, 1, '#333', 0.12);
+  addStar(50, 1.2, 1, '#444', 0.20);
+  addStar(40, 1.8, 1, '#555', 0.35);
+  addStar(35, 2.5, 2, '#777', 0.50);
+  addStar(20, 3.5, 2, '#aaa', 0.70);
+  addStar(12, 4.5, 2, '#ccc', 0.85);
+  addStar(6, 5.5, 3, '#fff', 1.0);
 }
 
 

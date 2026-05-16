@@ -13,7 +13,8 @@ var _GALAXY_CONFIG_DEFAULTS = {
   combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 },
   pressure:  { enabled: true, minMultiplier: 1.00, maxMultiplier: 1.18, levels: { LOW: 1.00, NORMAL: 1.06, HIGH: 1.12, MAX: 1.18 } },
   rhythm:    { enabled: true, wavePauseMinScale: 0.75, introMinScale: 0.72, entryDelayMinScale: 0.70 },
-  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false }
+  background:{ hc90Enabled: true, nebulaEnabled: true, colorGradingEnabled: true, maxStars: 180 },
+  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false }
 };
 
 function getGalaxyConfig() {
@@ -74,7 +75,8 @@ function getHardcoreDebugConfig() {
   var ser = (typeof d.showEnemyRoles === 'boolean') ? d.showEnemyRoles : false;
   var sbp = (typeof d.showBossPattern === 'boolean') ? d.showBossPattern : false;
   var sbd = (typeof d.showBossDispatch === 'boolean') ? d.showBossDispatch : false;
-  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp, showBossDispatch: sbd };
+  var sbs = (typeof d.showBackgroundStats === 'boolean') ? d.showBackgroundStats : false;
+  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp, showBossDispatch: sbd, showBackgroundStats: sbs };
 }
 
 function getPressureConfig() {
@@ -95,6 +97,16 @@ function getRhythmConfig() {
   var ims = (typeof r.introMinScale === 'number' && r.introMinScale > 0 && r.introMinScale <= 1) ? r.introMinScale : 0.72;
   var eds = (typeof r.entryDelayMinScale === 'number' && r.entryDelayMinScale > 0 && r.entryDelayMinScale <= 1) ? r.entryDelayMinScale : 0.70;
   return { enabled: en, wavePauseMinScale: wps, introMinScale: ims, entryDelayMinScale: eds };
+}
+
+function getBackgroundConfig() {
+  var cfg = getGalaxyConfig();
+  var b = (cfg.background && typeof cfg.background === 'object') ? cfg.background : _GALAXY_CONFIG_DEFAULTS.background;
+  var en = (typeof b.hc90Enabled === 'boolean') ? b.hc90Enabled : true;
+  var ne = (typeof b.nebulaEnabled === 'boolean') ? b.nebulaEnabled : true;
+  var cg = (typeof b.colorGradingEnabled === 'boolean') ? b.colorGradingEnabled : true;
+  var ms = (typeof b.maxStars === 'number' && b.maxStars > 0) ? Math.min(300, Math.max(10, b.maxStars)) : 180;
+  return { hc90Enabled: en, nebulaEnabled: ne, colorGradingEnabled: cg, maxStars: ms };
 }
 
 // ============================================================

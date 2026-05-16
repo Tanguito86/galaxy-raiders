@@ -79,6 +79,14 @@ window.GALAXY_CONFIG = {
     entryDelayMinScale: 0.70
   },
 
+  // ============ BACKGROUND ============
+  background: {
+    hc90Enabled: true,
+    nebulaEnabled: true,
+    colorGradingEnabled: true,
+    maxStars: 180
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
@@ -86,7 +94,8 @@ window.GALAXY_CONFIG = {
     showHardcoreSystems: false,
     showEnemyRoles: false,
     showBossPattern: false,
-    showBossDispatch: false
+    showBossDispatch: false,
+    showBackgroundStats: false
   }
 
 };

@@ -4304,6 +4304,7 @@ ufoRewards.forEach(d => {
     if (typeof drawHardcoreRankDebug === 'function') drawHardcoreRankDebug(ctx);
     if (typeof window.drawHardcoreComboHUD === 'function') window.drawHardcoreComboHUD(ctx);
     if (typeof window.drawHardcoreSystemsDebug === 'function') window.drawHardcoreSystemsDebug(ctx);
+    if (typeof drawHC90BackgroundStats === 'function') drawHC90BackgroundStats(ctx, level);
     if (typeof drawHardcoreRankLevelFeedback === 'function') drawHardcoreRankLevelFeedback(ctx);
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {
