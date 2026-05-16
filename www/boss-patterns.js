@@ -987,7 +987,63 @@ function updateFifthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-67/68: Phase 3 — not yet implemented, fall through to legacy
+  // HC-69: Phase 3 — imperial final decree (5 aimed + 4 outer delayed, max 9 bullets)
+  if (phase === 3) {
+    var center3 = getBossCenter(target);
+    var speed3 = Math.min(3.6, _emperadorBulletSpeed() * 0.86);
+    var angleToPlayer3 = getAngleFromBossToPlayer(target);
+    var downBias3 = Math.PI / 2;
+    var clampedAngle3 = angleToPlayer3;
+    if (clampedAngle3 < downBias3 - 0.5) clampedAngle3 = downBias3 - 0.5;
+    if (clampedAngle3 > downBias3 + 0.5) clampedAngle3 = downBias3 + 0.5;
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 520);
+
+    var color3 = '#8844ee'; // bright purple for final phase
+
+    // Aimed spread: 5 bullets
+    var aimCount3 = 5;
+    var aimSpan3 = 0.85;
+    for (var i = 0; i < aimCount3; i++) {
+      var ti = aimCount3 > 1 ? i / (aimCount3 - 1) : 0.5;
+      var ai = clampedAngle3 - aimSpan3 / 2 + ti * aimSpan3;
+      pushEnemyBullet(center3.x - 2, target.y + target.h, Math.cos(ai) * speed3, Math.sin(ai) * speed3, 5, 10, {
+        kind: 'crossfire_a',
+        color: color3,
+        sourceType: 'boss_emperador'
+      });
+    }
+
+    // Outer delayed: 4 bullets (2 left, 2 right) at 200ms delay
+    var latAngle3 = downBias3;
+    var latOffsets3 = [54, 76]; // two distances per side
+    var latDelay3 = 200;
+    var sx3 = center3.x;
+    var sy3 = target.y + target.h;
+    (function(cx, cy, spd, col, offsets) {
+      setTimeout(function() {
+        if (!target.active || target.isTeleporting) return;
+        for (var oi = 0; oi < offsets.length; oi++) {
+          var off = offsets[oi];
+          pushEnemyBullet(cx - off - 2, cy, Math.cos(latAngle3) * spd, Math.sin(latAngle3) * spd, 5, 10, {
+            kind: 'crossfire_b',
+            color: col,
+            sourceType: 'boss_emperador'
+          });
+          pushEnemyBullet(cx + off - 2, cy, Math.cos(latAngle3) * spd, Math.sin(latAngle3) * spd, 5, 10, {
+            kind: 'crossfire_b',
+            color: col,
+            sourceType: 'boss_emperador'
+          });
+        }
+      }, latDelay3);
+    })(sx3, sy3, speed3 * 0.72, color3, latOffsets3);
+
+    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
+    if (typeof pushScreenShake === 'function') pushScreenShake('heavy', 6);
+    return true;
+  }
+
   return false;
 }
 
