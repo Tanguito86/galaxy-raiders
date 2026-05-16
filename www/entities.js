@@ -5,51 +5,9 @@
 const MAX_PARTICLES = 100;
 const ENEMY_SPAWN_FLASH_DURATION = 220;
 
-// --- STARS ---
+// --- STARS (HC-90 multi-layer) ---
 function initStars() {
-  stars = [];
-
-  function addStar(count, speed, size, color, depth) {
-    for (let i = 0; i < count; i++) {
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        speed: speed + (Math.random() - 0.5) * speed * 0.3,  // Â±15% variaciÃ³n
-        size,
-        color,
-        depth,
-        tw: Math.random() * 6.28,
-        drift: (Math.random() - 0.5) * 0.25,  // mÃ¡s drift
-        phase: Math.random() * 1000  // desfase para movimiento
-      });
-    }
-  }
-
-  // === 7 CAPAS DE PROFUNDIDAD ===
-  
-  // Capa 1: Muy muy lejos (casi estÃ¡ticas, nebulosa)
-  addStar(40, 0.4, 1, '#222', 0.05);
-  
-  // Capa 2: Muy lejos
-  addStar(60, 0.8, 1, '#333', 0.12);
-  
-  // Capa 3: Lejos
-  addStar(50, 1.2, 1, '#444', 0.20);
-  
-  // Capa 4: Medio-lejos
-  addStar(40, 1.8, 1, '#555', 0.35);
-  
-  // Capa 5: Medio
-  addStar(35, 2.5, 2, '#777', 0.50);
-  
-  // Capa 6: Cerca
-  addStar(20, 3.5, 2, '#aaa', 0.70);
-  
-  // Capa 7: Muy cerca
-  addStar(12, 4.5, 2, '#ccc', 0.85);
-  
-  // Capa 8: Destellos brillantes (primer plano)
-  addStar(6, 5.5, 3, '#fff', 1.0);
+  initHC90Stars();
 }
 
 

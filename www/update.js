@@ -72,9 +72,13 @@ function update(dt) {
   prevPlayerX = player.x;
   prevPlayerY = player.y;
 
+  // HC-90: stage intensity scales star speed (deeper levels = faster backdrop)
+  var hc90Intensity = getHC90Intensity(level);
+  var hc90SpeedMul = 0.7 + hc90Intensity * 0.6;
+
   stars.forEach(s => {
-    // Scroll principal (warp)
-    s.y += s.speed * warpSpeed * step;
+    // Scroll principal (warp) — HC-90 intensity multiplier
+    s.y += s.speed * warpSpeed * step * hc90SpeedMul;
 
     // Parallax: estrellas cercanas se mueven mas con tu movimiento
     const px = dx * (0.25 + s.depth * 0.85);

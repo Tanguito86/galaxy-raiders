@@ -2652,7 +2652,11 @@ function draw() {
     document.body.dataset.theme = deckTheme;
   }
 
-  // 2) STAR SHAKE (solo fondo, más fuerte en boss)
+  // 2) HC-90: nebula overlay + color grading (behind stars, after theme BG)
+  drawHC90Nebula(ctx, level, globalTime);
+  applyHC90ColorGrading(ctx, level);
+
+  // 3) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
   const shakeAmt = Math.max(0, screenShakeBg) * SHAKE_CONFIG.bgStrength * bgShakeMult;
 
@@ -2693,7 +2697,7 @@ function draw() {
 
   ctx.globalAlpha = 1;
 
-  // 3) A PARTIR DE ACÁ: shake global SOLO para gameplay (player/enemies/etc.)
+  // 4) A PARTIR DE ACÁ: shake global SOLO para gameplay (player/enemies/etc.)
   ctx.save();
   if (screenShakeGameplay > 0) {
     ctx.translate(gameplayShakeX, gameplayShakeY);
