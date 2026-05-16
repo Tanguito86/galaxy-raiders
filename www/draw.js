@@ -3825,6 +3825,62 @@ if (shouldShow) {
       };
     }
 
+    function getEnemySpriteId(e) {
+      if (!e) return null;
+      if (e.type === 'alien1' || e.type === 'alien2' || e.type === 'alien3' ||
+          e.type === 'alien4' || e.type === 'alien5' || e.type === 'alien6') {
+        return e.type;
+      }
+      return null;
+    }
+
+    function getEnemySpriteFrame(spriteId, fallbackFrame) {
+      if (!window.SpriteSystem || !spriteId) return fallbackFrame;
+
+      var sprite = window.SpriteSystem.getSprite(spriteId);
+      if (!sprite || !sprite.image) return fallbackFrame;
+
+      var columns = Math.max(1, Math.floor(sprite.image.width / sprite.frameWidth));
+      var rows = Math.max(1, Math.floor(sprite.image.height / sprite.frameHeight));
+      var frameCount = Math.max(1, columns * rows);
+      return frameCount > 1 ? fallbackFrame % frameCount : 0;
+    }
+
+    function drawEnemySpriteOrLegacy(ctx, e, spriteKey, color, size, options) {
+      options = options || {};
+
+      var spriteId = getEnemySpriteId(e);
+      if (!spriteId || !window.SpriteSystem || !window.SpriteSystem.isSpriteReady(spriteId)) {
+        var legacyX = (typeof options.x === 'number') ? options.x : e.x;
+        var legacyY = (typeof options.y === 'number') ? options.y : e.y;
+        drawSprite(ctx, SPRITES[spriteKey], legacyX, legacyY, color, size);
+        return;
+      }
+
+      var sprite = window.SpriteSystem.getSprite(spriteId);
+      var targetW = e.w || (sprite.frameWidth * size);
+      var targetH = e.h || (sprite.frameHeight * size);
+      var scale = Math.min(targetW / sprite.frameWidth, targetH / sprite.frameHeight);
+      if (!isFinite(scale) || scale <= 0) scale = 1;
+
+      var drawX = (typeof options.x === 'number') ? options.x : e.x;
+      var drawY = (typeof options.y === 'number') ? options.y : e.y;
+      var cx = drawX + targetW / 2;
+      var cy = drawY + targetH / 2;
+      var frame = getEnemySpriteFrame(spriteId, animationFrame);
+
+      window.drawSpriteFrame(ctx, spriteId, cx, cy, {
+        frame: frame,
+        scale: scale,
+        rotation: options.rotation || 0,
+        alpha: options.alpha,
+        tint: options.tint,
+        fallback: function () {
+          drawSprite(ctx, SPRITES[spriteKey], drawX, drawY, color, size);
+        }
+      });
+    }
+
     // Enemies
     enemies.forEach(e => {
       if (e.alive) {
@@ -3880,7 +3936,7 @@ if (shouldShow) {
     } else {
       ctx.globalAlpha = 1;
     }
-    drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, color, size);
+    drawEnemySpriteOrLegacy(ctx, e, spriteKey, color, size);
     ctx.restore();
 
     if (e.spawnFlashTimer > 0) {
@@ -3904,10 +3960,10 @@ if (shouldShow) {
           ctx.save();
           if (_hi > 0.25) {
             ctx.globalAlpha = _hi * 0.62;
-            drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffffff', size);
+            drawEnemySpriteOrLegacy(ctx, e, spriteKey, '#ffffff', size, { tint: '#ffffff' });
           }
           ctx.globalAlpha = flicker * (0.35 + 0.45 * _hi);
-          drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, hitColor, size);
+          drawEnemySpriteOrLegacy(ctx, e, spriteKey, hitColor, size, { tint: hitColor });
           ctx.restore();
         }
 
@@ -4070,7 +4126,11 @@ if (shouldShow) {
           ctx.globalAlpha = dTelAlpha * 0.40;
           var aiOffX = (dcx - (e._hcDiverTargetX || dcx)) * 0.08;
           var aiOffY = (dcy - (e._hcDiverTargetY || dcy)) * 0.08;
-          drawSprite(ctx, SPRITES[spriteKey], e.x - aiOffX, e.y - aiOffY, '#f52', size);
+          drawEnemySpriteOrLegacy(ctx, e, spriteKey, '#f52', size, {
+            x: e.x - aiOffX,
+            y: e.y - aiOffY,
+            tint: '#f52'
+          });
 
           // pulsating red/orange glow
           ctx.globalAlpha = dTelAlpha;
