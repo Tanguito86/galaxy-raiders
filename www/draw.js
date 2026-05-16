@@ -620,15 +620,17 @@ function drawArcadePanel(x, y, w, h, accentColor) {
 
 function drawGameplayHudPanel(x, y, w, h, accentColor) {
   ctx.save();
-  ctx.globalAlpha = 0.16;
+  ctx.globalAlpha = 0.20;
   ctx.fillStyle = '#000';
   ctx.fillRect(x, y, w, h);
-  ctx.globalAlpha = 0.12;
+  ctx.globalAlpha = 0.18;
   ctx.fillStyle = accentColor;
-  ctx.fillRect(x, y, w, 1);
-  ctx.fillRect(x, y + h - 1, w, 1);
+  ctx.fillRect(x, y, w, 2);
+  ctx.fillRect(x, y + h - 2, w, 2);
+  ctx.globalAlpha = 0.08;
+  ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
   ctx.lineWidth = 1;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   ctx.restore();
@@ -636,28 +638,34 @@ function drawGameplayHudPanel(x, y, w, h, accentColor) {
 
 function drawOverlayPanel(x, y, w, h, accentColor) {
   ctx.save();
-  ctx.fillStyle = 'rgba(2,4,12,0.92)';
+  ctx.fillStyle = 'rgba(2,4,12,0.94)';
   ctx.fillRect(x, y, w, h);
 
-  ctx.globalAlpha = 0.22;
+  // Accent glow bars (top / bottom)
+  ctx.globalAlpha = 0.28;
   ctx.fillStyle = accentColor;
-  ctx.fillRect(x + 4, y + 4, w - 8, 2);
-  ctx.fillRect(x + 4, y + h - 6, w - 8, 2);
+  ctx.fillRect(x + 6, y + 4, w - 12, 2);
+  ctx.fillRect(x + 6, y + h - 6, w - 12, 2);
 
+  // Outer border
   ctx.globalAlpha = 1;
   ctx.strokeStyle = accentColor;
   ctx.lineWidth = 2;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  // Inner border
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
   ctx.lineWidth = 1;
-  ctx.strokeRect(x + 6.5, y + 6.5, w - 13, h - 13);
+  ctx.strokeRect(x + 8.5, y + 8.5, w - 17, h - 17);
 
+  // Corner brackets
   ctx.fillStyle = accentColor;
-  ctx.fillRect(x - 2, y + 12, 4, 18);
-  ctx.fillRect(x + w - 2, y + 12, 4, 18);
-  ctx.fillRect(x - 2, y + h - 30, 4, 18);
-  ctx.fillRect(x + w - 2, y + h - 30, 4, 18);
+  ctx.globalAlpha = 0.45;
+  ctx.fillRect(x - 1, y + 8, 3, 12);
+  ctx.fillRect(x + w - 2, y + 8, 3, 12);
+  ctx.fillRect(x - 1, y + h - 20, 3, 12);
+  ctx.fillRect(x + w - 2, y + h - 20, 3, 12);
+
   ctx.restore();
 }
 
@@ -3609,35 +3617,40 @@ if (shouldShow) {
       }
            
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
-      
+
       const _barW = 200;
       const _barH = 8;
       const _barX = W / 2 - _barW / 2;
       const _barY = 92;
       const _pad = 4;
-      
+
       ctx.save();
-      
-      ctx.globalAlpha = 0.30;
+
+      // Outer panel bg
+      ctx.globalAlpha = 0.28;
       ctx.fillStyle = '#000';
       ctx.fillRect(_barX - _pad, _barY - _pad, _barW + _pad * 2, _barH + _pad * 2);
-      
-      ctx.globalAlpha = 0.35;
+
+      // Outer border
+      ctx.globalAlpha = 0.30;
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
       ctx.strokeRect(_barX - _pad + 0.5, _barY - _pad + 0.5, _barW + _pad * 2 - 1, _barH + _pad * 2 - 1);
-      
-      ctx.globalAlpha = 0.50;
+
+      // Accent top line
+      ctx.globalAlpha = 0.55;
       ctx.strokeStyle = boss.color || '#f44';
       ctx.beginPath();
       ctx.moveTo(_barX - _pad, _barY - _pad + 0.5);
       ctx.lineTo(_barX + _barW + _pad, _barY - _pad + 0.5);
       ctx.stroke();
-      
-      ctx.globalAlpha = 0.30;
-      ctx.fillStyle = '#300';
+
+      // Bar background
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = '#200';
       ctx.fillRect(_barX, _barY, _barW, _barH);
-      
+
+      // Bar fill color
       var _barColor;
       if (hpPct > 0.66) {
         _barColor = boss.color || '#f00';
@@ -3646,43 +3659,53 @@ if (shouldShow) {
       } else {
         _barColor = '#f33';
       }
-      
+
       var _fillW = _barW * hpPct;
-      
-      ctx.globalAlpha = 0.88;
+
+      // Gradient fill for bar (top half bright, bottom solid)
+      ctx.globalAlpha = 0.85;
       ctx.fillStyle = _barColor;
       ctx.fillRect(_barX, _barY, _fillW, _barH);
-      
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(_barX, _barY + 1, _fillW, Math.floor(_barH * 0.45));
-      
-      ctx.globalAlpha = 0.10;
+
+      // Top shine gradient
+      var shineGrad = ctx.createLinearGradient(0, _barY, 0, _barY + _barH * 0.5);
+      shineGrad.addColorStop(0, 'rgba(255,255,255,0.28)');
+      shineGrad.addColorStop(1, 'rgba(255,255,255,0.04)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = shineGrad;
+      ctx.fillRect(_barX, _barY, _fillW, Math.floor(_barH * 0.5));
+
+      // Segment lines (subtler)
+      ctx.globalAlpha = 0.14;
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 1;
-      for (var _sx = _barX + 10; _sx < _barX + _fillW; _sx += 11) {
+      for (var _sx = _barX + 14; _sx < _barX + _barW; _sx += 22) {
+        if (_sx > _barX + _fillW) break;
         ctx.beginPath();
         ctx.moveTo(_sx + 0.5, _barY + 1);
         ctx.lineTo(_sx + 0.5, _barY + _barH - 1);
         ctx.stroke();
       }
-      
+
+      // Low HP pulse
       if (hpPct <= 0.33) {
-        var _pulse = 0.18 + 0.22 * Math.sin(globalTime * 0.012);
+        var _pulse = 0.12 + 0.18 * Math.sin(globalTime * 0.012);
         ctx.globalAlpha = _pulse;
         ctx.fillStyle = '#f00';
         ctx.fillRect(_barX, _barY, _fillW, _barH);
       }
-      
-      ctx.font = '10px "Press Start 2P"';
+
+      // Boss name
       ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(0,0,0,0.88)';
-      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2 + 2, _barY - 8);
+      ctx.globalAlpha = 1;
+      ctx.font = '8px "Press Start 2P"';
       var _txtColor = boss.color || '#fff';
       if (_txtColor === '#f00' || _txtColor === '#ff0000') _txtColor = '#ffd6d6';
+      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2 + 1, _barY - 9);
       ctx.fillStyle = _txtColor;
-      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2, _barY - 10);
-      
+      ctx.fillText(boss.name || 'MOTHERSHIP', W / 2, _barY - 11);
+
       ctx.restore();
     }
 
@@ -4402,7 +4425,7 @@ ufoRewards.forEach(d => {
     drawPopups(ctx);
 
 
-    // HUD
+    // HUD (HC-96: improved contrast + value glow)
     ctx.save();
     const hudTop = 7;
     const hudLeftX = 6;
@@ -4414,29 +4437,46 @@ ufoRewards.forEach(d => {
     drawGameplayHudPanel(hudRightX, hudTop, hudRightW, 38, '#ffd966');
 
     ctx.textBaseline = 'alphabetic';
+
+    // LEFT panel — SCORE / LEVEL
     ctx.textAlign = 'left';
     ctx.font = '6px "Press Start 2P"';
-    ctx.fillStyle = 'rgba(100,245,255,0.82)';
+    ctx.fillStyle = 'rgba(120,255,255,0.85)';
     ctx.fillText('SCORE', hudLeftX + 6, hudTop + 13);
+    ctx.fillStyle = 'rgba(120,255,255,0.78)';
     ctx.fillText('LEVEL', hudLeftX + 6, hudTop + 31);
 
     ctx.textAlign = 'right';
     ctx.font = '9px "Press Start 2P"';
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#0ff';
+    ctx.fillText(score, hudLeftX + hudLeftW - 5, hudTop + 16);
+    ctx.fillText(level, hudLeftX + hudLeftW - 5, hudTop + 34);
+    ctx.globalAlpha = 1;
     ctx.fillStyle = '#fff';
     ctx.fillText(score, hudLeftX + hudLeftW - 7, hudTop + 14);
     ctx.fillText(level, hudLeftX + hudLeftW - 7, hudTop + 32);
 
+    // RIGHT panel — HI / CHAIN / MEDAL
     ctx.textAlign = 'left';
     ctx.font = '6px "Press Start 2P"';
-    ctx.fillStyle = 'rgba(255,217,102,0.86)';
+    ctx.fillStyle = 'rgba(255,220,120,0.88)';
     ctx.fillText('HI', hudRightX + 6, hudTop + 10);
-    ctx.fillStyle = 'rgba(158,231,255,0.82)';
+    ctx.fillStyle = 'rgba(160,235,255,0.85)';
     ctx.fillText('CHAIN', hudRightX + 6, hudTop + 23);
-    ctx.fillStyle = 'rgba(255,217,102,0.78)';
+    ctx.fillStyle = 'rgba(255,220,120,0.82)';
     ctx.fillText('MEDAL', hudRightX + 6, hudTop + 35);
 
     ctx.textAlign = 'right';
     ctx.font = '7px "Press Start 2P"';
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#ffd966';
+    ctx.fillText(bestScore, hudRightX + hudRightW - 4, hudTop + 12);
+    ctx.fillStyle = '#9ee7ff';
+    ctx.fillText(medalChain, hudRightX + hudRightW - 4, hudTop + 25);
+    ctx.fillStyle = '#ffd966';
+    ctx.fillText(medalValue, hudRightX + hudRightW - 4, hudTop + 37);
+    ctx.globalAlpha = 1;
     ctx.fillStyle = '#fff';
     ctx.fillText(bestScore, hudRightX + hudRightW - 6, hudTop + 10);
     ctx.fillStyle = '#9ee7ff';
@@ -4633,77 +4673,90 @@ ufoRewards.forEach(d => {
 	      ctx.fillText(setPieceBannerText, W / 2, 78);
 	    }
 
-	   // Power timer (abajo a la derecha)
+	   // Power timer (HC-96: cleaner arcade bar)
 if (player.weaponType !== 'normal') {
   const maxDurations = { double: 4000, spread: 4000, machine: 4000, laser: 4000 };
   const maxTime = maxDurations[player.weaponType] || 5000;
   const trackW = 76;
   const barW = Math.min(trackW, (player.weaponTimer / maxTime) * trackW);
 
-  const barX = W - 90;    // derecha
-  const barY = H - 17;    // alineado con vidas
+  const barX = W - 90;
+  const barY = H - 17;
   const wColor = getWeaponColor(player.weaponType);
 
   ctx.save();
 
-  // Fondo oscuro del track
-  ctx.globalAlpha = 0.22;
+  // Dark background
+  ctx.globalAlpha = 0.25;
   ctx.fillStyle = '#000';
-  ctx.fillRect(barX - 1, barY - 1, trackW + 2, 7);
+  ctx.fillRect(barX - 2, barY - 2, trackW + 4, 9);
 
-  // Track vacio (tenue)
-  ctx.globalAlpha = 0.10;
+  // Empty track
+  ctx.globalAlpha = 0.12;
   ctx.fillStyle = wColor;
   ctx.fillRect(barX, barY, trackW, 5);
 
-  // Barra llena
-  ctx.globalAlpha = 0.72;
+  // Filled bar
+  ctx.globalAlpha = 0.80;
   ctx.fillStyle = wColor;
   ctx.fillRect(barX, barY, barW, 5);
 
-  // Brillo interno
-  ctx.globalAlpha = 0.28;
+  // Top shine
+  ctx.globalAlpha = 0.30;
   ctx.fillStyle = '#fff';
-  ctx.fillRect(barX, barY + 1, barW, 2);
+  ctx.fillRect(barX, barY, barW, 2);
 
-  // Borde fino
-  ctx.globalAlpha = 0.38;
-  ctx.strokeStyle = '#fff';
+  // Border
+  ctx.globalAlpha = 0.32;
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth = 1;
   ctx.strokeRect(barX + 0.5, barY + 0.5, trackW - 1, 4);
 
-  // Low-time pulse
-      if (player.weaponTimer < 1200) {
-        const warnPulse = 0.30 + 0.30 * Math.sin(globalTime * 0.06);
-        ctx.globalAlpha = warnPulse;
-        ctx.fillStyle = '#f44';
-        ctx.fillRect(barX, barY, barW, 5);
-      }
+  // Low-time warning
+  if (player.weaponTimer < 1200) {
+    var warnPulse = 0.25 + 0.25 * Math.sin(globalTime * 0.06);
+    ctx.globalAlpha = warnPulse;
+    ctx.fillStyle = '#f44';
+    ctx.fillRect(barX, barY, barW, 5);
+  }
 
-      // Etiqueta con sombra para legibilidad
-      ctx.globalAlpha = 0.62;
-      ctx.fillStyle = '#000';
-      ctx.font = '6px "Press Start 2P"';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 3);
-      ctx.fillText(player.weaponType.toUpperCase(), W - 10, barY - 1);
-
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = wColor;
-      ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 2);
+  // Label
+  ctx.globalAlpha = 0.50;
+  ctx.fillStyle = '#000';
+  ctx.font = '6px "Press Start 2P"';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(player.weaponType.toUpperCase(), W - 8, barY - 2);
+  ctx.fillText(player.weaponType.toUpperCase(), W - 8, barY);
+  ctx.globalAlpha = 0.88;
+  ctx.fillStyle = wColor;
+  ctx.fillText(player.weaponType.toUpperCase(), W - 9, barY - 1);
 
   ctx.restore();
 }
 
 
 
-    // Lives
-    const livesW = 12 + lives * 15;
+    // Lives (HC-96: ship-shaped icons)
+    var livesW = 8 + lives * 18;
     drawGameplayHudPanel(4, H - 26, livesW, 17, currentPalette[0]);
-    for (let i = 0; i < lives; i++) {
+    for (var li = 0; li < lives; li++) {
+      var lx = 10 + li * 18;
+      var ly = H - 23;
       ctx.fillStyle = currentPalette[0];
-      ctx.fillRect(11 + i * 15, H - 21, 9, 6);
+      // Mini ship icon
+      ctx.fillRect(lx + 4, ly, 3, 1);
+      ctx.fillRect(lx + 3, ly + 1, 5, 1);
+      ctx.fillRect(lx + 2, ly + 2, 7, 1);
+      ctx.fillRect(lx + 1, ly + 3, 9, 1);
+      ctx.fillRect(lx, ly + 4, 11, 1);
+      ctx.fillRect(lx + 4, ly + 5, 3, 1);
+      ctx.fillRect(lx + 3, ly + 6, 5, 1);
+      // Thruster dot
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(lx + 5, ly + 7, 1, 1);
+      ctx.globalAlpha = 1;
     }
 
     // LEVEL CLEAR overlay
@@ -4853,76 +4906,57 @@ if (player.weaponType !== 'normal') {
       ctx.restore();
     }
 
-    // BOSS WARNING overlay
+    // BOSS WARNING overlay (HC-96: cleaner arcade style)
     if (boss && boss.active) {
       ctx.save();
 
       var bwPulse = 0.7 + 0.3 * Math.sin(globalTime * 0.004);
       var bwPulseF = 0.55 + 0.45 * Math.sin(globalTime * 0.006 + 1.5);
       var _bwY = 52;
-      var _bwH = 24;
+      var _bwH = 22;
       var _bwColor = boss.color || '#f44';
-      var _stripeStep = 20;
 
-      ctx.globalAlpha = 0.22;
+      // Dark band
+      ctx.globalAlpha = 0.25;
       ctx.fillStyle = '#000';
       ctx.fillRect(0, _bwY, W, _bwH);
 
-      ctx.globalAlpha = 0.12 + 0.04 * bwPulseF;
-      ctx.fillStyle = '#400';
-      for (var sx = -_stripeStep; sx < W + _stripeStep; sx += _stripeStep) {
-        ctx.beginPath();
-        ctx.moveTo(sx, _bwY + _bwH);
-        ctx.lineTo(sx + _stripeStep * 0.5, _bwY);
-        ctx.lineTo(sx + _stripeStep, _bwY);
-        ctx.lineTo(sx + _stripeStep * 0.5, _bwY + _bwH);
-        ctx.closePath();
-        ctx.fill();
+      // Subtle warning stripes
+      ctx.globalAlpha = 0.06 + 0.03 * bwPulseF;
+      ctx.fillStyle = _bwColor;
+      for (var sd = -20; sd < W + 20; sd += 16) {
+        ctx.fillRect(sd, _bwY, 8, _bwH);
       }
 
-      ctx.globalAlpha = 0.72 * bwPulse;
+      // Top/bottom accent lines
+      ctx.globalAlpha = 0.65 * bwPulse;
       ctx.fillStyle = _bwColor;
-      ctx.fillRect(0, _bwY, W, 1);
-      ctx.fillRect(0, _bwY + _bwH - 1, W, 1);
+      ctx.fillRect(0, _bwY, W, 2);
+      ctx.fillRect(0, _bwY + _bwH - 2, W, 2);
 
-      ctx.globalAlpha = 0.30 + 0.22 * bwPulseF;
-      ctx.fillStyle = _bwColor;
-      ctx.fillRect(0, _bwY + 1, 2, _bwH - 2);
-      ctx.fillRect(W - 2, _bwY + 1, 2, _bwH - 2);
+      // Side pillars
+      ctx.globalAlpha = 0.25 + 0.18 * bwPulseF;
+      ctx.fillRect(0, _bwY + 2, 3, _bwH - 4);
+      ctx.fillRect(W - 3, _bwY + 2, 3, _bwH - 4);
 
+      // WARNING text
       ctx.textAlign = 'center';
-      ctx.font = '9px "Press Start 2P"';
-
-      ctx.shadowColor = 'rgba(255, 32, 32, 0.72)';
-      ctx.shadowBlur = 8;
-      ctx.globalAlpha = 0.38 * bwPulseF;
-      ctx.fillStyle = _bwColor;
-      ctx.fillText('WARNING', W / 2, _bwY + 9);
-      ctx.fillText('WARNING', W / 2, _bwY + 11);
-
-      ctx.shadowBlur = 0;
-      ctx.globalAlpha = 0.86 * bwPulse;
+      ctx.font = '10px "Press Start 2P"';
+      ctx.globalAlpha = 0.78 * bwPulse;
       ctx.fillStyle = '#000';
-      ctx.fillText('WARNING', W / 2 + 1, _bwY + 11);
+      ctx.fillText('WARNING', W / 2 + 1, _bwY + 10);
+      ctx.globalAlpha = 0.90 * bwPulse;
+      ctx.fillStyle = '#fff';
+      ctx.fillText('WARNING', W / 2, _bwY + 9);
 
-      ctx.shadowColor = 'rgba(255, 36, 36, 0.85)';
-      ctx.shadowBlur = 5;
-      ctx.globalAlpha = 0.94 * bwPulse;
-      ctx.fillStyle = '#fff3e8';
-      ctx.fillText('WARNING', W / 2, _bwY + 10);
-
+      // Boss name
       if (boss.name) {
-        ctx.font = '7px "Press Start 2P"';
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 0.82 * bwPulse;
-        ctx.fillStyle = '#000';
-        ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 21);
-
-        ctx.shadowColor = 'rgba(255, 64, 64, 0.65)';
-        ctx.shadowBlur = 4;
-        ctx.globalAlpha = 0.88 * bwPulseF;
-        ctx.fillStyle = '#ffd6d6';
-        ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 20);
+        ctx.font = '6px "Press Start 2P"';
+        ctx.globalAlpha = 0.35 * bwPulse;
+        ctx.fillStyle = _bwColor;
+        ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 20);
+        ctx.globalAlpha = 0.72 * bwPulseF;
+        ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 19);
       }
 
       ctx.shadowBlur = 0;
