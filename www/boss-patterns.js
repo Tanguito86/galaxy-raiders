@@ -867,3 +867,43 @@ function _tenienteBulletSpeed() {
   }
   return Math.min(3.5, speed);
 }
+
+// ============================================================
+// HARDCORE EMPERADOR PATTERN (fifth boss, supreme, level 20)
+// HC-66: foundation only — metadata + guard, no pattern override yet
+// ============================================================
+
+function isFifthHardcoreBoss(b) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+  if (target.name === 'EMPERADOR') return true;
+  if (target.pattern === 'supreme') return true;
+  return false;
+}
+
+function shouldUseFifthBossHardcorePattern(b) {
+  if (!shouldUseHardcoreBossPatterns()) return false;
+  if (!isFifthHardcoreBoss(b)) return false;
+  return true;
+}
+
+function _markEmperadorPatternMeta(b) {
+  var target = b || boss;
+  if (!target || !target.active) return;
+  if (target._emperadorPatternReady) return;
+
+  target._emperadorPatternReady = true;
+  target._emperadorPatternPhase = getBossPhaseSafe(target);
+  if (target._emperadorPatternTimer === undefined) target._emperadorPatternTimer = 0;
+  if (target._emperadorPatternSeed === undefined) target._emperadorPatternSeed = Math.random() * 1000;
+}
+
+function updateFifthBossHardcorePattern(b, dt) {
+  var target = b || boss;
+  if (!target || !target.active) return false;
+
+  _markEmperadorPatternMeta(target);
+
+  // HC-66: stub — no pattern override yet, returns false to keep legacy behavior
+  return false;
+}

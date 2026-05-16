@@ -832,6 +832,12 @@ if (Math.random() < 0.5 && mines.length < 8) {
        break;
       
     case 'supreme':
+      // HC-66: Emperador hardcore foundation (stub — returns false, no override yet)
+      if (typeof shouldUseFifthBossHardcorePattern === 'function' && shouldUseFifthBossHardcorePattern(boss)) {
+        if (typeof updateFifthBossHardcorePattern === 'function' && updateFifthBossHardcorePattern(boss, dt)) {
+          break;
+        }
+      }
       // EMPERADOR: No disparar durante teletransporte
       if (boss.isTeleporting) break;
       
