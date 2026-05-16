@@ -1144,13 +1144,18 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
   if (!target) return false;
 
   var bossId = window.getHardcoreBossId(target);
-  if (bossId <= 0) return false;
+  if (bossId <= 0) {
+    if (target) target._hcDispatchConsumed = false;
+    return false;
+  }
+
+  var result = false;
 
   switch (bossId) {
     case 1: // CRABTRON / crossfire
       if (typeof shouldUseCrancktonHardcorePattern === 'function' && shouldUseCrancktonHardcorePattern(target)) {
         if (typeof fireCrancktonHardcorePattern === 'function') {
-          return fireCrancktonHardcorePattern(target);
+          result = fireCrancktonHardcorePattern(target);
         }
       }
       break;
@@ -1158,7 +1163,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
     case 2: // SERPENTRIX / zigzag
       if (typeof shouldUseSerpentrixHardcorePattern === 'function' && shouldUseSerpentrixHardcorePattern(target)) {
         if (typeof updateSerpentrixHardcorePattern === 'function') {
-          return updateSerpentrixHardcorePattern(target, dt);
+          result = updateSerpentrixHardcorePattern(target, dt);
         }
       }
       break;
@@ -1166,7 +1171,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
     case 3: // ORBITAL / rotate
       if (typeof shouldUseThirdBossHardcorePattern === 'function' && shouldUseThirdBossHardcorePattern(target)) {
         if (typeof updateThirdBossHardcorePattern === 'function') {
-          return updateThirdBossHardcorePattern(target, dt);
+          result = updateThirdBossHardcorePattern(target, dt);
         }
       }
       break;
@@ -1174,7 +1179,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
     case 4: // TENIENTE / divebomb
       if (typeof shouldUseFourthBossHardcorePattern === 'function' && shouldUseFourthBossHardcorePattern(target)) {
         if (typeof updateFourthBossHardcorePattern === 'function') {
-          return updateFourthBossHardcorePattern(target, dt);
+          result = updateFourthBossHardcorePattern(target, dt);
         }
       }
       break;
@@ -1182,7 +1187,7 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
     case 5: // EMPERADOR / supreme
       if (typeof shouldUseFifthBossHardcorePattern === 'function' && shouldUseFifthBossHardcorePattern(target)) {
         if (typeof updateFifthBossHardcorePattern === 'function') {
-          return updateFifthBossHardcorePattern(target, dt);
+          result = updateFifthBossHardcorePattern(target, dt);
         }
       }
       break;
@@ -1191,5 +1196,6 @@ window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
       break;
   }
 
-  return false;
+  target._hcDispatchConsumed = result;
+  return result;
 };

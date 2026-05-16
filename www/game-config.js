@@ -77,7 +77,8 @@ window.GALAXY_CONFIG = {
     showRank: false,
     showHardcoreSystems: false,
     showEnemyRoles: false,
-    showBossPattern: false
+    showBossPattern: false,
+    showBossDispatch: false
   }
 
 };

@@ -3497,6 +3497,19 @@ if (shouldShow) {
           ctx.fillStyle = '#f88';
           ctx.fillText(bTelegraph, bx, by + 32);
         }
+
+        // HC-76: BOSS DISPATCH DEBUG
+        if (typeof getHardcoreDebugConfig === 'function' && getHardcoreDebugConfig().showBossDispatch) {
+          var dOn = (bId > 0 && typeof isHardcoreEnabled === 'function' && isHardcoreEnabled()) ? 'ON' : 'OFF';
+          var dConsumed = boss._hcDispatchConsumed ? 'true' : 'false';
+          ctx.globalAlpha = 0.65;
+          ctx.fillStyle = '#8f8';
+          ctx.fillText('DISPATCH: ' + dOn, bx, by + 40);
+          ctx.fillStyle = boss._hcDispatchConsumed ? '#0f0' : '#f44';
+          ctx.fillText('CONSUMED: ' + dConsumed, bx, by + 48);
+          ctx.fillStyle = '#8cf';
+          ctx.fillText('BOSS ID: ' + bId, bx, by + 56);
+        }
         ctx.restore();
       }
 
