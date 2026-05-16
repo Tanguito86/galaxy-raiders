@@ -56,7 +56,7 @@ function isHC90BackgroundEnabled() {
   }
 }
 
-// --- APPLY COLOR GRADING (single fillRect, extremely cheap) ---
+// --- APPLY COLOR GRADING (simple fillRect, mobile-safe) ---
 function applyHC90ColorGrading(ctx, level) {
   try {
     if (!ctx) return;
@@ -71,13 +71,13 @@ function applyHC90ColorGrading(ctx, level) {
     var grade = HC90_COLOR_GRADE[theme] || HC90_COLOR_GRADE.earth;
     var intensity = getHC90Intensity(level);
     var a = grade.a * (0.5 + intensity * 0.5);
+    if (!isFinite(a) || a <= 0) return;
 
-    ctx.save();
-    ctx.globalCompositeOperation = 'overlay';
-    ctx.globalAlpha = a;
+    // Mobile-safe: plain fillRect at low alpha (avoids expensive globalCompositeOperation)
+    ctx.globalAlpha = Math.min(0.07, a);
     ctx.fillStyle = 'rgb(' + grade.r + ',' + grade.g + ',' + grade.b + ')';
     ctx.fillRect(0, 0, W, H);
-    ctx.restore();
+    ctx.globalAlpha = 1;
   } catch (e) {
     // Silent fail — never break render
   }
