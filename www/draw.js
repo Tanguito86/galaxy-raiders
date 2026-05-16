@@ -3474,16 +3474,28 @@ if (shouldShow) {
         var bReady = (boss.patternReady) ? 'RDY' : '---';
         var bPattern = boss.pattern || '-';
         var bTelegraph = (boss._hcTelegraphType && boss._hcTelegraphTimer > 0) ? 'TG:' + boss._hcTelegraphType : '';
+        var bId = (typeof window.getHardcoreBossId === 'function') ? window.getHardcoreBossId(boss) : -1;
+        var bRegEntry = null;
+        if (bId > 0 && typeof window.getHardcoreBossRegistry === 'function') {
+          var reg = window.getHardcoreBossRegistry();
+          bRegEntry = reg[bId - 1] || null;
+        }
         ctx.globalAlpha = 0.85;
         ctx.fillStyle = '#ff0';
         ctx.fillText(bName + ' P' + bPhase + ' ' + bReady, bx, by);
         ctx.globalAlpha = 0.72;
         ctx.fillStyle = '#ff8';
         ctx.fillText(bPattern, bx, by + 8);
+        if (bRegEntry) {
+          ctx.globalAlpha = 0.60;
+          ctx.fillStyle = '#8cf';
+          ctx.fillText('#' + bRegEntry.id + ' phases:' + bRegEntry.phaseCount, bx, by + 16);
+          ctx.fillText(bRegEntry.updateFnName, bx, by + 24);
+        }
         if (bTelegraph) {
           ctx.globalAlpha = 0.65;
           ctx.fillStyle = '#f88';
-          ctx.fillText(bTelegraph, bx, by + 16);
+          ctx.fillText(bTelegraph, bx, by + 32);
         }
         ctx.restore();
       }
