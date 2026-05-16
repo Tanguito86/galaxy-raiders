@@ -802,7 +802,60 @@ function updateFourthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-61/62: Phase 3 — not yet implemented, fall through to legacy
+  // HC-63: Phase 3 — aggressive dive crossfire: 2 lateral columns + 1 aimed center burst (max 7 bullets)
+  if (phase === 3) {
+    var center3 = getBossCenter(target);
+    var speed3 = Math.min(3.5, _tenienteBulletSpeed() * 0.85);
+    var angleToPlayer3 = getAngleFromBossToPlayer(target);
+    var downBias3 = Math.PI / 2;
+    var maxDeviation3 = 0.55;
+    var clampedAngle3 = angleToPlayer3;
+    if (clampedAngle3 < downBias3 - maxDeviation3) clampedAngle3 = downBias3 - maxDeviation3;
+    if (clampedAngle3 > downBias3 + maxDeviation3) clampedAngle3 = downBias3 + maxDeviation3;
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 450);
+
+    var color3 = '#dd3311'; // bright red for phase 3
+    var laneOff3 = 38; // lateral column offset
+
+    // Center burst: 3 bullets aimed at player
+    for (var i = 0; i < 3; i++) {
+      var ti = 2 > 0 ? i / 2 : 0.5;
+      var ai = clampedAngle3 - 0.28 / 2 + ti * 0.28;
+      pushEnemyBullet(center3.x - 2, target.y + target.h, Math.cos(ai) * speed3, Math.sin(ai) * speed3, 5, 10, {
+        kind: 'basic',
+        color: color3,
+        sourceType: 'boss_teniente'
+      });
+    }
+
+    // Left column: 2 bullets
+    for (var j = 0; j < 2; j++) {
+      var tj = 1 > 0 ? j / 1 : 0.5;
+      var aj = clampedAngle3 - 0.24 / 2 + tj * 0.24;
+      pushEnemyBullet(center3.x - laneOff3 - 2, target.y + target.h, Math.cos(aj) * speed3, Math.sin(aj) * speed3, 5, 10, {
+        kind: 'basic',
+        color: color3,
+        sourceType: 'boss_teniente'
+      });
+    }
+
+    // Right column: 2 bullets
+    for (var k = 0; k < 2; k++) {
+      var tk = 1 > 0 ? k / 1 : 0.5;
+      var ak = clampedAngle3 - 0.24 / 2 + tk * 0.24;
+      pushEnemyBullet(center3.x + laneOff3 - 2, target.y + target.h, Math.cos(ak) * speed3, Math.sin(ak) * speed3, 5, 10, {
+        kind: 'basic',
+        color: color3,
+        sourceType: 'boss_teniente'
+      });
+    }
+
+    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
+    if (typeof pushScreenShake === 'function') pushScreenShake('medium', 4);
+    return true;
+  }
+
   return false;
 }
 
