@@ -192,7 +192,9 @@ var HC_TELEGRAPH_COLORS = {
   serpent_mine:  '#33cc33',
   serpent_arc:   '#22aa22',
   // HC-54: Orbital blue/violet telegraphs
-  orbital_arc:   '#4488ff'
+  orbital_arc:   '#4488ff',
+  // HC-61: Teniente red/orange telegraphs
+  teniente_dive: '#ff5533'
 };
 
 function triggerBossTelegraph(b, type, duration) {
@@ -716,9 +718,50 @@ function _markTenientePatternMeta(b) {
 function updateFourthBossHardcorePattern(b, dt) {
   var target = b || boss;
   if (!target || !target.active) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
 
   _markTenientePatternMeta(target);
 
-  // HC-60: stub — no pattern override yet, returns false to keep legacy behavior
+  var phase = getBossPhaseSafe(target);
+
+  // HC-61: Phase 1 — aimed slow vertical burst (3 bullets, wide vertical bias, clear gaps)
+  if (phase === 1) {
+    var center = getBossCenter(target);
+    var speed = _tenienteBulletSpeed();
+    var angleToPlayer = getAngleFromBossToPlayer(target);
+    var downBias = Math.PI / 2;
+    var maxDeviation = 0.55;
+    var clampedAngle = angleToPlayer;
+    if (clampedAngle < downBias - maxDeviation) clampedAngle = downBias - maxDeviation;
+    if (clampedAngle > downBias + maxDeviation) clampedAngle = downBias + maxDeviation;
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'teniente_dive', 360);
+
+    var bulletCount = 3;
+    var spread = 0.32;
+    for (var i = 0; i < bulletCount; i++) {
+      var t = bulletCount > 1 ? i / (bulletCount - 1) : 0.5;
+      var a = clampedAngle - spread / 2 + t * spread;
+      pushEnemyBullet(center.x - 2, target.y + target.h, Math.cos(a) * speed, Math.sin(a) * speed, 5, 10, {
+        kind: 'basic',
+        color: '#ff5533',
+        sourceType: 'boss_teniente'
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    return true;
+  }
+
+  // HC-61: Phases 2 and 3 — not yet implemented, fall through to legacy
   return false;
+}
+
+function _tenienteBulletSpeed() {
+  var speed = 2.2;
+  if (typeof getDifficultySettings === 'function') {
+    var s = getDifficultySettings(typeof level === 'number' ? level : 19);
+    if (s && typeof s.bulletSpeed === 'number') speed = s.bulletSpeed * 0.72;
+  }
+  return Math.min(3.5, speed);
 }
