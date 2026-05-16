@@ -1133,3 +1133,63 @@ window.getHardcoreBossId = function(b) {
   }
   return -1;
 };
+
+// ============================================================
+// HC-74: BOSS REGISTRY DISPATCH
+// Central dispatcher — routes to correct hardcore update per boss
+// ============================================================
+
+window.updateHardcoreBossPatternFromRegistry = function(b, dt) {
+  var target = b || boss;
+  if (!target) return false;
+
+  var bossId = window.getHardcoreBossId(target);
+  if (bossId <= 0) return false;
+
+  switch (bossId) {
+    case 1: // CRABTRON / crossfire
+      if (typeof shouldUseCrancktonHardcorePattern === 'function' && shouldUseCrancktonHardcorePattern(target)) {
+        if (typeof fireCrancktonHardcorePattern === 'function') {
+          return fireCrancktonHardcorePattern(target);
+        }
+      }
+      break;
+
+    case 2: // SERPENTRIX / zigzag
+      if (typeof shouldUseSerpentrixHardcorePattern === 'function' && shouldUseSerpentrixHardcorePattern(target)) {
+        if (typeof updateSerpentrixHardcorePattern === 'function') {
+          return updateSerpentrixHardcorePattern(target, dt);
+        }
+      }
+      break;
+
+    case 3: // ORBITAL / rotate
+      if (typeof shouldUseThirdBossHardcorePattern === 'function' && shouldUseThirdBossHardcorePattern(target)) {
+        if (typeof updateThirdBossHardcorePattern === 'function') {
+          return updateThirdBossHardcorePattern(target, dt);
+        }
+      }
+      break;
+
+    case 4: // TENIENTE / divebomb
+      if (typeof shouldUseFourthBossHardcorePattern === 'function' && shouldUseFourthBossHardcorePattern(target)) {
+        if (typeof updateFourthBossHardcorePattern === 'function') {
+          return updateFourthBossHardcorePattern(target, dt);
+        }
+      }
+      break;
+
+    case 5: // EMPERADOR / supreme
+      if (typeof shouldUseFifthBossHardcorePattern === 'function' && shouldUseFifthBossHardcorePattern(target)) {
+        if (typeof updateFifthBossHardcorePattern === 'function') {
+          return updateFifthBossHardcorePattern(target, dt);
+        }
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  return false;
+};
