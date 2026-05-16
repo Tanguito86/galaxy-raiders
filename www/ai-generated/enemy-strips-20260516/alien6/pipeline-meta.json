@@ -1,0 +1,161 @@
+{
+  "target": "asset",
+  "mode": "idle",
+  "prompt": "Create a 2x2 sprite sheet for a shmup enemy, modern pixel art with crisp dark outlines, high contrast, readable on a dark space background, transparent-friendly subject on a solid flat #FF00FF magenta background only. Exact 2x2 grid, no visible borders, no text, no UI. Same enemy identity and same size in all 4 cells, centered in each cell, full silhouette contained well inside each cell with clear magenta margin on all sides, no pixels touching cell edges. Subject: alien6, a magenta segmented splitter enemy with a layered body and visible seams around a small inner core, not square, not icon-like, no excessive detail. Animation across the 4 cells in reading order: frame 1 neutral segmented hover, frame 2 seam/core pulse brighter, frame 3 strongest body split tension and core pulse, frame 4 return-close loop pose. Keep the silhouette clear and coherent, subtle motion only, no detached effects outside the body silhouette.",
+  "role": "",
+  "input": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a08edd02b9c8193beecc0c263239c91.png",
+  "threshold": 100,
+  "edge_threshold": 150,
+  "duration": 180,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 32,
+  "fit_scale": 0.76,
+  "trim_border": 3,
+  "edge_clean_depth": 2,
+  "align": "center",
+  "shared_scale": true,
+  "component_mode": "all",
+  "component_padding": 0,
+  "min_component_area": 8,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "idle-1",
+    "idle-2",
+    "idle-3",
+    "idle-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 11,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        150,
+        91,
+        476,
+        555
+      ],
+      "edge_touch": false,
+      "output_size": [
+        16,
+        23
+      ],
+      "paste_position": [
+        8,
+        4
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 38,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        133,
+        91,
+        461,
+        556
+      ],
+      "edge_touch": false,
+      "output_size": [
+        16,
+        23
+      ],
+      "paste_position": [
+        8,
+        4
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 95,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        135,
+        34,
+        491,
+        520
+      ],
+      "edge_touch": false,
+      "output_size": [
+        17,
+        24
+      ],
+      "paste_position": [
+        7,
+        4
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 13,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        133,
+        46,
+        450,
+        507
+      ],
+      "edge_touch": false,
+      "output_size": [
+        15,
+        23
+      ],
+      "paste_position": [
+        8,
+        4
+      ]
+    }
+  ],
+  "edge_touch_frames": [],
+  "final_strip": "alien6-strip.png",
+  "selected_frames": [
+    "idle-1.png",
+    "idle-2.png",
+    "idle-3.png"
+  ]
+}

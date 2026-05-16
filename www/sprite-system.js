@@ -84,6 +84,34 @@
     return !!(isEnabled() && sprite && sprite.loaded && sprite.image);
   }
 
+  function getAnimationFrame(id, animationName, timeMs, options) {
+    var sprite = getSprite(id);
+    if (!sprite) return 0;
+
+    var animations = sprite.animations || {};
+    var animation = animations[animationName] || animations.idle || { frames: [0], fps: 1, loop: true };
+    var frames = Array.isArray(animation.frames) && animation.frames.length ? animation.frames : [0];
+    var fps = Number(animation.fps);
+    var loop = animation.loop !== false;
+    var offsetMs = Number(options && options.timeOffset) || 0;
+    var frameOffset = Math.max(0, Math.floor(Number(options && options.frameOffset) || 0));
+    var safeTimeMs = Number(timeMs);
+    var elapsed;
+    var rawIndex;
+
+    if (!isFinite(fps) || fps <= 0) fps = 1;
+    if (!isFinite(safeTimeMs)) safeTimeMs = 0;
+
+    elapsed = Math.max(0, safeTimeMs + offsetMs) / 1000;
+    rawIndex = Math.floor(elapsed * fps) + frameOffset;
+
+    if (loop) {
+      return frames[((rawIndex % frames.length) + frames.length) % frames.length];
+    }
+
+    return frames[Math.min(frames.length - 1, Math.max(0, rawIndex))];
+  }
+
   function drawTint(ctx, sprite, sx, sy, sw, sh, dx, dy, dw, dh, tint) {
     var canvas = document.createElement("canvas");
     var tintCtx = canvas.getContext("2d");
@@ -162,17 +190,31 @@
     registerSprite: registerSprite,
     getSprite: getSprite,
     isSpriteReady: isSpriteReady,
+    getAnimationFrame: getAnimationFrame,
     drawSpriteFrame: drawSpriteFrame
   };
 
   global.registerSprite = registerSprite;
   global.getSprite = getSprite;
   global.isSpriteReady = isSpriteReady;
+  global.getAnimationFrame = getAnimationFrame;
   global.drawSpriteFrame = drawSpriteFrame;
 
   registerSprite("player", {
     frameWidth: 32,
     frameHeight: 32,
+    fallbackColor: "#6ee7ff"
+  });
+
+  registerSprite("player_ship_3x3", {
+    src: "assets/sprites/player-ship-3x3.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 8, loop: true },
+      bankLeft: { frames: [3, 4, 5], fps: 10, loop: true },
+      bankRight: { frames: [6, 7, 8], fps: 10, loop: true }
+    },
     fallbackColor: "#6ee7ff"
   });
 
@@ -182,9 +224,29 @@
     fallbackColor: "#7cff6b"
   });
 
+  registerSprite("alien1_strip", {
+    src: "assets/sprites/alien1-strip.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+    },
+    fallbackColor: "#7cff6b"
+  });
+
   registerSprite("alien2", {
     frameWidth: 32,
     frameHeight: 32,
+    fallbackColor: "#ffdd66"
+  });
+
+  registerSprite("alien2_strip", {
+    src: "assets/sprites/alien2-strip.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+    },
     fallbackColor: "#ffdd66"
   });
 
@@ -194,9 +256,29 @@
     fallbackColor: "#ff6bd6"
   });
 
+  registerSprite("alien3_strip", {
+    src: "assets/sprites/alien3-strip.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+    },
+    fallbackColor: "#ff6bd6"
+  });
+
   registerSprite("alien4", {
     frameWidth: 32,
     frameHeight: 32,
+    fallbackColor: "#ff8a3d"
+  });
+
+  registerSprite("alien4_strip", {
+    src: "assets/sprites/alien4-strip.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+    },
     fallbackColor: "#ff8a3d"
   });
 
@@ -206,9 +288,29 @@
     fallbackColor: "#9d7cff"
   });
 
+  registerSprite("alien5_strip", {
+    src: "assets/sprites/alien5-strip.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+    },
+    fallbackColor: "#9d7cff"
+  });
+
   registerSprite("alien6", {
     frameWidth: 32,
     frameHeight: 32,
+    fallbackColor: "#ff4d5e"
+  });
+
+  registerSprite("alien6_strip", {
+    src: "assets/sprites/alien6-strip.png",
+    frameWidth: 32,
+    frameHeight: 32,
+    animations: {
+      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+    },
     fallbackColor: "#ff4d5e"
   });
 

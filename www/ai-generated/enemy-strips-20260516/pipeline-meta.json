@@ -1,0 +1,102 @@
+{
+  "bundle": "galaxy-raiders-enemy-strips",
+  "date": "2026-05-16",
+  "outputs": [
+    {
+      "name": "alien1",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien1",
+      "final_strip": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien1\\alien1-strip.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\alien1-strip.png",
+      "size": [
+        96,
+        32
+      ],
+      "selected_frames": [
+        "idle-1.png",
+        "idle-2.png",
+        "idle-3.png"
+      ],
+      "edge_touch_frames": []
+    },
+    {
+      "name": "alien2",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien2",
+      "final_strip": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien2\\alien2-strip.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\alien2-strip.png",
+      "size": [
+        96,
+        32
+      ],
+      "selected_frames": [
+        "idle-1.png",
+        "idle-2.png",
+        "idle-3.png"
+      ],
+      "edge_touch_frames": []
+    },
+    {
+      "name": "alien3",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien3",
+      "final_strip": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien3\\alien3-strip.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\alien3-strip.png",
+      "size": [
+        96,
+        32
+      ],
+      "selected_frames": [
+        "idle-1.png",
+        "idle-2.png",
+        "idle-3.png"
+      ],
+      "edge_touch_frames": []
+    },
+    {
+      "name": "alien4",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien4",
+      "final_strip": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien4\\alien4-strip.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\alien4-strip.png",
+      "size": [
+        96,
+        32
+      ],
+      "selected_frames": [
+        "idle-1.png",
+        "idle-2.png",
+        "idle-3.png"
+      ],
+      "edge_touch_frames": []
+    },
+    {
+      "name": "alien5",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien5",
+      "final_strip": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien5\\alien5-strip.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\alien5-strip.png",
+      "size": [
+        96,
+        32
+      ],
+      "selected_frames": [
+        "idle-1.png",
+        "idle-2.png",
+        "idle-3.png"
+      ],
+      "edge_touch_frames": []
+    },
+    {
+      "name": "alien6",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien6",
+      "final_strip": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\enemy-strips-20260516\\alien6\\alien6-strip.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\alien6-strip.png",
+      "size": [
+        96,
+        32
+      ],
+      "selected_frames": [
+        "idle-1.png",
+        "idle-2.png",
+        "idle-3.png"
+      ],
+      "edge_touch_frames": []
+    }
+  ]
+}
