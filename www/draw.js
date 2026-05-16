@@ -3908,11 +3908,18 @@ if (shouldShow) {
       return !!(window.SpriteSystem && animatedSpriteId && window.SpriteSystem.isSpriteReady(animatedSpriteId));
     }
 
+    var _ENEMY_READABILITY_MULT = {
+      alien1: 1.30,
+      alien2: 1.45,
+      alien3: 1.45,
+      alien4: 1.55,
+      alien5: 1.55,
+      alien6: 1.45
+    };
+
     function getEnemySpriteReadabilityScale(e, spriteId) {
       if (!spriteId || spriteId.indexOf('_strip') === -1) return 1;
-      if (e.type === 'alien2') return 1.25;
-      if (e.type === 'alien4') return 1.16;
-      if (e.type === 'alien5') return 1.2;
+      if (_ENEMY_READABILITY_MULT.hasOwnProperty(e.type)) return _ENEMY_READABILITY_MULT[e.type];
       return 1.18;
     }
 
@@ -4022,7 +4029,9 @@ if (shouldShow) {
         
         if (e.diving) color = '#f00';
         
-    const size = (e.type === 'alien_mini') ? 2 : 3;
+    const baseSize = (e.type === 'alien_mini') ? 2 : 3;
+    const readabilityScale = _ENEMY_READABILITY_MULT[e.type] || 1;
+    const size = baseSize * readabilityScale;
 
     ctx.save();
     if (!isEnemyAnimatedSpriteReady(e)) {
