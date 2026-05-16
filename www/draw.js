@@ -3593,7 +3593,9 @@ if (shouldShow) {
         const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
         ctx.save();
         ctx.globalAlpha = flicker;
-        drawSprite(ctx, bossSprite, boss.x, boss.y, '#ffaaaa', 5);
+        drawSprite(ctx, bossSprite, boss.x, boss.y, bossColor, 5);
+        ctx.globalAlpha = flicker * 0.35;
+        drawSprite(ctx, bossSprite, boss.x, boss.y, '#ffffff', 5);
         ctx.restore();
       }
 
@@ -3821,13 +3823,14 @@ if (shouldShow) {
           var _ft = e.flashTimer / 150;
           var _hi = _ft * _ft * _ft;
           var flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
+          var hitColor = currentPalette[e.color] || currentPalette[1] || '#ff5050';
           ctx.save();
-          if (_hi > 0.3) {
-            ctx.globalAlpha = _hi * 0.55;
+          if (_hi > 0.25) {
+            ctx.globalAlpha = _hi * 0.62;
             drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffffff', size);
           }
-          ctx.globalAlpha = flicker * (0.5 + 0.5 * _hi);
-          drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, '#ffe0e0', size);
+          ctx.globalAlpha = flicker * (0.35 + 0.45 * _hi);
+          drawSprite(ctx, SPRITES[spriteKey], e.x, e.y, hitColor, size);
           ctx.restore();
         }
 
@@ -4358,29 +4361,41 @@ ufoRewards.forEach(d => {
 
     drawMedals(ctx);
 
-    // Particles
+    // Particles (HC-95: core glow + ring depth)
     particles.forEach(p => {
       ctx.globalAlpha = Math.max(0, p.life);
-      
+
       if (p.isRing) {
-        // Anillo expansivo
+        var ringAlpha = Math.max(0, p.life);
         ctx.strokeStyle = p.color;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = ringAlpha * 0.55;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.ringRadius + 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = ringAlpha;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.ringRadius, 0, Math.PI * 2);
         ctx.stroke();
         p.ringRadius += p.ringExpand * 0.1;
       } else if (p.isSpark) {
-        // Chispa con trail
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, p.size, p.size);
-        ctx.globalAlpha = p.life * 0.5;
+        ctx.globalAlpha = p.life * 0.45;
         ctx.fillRect(p.x - p.vx * 0.3, p.y - p.vy * 0.3, p.size, p.size);
+        ctx.globalAlpha = p.life * 0.35;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(p.x + 1, p.y + 1, Math.max(1, p.size - 2), Math.max(1, p.size - 2));
       } else {
-        // Partícula normal
-        const size = p.size || 3;
+        var size = p.size || 3;
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, size, size);
+        if (p.life > 0.25) {
+          ctx.globalAlpha = p.life * 0.4;
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(p.x + 1, p.y + 1, Math.max(1, size - 2), Math.max(1, size - 2));
+        }
       }
     });
     ctx.globalAlpha = 1;
@@ -5226,9 +5241,17 @@ if (player.weaponType !== 'normal') {
     drawBalanceDebugOverlay(ctx);
   }
 
-  // Flash overlay
+  // Flash overlay (HC-95: soft alpha + vignette for heavy hits)
   if (flashScreen > 0) {
-    ctx.fillStyle = `rgba(255,255,255,${flashScreen * 0.1})`;
+    var fsAlpha = Math.min(1, flashScreen * 0.08);
+    if (flashScreen > 20) {
+      var fsGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.8);
+      fsGrad.addColorStop(0, 'rgba(255,255,255,' + (fsAlpha * 0.55) + ')');
+      fsGrad.addColorStop(1, 'rgba(255,200,180,' + (fsAlpha * 0.25) + ')');
+      ctx.fillStyle = fsGrad;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,' + fsAlpha + ')';
+    }
     ctx.fillRect(-10, -10, W + 20, H + 20);
   }
 

@@ -289,12 +289,13 @@ function createEnemyDeathPop(x, y, color, enemy) {
 }
 
 function createImpactBurst(x, y, color, count = 5) {
-  const overflow = (particles.length + count) - MAX_PARTICLES;
+  var total = count + 2;
+  var overflow = (particles.length + total) - MAX_PARTICLES;
   if (overflow > 0) particles.splice(0, overflow);
 
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 3 + 1.5;
+  for (var i = 0; i < count; i++) {
+    var angle = Math.random() * Math.PI * 2;
+    var speed = Math.random() * 3 + 1.5;
     particles.push({
       x, y,
       vx: Math.cos(angle) * speed,
@@ -306,6 +307,29 @@ function createImpactBurst(x, y, color, count = 5) {
       isSpark: true
     });
   }
+
+  // HC-95: micro ring for impact definition
+  particles.push({
+    x, y,
+    vx: 0, vy: 0,
+    life: 0.18 + Math.random() * 0.08,
+    gravity: 0,
+    color: color,
+    size: 2,
+    isRing: true,
+    ringRadius: 2 + Math.random() * 2,
+    ringExpand: 4 + Math.random() * 3
+  });
+
+  // HC-95: bright core flash
+  particles.push({
+    x, y,
+    vx: 0, vy: 0,
+    life: 0.10 + Math.random() * 0.06,
+    gravity: 0,
+    color: '#ffffff',
+    size: 3 + Math.random() * 2
+  });
 }
 
 function createEnemyMuzzleFlash(x, y, sourceType) {
