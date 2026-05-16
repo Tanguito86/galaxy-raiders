@@ -913,12 +913,12 @@ function updateFifthBossHardcorePattern(b, dt) {
   // HC-67: Phase 1 — wide imperial spread (7 bullets, wide fan, slow speed, clear gaps)
   if (phase === 1) {
     var center = getBossCenter(target);
-    var speed = _emperadorBulletSpeed();
+    var speed = Math.min(3.6, _emperadorBulletSpeed() * 0.92);
     var downBias = Math.PI / 2;
     var arcCount = 7;
-    var arcSpan = 1.5; // ~86° wide fan — imperial presence, readable gaps
+    var arcSpan = 1.3; // ~74° — tighter imperial fan, cleaner gaps
 
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 420);
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 440);
 
     for (var i = 0; i < arcCount; i++) {
       var t = arcCount > 1 ? i / (arcCount - 1) : 0.5;
@@ -937,14 +937,14 @@ function updateFifthBossHardcorePattern(b, dt) {
   // HC-68: Phase 2 — imperial cross pressure (5 aimed spread + 2 delayed lateral, max 7)
   if (phase === 2) {
     var center2 = getBossCenter(target);
-    var speed2 = Math.min(3.6, _emperadorBulletSpeed() * 0.9);
+    var speed2 = Math.min(3.6, _emperadorBulletSpeed() * 0.86);
     var angleToPlayer2 = getAngleFromBossToPlayer(target);
     var downBias2 = Math.PI / 2;
     var clampedAngle2 = angleToPlayer2;
     if (clampedAngle2 < downBias2 - 0.5) clampedAngle2 = downBias2 - 0.5;
     if (clampedAngle2 > downBias2 + 0.5) clampedAngle2 = downBias2 + 0.5;
 
-    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 460);
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 480);
 
     var color2 = '#9966dd'; // deeper purple for phase 2
 
@@ -999,7 +999,7 @@ function updateFifthBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 520);
 
-    var color3 = '#8844ee'; // bright purple for final phase
+    var color3 = '#9977ee'; // imperial gold-purple for final phase
 
     // Aimed spread: 5 bullets
     var aimCount3 = 5;
@@ -1039,8 +1039,8 @@ function updateFifthBossHardcorePattern(b, dt) {
       }, latDelay3);
     })(sx3, sy3, speed3 * 0.72, color3, latOffsets3);
 
-    if (typeof sfxBigExplosion === 'function') sfxBigExplosion();
-    if (typeof pushScreenShake === 'function') pushScreenShake('heavy', 6);
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    if (typeof pushScreenShake === 'function') pushScreenShake('medium', 5);
     return true;
   }
 
