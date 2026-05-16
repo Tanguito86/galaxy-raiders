@@ -1,0 +1,23 @@
+﻿{
+    "asset_type":  "player",
+    "action":  "single",
+    "view":  "topdown",
+    "art_style":  "pixel_art",
+    "source":  "C:\\Users\\Deposito\\.codex\\generated_images\\019e32b8-03ce-7070-87e2-05e5e16df90d\\ig_0ccefa5fe28a87cf016a08e362fa9c8197923e0b2b158ab97f.png",
+    "final":  "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\player.png",
+    "canvas":  "32x32",
+    "transparent_background":  true,
+    "crop_bounds":  {
+                        "y":  99,
+                        "width":  945,
+                        "height":  1059,
+                        "x":  154
+                    },
+    "drawn_bounds":  {
+                         "y":  2,
+                         "width":  25,
+                         "height":  28,
+                         "x":  3
+                     },
+    "edge_touch":  false
+}
