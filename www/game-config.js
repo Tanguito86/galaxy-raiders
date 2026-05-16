@@ -95,6 +95,13 @@ window.GALAXY_CONFIG = {
     ambientFlashEnabled: true
   },
 
+  // ============ SPRITES ============
+  sprites: {
+    enabled: true,
+    fallbackToLegacy: true,
+    debugMissingSprites: false
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
