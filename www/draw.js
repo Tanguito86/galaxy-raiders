@@ -3310,27 +3310,68 @@ if (shouldShow) {
   ctx.rotate(tilt);
   ctx.translate(-cx, -cy);
 
+  // --- HC-92: CORE GLOW ---
+  const corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.025);
+  ctx.globalAlpha = 0.08 + corePulse * 0.05;
+  var coreGrad = ctx.createRadialGradient(cx, cy - 2, 2, cx, cy - 2, 16);
+  coreGrad.addColorStop(0, '#fff');
+  coreGrad.addColorStop(0.4, '#6df');
+  coreGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreGrad;
+  ctx.fillRect(cx - 18, cy - 20, 36, 36);
+
+  // --- HC-92: SIDE MARKER LIGHTS ---
+  ctx.globalAlpha = 0.5 + 0.3 * Math.sin(globalTime * 0.04);
+  ctx.fillStyle = '#0ff';
+  ctx.fillRect(player.x + 3, player.y + 12, 3, 3);
+  ctx.fillStyle = '#0ff';
+  ctx.fillRect(player.x + player.width - 6, player.y + 12, 3, 3);
+  ctx.globalAlpha = 0.3 + 0.2 * Math.sin(globalTime * 0.04 + 1.5);
+  ctx.fillStyle = '#6ff';
+  ctx.fillRect(player.x + 4, player.y + 13, 1, 1);
+  ctx.fillRect(player.x + player.width - 5, player.y + 13, 1, 1);
+
+  // --- HC-92: THRUSTER (banking-aware + enhanced) ---
   const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.035);
   const thrust = player.movingUp ? 1.4 : player.movingDown ? 0.6 : 1.0;
   const flameH = Math.max(4, (10 + 6 * pulse) * thrust);
   const fx = cx;
   const fy = player.y + player.height;
+  const tiltLean = tilt * 9;
+
+  // --- HC-92: ENGINE BAY GLOW ---
+  ctx.globalAlpha = 0.10 + corePulse * 0.06;
+  var bayGrad = ctx.createRadialGradient(cx, fy + 2, 1, cx, fy + 2, 10);
+  bayGrad.addColorStop(0, '#f80');
+  bayGrad.addColorStop(0.5, '#f40');
+  bayGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = bayGrad;
+  ctx.fillRect(cx - 8, fy - 4, 16, 16);
 
   ctx.globalAlpha = (0.06 + 0.06 * pulse) * thrust;
   ctx.fillStyle = '#0ff';
-  ctx.fillRect(fx - 7, fy - 2, 14, flameH + 6);
+  ctx.fillRect(fx - 7 + tiltLean * 0.6, fy - 2, 14, flameH + 6);
 
   ctx.globalAlpha = 0.5 + 0.35 * pulse;
   ctx.fillStyle = '#f80';
-  ctx.fillRect(fx - 3, fy, 6, flameH);
+  ctx.fillRect(fx - 3 + tiltLean * 0.3, fy, 6, flameH);
 
   ctx.globalAlpha = 0.7;
   ctx.fillStyle = '#ff0';
-  ctx.fillRect(fx - 2, fy + 2, 4, Math.max(2, flameH - 3));
+  ctx.fillRect(fx - 2 + tiltLean * 0.15, fy + 2, 4, Math.max(2, flameH - 3));
 
   ctx.globalAlpha = 0.6;
   ctx.fillStyle = '#fff';
   ctx.fillRect(fx - 1, fy + 3, 2, Math.max(1, flameH - 5));
+
+  // --- HC-92: THRUSTER SPARKS ---
+  ctx.globalAlpha = (0.15 + 0.12 * pulse) * thrust;
+  ctx.fillStyle = '#ff6';
+  ctx.fillRect(fx - 5 + tiltLean * 0.5, fy + flameH * 0.7, 2, 3);
+  ctx.fillRect(fx + 3 + tiltLean * 0.5, fy + flameH * 0.7, 2, 3);
+  ctx.fillStyle = '#fa0';
+  ctx.fillRect(fx - 6 + tiltLean * 0.6, fy + flameH * 0.4, 2, 2);
+  ctx.fillRect(fx + 4 + tiltLean * 0.6, fy + flameH * 0.4, 2, 2);
 
   ctx.globalAlpha = 1;
 
@@ -3402,6 +3443,14 @@ if (shouldShow) {
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
+
+  // --- HC-92: SILHOUETTE GLOW ---
+  ctx.globalAlpha = 0.18 + corePulse * 0.06;
+  drawSprite(ctx, SPRITES[shipKey], player.x - 1, player.y, '#48f', 3);
+  ctx.globalAlpha = 0.10 + corePulse * 0.04;
+  drawSprite(ctx, SPRITES[shipKey], player.x + 1, player.y, '#6cf', 3);
+  ctx.globalAlpha = 0.06 + corePulse * 0.03;
+  drawSprite(ctx, SPRITES[shipKey], player.x, player.y - 1, '#8df', 3);
 
   drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
   ctx.restore();
