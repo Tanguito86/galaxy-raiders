@@ -19,13 +19,7 @@ var _hardcoreRank = {
 
 // Lectura segura de la config de rank desde GALAXY_CONFIG
 function _hardcoreRankReadConfig() {
-  var cfg = window.GALAXY_CONFIG;
-  if (!cfg || typeof cfg !== 'object') return { enabled: false, baseLevel: 0 };
-  var r = (cfg.rank && typeof cfg.rank === 'object') ? cfg.rank : { enabled: false, baseLevel: 0 };
-  return {
-    enabled: !!(r.enabled),
-    baseLevel: (typeof r.baseLevel === 'number') ? r.baseLevel : 0
-  };
+  return getRankConfig();
 }
 
 function _hardcoreRankIsEnabled() {
@@ -136,8 +130,7 @@ window.resetHardcoreRank = function() {
 // ============================================================
 
 function _hardcoreRankDecayReadConfig() {
-  var cfg = window.GALAXY_CONFIG;
-  if (!cfg || typeof cfg !== 'object') return { decayDelayMs: 6000, decayAmount: 0.15, decayIntervalMs: 1000 };
+  var cfg = getGalaxyConfig();
   var r = (cfg.rank && typeof cfg.rank === 'object') ? cfg.rank : {};
   return {
     decayDelayMs: (typeof r.decayDelayMs === 'number') ? r.decayDelayMs : 6000,
@@ -213,8 +206,7 @@ window.getHardcoreRankScoreMultiplier = function() {
 
 function drawHardcoreRankDebug(ctx) {
   if (!ctx) return;
-  var cfg = window.GALAXY_CONFIG;
-  if (!cfg || typeof cfg !== 'object') return;
+  var cfg = getGalaxyConfig();
   var dbg = (cfg.debug && typeof cfg.debug === 'object') ? cfg.debug : {};
   if (!dbg.showRank) return;
   if (typeof H === 'undefined') return;

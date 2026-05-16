@@ -268,7 +268,7 @@ function drawBossPhaseTransitionFX(ctx, b) {
 }
 
 // ============================================================
-// BOSS 1 — CRANCKTON (crossfire, level 5)
+// BOSS 1 — CRABTRON (crossfire, level 5)
 // ============================================================
 
 function isFirstHardcoreBoss(b) {

@@ -18,11 +18,10 @@ var _hardcoreCombo = {
 };
 
 function _hardcoreComboReadConfig() {
-  var cfg = window.GALAXY_CONFIG;
-  if (!cfg || typeof cfg !== 'object') return { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 };
-  var c = (cfg.combo && typeof cfg.combo === 'object') ? cfg.combo : { enabled: false, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 };
+  var cfg = getGalaxyConfig();
+  var c = (cfg.combo && typeof cfg.combo === 'object') ? cfg.combo : {};
   return {
-    enabled: !!(c.enabled),
+    enabled: (typeof c.enabled === 'boolean') ? c.enabled : true,
     timeoutMs: (typeof c.timeoutMs === 'number') ? c.timeoutMs : 2500,
     maxMultiplier: (typeof c.maxMultiplier === 'number') ? c.maxMultiplier : 2.0,
     graceMs: (typeof c.graceMs === 'number') ? c.graceMs : 350,
@@ -328,8 +327,7 @@ window.drawHardcoreComboHUD = function(ctx) {
 
 window.drawHardcoreSystemsDebug = function(ctx) {
   if (!ctx) return;
-  var cfg = window.GALAXY_CONFIG;
-  if (!cfg || typeof cfg !== 'object') return;
+  var cfg = getGalaxyConfig();
   var dbg = (cfg.debug && typeof cfg.debug === 'object') ? cfg.debug : {};
   if (!dbg.showHardcoreSystems) return;
   if (typeof H === 'undefined' || typeof W === 'undefined') return;
