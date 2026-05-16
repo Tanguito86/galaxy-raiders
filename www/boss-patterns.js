@@ -727,7 +727,7 @@ function updateFourthBossHardcorePattern(b, dt) {
   // HC-61: Phase 1 — aimed slow vertical burst (3 bullets, wide vertical bias, clear gaps)
   if (phase === 1) {
     var center = getBossCenter(target);
-    var speed = _tenienteBulletSpeed() * 0.94;
+    var speed = Math.min(3.5, _tenienteBulletSpeed() * 0.94);
     var angleToPlayer = getAngleFromBossToPlayer(target);
     var downBias = Math.PI / 2;
     var maxDeviation = 0.55;
@@ -756,7 +756,7 @@ function updateFourthBossHardcorePattern(b, dt) {
   // HC-62: Phase 2 — double dive lane: 2 columns, one aimed near player, one lateral closure
   if (phase === 2) {
     var center2 = getBossCenter(target);
-    var speed2 = _tenienteBulletSpeed() * 0.88;
+    var speed2 = Math.min(3.5, _tenienteBulletSpeed() * 0.88);
     var angleToPlayer2 = getAngleFromBossToPlayer(target);
     var downBias2 = Math.PI / 2;
     var maxDeviation2 = 0.55;
