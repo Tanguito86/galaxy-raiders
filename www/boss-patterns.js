@@ -934,7 +934,60 @@ function updateFifthBossHardcorePattern(b, dt) {
     return true;
   }
 
-  // HC-67: Phases 2 and 3 — not yet implemented, fall through to legacy
+  // HC-68: Phase 2 — imperial cross pressure (5 aimed spread + 2 delayed lateral, max 7)
+  if (phase === 2) {
+    var center2 = getBossCenter(target);
+    var speed2 = Math.min(3.6, _emperadorBulletSpeed() * 0.9);
+    var angleToPlayer2 = getAngleFromBossToPlayer(target);
+    var downBias2 = Math.PI / 2;
+    var clampedAngle2 = angleToPlayer2;
+    if (clampedAngle2 < downBias2 - 0.5) clampedAngle2 = downBias2 - 0.5;
+    if (clampedAngle2 > downBias2 + 0.5) clampedAngle2 = downBias2 + 0.5;
+
+    if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 460);
+
+    var color2 = '#9966dd'; // deeper purple for phase 2
+
+    // Aimed spread: 5 bullets
+    var aimCount = 5;
+    var aimSpan = 0.8; // ~46° aimed fan
+    for (var i = 0; i < aimCount; i++) {
+      var ti = aimCount > 1 ? i / (aimCount - 1) : 0.5;
+      var ai = clampedAngle2 - aimSpan / 2 + ti * aimSpan;
+      pushEnemyBullet(center2.x - 2, target.y + target.h, Math.cos(ai) * speed2, Math.sin(ai) * speed2, 5, 10, {
+        kind: 'crossfire_a',
+        color: color2,
+        sourceType: 'boss_emperador'
+      });
+    }
+
+    // Lateral delayed: 2 bullets, one left one right, delayed 150ms
+    var latAngle = downBias2;
+    var latOffset = 60;
+    var latDelay = 150;
+    var sx = center2.x;
+    var sy = target.y + target.h;
+    (function(cx, cy, spd, col) {
+      setTimeout(function() {
+        if (!target.active || target.isTeleporting) return;
+        pushEnemyBullet(cx - latOffset - 2, cy, Math.cos(latAngle) * spd, Math.sin(latAngle) * spd, 5, 10, {
+          kind: 'crossfire_b',
+          color: col,
+          sourceType: 'boss_emperador'
+        });
+        pushEnemyBullet(cx + latOffset - 2, cy, Math.cos(latAngle) * spd, Math.sin(latAngle) * spd, 5, 10, {
+          kind: 'crossfire_b',
+          color: col,
+          sourceType: 'boss_emperador'
+        });
+      }, latDelay);
+    })(sx, sy, speed2 * 0.78, color2);
+
+    if (typeof sfxBossWarning === 'function') sfxBossWarning();
+    return true;
+  }
+
+  // HC-67/68: Phase 3 — not yet implemented, fall through to legacy
   return false;
 }
 
