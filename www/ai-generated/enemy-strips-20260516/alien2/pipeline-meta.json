@@ -1,16 +1,16 @@
 {
   "target": "asset",
   "mode": "idle",
-  "prompt": "Create a 2x2 sprite sheet for a shmup enemy, modern pixel art with crisp dark outlines, high contrast, readable on a dark space background, transparent-friendly subject on a solid flat #FF00FF magenta background only. Exact 2x2 grid, no visible borders, no text, no UI. Same enemy identity and same size in all 4 cells, centered in each cell, full silhouette contained well inside each cell with clear magenta margin on all sides, no pixels touching cell edges. Subject: alien2, a thin purple sniper enemy with a sleek elongated body, narrow fins, and a central visor or targeting eye, not square, not icon-like, no excessive detail. Animation across the 4 cells in reading order: frame 1 neutral aim pose, frame 2 visor glow pulse brighter, frame 3 tighter aiming posture with strongest target eye glow, frame 4 return-close loop pose. Keep the silhouette clear and coherent, subtle motion only, no detached effects outside the body silhouette.",
+  "prompt": "Create a 2x2 sprite sheet for one arcade shmup enemy ship, modern pixel art with crisp dark outline, high contrast, readable at 32x32 on a dark space background. Background must be 100% solid flat #FF00FF magenta only, no gradients, no shadows, no borders, no text, no UI. Exact 2x2 grid with four equal invisible cells, no visible cell lines. Same enemy identity and same silhouette scale in every cell, centered in each cell, full subject inside the central safe area with magenta margin on all sides, no pixels touching cell edges. Subject: Galaxy Raiders sniper enemy, an elegant high-tech assassin ship in purple and magenta palette, narrow aggressive triangular silhouette, clearly facing downward toward the player, pointed lower nose/weapon, subtle diagonal wing structure swept upward/back, small glowing visor or targeting eye near the front, floating lethal precision feeling. Avoid square silhouette, avoid cross shape, avoid plus-sign or UI icon appearance, avoid excessive detail. The ship should visually occupy about 24 to 26 pixels inside each 32x32 final frame after processing. Animation phases in reading order: frame 1 idle glow with dim visor, frame 2 visor/targeting eye pulse brighter, frame 3 energy charge pulse along nose and wings, frame 4 loop return close to frame 1. Keep motion subtle and coherent; no detached effects outside the main ship silhouette; no projectile, no muzzle flash.",
   "role": "",
-  "input": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a08ecfc7470819395be51b5521076a5.png",
+  "input": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a08fbe16dd0819399b3e27b68388793.png",
   "threshold": 100,
   "edge_threshold": 150,
   "duration": 180,
   "rows": 2,
   "cols": 2,
   "cell_size": 32,
-  "fit_scale": 0.76,
+  "fit_scale": 0.82,
   "trim_border": 3,
   "edge_clean_depth": 2,
   "align": "center",
@@ -38,23 +38,23 @@
         627
       ],
       "component_mode": "all",
-      "component_count": 1,
+      "component_count": 2,
       "selected_component_area": null,
       "selected_component_bbox": null,
       "crop_bbox": [
-        197,
-        66,
-        433,
-        569
+        164,
+        100,
+        502,
+        564
       ],
       "edge_touch": false,
       "output_size": [
-        11,
-        24
+        18,
+        26
       ],
       "paste_position": [
-        10,
-        4
+        7,
+        3
       ]
     },
     {
@@ -69,23 +69,23 @@
         627
       ],
       "component_mode": "all",
-      "component_count": 1,
+      "component_count": 5,
       "selected_component_area": null,
       "selected_component_bbox": null,
       "crop_bbox": [
-        188,
-        63,
-        423,
-        569
+        109,
+        100,
+        465,
+        566
       ],
       "edge_touch": false,
       "output_size": [
-        11,
-        24
+        19,
+        26
       ],
       "paste_position": [
-        10,
-        4
+        6,
+        3
       ]
     },
     {
@@ -100,23 +100,23 @@
         1254
       ],
       "component_mode": "all",
-      "component_count": 5,
+      "component_count": 26,
       "selected_component_area": null,
       "selected_component_bbox": null,
       "crop_bbox": [
-        211,
-        59,
-        422,
-        538
+        149,
+        58,
+        519,
+        526
       ],
       "edge_touch": false,
       "output_size": [
-        10,
-        23
+        20,
+        26
       ],
       "paste_position": [
-        11,
-        4
+        6,
+        3
       ]
     },
     {
@@ -135,19 +135,19 @@
       "selected_component_area": null,
       "selected_component_bbox": null,
       "crop_bbox": [
-        188,
-        56,
-        423,
-        561
+        109,
+        65,
+        465,
+        531
       ],
       "edge_touch": false,
       "output_size": [
-        11,
-        24
+        19,
+        26
       ],
       "paste_position": [
-        10,
-        4
+        6,
+        3
       ]
     }
   ],
@@ -157,5 +157,6 @@
     "idle-1.png",
     "idle-2.png",
     "idle-3.png"
-  ]
+  ],
+  "redesign_goal": "HC sniper readability redesign: triangular downward assassin ship, less rigid/cross-shaped."
 }
