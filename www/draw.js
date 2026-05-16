@@ -4084,40 +4084,90 @@ if (shouldShow) {
       }
     });
 
-	    // Player bullets
+	    // Player bullets (HC-93 visual polish)
 	    bullets.forEach(b => {
-	      if (Array.isArray(b.trail) && b.trail.length > 0) {
-	        const trailColor = b.trailColor || b.color || '#fff';
-	        const len = b.trail.length;
+	      var bt = b.type || 'normal';
+	      var bc = b.color || '#fff';
 
-	        for (let i = 0; i < len; i++) {
-	          const t = (i + 1) / len;
-	          const p = b.trail[i];
-	          const tw = Math.max(1, b.w * (0.40 + t * 0.45));
-	          const th = Math.max(1, b.h * (0.25 + t * 0.40));
-
-	          ctx.globalAlpha = 0.03 + t * 0.30;
-	          ctx.fillStyle = trailColor;
-	          ctx.fillRect(p.x - tw / 2, p.y - th / 2, tw, th);
-	        }
-	        ctx.globalAlpha = 1;
+	      // --- HC-93: per-weapon glow profile ---
+	      var glowColor, glowOuter, glowInner;
+	      switch (bt) {
+	        case 'laser':   glowColor = '#0ff'; glowOuter = 0.16; glowInner = 0.10; break;
+	        case 'machine': glowColor = '#f5f'; glowOuter = 0.12; glowInner = 0.07; break;
+	        case 'spread':  glowColor = '#5f5'; glowOuter = 0.14; glowInner = 0.08; break;
+	        case 'double':  glowColor = '#ff8'; glowOuter = 0.13; glowInner = 0.07; break;
+	        default:        glowColor = '#fff'; glowOuter = 0.10; glowInner = 0.06; break;
 	      }
 
-	      const glowW = b.type === 'laser' ? 4 : 2;
-	      const glowH = b.type === 'laser' ? 6 : 2;
-	      ctx.globalAlpha = b.type === 'laser' ? 0.12 : 0.08;
-	      ctx.fillStyle = b.color;
-	      ctx.fillRect(b.x - glowW, b.y - glowH, b.w + glowW * 2, b.h + glowH * 2);
+	      // --- HC-93: trail with enhanced fade ---
+	      if (Array.isArray(b.trail) && b.trail.length > 0) {
+	        var trailLen = b.trail.length;
+	        for (var ti = 0; ti < trailLen; ti++) {
+	          var tf = (ti + 1) / trailLen;
+	          var tp = b.trail[ti];
+	          var ttw = Math.max(1, b.w * (0.35 + tf * 0.40));
+	          var tth = Math.max(1, b.h * (0.20 + tf * 0.35));
 
+	          ctx.globalAlpha = 0.02 + tf * 0.28;
+	          ctx.fillStyle = glowColor;
+	          ctx.fillRect(tp.x - ttw / 2 - 1, tp.y - tth / 2 - 1, ttw + 2, tth + 2);
+
+	          ctx.globalAlpha = 0.04 + tf * 0.22;
+	          ctx.fillStyle = bc;
+	          ctx.fillRect(tp.x - ttw / 2, tp.y - tth / 2, ttw, tth);
+	        }
+	      }
+
+	      // --- HC-93: outer glow halo ---
+	      var ow = bt === 'laser' ? 5 : 3;
+	      var oh = bt === 'laser' ? 7 : 3;
+	      ctx.globalAlpha = glowOuter;
+	      ctx.fillStyle = glowColor;
+	      ctx.fillRect(b.x - ow, b.y - oh, b.w + ow * 2, b.h + oh * 2);
+
+	      // --- HC-93: inner glow ring ---
+	      ctx.globalAlpha = glowInner;
+	      ctx.fillStyle = glowColor;
+	      ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
+
+	      // --- HC-93: main body ---
 	      ctx.globalAlpha = 1;
-	      ctx.fillStyle = b.color;
+	      ctx.fillStyle = bc;
 	      ctx.fillRect(b.x, b.y, b.w, b.h);
 
-	      const coreW = b.type === 'laser' ? 2 : 1;
-	      const coreH = b.type === 'laser' ? 4 : 1;
-	      ctx.globalAlpha = b.type === 'laser' ? 0.55 : 0.50;
+	      // --- HC-93: bright core with pulse ---
+	      var corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.06 + b.x * 0.03);
+	      var cw = bt === 'laser' ? 2 : 1;
+	      var ch = bt === 'laser' ? 3 : 1;
+	      var coreAlpha = bt === 'laser' ? 0.55 + corePulse * 0.15 : 0.45 + corePulse * 0.15;
+	      ctx.globalAlpha = coreAlpha;
 	      ctx.fillStyle = '#fff';
-	      ctx.fillRect(b.x + coreW, b.y + coreH, Math.max(1, b.w - coreW * 2), Math.max(1, b.h - coreH * 2));
+	      ctx.fillRect(b.x + cw, b.y + ch, Math.max(1, b.w - cw * 2), Math.max(1, b.h - ch * 2));
+
+	      // --- HC-93: per-type extras ---
+	      if (bt === 'laser') {
+	        ctx.globalAlpha = 0.20 + corePulse * 0.10;
+	        ctx.fillStyle = '#fff';
+	        ctx.fillRect(b.x + 1, b.y + b.h * 0.25, 1, b.h * 0.20);
+	        ctx.fillRect(b.x + b.w - 2, b.y + b.h * 0.25, 1, b.h * 0.20);
+	        ctx.fillRect(b.x + 1, b.y + b.h * 0.60, 1, b.h * 0.20);
+	        ctx.fillRect(b.x + b.w - 2, b.y + b.h * 0.60, 1, b.h * 0.20);
+	      } else if (bt === 'machine') {
+	        ctx.globalAlpha = 0.08 + corePulse * 0.05;
+	        ctx.fillStyle = '#fff';
+	        ctx.fillRect(b.x - 2, b.y + b.h * 0.3, 1, 2);
+	        ctx.fillRect(b.x + b.w + 1, b.y + b.h * 0.5, 1, 2);
+	      } else if (bt === 'spread') {
+	        ctx.globalAlpha = 0.10;
+	        ctx.fillStyle = '#8f8';
+	        ctx.fillRect(b.x - 3, b.y + 1, 2, b.h - 2);
+	        ctx.fillRect(b.x + b.w + 1, b.y + 1, 2, b.h - 2);
+	      } else if (bt === 'double') {
+	        ctx.globalAlpha = 0.12 + corePulse * 0.06;
+	        ctx.fillStyle = '#ff8';
+	        ctx.fillRect(b.x + b.w * 0.5 - 1, b.y - 2, 2, 2);
+	        ctx.fillRect(b.x + b.w * 0.5 - 1, b.y + b.h, 2, 2);
+	      }
 	    });
 	    ctx.globalAlpha = 1;
 
