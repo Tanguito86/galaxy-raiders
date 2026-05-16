@@ -2665,7 +2665,7 @@ function draw() {
   applyHC90ColorGrading(ctx, level);
 
   // 2.5) HC-97: atmospheric effects (dust, speed lines, ambient flash)
-  drawHC97Atmosphere(ctx, level, globalTime);
+  if (typeof drawHC97Atmosphere === 'function') drawHC97Atmosphere(ctx, level, globalTime);
 
   // 3) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
@@ -4492,6 +4492,7 @@ ufoRewards.forEach(d => {
     if (typeof window.drawHardcoreComboHUD === 'function') window.drawHardcoreComboHUD(ctx);
     if (typeof window.drawHardcoreSystemsDebug === 'function') window.drawHardcoreSystemsDebug(ctx);
     if (typeof drawHC90BackgroundStats === 'function') drawHC90BackgroundStats(ctx, level);
+    if (typeof drawHC97AtmosphereStats === 'function') drawHC97AtmosphereStats(ctx, level);
     if (typeof drawHardcoreRankLevelFeedback === 'function') drawHardcoreRankLevelFeedback(ctx);
 
       if (typeof getBalanceProfile === 'function' && getBalanceProfile() === 'tournament') {

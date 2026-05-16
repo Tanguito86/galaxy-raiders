@@ -87,6 +87,14 @@ window.GALAXY_CONFIG = {
     maxStars: 180
   },
 
+  // ============ ATMOSPHERE ============
+  atmosphere: {
+    enabled: true,
+    dustEnabled: true,
+    speedLinesEnabled: true,
+    ambientFlashEnabled: true
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
@@ -95,7 +103,8 @@ window.GALAXY_CONFIG = {
     showEnemyRoles: false,
     showBossPattern: false,
     showBossDispatch: false,
-    showBackgroundStats: false
+    showBackgroundStats: false,
+    showAtmosphereStats: false
   }
 
 };

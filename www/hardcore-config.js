@@ -14,7 +14,8 @@ var _GALAXY_CONFIG_DEFAULTS = {
   pressure:  { enabled: true, minMultiplier: 1.00, maxMultiplier: 1.18, levels: { LOW: 1.00, NORMAL: 1.06, HIGH: 1.12, MAX: 1.18 } },
   rhythm:    { enabled: true, wavePauseMinScale: 0.75, introMinScale: 0.72, entryDelayMinScale: 0.70 },
   background:{ hc90Enabled: true, nebulaEnabled: true, colorGradingEnabled: true, maxStars: 180 },
-  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false }
+  atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
+  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false }
 };
 
 function getGalaxyConfig() {
@@ -76,7 +77,8 @@ function getHardcoreDebugConfig() {
   var sbp = (typeof d.showBossPattern === 'boolean') ? d.showBossPattern : false;
   var sbd = (typeof d.showBossDispatch === 'boolean') ? d.showBossDispatch : false;
   var sbs = (typeof d.showBackgroundStats === 'boolean') ? d.showBackgroundStats : false;
-  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp, showBossDispatch: sbd, showBackgroundStats: sbs };
+  var sas = (typeof d.showAtmosphereStats === 'boolean') ? d.showAtmosphereStats : false;
+  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp, showBossDispatch: sbd, showBackgroundStats: sbs, showAtmosphereStats: sas };
 }
 
 function getPressureConfig() {
@@ -107,6 +109,16 @@ function getBackgroundConfig() {
   var cg = (typeof b.colorGradingEnabled === 'boolean') ? b.colorGradingEnabled : true;
   var ms = (typeof b.maxStars === 'number' && b.maxStars > 0) ? Math.min(300, Math.max(10, b.maxStars)) : 180;
   return { hc90Enabled: en, nebulaEnabled: ne, colorGradingEnabled: cg, maxStars: ms };
+}
+
+function getAtmosphereConfig() {
+  var cfg = getGalaxyConfig();
+  var a = (cfg.atmosphere && typeof cfg.atmosphere === 'object') ? cfg.atmosphere : _GALAXY_CONFIG_DEFAULTS.atmosphere;
+  var en = (typeof a.enabled === 'boolean') ? a.enabled : true;
+  var de = (typeof a.dustEnabled === 'boolean') ? a.dustEnabled : true;
+  var sl = (typeof a.speedLinesEnabled === 'boolean') ? a.speedLinesEnabled : true;
+  var af = (typeof a.ambientFlashEnabled === 'boolean') ? a.ambientFlashEnabled : true;
+  return { enabled: en, dustEnabled: de, speedLinesEnabled: sl, ambientFlashEnabled: af };
 }
 
 // ============================================================
