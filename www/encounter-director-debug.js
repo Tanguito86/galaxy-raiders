@@ -35,7 +35,7 @@
     var panelY = 4;
     var panelW = 114;
     var lineH = 8;
-    var rows = 18;
+    var rows = 19;
     var panelH = rows * lineH + 6;
 
     ctx.globalAlpha = 0.62;
@@ -124,6 +124,8 @@
     var staggerDelay = safeNum(st.lastStaggerDelay || 0);
     var staggerGroup = safeStr(st.lastStaggerGroupSize || 0);
     row('stagger:', staggerRole + ' ' + staggerDelay + '/' + staggerGroup, st.lastStaggerDelay > 0 ? '#ff0' : '#888');
+
+    row('relief:', st.reliefActive ? 'ACTIVE' : '---', st.reliefActive ? '#0f0' : '#888');
 
     ctx.restore();
   }

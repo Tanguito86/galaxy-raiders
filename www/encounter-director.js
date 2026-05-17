@@ -12,7 +12,8 @@
     spawnStaggerMs: 220,
     recentMemory: 12,
     levelResetPressureCarryMax: 0.45,
-    maxStaggerDelayMs: 850
+    maxStaggerDelayMs: 850,
+    silenceMaxMs: 2000
   };
 
   var config = global.ENCOUNTER_DIRECTOR_CONFIG || {};
@@ -35,7 +36,8 @@
     roleRepeatCap: 3,
     lastStaggerDelay: 0,
     lastStaggerRole: null,
-    lastStaggerGroupSize: 0
+    lastStaggerGroupSize: 0,
+    reliefActive: false
   };
 
   function getCfg(key) {
@@ -205,7 +207,7 @@
       t: global.globalTime || 0
     });
 
-    director.silenceTimer = Math.max(director.silenceTimer, getSilenceOnDeathMs());
+    director.silenceTimer = Math.min(getCfg('silenceMaxMs'), Math.max(director.silenceTimer, getSilenceOnDeathMs()));
     recountActiveRoles();
     return true;
   }
@@ -364,6 +366,7 @@
     director.lastStaggerDelay = 0;
     director.lastStaggerRole = null;
     director.lastStaggerGroupSize = 0;
+    director.reliefActive = false;
     director.spawnCooldown = 0;
     director.silenceTimer = 0;
     director.pressure = Math.min(director.pressure, getCfg('levelResetPressureCarryMax'));
@@ -395,7 +398,7 @@
       }
     }
     if (!isBossWindowActive() && aliveCount === 0) {
-      director.silenceTimer = Math.max(director.silenceTimer, getCfg('silenceOnWaveClearMs'));
+      director.silenceTimer = Math.min(getCfg('silenceMaxMs'), Math.max(director.silenceTimer, getCfg('silenceOnWaveClearMs')));
     }
 
     director.targetPressure = computeTargetPressure();
@@ -403,6 +406,18 @@
     var smoothing = director.targetPressure >= director.pressure
       ? getCfg('pressureSmoothingIn')
       : getCfg('pressureSmoothingOut');
+
+    // HC-125K: pressure relief — accelerate decay when calm
+    director.reliefActive = false;
+    if (director.pressure >= 0.70 && director.targetPressure < director.pressure) {
+      var dives = director.activeRoles.dive || 0;
+      var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
+      if (dives === 0 && bullets <= 6) {
+        smoothing = Math.min(getCfg('pressureSmoothingIn'), smoothing * 2.2);
+        director.reliefActive = true;
+      }
+    }
+
     var normalizedDt = clamp(dt / 16.6667, 0, 3);
     director.pressure += (director.targetPressure - director.pressure) * smoothing * normalizedDt;
     director.pressure = clamp(director.pressure, 0, 1);
@@ -435,7 +450,8 @@
       repeatedRoleCount: director.repeatedRoleCount,
       lastStaggerDelay: director.lastStaggerDelay,
       lastStaggerRole: director.lastStaggerRole,
-      lastStaggerGroupSize: director.lastStaggerGroupSize
+      lastStaggerGroupSize: director.lastStaggerGroupSize,
+      reliefActive: director.reliefActive
     };
   };
 })(window);
