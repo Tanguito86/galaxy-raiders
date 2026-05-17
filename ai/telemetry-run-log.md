@@ -1,7 +1,7 @@
 # Encounter Director — Telemetry Run Log
 
 Template for recording Encounter Director telemetry across real playtests.
-Press **F5** during/after a run to export the JSON baseline to console.
+Press **U** to start capture, **I** to export the JSON baseline to console.
 
 ---
 
@@ -78,4 +78,55 @@ Copy this block per run:
 - sniperUptime (8.9%) noticeable but not oppressive
 - cleanupDuration (5/45 = 11%) on low side — personality spread looks balanced
 - No changes needed
+```
+
+---
+
+## Manual Feel Audit
+
+Play LV1 / LV2 / LV3 manually without capture. Record qualitative notes only. Use this as a cross-check against telemetry when hotkeys are unreliable.
+
+### LV1 — Playtest
+
+| Aspect | Note |
+|---|---|
+| **Empty moments** | `<none / rare / frequent — describe when>` |
+| **Pressure spikes** | `<none / rare / frequent — describe when>` |
+| **Sniper readability** | `<never saw / visible / oppressive>` |
+| **Elite overlap** | `<never saw / fair / unfair — describe>` |
+| **Cleanup breathing** | `<never felt / noticeable / too slow>` |
+| **Lane usefulness** | `<ignored / used / essential>` |
+| **Stagger visibility** | `<invisible / noticeable / jarring>` |
+| **Overall feel** | `<1-line summary>` |
+
+### LV2 — Playtest
+
+| Aspect | Note |
+|---|---|
+| **Empty moments** | `<none / rare / frequent — describe when>` |
+| **Pressure spikes** | `<none / rare / frequent — describe when>` |
+| **Sniper readability** | `<never saw / visible / oppressive>` |
+| **Elite overlap** | `<never saw / fair / unfair — describe>` |
+| **Cleanup breathing** | `<never felt / noticeable / too slow>` |
+| **Lane usefulness** | `<ignored / used / essential>` |
+| **Stagger visibility** | `<invisible / noticeable / jarring>` |
+| **Overall feel** | `<1-line summary>` |
+
+### LV3 — Playtest
+
+| Aspect | Note |
+|---|---|
+| **Empty moments** | `<none / rare / frequent — describe when>` |
+| **Pressure spikes** | `<none / rare / frequent — describe when>` |
+| **Sniper readability** | `<never saw / visible / oppressive>` |
+| **Elite overlap** | `<never saw / fair / unfair — describe>` |
+| **Cleanup breathing** | `<never felt / noticeable / too slow>` |
+| **Lane usefulness** | `<ignored / used / essential>` |
+| **Stagger visibility** | `<invisible / noticeable / jarring>` |
+| **Overall feel** | `<1-line summary>` |
+
+### Cross-Level Patterns
+
+```
+<Any recurring issues across levels: e.g. "silence too long at all levels", "snipers never appear", etc.>
 ```
