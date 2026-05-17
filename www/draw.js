@@ -3543,10 +3543,10 @@ if (shouldShow) {
 
     var _BOSS_READABILITY_MULT = {
       crossfire: 1.53,
-      zigzag: 1.53,
+      zigzag: 1.42,
       rotate: 1.53,
       divebomb: 1.56,
-      supreme: 1.27
+      supreme: 1.45
     };
 
     function getBossSpriteId(boss) {
@@ -3597,10 +3597,10 @@ if (shouldShow) {
 
       // HC-121: ambient darkening overlay (behind boss, subtle tint)
       ctx.save();
-      ctx.globalAlpha = 0.04 + 0.015 * Math.sin(globalTime * 0.009 + 1.2);
+      ctx.globalAlpha = 0.03 + 0.01 * Math.sin(globalTime * 0.009 + 1.2);
       ctx.fillStyle = bossColor;
       ctx.fillRect(-10, -10, W + 20, H + 20);
-      ctx.globalAlpha = 0.03;
+      ctx.globalAlpha = 0.02;
       ctx.fillStyle = '#000';
       ctx.fillRect(-10, -10, W + 20, H + 20);
       ctx.restore();
@@ -3720,16 +3720,18 @@ if (shouldShow) {
         ctx.restore();
       }
 
-      // HC-121: radial boss aura (soft concentric glow behind sprite)
-      ctx.save();
-      for (var _ai = 4; _ai >= 0; _ai--) {
-        var _aa = 0.025 * (5 - _ai);
-        var _as = (_ai + 1) * 8;
-        ctx.globalAlpha = _aa;
-        ctx.fillStyle = bossColor;
-        ctx.fillRect(boss.x - _as, boss.y - _as, boss.w + _as * 2, boss.h + _as * 2);
+      // HC-121: radial boss aura (soft concentric glow behind sprite, only for bosses without own aura)
+      if (boss.pattern === 'crossfire') {
+        ctx.save();
+        for (var _ai = 4; _ai >= 0; _ai--) {
+          var _aa = 0.025 * (5 - _ai);
+          var _as = (_ai + 1) * 8;
+          ctx.globalAlpha = _aa;
+          ctx.fillStyle = bossColor;
+          ctx.fillRect(boss.x - _as, boss.y - _as, boss.w + _as * 2, boss.h + _as * 2);
+        }
+        ctx.restore();
       }
-      ctx.restore();
 
       drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
@@ -3761,16 +3763,6 @@ if (shouldShow) {
       drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
       ctx.restore();
 
-      if (boss.flashTimer > 0) {
-        const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
-        ctx.save();
-        ctx.globalAlpha = flicker;
-        drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
-        ctx.globalAlpha = flicker * 0.35;
-        drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
-        ctx.restore();
-      }
-
       if (boss.pattern === 'crossfire') {
         drawCrabtronCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
@@ -3781,6 +3773,16 @@ if (shouldShow) {
       }
 
       ctx.restore();
+
+      if (boss.flashTimer > 0) {
+        const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
+        ctx.save();
+        ctx.globalAlpha = flicker;
+        drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+        ctx.globalAlpha = flicker * 0.35;
+        drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
+        ctx.restore();
+      }
            
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
 
