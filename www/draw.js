@@ -4157,10 +4157,15 @@ if (shouldShow) {
 
     // HC-125H: encounter stagger visual (render-only, no gameplay effect)
     if (e._encounterDelayTimer > 0) {
-      var _stgT = Math.min(1, e._encounterDelayTimer / 220);
-      ctx.globalAlpha *= 0.50 + _stgT * 0.50;
-      ctx.translate(0, (1 - _stgT) * -5);
-      ctx.scale(0.88 + _stgT * 0.12, 0.88 + _stgT * 0.12);
+      var _stgInitial = Math.max(220, e._encounterDelayInitial || e._encounterDelayTimer || 220);
+      var _stgPending = Math.max(0, Math.min(1, e._encounterDelayTimer / _stgInitial));
+      var _stgScale = 0.90 + (1 - _stgPending) * 0.10;
+      var _stgCx = e.x + e.w / 2;
+      var _stgCy = e.y + e.h / 2;
+      ctx.globalAlpha *= 0.42 + (1 - _stgPending) * 0.58;
+      ctx.translate(_stgCx, _stgCy - _stgPending * 8);
+      ctx.scale(_stgScale, _stgScale);
+      ctx.translate(-_stgCx, -_stgCy);
     }
 
     drawEnemySpriteOrLegacy(ctx, e, spriteKey, color, size);

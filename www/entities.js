@@ -861,6 +861,77 @@ function assignInitialShmupRoutes(enemies, level) {
   });
 }
 
+function getEncounterFormationRole(enemy) {
+  if (!enemy) return 'standard';
+  if (enemy.type === 'alien2') return 'sniper';
+  if (enemy.type === 'alien3') return 'tank';
+  if (enemy.type === 'alien4') return 'flanker';
+  if (enemy.type === 'alien5') return 'kamikaze';
+  if (enemy.type === 'alien6') return 'splitter';
+  return 'standard';
+}
+
+function getFormationPacingDelay(baseDelay, directorState) {
+  if (!baseDelay || baseDelay <= 0) return 0;
+
+  const st = directorState || {};
+  const pressure = Math.max(0, Math.min(1, Number(st.pressure) || 0));
+  const silenceTimer = Math.max(0, Number(st.silenceTimer) || 0);
+  let delay = baseDelay;
+
+  if (pressure >= 0.70) delay *= 1.18;
+  else if (pressure >= 0.45) delay *= 1.08;
+
+  if (silenceTimer > 0) delay += Math.min(80, silenceTimer * 0.08);
+  if (st.reliefActive) delay *= 0.82;
+  if (level <= 5) delay *= 0.90;
+
+  return Math.max(0, Math.min(850, Math.round(delay)));
+}
+
+function applyEncounterFormationPacing(normalEnemies, formation, waveType) {
+  if (waveType !== 'normal') return;
+  if (!Array.isArray(normalEnemies) || normalEnemies.length === 0) return;
+  if (typeof window.getEncounterStaggerDelay !== 'function') return;
+
+  const directorState = (typeof window.getEncounterDirectorState === 'function')
+    ? window.getEncounterDirectorState()
+    : null;
+  const candidates = normalEnemies.filter(e =>
+    e &&
+    e.alive &&
+    !e.isExternalShmup &&
+    !e.shmupRoute &&
+    e.entryTargetX === undefined &&
+    e.entryTargetY === undefined &&
+    e.row >= 0
+  );
+  const groupSize = candidates.length;
+  if (groupSize <= 1) return;
+
+  for (let i = 0; i < groupSize; i++) {
+    const enemy = candidates[i];
+    if (enemy._encounterDelayTimer > 0) continue;
+
+    const role = getEncounterFormationRole(enemy);
+    const baseDelay = window.getEncounterStaggerDelay(role, i, groupSize, {
+      isBoss: false,
+      isSetPiece: false,
+      isScripted: false,
+      allowStagger: true,
+      formation: formation,
+      waveType: waveType
+    });
+    const delay = getFormationPacingDelay(baseDelay, directorState);
+    if (delay > 0) {
+      enemy._encounterDelayTimer = delay;
+      enemy._encounterDelayInitial = delay;
+      enemy._encounterPacingRole = role;
+      enemy._encounterPacingFormation = formation;
+    }
+  }
+}
+
 function initEnemies() {
   boss.active = false;
 
@@ -900,34 +971,12 @@ function initEnemies() {
     sfxBossWarning();
   } else {
     const formation = getFormation(level);
+    const waveType = getWaveType(level);
     enemies = createFormation(formation);
     assignInitialShmupRoutes(enemies, level);
     trimFormationForExternalShmupWave(enemies, level);
     addInitialExternalShmupWave(enemies, level);
-
-    // HC-125H: apply encounter stagger delays to normal wave enemies
-    if (typeof window.getEncounterStaggerDelay === 'function') {
-      var _groupSize = enemies.length;
-      for (var _si = 0; _si < enemies.length; _si++) {
-        var _e = enemies[_si];
-        if (!_e || _e._encounterDelayTimer || _e.isExternalShmup) continue;
-        var _role = 'standard';
-        if (_e.type === 'alien2') _role = 'sniper';
-        else if (_e.type === 'alien3') _role = 'tank';
-        else if (_e.type === 'alien4') _role = 'flanker';
-        else if (_e.type === 'alien5') _role = 'kamikaze';
-        else if (_e.type === 'alien6') _role = 'splitter';
-        var _delay = window.getEncounterStaggerDelay(_role, _si, _groupSize, {
-          isBoss: false,
-          isSetPiece: false,
-          isScripted: false,
-          allowStagger: true
-        });
-        if (_delay > 0) {
-          _e._encounterDelayTimer = _delay;
-        }
-      }
-    }
+    applyEncounterFormationPacing(enemies, formation, waveType);
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
     setPieceIntroTimer = 0;
