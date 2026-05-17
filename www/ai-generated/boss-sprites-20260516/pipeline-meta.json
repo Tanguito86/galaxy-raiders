@@ -1,0 +1,96 @@
+{
+  "bundle": "galaxy-raiders-hardcore-boss-sprites",
+  "date": "2026-05-16",
+  "outputs": [
+    {
+      "name": "boss_crabtron",
+      "size": [
+        96,
+        96
+      ],
+      "source_raw": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a09030842688193a75e95d25a1b154a.png",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_crabtron",
+      "final_png": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_crabtron\\boss_crabtron.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\boss_crabtron.png",
+      "alpha_bbox": [
+        5,
+        15,
+        91,
+        81
+      ],
+      "edge_alpha_pixels": 0
+    },
+    {
+      "name": "boss_serpentrix",
+      "size": [
+        96,
+        96
+      ],
+      "source_raw": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a09032b92d88193afc000409def77ff.png",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_serpentrix",
+      "final_png": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_serpentrix\\boss_serpentrix.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\boss_serpentrix.png",
+      "alpha_bbox": [
+        15,
+        5,
+        80,
+        91
+      ],
+      "edge_alpha_pixels": 0
+    },
+    {
+      "name": "boss_orbital",
+      "size": [
+        96,
+        96
+      ],
+      "source_raw": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a090361f890819380be9dc5628b9ec7.png",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_orbital",
+      "final_png": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_orbital\\boss_orbital.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\boss_orbital.png",
+      "alpha_bbox": [
+        5,
+        7,
+        91,
+        88
+      ],
+      "edge_alpha_pixels": 0
+    },
+    {
+      "name": "boss_teniente",
+      "size": [
+        96,
+        96
+      ],
+      "source_raw": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a09039e37a081939b9366e987b2f7b9.png",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_teniente",
+      "final_png": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_teniente\\boss_teniente.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\boss_teniente.png",
+      "alpha_bbox": [
+        5,
+        7,
+        91,
+        88
+      ],
+      "edge_alpha_pixels": 0
+    },
+    {
+      "name": "boss_emperador",
+      "size": [
+        128,
+        128
+      ],
+      "source_raw": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a0903e3e8048193af78bb59a088d806.png",
+      "folder": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_emperador",
+      "final_png": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\ai-generated\\boss-sprites-20260516\\boss_emperador\\boss_emperador.png",
+      "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\boss_emperador.png",
+      "alpha_bbox": [
+        7,
+        6,
+        120,
+        121
+      ],
+      "edge_alpha_pixels": 0
+    }
+  ]
+}

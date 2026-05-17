@@ -1,0 +1,25 @@
+{
+  "target": "asset",
+  "mode": "single",
+  "prompt": "Single centered final boss sprite for Galaxy Raiders, hardcore arcade shmup modern pixel art. Background must be 100% solid flat #FF00FF magenta only, no gradients, no shadows, no text, no labels, no UI. One boss only, centered, transparent-friendly subject, full silhouette contained with generous magenta margin on all sides, no opaque pixels touching image edges. Style: divine biomechanical industrial sci-fi horror, dark crisp outline, high contrast, glowing royal core, intimidating overwhelming silhouette, readable instantly on a dark space background, not cute, not cartoon, not a flat icon. Boss: EMPERADOR, the final boss emperor machine, gigantic imperial throne-warship hybrid, white/gold/purple palette, divine mechanical tyrant, cathedral-like armor design with spires and winged throne plates, glowing royal core in the center, elegant but horrifying, overwhelmingly powerful. Emphasize massive vertical imperial silhouette, cathedral armor arches, crown-like machinery, purple shadow metal, gold trim, white armor plates, terrifying royal energy core and cold machine eyes. Pixel art should be clean and readable at 128x128, silhouettes more important than tiny detail.",
+  "role": "",
+  "input": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a0903e3e8048193af78bb59a088d806.png",
+  "threshold": 100,
+  "edge_threshold": 150,
+  "duration": 200,
+  "single_size": 128,
+  "final_png": "boss_emperador.png",
+  "asset_copy": "C:\\Users\\Deposito\\Documents\\AGENTE\\GALAXY\\GALAXY RAIDERS\\www\\assets\\sprites\\boss_emperador.png",
+  "size": [
+    128,
+    128
+  ],
+  "alpha_bbox": [
+    7,
+    6,
+    120,
+    121
+  ],
+  "edge_alpha_pixels": 0,
+  "source_raw": "C:\\Users\\Deposito\\.codex\\generated_images\\019e32dc-013b-7351-899b-e2ae0e085340\\ig_04e32699c536f680016a0903e3e8048193af78bb59a088d806.png"
+}
