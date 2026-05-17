@@ -13,7 +13,9 @@
     recentMemory: 12,
     levelResetPressureCarryMax: 0.45,
     maxStaggerDelayMs: 850,
-    silenceMaxMs: 2000
+    silenceMaxMs: 2000,
+    reliefThreshold: 0.70,
+    reliefDecayMult: 2.2
   };
 
   var config = global.ENCOUNTER_DIRECTOR_CONFIG || {};
@@ -300,7 +302,7 @@
   var WAVE_PERSONALITIES = {
     balanced: { label: 'BALANCED', staggerMult: 1.00, diveBias: 0, silenceMult: 1.00, reliefMult: 1.00, rotationAggression: 1.00 },
     swarm:    { label: 'SWARM',    staggerMult: 0.78, diveBias: 0, silenceMult: 0.80, reliefMult: 1.10, rotationAggression: 1.15 },
-    sniper:   { label: 'SNIPER',   staggerMult: 1.12, diveBias: -1, silenceMult: 1.15, reliefMult: 1.00, rotationAggression: 0.70 },
+    sniper:   { label: 'SNIPER',   staggerMult: 1.08, diveBias: -1, silenceMult: 1.20, reliefMult: 1.00, rotationAggression: 0.70 },
     pressure: { label: 'PRESSURE', staggerMult: 0.85, diveBias: 1,  silenceMult: 0.85, reliefMult: 0.80, rotationAggression: 1.40 },
     cleanup:  { label: 'CLEANUP',  staggerMult: 1.10, diveBias: 0, silenceMult: 0.75, reliefMult: 1.40, rotationAggression: 0.60 },
     flanker:  { label: 'FLANKER',  staggerMult: 0.90, diveBias: 0, silenceMult: 1.00, reliefMult: 1.05, rotationAggression: 1.10 }
@@ -532,11 +534,11 @@
 
     // HC-125K: pressure relief — accelerate decay when calm
     director.reliefActive = false;
-    if (director.pressure >= 0.70 && director.targetPressure < director.pressure) {
+    if (director.pressure >= getNumCfg('reliefThreshold', 0.40, 0.95) && director.targetPressure < director.pressure) {
       var dives = director.activeRoles.dive || 0;
       var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
       if (dives === 0 && bullets <= 6) {
-        smoothing = Math.min(getNumCfg('pressureSmoothingIn', 0.001, 1), smoothing * 2.2 * getPersonalityBias('reliefMult'));
+        smoothing = Math.min(getNumCfg('pressureSmoothingIn', 0.001, 1), smoothing * getNumCfg('reliefDecayMult', 1.0, 5.0) * getPersonalityBias('reliefMult'));
         director.reliefActive = true;
       }
     }
