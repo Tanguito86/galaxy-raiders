@@ -42,7 +42,16 @@ function syncEncounterDirectorEnemyState(dt) {
   }
 }
 
+// HC-150: bridge let-scoped variables to window for encounter director
+function syncEncounterDirectorGlobals() {
+  window.enemies = enemies;
+  window.enemyBullets = enemyBullets;
+  window.level = level;
+  window.globalTime = globalTime;
+}
+
 function updateEnemiesAndProjectiles(step, dt) {
+    syncEncounterDirectorGlobals();
     if (typeof window.updateEncounterDirector === 'function') {
       window.updateEncounterDirector(dt);
     }
