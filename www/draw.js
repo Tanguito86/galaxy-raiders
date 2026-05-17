@@ -4162,7 +4162,7 @@ if (shouldShow) {
       var _stgScale = 0.90 + (1 - _stgPending) * 0.10;
       var _stgCx = e.x + e.w / 2;
       var _stgCy = e.y + e.h / 2;
-      ctx.globalAlpha *= 0.42 + (1 - _stgPending) * 0.58;
+      ctx.globalAlpha *= 0.50 + (1 - _stgPending) * 0.50;
       ctx.translate(_stgCx, _stgCy - _stgPending * 8);
       ctx.scale(_stgScale, _stgScale);
       ctx.translate(-_stgCx, -_stgCy);
