@@ -49,8 +49,8 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  // HC-146: export encounter director telemetry baseline: F5
-  if (e.code === 'F5') {
+  // HC-148A: export encounter director telemetry baseline: F8
+  if (e.code === 'F8') {
     if (typeof global.printEncounterDirectorCaptureReport === 'function') {
       global.printEncounterDirectorCaptureReport();
     }
