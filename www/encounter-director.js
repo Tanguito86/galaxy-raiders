@@ -6,9 +6,12 @@
     pressureSmoothingIn: 0.08,
     pressureSmoothingOut: 0.035,
     silenceOnDeathMs: 420,
+    earlySilenceOnDeathMs: 320,
+    earlySilenceMaxLevel: 5,
     silenceOnWaveClearMs: 900,
     spawnStaggerMs: 220,
-    recentMemory: 12
+    recentMemory: 12,
+    levelResetPressureCarryMax: 0.45
   };
 
   var config = global.ENCOUNTER_DIRECTOR_CONFIG || {};
@@ -23,6 +26,7 @@
     trackedEnemies: [],
     trackedAliveIds: {},
     nextEnemyId: 1,
+    lastLevel: Math.max(1, global.level || 1),
     enabled: config.enabled !== false && global.ENCOUNTER_DIRECTOR_ENABLED !== false
   };
 
@@ -61,6 +65,16 @@
   function pushRecent(list, payload) {
     list.push(payload);
     while (list.length > getCfg('recentMemory')) list.shift();
+  }
+
+  function getCurrentLevel() {
+    return Math.max(1, global.level || 1);
+  }
+
+  function getSilenceOnDeathMs() {
+    return getCurrentLevel() <= getCfg('earlySilenceMaxLevel')
+      ? getCfg('earlySilenceOnDeathMs')
+      : getCfg('silenceOnDeathMs');
   }
 
   function recountActiveRoles() {
@@ -121,7 +135,7 @@
   }
 
   function getRoleCap(role) {
-    var level = Math.max(1, global.level || 1);
+    var level = getCurrentLevel();
     if (role === 'dive') return level >= 14 ? 3 : level >= 7 ? 2 : 1;
     if (role === 'external') return level >= 10 ? 2 : 1;
     if (role === 'kamikaze') return level >= 12 ? 2 : 1;
@@ -179,12 +193,12 @@
       t: global.globalTime || 0
     });
 
-    director.silenceTimer = Math.max(director.silenceTimer, getCfg('silenceOnDeathMs'));
+    director.silenceTimer = Math.max(director.silenceTimer, getSilenceOnDeathMs());
     recountActiveRoles();
     return true;
   }
 
-  function canSpawnRole(role) {
+  function canSpawnRoleInternal(role, consumeCooldown) {
     if (!director.enabled) return true;
     if (isBossWindowActive()) return true;
     if (!role) return true;
@@ -199,14 +213,44 @@
     if (role === 'external' && director.pressure >= 0.75) return false;
     if (role === 'kamikaze' && director.pressure >= 0.7) return false;
 
-    director.spawnCooldown = Math.max(director.spawnCooldown, getCfg('spawnStaggerMs'));
+    if (consumeCooldown) {
+      director.spawnCooldown = Math.max(director.spawnCooldown, getCfg('spawnStaggerMs'));
+    }
     return true;
+  }
+
+  function canSpawnRole(role) {
+    return canSpawnRoleInternal(role, true);
+  }
+
+  function peekCanSpawnRole(role) {
+    return canSpawnRoleInternal(role, false);
+  }
+
+  function resetEncounterDirectorForLevel(nextLevel) {
+    var level = Math.max(1, nextLevel || global.level || 1);
+    director.lastLevel = level;
+    director.trackedAliveIds = {};
+    director.recentSpawns = [];
+    director.recentDeaths = [];
+    director.spawnCooldown = 0;
+    director.silenceTimer = 0;
+    director.pressure = Math.min(director.pressure, getCfg('levelResetPressureCarryMax'));
+    director.targetPressure = Math.min(director.targetPressure, director.pressure);
+    recountActiveRoles();
+  }
+
+  function detectLevelChange() {
+    var level = getCurrentLevel();
+    if (level === director.lastLevel) return;
+    resetEncounterDirectorForLevel(level);
   }
 
   function updateEncounterDirector(dt) {
     if (!director.enabled) return director.pressure;
 
     dt = Math.max(0, dt || 0);
+    detectLevelChange();
     syncTrackedEnemies();
     recountActiveRoles();
 
@@ -239,6 +283,8 @@
   global.registerEnemySpawn = registerEnemySpawn;
   global.registerEnemyDeath = registerEnemyDeath;
   global.canSpawnRole = canSpawnRole;
+  global.peekCanSpawnRole = peekCanSpawnRole;
+  global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
   global.getEncounterDirectorState = function() {
@@ -250,7 +296,8 @@
       spawnCooldown: director.spawnCooldown,
       activeRoles: Object.assign({}, director.activeRoles),
       recentSpawnCount: director.recentSpawns.length,
-      recentDeathCount: director.recentDeaths.length
+      recentDeathCount: director.recentDeaths.length,
+      silenceOnDeathMs: getSilenceOnDeathMs()
     };
   };
 })(window);

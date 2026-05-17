@@ -95,7 +95,9 @@
     }
     row('roles:', roleStr || '(none)', roleStr ? '#ff0' : '#888');
 
-    var canDive = typeof global.canSpawnRole === 'function' ? global.canSpawnRole('dive') : 'n/a';
+    var canDive = typeof global.peekCanSpawnRole === 'function'
+      ? global.peekCanSpawnRole('dive')
+      : typeof global.canSpawnRole === 'function' ? global.canSpawnRole('dive') : 'n/a';
     row('can dive:', canDive === true ? 'YES' : canDive === false ? 'NO' : 'n/a', canDive === true ? '#0f0' : canDive === false ? '#f44' : '#888');
 
     row('level:', safeStr(global.level || 1), '#fff');

@@ -389,6 +389,9 @@ function spawnVictoryParticles() {
 
 function startLevel() {
   recordRunLevel(level);
+  if (typeof window.resetEncounterDirectorForLevel === 'function') {
+    window.resetEncounterDirectorForLevel(level);
+  }
   hitstopTimer = 0;
   clearScreenShakeLayers();
   currentSetPiece = null;
