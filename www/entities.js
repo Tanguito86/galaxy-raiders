@@ -698,11 +698,11 @@ function applyFormationGeometry(enemies, personality) {
   if (!personality || personality === 'balanced') return;
 
   var cfg = {
-    swarm:    { hMult: 0.82, vMult: 0.88, hCenter: 0,  vCenter: 0,   diagonal: 0 },
-    sniper:   { hMult: 1.14, vMult: 1.00, hCenter: 0,  vCenter: 0,   diagonal: 0 },
-    cleanup:  { hMult: 1.10, vMult: 1.08, hCenter: 0,  vCenter: 0,   diagonal: 0 },
-    pressure: { hMult: 0.92, vMult: 0.94, hCenter: 0,  vCenter: 0,   diagonal: 0.08 },
-    flanker:  { hMult: 1.00, vMult: 1.00, hCenter: 0.08, vCenter: 0, diagonal: 0 }
+    swarm:    { hMult: 0.82, vMult: 0.88, hCenter: 0,  vCenter: 0,   diagonal: 0, laneGap: 1, laneWiden: 4,  laneCount: 0 },
+    sniper:   { hMult: 1.14, vMult: 1.00, hCenter: 0,  vCenter: 0,   diagonal: 0, laneGap: 2, laneWiden: 6,  laneCount: 1 },
+    cleanup:  { hMult: 1.10, vMult: 1.08, hCenter: 0,  vCenter: 0,   diagonal: 0, laneGap: 2, laneWiden: 8,  laneCount: 1 },
+    pressure: { hMult: 0.92, vMult: 0.94, hCenter: 0,  vCenter: 0,   diagonal: 0.08, laneGap: 0, laneWiden: 3, laneCount: 0 },
+    flanker:  { hMult: 1.00, vMult: 1.00, hCenter: 0.08, vCenter: 0, diagonal: 0, laneGap: 1, laneWiden: 5,  laneCount: 1 }
   };
   var c = cfg[personality];
   if (!c) return;
@@ -735,6 +735,20 @@ function applyFormationGeometry(enemies, personality) {
       var dist = Math.abs(dx) / (W / 2);
       en.x += Math.round(dx * c.hCenter * (1 - dist * 0.5));
       en.x = clamp(en.x, 10, W - 10 - en.w);
+    }
+
+    // HC-133: lane readability — breathing gaps at column boundaries
+    if (c.laneCount > 0 && c.laneWiden > 0) {
+      var colIdx = Math.round((en.x + en.w / 2 - 10) / 38); // approximate column from classic spacing
+      var laneGapCol = (c.laneGap * 3 + (level || 1) * 7) % 10; // deterministic gap column (0-9)
+      for (var l = 0; l < c.laneCount; l++) {
+        var gapCol = (laneGapCol + l * 3) % 10;
+        var colDist = colIdx - gapCol;
+        if (Math.abs(colDist) <= 1) {
+          en.x += Math.round((colDist > 0 ? 1 : -1) * c.laneWiden * 0.5);
+          en.x = clamp(en.x, 10, W - 10 - en.w);
+        }
+      }
     }
   }
 }
