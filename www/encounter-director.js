@@ -42,12 +42,33 @@
     recentPersonalities: [],
     lastPersonality: null,
     lastEliteDecision: { role: null, allowed: true, reason: '' },
-    spawnPacingBias: 1
+    spawnPacingBias: 1,
+    _wasBossActive: false,
+    lastTransition: ''
   };
 
   function getCfg(key) {
     if (config[key] !== undefined) return config[key];
     return DEFAULT_CONFIG[key];
+  }
+
+  // HC-141: safe config getters with validation
+  function getNumCfg(key, min, max) {
+    var def = DEFAULT_CONFIG[key];
+    var raw = config[key];
+    if (raw === undefined || raw === null) return def;
+    var v = Number(raw);
+    if (!isFinite(v) || isNaN(v)) return def;
+    return clamp(v, min !== undefined ? min : -Infinity, max !== undefined ? max : Infinity);
+  }
+
+  function getIntCfg(key, min, max) {
+    var def = DEFAULT_CONFIG[key];
+    var raw = config[key];
+    if (raw === undefined || raw === null) return def;
+    var v = parseInt(raw, 10);
+    if (!isFinite(v) || isNaN(v)) return def;
+    return clamp(v, min !== undefined ? min : -Infinity, max !== undefined ? max : Infinity);
   }
 
   function clamp(value, min, max) {
@@ -80,7 +101,7 @@
 
   function pushRecent(list, payload) {
     list.push(payload);
-    while (list.length > getCfg('recentMemory')) list.shift();
+    while (list.length > getIntCfg('recentMemory', 4, 60)) list.shift();
   }
 
   function getCurrentLevel() {
@@ -88,9 +109,9 @@
   }
 
   function getSilenceOnDeathMs() {
-    return getCurrentLevel() <= getCfg('earlySilenceMaxLevel')
-      ? getCfg('earlySilenceOnDeathMs')
-      : getCfg('silenceOnDeathMs');
+    return getCurrentLevel() <= getIntCfg('earlySilenceMaxLevel', 1, 20)
+      ? getNumCfg('earlySilenceOnDeathMs', 0, 2000)
+      : getNumCfg('silenceOnDeathMs', 0, 3000);
   }
 
   function isFiniteNumber(value) {
@@ -185,7 +206,7 @@
     enemy._encounterDirectorTracked = true;
     enemy._encounterDirectorDeathRegistered = false;
     director.trackedAliveIds[id] = true;
-    director.spawnCooldown = Math.max(director.spawnCooldown, getCfg('spawnStaggerMs'));
+    director.spawnCooldown = Math.max(director.spawnCooldown, getNumCfg('spawnStaggerMs', 0, 2000));
 
     pushRecent(director.recentSpawns, {
       id: id,
@@ -214,7 +235,7 @@
       t: global.globalTime || 0
     });
 
-    director.silenceTimer = Math.min(getCfg('silenceMaxMs'), Math.max(director.silenceTimer, getSilenceOnDeathMs()));
+    director.silenceTimer = Math.min(getNumCfg('silenceMaxMs', 100, 5000), Math.max(director.silenceTimer, getSilenceOnDeathMs()));
     recountActiveRoles();
     return true;
   }
@@ -359,7 +380,7 @@
     if (shouldBypassStagger(context)) return 0;
 
     var level = getCurrentLevel();
-    var earlyScale = level <= getCfg('earlySilenceMaxLevel') ? 0.86 : 1;
+    var earlyScale = level <= getIntCfg('earlySilenceMaxLevel', 1, 20) ? 0.86 : 1;
     var pressureBias = clamp(director.pressure, 0, 1);
     var groupBias = clamp((groupSize - 2) / 4, 0, 1);
     var silenceBias = director.silenceTimer > 0 ? clamp(director.silenceTimer / 900, 0, 1) : 0;
@@ -374,11 +395,11 @@
       delay = clamp(delay * earlyScale, 320, 520);
     } else {
       delay = 480 + (index - 3) * 110 + pressureBias * 170 + groupBias * 80 + silenceBias * 70 + roleBias;
-      delay = clamp(delay * earlyScale, 0, getCfg('maxStaggerDelayMs'));
+      delay = clamp(delay * earlyScale, 0, getNumCfg('maxStaggerDelayMs', 100, 3000));
     }
 
-    delay = Math.round(clamp(delay, 0, getCfg('maxStaggerDelayMs')));
-    delay = Math.round(clamp(delay * getPersonalityBias('staggerMult'), 0, getCfg('maxStaggerDelayMs')));
+    delay = Math.round(clamp(delay, 0, getNumCfg('maxStaggerDelayMs', 100, 3000)));
+    delay = Math.round(clamp(delay * getPersonalityBias('staggerMult'), 0, getNumCfg('maxStaggerDelayMs', 100, 3000)));
     director.lastStaggerDelay = delay;
     director.lastStaggerRole = role;
     director.lastStaggerGroupSize = groupSize;
@@ -401,7 +422,7 @@
     if (role === 'kamikaze' && director.pressure >= 0.7) return false;
 
     if (consumeCooldown) {
-      director.spawnCooldown = Math.max(director.spawnCooldown, getCfg('spawnStaggerMs'));
+      director.spawnCooldown = Math.max(director.spawnCooldown, getNumCfg('spawnStaggerMs', 0, 2000));
     }
     return true;
   }
@@ -428,12 +449,14 @@
     director.lastStaggerGroupSize = 0;
     director.reliefActive = false;
     director.spawnPacingBias = 1;
+    director._wasBossActive = false;
+    director.lastTransition = '';
     director.currentWavePersonality = 'balanced';
     director.recentPersonalities = [];
     director.lastPersonality = null;
     director.spawnCooldown = 0;
     director.silenceTimer = 0;
-    director.pressure = Math.min(director.pressure, getCfg('levelResetPressureCarryMax'));
+    director.pressure = Math.min(director.pressure, getNumCfg('levelResetPressureCarryMax', 0, 1));
     director.targetPressure = Math.min(director.targetPressure, director.pressure);
     recountActiveRoles();
   }
@@ -449,6 +472,21 @@
 
     dt = Math.max(0, dt || 0);
     detectLevelChange();
+
+    // HC-140: boss transition — soft-reset pressure and clear cooldowns
+    var _bossNow = isBossWindowActive();
+    if (_bossNow && !director._wasBossActive) {
+      director.lastTransition = 'boss-enter';
+      director.currentWavePersonality = 'balanced';
+      director.spawnCooldown = 0;
+      director.silenceTimer = 0;
+      director.pressure = Math.min(director.pressure, 0.35);
+      director.spawnPacingBias = 1;
+    } else if (!_bossNow && director._wasBossActive) {
+      director.lastTransition = 'boss-exit';
+    }
+    director._wasBossActive = _bossNow;
+
     syncTrackedEnemies();
     recountActiveRoles();
 
@@ -466,14 +504,14 @@
       }
     }
     if (!isBossWindowActive() && aliveCount === 0) {
-      director.silenceTimer = Math.min(getCfg('silenceMaxMs'), Math.max(director.silenceTimer, getCfg('silenceOnWaveClearMs')));
+      director.silenceTimer = Math.min(getNumCfg('silenceMaxMs', 100, 5000), Math.max(director.silenceTimer, getNumCfg('silenceOnWaveClearMs', 0, 5000)));
     }
 
     director.targetPressure = computeTargetPressure();
 
     var smoothing = director.targetPressure >= director.pressure
-      ? getCfg('pressureSmoothingIn')
-      : getCfg('pressureSmoothingOut');
+      ? getNumCfg('pressureSmoothingIn', 0.001, 1)
+      : getNumCfg('pressureSmoothingOut', 0.001, 1);
 
     // HC-125K: pressure relief — accelerate decay when calm
     director.reliefActive = false;
@@ -481,7 +519,7 @@
       var dives = director.activeRoles.dive || 0;
       var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
       if (dives === 0 && bullets <= 6) {
-        smoothing = Math.min(getCfg('pressureSmoothingIn'), smoothing * 2.2 * getPersonalityBias('reliefMult'));
+        smoothing = Math.min(getNumCfg('pressureSmoothingIn', 0.001, 1), smoothing * 2.2 * getPersonalityBias('reliefMult'));
         director.reliefActive = true;
       }
     }
@@ -592,7 +630,8 @@
       reliefActive: director.reliefActive,
       currentWavePersonality: director.currentWavePersonality,
       lastEliteDecision: director.lastEliteDecision,
-      spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3))
+      spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3)),
+      lastTransition: director.lastTransition
     };
   };
 
@@ -626,7 +665,8 @@
       enabled: director.enabled,
       silenceOnDeathMs: getSilenceOnDeathMs(),
       repeatedRoleCount: director.repeatedRoleCount,
-      spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3))
+      spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3)),
+      lastTransition: director.lastTransition
     };
   };
 
