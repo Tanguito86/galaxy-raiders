@@ -112,7 +112,7 @@ window.GALAXY_CONFIG = {
     showBossDispatch: false,
     showBackgroundStats: false,
     showAtmosphereStats: false,
-    showLevelSkipButton: false
+    showLevelSkipButton: true
   }
 
 };
