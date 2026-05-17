@@ -19,7 +19,29 @@ function appendPlayerBulletTrail(b) {
   while (b.trail.length > maxLen) b.trail.shift();
 }
 
+function syncEncounterDirectorEnemyState() {
+  if (!Array.isArray(enemies)) return;
+
+  for (let i = 0; i < enemies.length; i++) {
+    const enemy = enemies[i];
+    if (!enemy) continue;
+
+    if (enemy.alive && typeof window.registerEnemySpawn === 'function' && !enemy._encounterDirectorTracked) {
+      window.registerEnemySpawn(enemy);
+    }
+
+    if (!enemy.alive && typeof window.registerEnemyDeath === 'function' && enemy._encounterDirectorTracked && !enemy._encounterDirectorDeathRegistered) {
+      window.registerEnemyDeath(enemy);
+    }
+  }
+}
+
 function updateEnemiesAndProjectiles(step, dt) {
+    if (typeof window.updateEncounterDirector === 'function') {
+      window.updateEncounterDirector(dt);
+    }
+    syncEncounterDirectorEnemyState();
+
     // UFO spawn/move
     if (!ufo.active && globalTime > ufo.timer && enemies.filter(e => e.alive).length > 0 && !boss.active) {
       ufo.active = true;
@@ -146,6 +168,9 @@ if (
         if (e.hp <= 0) {
           /// MUERTE
           e.alive = false;
+          if (typeof window.registerEnemyDeath === 'function') {
+            window.registerEnemyDeath(e);
+          }
           recordEnemyKilled();
           if (!e._rankKillAwarded && typeof window.addHardcoreRank === 'function') {
             e._rankKillAwarded = true;
@@ -186,6 +211,9 @@ if (
               mini.vy = 2;
               setEnemyMovePattern(mini, chooseEnemyDivePattern(mini));
               enemies.push(mini);
+              if (typeof window.registerEnemySpawn === 'function') {
+                window.registerEnemySpawn(mini);
+              }
             }
             sfxEnemyHit();
           }
@@ -788,7 +816,8 @@ if (!boss.active && activeEnemies.length > 0) {
 
   if (diveSlotsLeft > 0 && Math.random() < diffSettings.diveChance) {
     const candidates = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.canDive !== false);
-    if (candidates.length > 0) {
+    const encounterAllowsDive = (typeof window.canSpawnRole !== 'function') || window.canSpawnRole('dive');
+    if (candidates.length > 0 && encounterAllowsDive) {
       const diver = candidates[Math.floor(Math.random() * candidates.length)];
       diver.diving = true;
 
@@ -1035,4 +1064,5 @@ if (!boss.active && activeEnemies.length > 0) {
     });
   }
 
+  syncEncounterDirectorEnemyState();
 }
