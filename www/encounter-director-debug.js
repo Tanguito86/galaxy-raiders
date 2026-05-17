@@ -35,7 +35,7 @@
     var panelY = 4;
     var panelW = 114;
     var lineH = 8;
-    var rows = 17;
+    var rows = 18;
     var panelH = rows * lineH + 6;
 
     ctx.globalAlpha = 0.62;
@@ -119,6 +119,11 @@
 
     row('lastRole:', safeStr(st.lastRole, '(none)'), '#8cf');
     row('repeat:', safeStr(st.repeatedRoleCount, '0'), st.repeatedRoleCount >= 3 ? '#f44' : '#fff');
+
+    var staggerRole = safeStr(st.lastStaggerRole, '-');
+    var staggerDelay = safeNum(st.lastStaggerDelay || 0);
+    var staggerGroup = safeStr(st.lastStaggerGroupSize || 0);
+    row('stagger:', staggerRole + ' ' + staggerDelay + '/' + staggerGroup, st.lastStaggerDelay > 0 ? '#ff0' : '#888');
 
     ctx.restore();
   }

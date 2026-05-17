@@ -11,7 +11,8 @@
     silenceOnWaveClearMs: 900,
     spawnStaggerMs: 220,
     recentMemory: 12,
-    levelResetPressureCarryMax: 0.45
+    levelResetPressureCarryMax: 0.45,
+    maxStaggerDelayMs: 850
   };
 
   var config = global.ENCOUNTER_DIRECTOR_CONFIG || {};
@@ -31,7 +32,10 @@
     recentRoles: [],
     lastRole: null,
     repeatedRoleCount: 0,
-    roleRepeatCap: 3
+    roleRepeatCap: 3,
+    lastStaggerDelay: 0,
+    lastStaggerRole: null,
+    lastStaggerGroupSize: 0
   };
 
   function getCfg(key) {
@@ -79,6 +83,10 @@
     return getCurrentLevel() <= getCfg('earlySilenceMaxLevel')
       ? getCfg('earlySilenceOnDeathMs')
       : getCfg('silenceOnDeathMs');
+  }
+
+  function isFiniteNumber(value) {
+    return typeof value === 'number' && isFinite(value);
   }
 
   function recountActiveRoles() {
@@ -249,6 +257,72 @@
     return role;
   }
 
+  function shouldBypassStagger(context) {
+    context = context || {};
+    if (context.allowStagger === true || context.stagger === true) return false;
+    if (context.isBoss || context.isSetPiece || context.isScripted) return true;
+    return isBossWindowActive();
+  }
+
+  function getRoleStaggerBias(role) {
+    if (role === 'dive' || role === 'kamikaze' || role === 'external' || role === 'sniper') return 34;
+    if (role === 'tank' || role === 'splitter') return 20;
+    if (role === 'formation' || role === 'standard' || role === 'flanker' || role === 'shooter') return 0;
+    return 0;
+  }
+
+  function isKnownStaggerRole(role) {
+    return role === 'dive' ||
+      role === 'kamikaze' ||
+      role === 'external' ||
+      role === 'sniper' ||
+      role === 'tank' ||
+      role === 'splitter' ||
+      role === 'formation' ||
+      role === 'standard' ||
+      role === 'flanker' ||
+      role === 'shooter' ||
+      role === 'default';
+  }
+
+  function getEncounterStaggerDelay(role, index, groupSize, context) {
+    if (!director.enabled) return 0;
+    if (typeof role !== 'string' || !role) return 0;
+    if (!isKnownStaggerRole(role)) return 0;
+    if (!isFiniteNumber(index) || !isFiniteNumber(groupSize)) return 0;
+
+    index = Math.floor(index);
+    groupSize = Math.floor(groupSize);
+    if (index < 0 || groupSize < 1 || index >= groupSize) return 0;
+    if (index === 0 || groupSize === 1) return 0;
+    if (shouldBypassStagger(context)) return 0;
+
+    var level = getCurrentLevel();
+    var earlyScale = level <= getCfg('earlySilenceMaxLevel') ? 0.86 : 1;
+    var pressureBias = clamp(director.pressure, 0, 1);
+    var groupBias = clamp((groupSize - 2) / 4, 0, 1);
+    var silenceBias = director.silenceTimer > 0 ? clamp(director.silenceTimer / 900, 0, 1) : 0;
+    var roleBias = getRoleStaggerBias(role);
+
+    var delay;
+    if (index === 1) {
+      delay = 180 + pressureBias * 48 + groupBias * 18 + silenceBias * 14 + roleBias * 0.25;
+      delay = clamp(delay * earlyScale, 180, 260);
+    } else if (index === 2) {
+      delay = 320 + pressureBias * 118 + groupBias * 42 + silenceBias * 34 + roleBias * 0.7;
+      delay = clamp(delay * earlyScale, 320, 520);
+    } else {
+      delay = 480 + (index - 3) * 110 + pressureBias * 170 + groupBias * 80 + silenceBias * 70 + roleBias;
+      delay = clamp(delay * earlyScale, 0, getCfg('maxStaggerDelayMs'));
+    }
+
+    delay = Math.round(clamp(delay, 0, getCfg('maxStaggerDelayMs')));
+    director.lastStaggerDelay = delay;
+    director.lastStaggerRole = role;
+    director.lastStaggerGroupSize = groupSize;
+    return delay;
+  }
+
   function canSpawnRoleInternal(role, consumeCooldown) {
     if (!director.enabled) return true;
     if (isBossWindowActive()) return true;
@@ -287,6 +361,9 @@
     director.recentRoles = [];
     director.lastRole = null;
     director.repeatedRoleCount = 0;
+    director.lastStaggerDelay = 0;
+    director.lastStaggerRole = null;
+    director.lastStaggerGroupSize = 0;
     director.spawnCooldown = 0;
     director.silenceTimer = 0;
     director.pressure = Math.min(director.pressure, getCfg('levelResetPressureCarryMax'));
@@ -339,6 +416,7 @@
   global.canSpawnRole = canSpawnRole;
   global.peekCanSpawnRole = peekCanSpawnRole;
   global.suggestEncounterRole = suggestEncounterRole;
+  global.getEncounterStaggerDelay = getEncounterStaggerDelay;
   global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
@@ -354,7 +432,10 @@
       recentDeathCount: director.recentDeaths.length,
       silenceOnDeathMs: getSilenceOnDeathMs(),
       lastRole: director.lastRole,
-      repeatedRoleCount: director.repeatedRoleCount
+      repeatedRoleCount: director.repeatedRoleCount,
+      lastStaggerDelay: director.lastStaggerDelay,
+      lastStaggerRole: director.lastStaggerRole,
+      lastStaggerGroupSize: director.lastStaggerGroupSize
     };
   };
 })(window);
