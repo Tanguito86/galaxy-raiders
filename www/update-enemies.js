@@ -808,6 +808,12 @@ if (!boss.active && activeEnemies.length > 0) {
     const kamikazes = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.kamikaze);
     for (let i = 0; i < kamikazes.length && diveSlotsLeft > 0; i++) {
       const e = kamikazes[i];
+      // HC-128: elite coordination — prevent kamikaze+diver overlap at high pressure
+      if (typeof window.canCoordinateEliteAction === 'function') {
+        if (!window.canCoordinateEliteAction('kamikaze', e, { isBoss: false, isSetPiece: false, isScripted: false })) {
+          continue;
+        }
+      }
       const data = ENEMY_TYPES[e.type] || ENEMY_TYPES.alien1;
       e.diving = true;
       const angle = Math.atan2(
@@ -837,10 +843,13 @@ if (!boss.active && activeEnemies.length > 0) {
     }
 
     if (_diveRole === 'dive' && encounterAllowsDive) {
-      const candidates = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.canDive !== false);
-      if (candidates.length > 0) {
-        const diver = candidates[Math.floor(Math.random() * candidates.length)];
-        diver.diving = true;
+      // HC-128: elite coordination — prevent toxic overlaps
+      var _coordOK = (typeof window.canCoordinateEliteAction !== 'function') || window.canCoordinateEliteAction('diver', null, { isBoss: false, isSetPiece: false, isScripted: false });
+      if (_coordOK) {
+        const candidates = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.canDive !== false);
+        if (candidates.length > 0) {
+          const diver = candidates[Math.floor(Math.random() * candidates.length)];
+          diver.diving = true;
 
         const angle = Math.atan2(
           player.y - diver.y,
@@ -853,6 +862,7 @@ if (!boss.active && activeEnemies.length > 0) {
         diver.vy = Math.sin(angle) * speed;
         setEnemyMovePattern(diver, chooseEnemyDivePattern(diver));
       }
+      } // _coordOK
     }
   }
 

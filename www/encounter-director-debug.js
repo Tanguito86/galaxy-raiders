@@ -130,6 +130,11 @@
     var personality = safeStr(st.currentWavePersonality, 'balanced');
     row('wave:', personality.toUpperCase(), '#8cf');
 
+    var elite = st.lastEliteDecision || {};
+    var eliteStr = safeStr(elite.role, '-') + ' ' + (elite.allowed ? 'OK' : 'NO');
+    var eliteReason = elite.reason ? ' (' + elite.reason + ')' : '';
+    row('elite:', eliteStr + eliteReason, elite.allowed ? '#0f0' : '#f44');
+
     ctx.restore();
   }
 

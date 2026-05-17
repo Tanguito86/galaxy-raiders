@@ -40,7 +40,8 @@
     reliefActive: false,
     currentWavePersonality: 'balanced',
     recentPersonalities: [],
-    lastPersonality: null
+    lastPersonality: null,
+    lastEliteDecision: { role: null, allowed: true, reason: '' }
   };
 
   function getCfg(key) {
@@ -488,6 +489,67 @@
     return director.pressure;
   }
 
+  function canCoordinateEliteAction(role, enemy, context) {
+    var _default = { role: role, allowed: true, reason: '' };
+    if (!director.enabled) return true;
+
+    context = context || {};
+    if (context.isBoss || context.isSetPiece || context.isScripted) return true;
+
+    role = role || '';
+    var personality = director.currentWavePersonality || 'balanced';
+
+    // silence blocks all aggressive actions
+    if (director.silenceTimer > 0) {
+      var _aggressive = role === 'sniper' || role === 'kamikaze' || role === 'diver';
+      if (_aggressive) {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'silence' };
+        return false;
+      }
+    }
+
+    // high pressure: prevent toxic overlaps
+    if (director.pressure >= 0.82) {
+      var roles = director.activeRoles || {};
+      if (role === 'sniper' && (roles.sniper || 0) > 0) {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'sniper overlap' };
+        return false;
+      }
+      if (role === 'kamikaze' && ((roles.dive || 0) > 0 || (roles.kamikaze || 0) > 0)) {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'kamikaze+dive overlap' };
+        return false;
+      }
+      if (role === 'diver' && ((roles.kamikaze || 0) > 0 || (roles.dive || 0) >= 2)) {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'diver+kamikaze overlap' };
+        return false;
+      }
+    }
+
+    // cleanup personality: extra conservative
+    if (personality === 'cleanup') {
+      if (role === 'kamikaze' || role === 'sniper') {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'cleanup conservative' };
+        return false;
+      }
+      if (role === 'diver' && director.pressure >= 0.55) {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'cleanup dive cap' };
+        return false;
+      }
+    }
+
+    // pressure personality: allow more but cap overlaps
+    if (personality === 'pressure') {
+      var _roles = director.activeRoles || {};
+      if (role === 'diver' && (_roles.dive || 0) >= 3) {
+        director.lastEliteDecision = { role: role, allowed: false, reason: 'pressure dive cap' };
+        return false;
+      }
+    }
+
+    director.lastEliteDecision = { role: role, allowed: true, reason: '' };
+    return true;
+  }
+
   global.updateEncounterDirector = updateEncounterDirector;
   global.registerEnemySpawn = registerEnemySpawn;
   global.registerEnemyDeath = registerEnemyDeath;
@@ -498,6 +560,7 @@
   global.selectNextWavePersonality = selectNextWavePersonality;
   global.getCurrentWavePersonality = function() { return director.currentWavePersonality; };
   global.resetWavePersonality = resetWavePersonality;
+  global.canCoordinateEliteAction = canCoordinateEliteAction;
   global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
@@ -518,7 +581,8 @@
       lastStaggerRole: director.lastStaggerRole,
       lastStaggerGroupSize: director.lastStaggerGroupSize,
       reliefActive: director.reliefActive,
-      currentWavePersonality: director.currentWavePersonality
+      currentWavePersonality: director.currentWavePersonality,
+      lastEliteDecision: director.lastEliteDecision
     };
   };
 })(window);
