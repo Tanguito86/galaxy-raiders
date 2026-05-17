@@ -15,7 +15,8 @@
     maxStaggerDelayMs: 850,
     silenceMaxMs: 2000,
     reliefThreshold: 0.70,
-    reliefDecayMult: 2.2
+    reliefDecayMult: 2.2,
+    reliefMaxBullets: 6
   };
 
   var config = global.ENCOUNTER_DIRECTOR_CONFIG || {};
@@ -559,7 +560,7 @@
       var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
       if (dives > 0) {
         director.reliefBlockedReason = 'dives';
-      } else if (bullets > 6) {
+      } else if (bullets > getIntCfg('reliefMaxBullets', 1, 100)) {
         director.reliefBlockedReason = 'bullets';
       } else {
         smoothing = Math.min(getNumCfg('pressureSmoothingIn', 0.001, 1), smoothing * getNumCfg('reliefDecayMult', 1.0, 5.0) * getPersonalityBias('reliefMult'));

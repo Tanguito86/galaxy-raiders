@@ -130,6 +130,7 @@ window.GALAXY_CONFIG = {
     pressureSmoothingOut: 0.045,         // pressure fall speed (was 0.040, 0.035)
     reliefThreshold: 0.62,               // lower relief activation threshold (was hardcoded 0.70)
     reliefDecayMult: 2.5,               // stronger relief decay (was hardcoded 2.2)
+    reliefMaxBullets: 24,               // bullet gate for relief (was hardcoded 6)
     // levelResetPressureCarryMax: 0.45, // max pressure carried to next level (default: 0.45)
     // maxStaggerDelayMs: 850,          // max stagger delay per enemy (default: 850)
     // recentMemory: 12,                // cap for recent arrays (default: 12)
