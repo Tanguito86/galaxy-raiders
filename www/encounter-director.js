@@ -587,4 +587,43 @@
       lastEliteDecision: director.lastEliteDecision
     };
   };
+
+  // HC-134: safe telemetry snapshot for playtests/debug
+  global.getEncounterDirectorSnapshot = function() {
+    var enemies = Array.isArray(global.enemies) ? global.enemies : [];
+    var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets : [];
+    var aliveCount = 0;
+    for (var i = 0; i < enemies.length; i++) {
+      if (enemies[i] && enemies[i].alive) aliveCount++;
+    }
+
+    return {
+      level: global.level || 0,
+      waveType: (typeof global.getWaveType === 'function') ? global.getWaveType(global.level || 1) : '?',
+      currentWavePersonality: director.currentWavePersonality,
+      pressure: parseFloat(director.pressure.toFixed(4)),
+      targetPressure: parseFloat(director.targetPressure.toFixed(4)),
+      silenceTimer: director.silenceTimer,
+      spawnCooldown: director.spawnCooldown,
+      reliefActive: director.reliefActive,
+      activeRoles: Object.assign({}, director.activeRoles),
+      recentSpawns: director.recentSpawns.length,
+      recentDeaths: director.recentDeaths.length,
+      recentRoles: director.recentRoles.slice(-6),
+      lastEliteDecision: Object.assign({}, director.lastEliteDecision),
+      lastStaggerDelay: director.lastStaggerDelay,
+      lastStaggerRole: director.lastStaggerRole,
+      enemyCount: aliveCount,
+      bulletCount: bullets.length,
+      enabled: director.enabled,
+      silenceOnDeathMs: getSilenceOnDeathMs(),
+      repeatedRoleCount: director.repeatedRoleCount
+    };
+  };
+
+  global.printEncounterDirectorSnapshot = function() {
+    if (typeof console !== 'undefined' && console.table) {
+      console.table([global.getEncounterDirectorSnapshot()]);
+    }
+  };
 })(window);
