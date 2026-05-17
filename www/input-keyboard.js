@@ -49,8 +49,8 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  // HC-148C: toggle encounter director capture: F7
-  if (e.code === 'F7') {
+  // HC-148E: toggle encounter director capture: U
+  if (e.code === 'KeyU') {
     e.preventDefault();
     if (typeof toggleEncounterDirectorCapture === 'function') {
       var started = toggleEncounterDirectorCapture();
@@ -61,8 +61,8 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  // HC-148A: export encounter director telemetry baseline: F8
-  if (e.code === 'F8') {
+  // HC-148E: export encounter director telemetry baseline: I
+  if (e.code === 'KeyI') {
     e.preventDefault();
     if (typeof printEncounterDirectorCaptureReport === 'function') {
       printEncounterDirectorCaptureReport();
