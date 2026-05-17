@@ -4182,8 +4182,8 @@ if (shouldShow) {
           }
           ctx.globalAlpha = flicker * (0.35 + 0.45 * _hi);
           drawEnemySpriteOrLegacy(ctx, e, spriteKey, hitColor, size, { tint: hitColor });
-          ctx.restore();
-        }
+  ctx.restore();
+}
 
         // SHMUP TELEGRAPH: carga visual antes de disparo externo
         if (e.isExternalShmup && e.shmupShotsRemaining > 0) {
@@ -5631,4 +5631,8 @@ if (player.weaponType !== 'normal') {
   }
 
   ctx.restore();
+
+  if (typeof window.drawEncounterDirectorDebug === 'function') {
+    window.drawEncounterDirectorDebug(ctx);
+  }
 }

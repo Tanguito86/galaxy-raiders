@@ -241,4 +241,16 @@
   global.canSpawnRole = canSpawnRole;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
+  global.getEncounterDirectorState = function() {
+    return {
+      enabled: director.enabled,
+      pressure: director.pressure,
+      targetPressure: director.targetPressure,
+      silenceTimer: director.silenceTimer,
+      spawnCooldown: director.spawnCooldown,
+      activeRoles: Object.assign({}, director.activeRoles),
+      recentSpawnCount: director.recentSpawns.length,
+      recentDeathCount: director.recentDeaths.length
+    };
+  };
 })(window);
