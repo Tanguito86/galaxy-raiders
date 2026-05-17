@@ -40,6 +40,10 @@
     lastStaggerRole: null,
     lastStaggerGroupSize: 0,
     reliefActive: false,
+    reliefEligible: false,
+    reliefBlockedReason: '',
+    reliefThresholdUsed: 0,
+    pressureAtReliefCheck: 0,
     currentWavePersonality: 'balanced',
     recentPersonalities: [],
     lastPersonality: null,
@@ -456,6 +460,10 @@
     director.lastStaggerRole = null;
     director.lastStaggerGroupSize = 0;
     director.reliefActive = false;
+    director.reliefEligible = false;
+    director.reliefBlockedReason = '';
+    director.reliefThresholdUsed = 0;
+    director.pressureAtReliefCheck = 0;
     director.spawnPacingBias = 1;
     director._wasBossActive = false;
     director._wasReliefActive = false;
@@ -534,10 +542,26 @@
 
     // HC-125K: pressure relief — accelerate decay when calm
     director.reliefActive = false;
-    if (director.pressure >= getNumCfg('reliefThreshold', 0.40, 0.95) && director.targetPressure < director.pressure) {
+    director.reliefEligible = false;
+    director.reliefBlockedReason = '';
+    director.reliefThresholdUsed = getNumCfg('reliefThreshold', 0.40, 0.95);
+    director.pressureAtReliefCheck = director.pressure;
+
+    if (!director.enabled) {
+      director.reliefBlockedReason = 'disabled';
+    } else if (director.pressure < director.reliefThresholdUsed) {
+      director.reliefBlockedReason = 'pressure';
+    } else if (director.targetPressure >= director.pressure) {
+      director.reliefBlockedReason = 'targetPressure';
+    } else {
+      director.reliefEligible = true;
       var dives = director.activeRoles.dive || 0;
       var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
-      if (dives === 0 && bullets <= 6) {
+      if (dives > 0) {
+        director.reliefBlockedReason = 'dives';
+      } else if (bullets > 6) {
+        director.reliefBlockedReason = 'bullets';
+      } else {
         smoothing = Math.min(getNumCfg('pressureSmoothingIn', 0.001, 1), smoothing * getNumCfg('reliefDecayMult', 1.0, 5.0) * getPersonalityBias('reliefMult'));
         director.reliefActive = true;
       }
@@ -659,6 +683,10 @@
       lastStaggerRole: director.lastStaggerRole,
       lastStaggerGroupSize: director.lastStaggerGroupSize,
       reliefActive: director.reliefActive,
+      reliefEligible: director.reliefEligible,
+      reliefBlockedReason: director.reliefBlockedReason,
+      reliefThresholdUsed: parseFloat(director.reliefThresholdUsed.toFixed(2)),
+      pressureAtReliefCheck: parseFloat(director.pressureAtReliefCheck.toFixed(4)),
       currentWavePersonality: director.currentWavePersonality,
       lastEliteDecision: director.lastEliteDecision,
       spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3)),
@@ -687,6 +715,9 @@
       silenceTimer: director.silenceTimer,
       spawnCooldown: director.spawnCooldown,
       reliefActive: director.reliefActive,
+      reliefEligible: director.reliefEligible,
+      reliefBlockedReason: director.reliefBlockedReason,
+      reliefThresholdUsed: parseFloat(director.reliefThresholdUsed.toFixed(2)),
       activeRoles: Object.assign({}, director.activeRoles),
       recentSpawns: director.recentSpawns.length,
       recentDeaths: director.recentDeaths.length,
@@ -806,7 +837,17 @@
       enemyMax: Math.max.apply(null, enemies),
       bulletMax: Math.max.apply(null, bullets),
       personalities: personalities,
-      lastSnapshots: last5
+      lastSnapshots: last5,
+      reliefEligibleSnapshots: data.filter(function(s) { return s.reliefEligible; }).length,
+      reliefBlockedReasons: (function() {
+        var reasons = {};
+        for (var j = 0; j < data.length; j++) {
+          var r = data[j].reliefBlockedReason || '?';
+          reasons[r] = (reasons[r] || 0) + 1;
+        }
+        return reasons;
+      })(),
+      reliefThresholdUsed: data.length > 0 ? data[0].reliefThresholdUsed : null
     };
   };
 
@@ -832,6 +873,9 @@
     console.log('  eliteOverlapWindows: ' + (report.eliteOverlapWindows !== undefined ? report.eliteOverlapWindows : 'n/a'));
     console.log('  sniperUptime:    ' + (report.sniperUptime !== undefined ? report.sniperUptime + '%' : 'n/a'));
     console.log('  cleanupDuration: ' + (report.cleanupDuration !== undefined ? report.cleanupDuration : 'n/a'));
+    console.log('  reliefEligible:  ' + (report.reliefEligibleSnapshots !== undefined ? report.reliefEligibleSnapshots + '/' + report.snapshots : 'n/a'));
+    console.log('  reliefBlockedBy: ' + (report.reliefBlockedReasons ? JSON.stringify(report.reliefBlockedReasons) : 'n/a'));
+    console.log('  reliefThreshold: ' + (report.reliefThresholdUsed !== undefined ? report.reliefThresholdUsed : 'n/a'));
     console.log('============================================');
     console.log('JSON: ' + JSON.stringify({
       level: level,
@@ -844,7 +888,10 @@
       avgDensity: report.avgDensity,
       eliteOverlapWindows: report.eliteOverlapWindows,
       sniperUptime: report.sniperUptime,
-      cleanupDuration: report.cleanupDuration
+      cleanupDuration: report.cleanupDuration,
+      reliefEligibleSnapshots: report.reliefEligibleSnapshots,
+      reliefBlockedReasons: report.reliefBlockedReasons,
+      reliefThresholdUsed: report.reliefThresholdUsed
     }));
   };
 })(window);

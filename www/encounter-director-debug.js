@@ -35,7 +35,7 @@
     var panelY = 4;
     var panelW = 114;
     var lineH = 8;
-    var rows = 22;
+    var rows = 25;
     var panelH = rows * lineH + 6;
 
     ctx.globalAlpha = 0.62;
@@ -126,6 +126,13 @@
     row('stagger:', staggerRole + ' ' + staggerDelay + '/' + staggerGroup, st.lastStaggerDelay > 0 ? '#ff0' : '#888');
 
     row('relief:', st.reliefActive ? 'ACTIVE' : '---', st.reliefActive ? '#0f0' : '#888');
+
+    row('reliefElig:', safeBool(st.reliefEligible), st.reliefEligible ? '#ff0' : '#888');
+
+    var reason = safeStr(st.reliefBlockedReason, '');
+    row('reliefWhy:', reason || '---', reason ? '#f80' : '#888');
+
+    row('reliefThr:', safeStr(st.reliefThresholdUsed, '-'), '#8cf');
 
     var personality = safeStr(st.currentWavePersonality, 'balanced');
     row('wave:', personality.toUpperCase(), '#8cf');
