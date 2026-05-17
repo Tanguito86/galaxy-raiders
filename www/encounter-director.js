@@ -630,14 +630,17 @@
   // HC-135: dev-only session capture
   var _captureInterval = null;
   var _captureData = [];
+  var _captureMax = 1800;
 
-  global.startEncounterDirectorCapture = function(intervalMs) {
+  global.startEncounterDirectorCapture = function(intervalMs, maxSnapshots) {
     if (_captureInterval) return;
     var ms = (typeof intervalMs === 'number' && intervalMs > 0) ? intervalMs : 1000;
+    _captureMax = (typeof maxSnapshots === 'number' && maxSnapshots > 0) ? maxSnapshots : 1800;
     _captureData = [];
     _captureInterval = setInterval(function() {
       if (typeof global.getEncounterDirectorSnapshot === 'function') {
         _captureData.push(global.getEncounterDirectorSnapshot());
+        while (_captureData.length > _captureMax) _captureData.shift();
       }
     }, ms);
   };
