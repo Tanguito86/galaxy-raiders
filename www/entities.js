@@ -723,6 +723,8 @@ function applyFormationGeometry(enemies, personality) {
   for (var j = 0; j < enemies.length; j++) {
     var en = enemies[j];
     if (!en || !en.alive) continue;
+    // HC-132C: external shmups/routed enemies keep authored route positions
+    if (en.isExternalShmup || en._shmupRoute) continue;
 
     var dx = (en.x + en.w / 2) - cx;
     var dy = (en.y + en.h / 2) - cy;
