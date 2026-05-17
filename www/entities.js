@@ -692,6 +692,51 @@ function createFormation(formation) {
   return newEnemies;
 }
 
+// HC-132: apply formation geometry bias based on wave personality
+function applyFormationGeometry(enemies, personality) {
+  if (!Array.isArray(enemies) || enemies.length === 0) return;
+  if (!personality || personality === 'balanced') return;
+
+  var cfg = {
+    swarm:    { hMult: 0.82, vMult: 0.88, hCenter: 0,  vCenter: 0,   diagonal: 0 },
+    sniper:   { hMult: 1.14, vMult: 1.00, hCenter: 0,  vCenter: 0,   diagonal: 0 },
+    cleanup:  { hMult: 1.10, vMult: 1.08, hCenter: 0,  vCenter: 0,   diagonal: 0 },
+    pressure: { hMult: 0.92, vMult: 0.94, hCenter: 0,  vCenter: 0,   diagonal: 0.08 },
+    flanker:  { hMult: 1.00, vMult: 1.00, hCenter: 0.08, vCenter: 0, diagonal: 0 }
+  };
+  var c = cfg[personality];
+  if (!c) return;
+
+  // compute center of mass
+  var cx = 0, cy = 0, count = 0;
+  for (var i = 0; i < enemies.length; i++) {
+    var e = enemies[i];
+    if (!e || !e.alive) continue;
+    cx += e.x + e.w / 2;
+    cy += e.y + e.h / 2;
+    count++;
+  }
+  if (count === 0) return;
+  cx /= count;
+  cy /= count;
+
+  for (var j = 0; j < enemies.length; j++) {
+    var en = enemies[j];
+    if (!en || !en.alive) continue;
+
+    var dx = (en.x + en.w / 2) - cx;
+    var dy = (en.y + en.h / 2) - cy;
+    en.x = Math.round(clamp(cx + dx * c.hMult + dy * c.diagonal, 10, W - 10 - en.w));
+    en.y = Math.round(clamp(cy + dy * c.vMult + dx * c.diagonal, 50, H - 80));
+
+    if (c.hCenter !== 0) {
+      var dist = Math.abs(dx) / (W / 2);
+      en.x += Math.round(dx * c.hCenter * (1 - dist * 0.5));
+      en.x = clamp(en.x, 10, W - 10 - en.w);
+    }
+  }
+}
+
 function trimFormationForExternalShmupWave(enemies, level) {
   if (!Array.isArray(enemies) || enemies.length === 0) return;
 
@@ -983,6 +1028,10 @@ function initEnemies() {
     addInitialExternalShmupWave(enemies, level);
     if (waveType === 'normal') {
       applyEncounterFormationPacing(enemies, formation, waveType);
+      var _geomPersonality = (typeof window.getCurrentWavePersonality === 'function')
+        ? window.getCurrentWavePersonality()
+        : 'balanced';
+      applyFormationGeometry(enemies, _geomPersonality);
     } else if (typeof window.resetWavePersonality === 'function') {
       window.resetWavePersonality();
     }
