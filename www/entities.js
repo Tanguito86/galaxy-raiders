@@ -720,6 +720,22 @@ function applyFormationGeometry(enemies, personality) {
   cx /= count;
   cy /= count;
 
+  // HC-142: adaptive density multiplier from director state
+  var _densityMult = 1;
+  if (typeof window.getEncounterDirectorState === 'function') {
+    var _st = window.getEncounterDirectorState();
+    if (_st) {
+      if (_st.pressure >= 0.70) _densityMult *= 1.06;
+      if (_st.reliefActive) _densityMult *= 1.04;
+      var _dp = _st.currentWavePersonality || 'balanced';
+      if (_dp === 'pressure') _densityMult *= 0.94;
+      else if (_dp === 'cleanup') _densityMult *= 1.06;
+    }
+  }
+  _densityMult = clamp(_densityMult, 0.92, 1.10);
+  c.hMult *= _densityMult;
+  c.vMult *= _densityMult;
+
   for (var j = 0; j < enemies.length; j++) {
     var en = enemies[j];
     if (!en || !en.alive) continue;
