@@ -632,6 +632,13 @@ if (!boss.active && activeEnemies.length > 0) {
 
   let moveDown = false;
 
+  // HC-124: optional tactical role layer. Full fallback if helper/config is absent or disabled.
+  if (typeof window.updateEnemyTacticalAI === 'function') {
+    activeEnemies.forEach(e => {
+      window.updateEnemyTacticalAI(e, player, dt);
+    });
+  }
+
   // --- AI (lvl 12+) - offsets suaves, no rompe formacion ---
   if (level >= 12) {
     const maxOffsetX = 18;

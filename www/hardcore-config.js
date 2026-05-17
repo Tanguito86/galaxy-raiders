@@ -16,6 +16,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   background:{ hc90Enabled: true, nebulaEnabled: true, colorGradingEnabled: true, maxStars: 180 },
   atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
   bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
+  enemyAI:   { enabled: true, maxOffsetX: 18, maxOffsetY: 10, decisionIntervalMs: 500 },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false, showLevelSkipButton: false }
 };
 
@@ -130,6 +131,18 @@ function getBossAIConfig() {
   var maxX = (typeof ai.maxOffsetX === 'number' && ai.maxOffsetX >= 0) ? Math.min(120, ai.maxOffsetX) : 70;
   var maxY = (typeof ai.maxOffsetY === 'number' && ai.maxOffsetY >= 0) ? Math.min(80, ai.maxOffsetY) : 35;
   return { enabled: en, maxOffsetX: maxX, maxOffsetY: maxY };
+}
+
+function getEnemyAIConfig() {
+  var cfg = getGalaxyConfig();
+  var ai = (cfg.enemyAI && typeof cfg.enemyAI === 'object') ? cfg.enemyAI : _GALAXY_CONFIG_DEFAULTS.enemyAI;
+  var en = (typeof ai.enabled === 'boolean') ? ai.enabled : true;
+  var maxX = (typeof ai.maxOffsetX === 'number' && ai.maxOffsetX >= 0) ? Math.min(32, ai.maxOffsetX) : 18;
+  var maxY = (typeof ai.maxOffsetY === 'number' && ai.maxOffsetY >= 0) ? Math.min(20, ai.maxOffsetY) : 10;
+  var interval = (typeof ai.decisionIntervalMs === 'number' && ai.decisionIntervalMs >= 120)
+    ? Math.min(2000, ai.decisionIntervalMs)
+    : 500;
+  return { enabled: en, maxOffsetX: maxX, maxOffsetY: maxY, decisionIntervalMs: interval };
 }
 
 // ============================================================

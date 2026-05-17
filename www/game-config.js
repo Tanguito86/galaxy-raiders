@@ -109,6 +109,14 @@ window.GALAXY_CONFIG = {
     maxOffsetY: 35
   },
 
+  // ============ ENEMY TACTICAL AI ============
+  enemyAI: {
+    enabled: true,
+    maxOffsetX: 18,
+    maxOffsetY: 10,
+    decisionIntervalMs: 500
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,

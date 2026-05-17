@@ -3958,9 +3958,11 @@ if (shouldShow) {
       }
 
       ampY += row * 0.15;
+      var tacticalX = (typeof e._tacticalVisualOffsetX === 'number') ? e._tacticalVisualOffsetX : 0;
+      var tacticalY = (typeof e._tacticalVisualOffsetY === 'number') ? e._tacticalVisualOffsetY : 0;
       return {
-        ox: Math.sin(time * speedX + phase) * ampX + tensionX,
-        oy: Math.cos(time * speedY + phase) * ampY + tensionY
+        ox: Math.sin(time * speedX + phase) * ampX + tensionX + tacticalX,
+        oy: Math.cos(time * speedY + phase) * ampY + tensionY + tacticalY
       };
     }
 
