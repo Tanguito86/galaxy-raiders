@@ -51,26 +51,25 @@ document.addEventListener('keydown', e => {
 
   // HC-148C: toggle encounter director capture: F7
   if (e.code === 'F7') {
-    if (typeof isEncounterDirectorCapturing === 'function' && isEncounterDirectorCapturing()) {
-      if (typeof stopEncounterDirectorCapture === 'function') stopEncounterDirectorCapture();
-      if (typeof setBalanceDebugNotice === 'function') setBalanceDebugNotice('ENC DIR CAPTURE STOPPED', 1400);
-    } else {
-      if (typeof startEncounterDirectorCapture === 'function') startEncounterDirectorCapture();
-      if (typeof setBalanceDebugNotice === 'function') setBalanceDebugNotice('ENC DIR CAPTURE STARTED', 1400);
-    }
     e.preventDefault();
+    if (typeof toggleEncounterDirectorCapture === 'function') {
+      var started = toggleEncounterDirectorCapture();
+      if (typeof setBalanceDebugNotice === 'function') {
+        setBalanceDebugNotice(started ? 'ENC DIR CAPTURE STARTED' : 'ENC DIR CAPTURE STOPPED', 1400);
+      }
+    }
     return;
   }
 
   // HC-148A: export encounter director telemetry baseline: F8
   if (e.code === 'F8') {
+    e.preventDefault();
     if (typeof printEncounterDirectorCaptureReport === 'function') {
       printEncounterDirectorCaptureReport();
     }
     if (typeof setBalanceDebugNotice === 'function') {
       setBalanceDebugNotice('ENC DIR TELEMETRY EXPORTED', 1600);
     }
-    e.preventDefault();
     return;
   }
 

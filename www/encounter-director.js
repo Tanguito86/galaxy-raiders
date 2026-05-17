@@ -740,6 +740,23 @@
     return !!_captureInterval;
   };
 
+  global.toggleEncounterDirectorCapture = function() {
+    if (_captureInterval) {
+      clearInterval(_captureInterval);
+      _captureInterval = null;
+      _captureData = [];
+      return false;
+    }
+    _captureData = [];
+    _captureInterval = setInterval(function() {
+      if (typeof global.getEncounterDirectorSnapshot === 'function') {
+        _captureData.push(global.getEncounterDirectorSnapshot());
+        while (_captureData.length > _captureMax) _captureData.shift();
+      }
+    }, 1000);
+    return true;
+  };
+
   global.getEncounterDirectorCaptureReport = function() {
     var data = _captureData;
     if (!data.length) return { snapshots: 0, message: 'no data captured' };
