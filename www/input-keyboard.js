@@ -49,6 +49,19 @@ document.addEventListener('keydown', e => {
     return;
   }
 
+  // HC-148C: toggle encounter director capture: F7
+  if (e.code === 'F7') {
+    if (typeof isEncounterDirectorCapturing === 'function' && isEncounterDirectorCapturing()) {
+      if (typeof stopEncounterDirectorCapture === 'function') stopEncounterDirectorCapture();
+      if (typeof setBalanceDebugNotice === 'function') setBalanceDebugNotice('ENC DIR CAPTURE STOPPED', 1400);
+    } else {
+      if (typeof startEncounterDirectorCapture === 'function') startEncounterDirectorCapture();
+      if (typeof setBalanceDebugNotice === 'function') setBalanceDebugNotice('ENC DIR CAPTURE STARTED', 1400);
+    }
+    e.preventDefault();
+    return;
+  }
+
   // HC-148A: export encounter director telemetry baseline: F8
   if (e.code === 'F8') {
     if (typeof printEncounterDirectorCaptureReport === 'function') {
