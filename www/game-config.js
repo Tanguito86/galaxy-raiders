@@ -120,8 +120,8 @@ window.GALAXY_CONFIG = {
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============
   encounterDirector: {
     // enabled: true,                    // master kill switch (default: true)
-    // silenceOnDeathMs: 400,           // silence after enemy death (default: 420)
-    // earlySilenceOnDeathMs: 300,      // shorter silence for levels ≤5 (default: 320)
+    silenceOnDeathMs: 400,               // silence after enemy death (was 420)
+    earlySilenceOnDeathMs: 300,          // shorter silence for levels ≤5 (was 320)
     // earlySilenceMaxLevel: 5,         // max level for early silence (default: 5)
     // silenceOnWaveClearMs: 900,       // silence after wave clear (default: 900)
     // silenceMaxMs: 2000,              // absolute silence cap (default: 2000)

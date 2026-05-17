@@ -48,6 +48,7 @@
     reliefEnterCount: 0,
     silenceTriggerCount: 0,
     eliteDenyCount: 0,
+    _waveClearSilenceCounted: false,
     lastTransition: ''
   };
 
@@ -459,6 +460,7 @@
     director.reliefEnterCount = 0;
     director.silenceTriggerCount = 0;
     director.eliteDenyCount = 0;
+    director._waveClearSilenceCounted = false;
     director.lastTransition = '';
     director.currentWavePersonality = 'balanced';
     director.recentPersonalities = [];
@@ -514,7 +516,12 @@
     }
     if (!isBossWindowActive() && aliveCount === 0) {
       director.silenceTimer = Math.min(getNumCfg('silenceMaxMs', 100, 5000), Math.max(director.silenceTimer, getNumCfg('silenceOnWaveClearMs', 0, 5000)));
-      director.silenceTriggerCount++;
+      if (!director._waveClearSilenceCounted) {
+        director.silenceTriggerCount++;
+        director._waveClearSilenceCounted = true;
+      }
+    } else if (aliveCount > 0) {
+      director._waveClearSilenceCounted = false;
     }
 
     director.targetPressure = computeTargetPressure();
