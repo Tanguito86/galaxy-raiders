@@ -51,8 +51,8 @@ document.addEventListener('keydown', e => {
 
   // HC-148A: export encounter director telemetry baseline: F8
   if (e.code === 'F8') {
-    if (typeof global.printEncounterDirectorCaptureReport === 'function') {
-      global.printEncounterDirectorCaptureReport();
+    if (typeof printEncounterDirectorCaptureReport === 'function') {
+      printEncounterDirectorCaptureReport();
     }
     if (typeof setBalanceDebugNotice === 'function') {
       setBalanceDebugNotice('ENC DIR TELEMETRY EXPORTED', 1600);
