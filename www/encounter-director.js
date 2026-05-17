@@ -37,7 +37,10 @@
     lastStaggerDelay: 0,
     lastStaggerRole: null,
     lastStaggerGroupSize: 0,
-    reliefActive: false
+    reliefActive: false,
+    currentWavePersonality: 'balanced',
+    recentPersonalities: [],
+    lastPersonality: null
   };
 
   function getCfg(key) {
@@ -240,10 +243,14 @@
       return 'standard';
     }
 
+    // HC-127: personality rotation aggression bias
+    var _aggressionCap = Math.round(director.roleRepeatCap * getPersonalityBias('rotationAggression'));
+    var _effectiveCap = clamp(_aggressionCap, 2, 5);
+
     if (role === director.lastRole) {
       director.repeatedRoleCount++;
       pushRecent(director.recentRoles, { role: role, t: global.globalTime || 0 });
-      if (director.repeatedRoleCount >= director.roleRepeatCap) {
+      if (director.repeatedRoleCount >= _effectiveCap) {
         var alt = map.alt[director.repeatedRoleCount % map.alt.length];
         director.lastRole = alt;
         director.repeatedRoleCount = 0;
@@ -257,6 +264,50 @@
     director.repeatedRoleCount = 1;
     pushRecent(director.recentRoles, { role: role, t: global.globalTime || 0 });
     return role;
+  }
+
+  var WAVE_PERSONALITIES = {
+    balanced: { label: 'BALANCED', staggerMult: 1.00, diveBias: 0, silenceMult: 1.00, reliefMult: 1.00, rotationAggression: 1.00 },
+    swarm:    { label: 'SWARM',    staggerMult: 0.78, diveBias: 0, silenceMult: 0.80, reliefMult: 1.10, rotationAggression: 1.15 },
+    sniper:   { label: 'SNIPER',   staggerMult: 1.12, diveBias: -1, silenceMult: 1.15, reliefMult: 1.00, rotationAggression: 0.70 },
+    pressure: { label: 'PRESSURE', staggerMult: 0.85, diveBias: 1,  silenceMult: 0.85, reliefMult: 0.80, rotationAggression: 1.40 },
+    cleanup:  { label: 'CLEANUP',  staggerMult: 1.10, diveBias: 0, silenceMult: 0.75, reliefMult: 1.40, rotationAggression: 0.60 },
+    flanker:  { label: 'FLANKER',  staggerMult: 0.90, diveBias: 0, silenceMult: 1.00, reliefMult: 1.05, rotationAggression: 1.10 }
+  };
+
+  function selectNextWavePersonality() {
+    if (!director.enabled || isBossWindowActive()) {
+      director.currentWavePersonality = 'balanced';
+      return 'balanced';
+    }
+
+    var level = getCurrentLevel();
+    var pool = ['swarm', 'sniper', 'pressure', 'cleanup', 'flanker', 'balanced'];
+
+    // avoid last personality if possible (allow repeat after 2 cycles)
+    var last2 = director.recentPersonalities.slice(-2);
+    var candidates = pool.filter(function(p) {
+      return last2[last2.length - 1] !== p || director.recentPersonalities.length < 2;
+    });
+    if (candidates.length === 0) candidates = pool.slice();
+
+    // deterministic-ish lean: level influences which personality is more likely
+    var lean = pool[level % pool.length];
+    var leanIdx = candidates.indexOf(lean);
+    if (leanIdx >= 0 && Math.random() < 0.55) {
+      director.currentWavePersonality = candidates[leanIdx];
+    } else {
+      director.currentWavePersonality = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    pushRecent(director.recentPersonalities, director.currentWavePersonality);
+    director.lastPersonality = director.currentWavePersonality;
+    return director.currentWavePersonality;
+  }
+
+  function getPersonalityBias(key) {
+    var p = WAVE_PERSONALITIES[director.currentWavePersonality] || WAVE_PERSONALITIES.balanced;
+    return p[key] !== undefined ? p[key] : 1;
   }
 
   function shouldBypassStagger(context) {
@@ -319,6 +370,7 @@
     }
 
     delay = Math.round(clamp(delay, 0, getCfg('maxStaggerDelayMs')));
+    delay = Math.round(clamp(delay * getPersonalityBias('staggerMult'), 0, getCfg('maxStaggerDelayMs')));
     director.lastStaggerDelay = delay;
     director.lastStaggerRole = role;
     director.lastStaggerGroupSize = groupSize;
@@ -336,7 +388,7 @@
     var activeCount = counts[role] || 0;
     if (activeCount >= getRoleCap(role)) return false;
 
-    if (role === 'dive' && director.pressure >= 0.82) return false;
+    if (role === 'dive' && director.pressure >= clamp(0.82 - getPersonalityBias('diveBias') * 0.06, 0.70, 0.90)) return false;
     if (role === 'external' && director.pressure >= 0.75) return false;
     if (role === 'kamikaze' && director.pressure >= 0.7) return false;
 
@@ -367,6 +419,9 @@
     director.lastStaggerRole = null;
     director.lastStaggerGroupSize = 0;
     director.reliefActive = false;
+    director.currentWavePersonality = 'balanced';
+    director.recentPersonalities = [];
+    director.lastPersonality = null;
     director.spawnCooldown = 0;
     director.silenceTimer = 0;
     director.pressure = Math.min(director.pressure, getCfg('levelResetPressureCarryMax'));
@@ -388,7 +443,11 @@
     syncTrackedEnemies();
     recountActiveRoles();
 
-    if (director.silenceTimer > 0) director.silenceTimer = Math.max(0, director.silenceTimer - dt);
+    // HC-127: personality-biased silence decay (faster for swarm/cleanup, slower for sniper)
+    if (director.silenceTimer > 0) {
+      var _silenceDecay = dt * (1 / getPersonalityBias('silenceMult'));
+      director.silenceTimer = Math.max(0, director.silenceTimer - _silenceDecay);
+    }
     if (director.spawnCooldown > 0) director.spawnCooldown = Math.max(0, director.spawnCooldown - dt);
 
     var aliveCount = 0;
@@ -413,7 +472,7 @@
       var dives = director.activeRoles.dive || 0;
       var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
       if (dives === 0 && bullets <= 6) {
-        smoothing = Math.min(getCfg('pressureSmoothingIn'), smoothing * 2.2);
+        smoothing = Math.min(getCfg('pressureSmoothingIn'), smoothing * 2.2 * getPersonalityBias('reliefMult'));
         director.reliefActive = true;
       }
     }
@@ -432,6 +491,8 @@
   global.peekCanSpawnRole = peekCanSpawnRole;
   global.suggestEncounterRole = suggestEncounterRole;
   global.getEncounterStaggerDelay = getEncounterStaggerDelay;
+  global.selectNextWavePersonality = selectNextWavePersonality;
+  global.getCurrentWavePersonality = function() { return director.currentWavePersonality; };
   global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
@@ -451,7 +512,8 @@
       lastStaggerDelay: director.lastStaggerDelay,
       lastStaggerRole: director.lastStaggerRole,
       lastStaggerGroupSize: director.lastStaggerGroupSize,
-      reliefActive: director.reliefActive
+      reliefActive: director.reliefActive,
+      currentWavePersonality: director.currentWavePersonality
     };
   };
 })(window);

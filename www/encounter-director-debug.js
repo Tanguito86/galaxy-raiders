@@ -127,6 +127,9 @@
 
     row('relief:', st.reliefActive ? 'ACTIVE' : '---', st.reliefActive ? '#0f0' : '#888');
 
+    var personality = safeStr(st.currentWavePersonality, 'balanced');
+    row('wave:', personality.toUpperCase(), '#8cf');
+
     ctx.restore();
   }
 

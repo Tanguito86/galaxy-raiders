@@ -894,6 +894,11 @@ function applyEncounterFormationPacing(normalEnemies, formation, waveType) {
   if (!Array.isArray(normalEnemies) || normalEnemies.length === 0) return;
   if (typeof window.getEncounterStaggerDelay !== 'function') return;
 
+  // HC-127: select wave personality each normal wave
+  if (typeof window.selectNextWavePersonality === 'function') {
+    window.selectNextWavePersonality();
+  }
+
   const directorState = (typeof window.getEncounterDirectorState === 'function')
     ? window.getEncounterDirectorState()
     : null;
