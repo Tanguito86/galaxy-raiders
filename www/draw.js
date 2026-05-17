@@ -4185,14 +4185,13 @@ if (shouldShow) {
     }
 
     // HC-129: threat telegraph — subtle role indicator (render-only)
-    if ((window.ENCOUNTER_DIRECTOR_DEBUG || window.ENCOUNTER_THREAT_TELEGRAPH) && e.alive) {
-      var _threatRole = null;
+    if (window.ENCOUNTER_THREAT_TELEGRAPH === true && e.alive) {
       var _threatColor = null;
-      if (e.type === 'alien2')        { _threatRole = 'sniper';  _threatColor = '#ff4'; }
-      else if (e.type === 'alien5')   { _threatRole = 'kamikaze'; _threatColor = '#f44'; }
-      else if (e.diving)              { _threatRole = 'diver';   _threatColor = '#f80'; }
-      else if (e.type === 'alien4')   { _threatRole = 'flanker'; _threatColor = '#4fc'; }
-      if (_threatRole) {
+      if (e.type === 'alien2')        { _threatColor = '#ff4'; }
+      else if (e.type === 'alien5')   { _threatColor = '#f44'; }
+      else if (e.diving)              { _threatColor = '#f80'; }
+      else if (e.type === 'alien4')   { _threatColor = '#4fc'; }
+      if (_threatColor) {
         var _tcx = e.x + e.w / 2;
         var _tcy = e.y + e.h / 2;
         var _tpulse = 0.5 + 0.5 * Math.sin(globalTime * 0.012 + e.x * 0.05);
