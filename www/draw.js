@@ -3541,6 +3541,14 @@ if (shouldShow) {
       supreme: 'boss_emperador'
     };
 
+    var _BOSS_READABILITY_MULT = {
+      crossfire: 1.30,
+      zigzag: 1.25,
+      rotate: 1.30,
+      divebomb: 1.30,
+      supreme: 1.15
+    };
+
     function getBossSpriteId(boss) {
       return _BOSS_SPRITE_ID_MAP[boss.pattern] || 'boss_crabtron';
     }
@@ -3556,18 +3564,22 @@ if (shouldShow) {
       }
     }
 
-    function drawBossSpriteOrLegacy(ctx, boss, bossColor, size) {
+    function drawBossSpriteOrLegacy(ctx, boss, bossColor, size, opts) {
       var spriteId = getBossSpriteId(boss);
       var sx = size || 5;
+      opts = opts || {};
       if (window.SpriteSystem && window.SpriteSystem.isSpriteReady(spriteId)) {
         var sprite = window.SpriteSystem.getSprite(spriteId);
         var scale = Math.min(boss.w / sprite.frameWidth, boss.h / sprite.frameHeight);
         if (!isFinite(scale) || scale <= 0) scale = 1;
+        scale *= _BOSS_READABILITY_MULT[boss.pattern] || 1;
         window.drawSpriteFrame(ctx, spriteId, boss.x + boss.w / 2, boss.y + boss.h / 2, {
           frame: 0,
           scale: scale,
           anchorX: 0.5,
-          anchorY: 0.5
+          anchorY: 0.5,
+          tint: opts.tint || undefined,
+          alpha: opts.alpha || undefined
         });
         return true;
       }
@@ -3699,9 +3711,9 @@ if (shouldShow) {
         const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
         ctx.save();
         ctx.globalAlpha = flicker;
-      drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+        drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
         ctx.globalAlpha = flicker * 0.35;
-        drawSprite(ctx, bossSprite, boss.x, boss.y, '#ffffff', 5);
+        drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
         ctx.restore();
       }
 
