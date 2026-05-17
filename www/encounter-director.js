@@ -490,16 +490,10 @@
     director.pressure += (director.targetPressure - director.pressure) * smoothing * normalizedDt;
     director.pressure = clamp(director.pressure, 0, 1);
 
-    // HC-139: spawn pacing bias — modulates stagger timing
+    // HC-139: spawn pacing bias — modulates stagger timing (pressure only; personality/relief already in chain)
     director.spawnPacingBias = 1;
     if (director.pressure >= 0.70) director.spawnPacingBias *= 1.14;
-    if (director.reliefActive) director.spawnPacingBias *= 0.82;
-    var _pers = director.currentWavePersonality || 'balanced';
-    if (_pers === 'pressure') director.spawnPacingBias *= 1.06;
-    else if (_pers === 'cleanup') director.spawnPacingBias *= 0.85;
-    else if (_pers === 'swarm') director.spawnPacingBias *= 0.88;
-    else if (_pers === 'sniper') director.spawnPacingBias *= 1.12;
-    director.spawnPacingBias = clamp(director.spawnPacingBias, 0.60, 1.50);
+    director.spawnPacingBias = clamp(director.spawnPacingBias, 0.85, 1.30);
 
     return director.pressure;
   }
