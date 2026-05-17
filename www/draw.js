@@ -4158,7 +4158,7 @@ if (shouldShow) {
     // HC-125H: encounter stagger visual (render-only, no gameplay effect)
     if (e._encounterDelayTimer > 0) {
       var _stgT = Math.min(1, e._encounterDelayTimer / 220);
-      ctx.globalAlpha *= 0.35 + _stgT * 0.65;
+      ctx.globalAlpha *= 0.50 + _stgT * 0.50;
       ctx.translate(0, (1 - _stgT) * -5);
       ctx.scale(0.88 + _stgT * 0.12, 0.88 + _stgT * 0.12);
     }

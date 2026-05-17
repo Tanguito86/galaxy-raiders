@@ -19,7 +19,7 @@ function appendPlayerBulletTrail(b) {
   while (b.trail.length > maxLen) b.trail.shift();
 }
 
-function syncEncounterDirectorEnemyState() {
+function syncEncounterDirectorEnemyState(dt) {
   if (!Array.isArray(enemies)) return;
 
   for (let i = 0; i < enemies.length; i++) {
@@ -36,7 +36,8 @@ function syncEncounterDirectorEnemyState() {
 
     // HC-125H: decay encounter stagger timer
     if (enemy._encounterDelayTimer > 0) {
-      enemy._encounterDelayTimer = Math.max(0, enemy._encounterDelayTimer - 16.667);
+      var _decay = (typeof dt === 'number' && isFinite(dt) && dt > 0) ? dt : 16.667;
+      enemy._encounterDelayTimer = Math.max(0, enemy._encounterDelayTimer - _decay);
     }
   }
 }
@@ -45,7 +46,7 @@ function updateEnemiesAndProjectiles(step, dt) {
     if (typeof window.updateEncounterDirector === 'function') {
       window.updateEncounterDirector(dt);
     }
-    syncEncounterDirectorEnemyState();
+    syncEncounterDirectorEnemyState(dt);
 
     // UFO spawn/move
     if (!ufo.active && globalTime > ufo.timer && enemies.filter(e => e.alive).length > 0 && !boss.active) {

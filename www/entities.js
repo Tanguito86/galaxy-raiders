@@ -910,7 +910,7 @@ function initEnemies() {
       var _groupSize = enemies.length;
       for (var _si = 0; _si < enemies.length; _si++) {
         var _e = enemies[_si];
-        if (!_e || _e._encounterDelayTimer) continue;
+        if (!_e || _e._encounterDelayTimer || _e.isExternalShmup) continue;
         var _role = 'standard';
         if (_e.type === 'alien2') _role = 'sniper';
         else if (_e.type === 'alien3') _role = 'tank';
