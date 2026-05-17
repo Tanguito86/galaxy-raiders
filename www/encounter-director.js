@@ -790,4 +790,42 @@
       lastSnapshots: last5
     };
   };
+
+  global.printEncounterDirectorCaptureReport = function() {
+    if (typeof console === 'undefined') return;
+    var report = global.getEncounterDirectorCaptureReport();
+    if (!report || !report.snapshots) {
+      console.log('[ENC-DIR] no capture data');
+      return;
+    }
+    var level = global.level || 0;
+    var ts = new Date().toISOString();
+
+    console.log('=== ENCOUNTER DIRECTOR TELEMETRY BASELINE ===');
+    console.log('  level:           ' + level);
+    console.log('  timestamp:       ' + ts);
+    console.log('  snapshots:       ' + report.snapshots);
+    console.log('  avgPressure:     ' + (report.avgPressure !== undefined ? report.avgPressure : 'n/a'));
+    console.log('  peakPressure:    ' + (report.peakPressure !== undefined ? report.peakPressure : 'n/a'));
+    console.log('  reliefCount:     ' + (report.reliefCount !== undefined ? report.reliefCount : 'n/a'));
+    console.log('  silenceCount:    ' + (report.silenceCount !== undefined ? report.silenceCount : 'n/a'));
+    console.log('  avgDensity:      ' + (report.avgDensity !== undefined ? report.avgDensity : 'n/a'));
+    console.log('  eliteOverlapWindows: ' + (report.eliteOverlapWindows !== undefined ? report.eliteOverlapWindows : 'n/a'));
+    console.log('  sniperUptime:    ' + (report.sniperUptime !== undefined ? report.sniperUptime + '%' : 'n/a'));
+    console.log('  cleanupDuration: ' + (report.cleanupDuration !== undefined ? report.cleanupDuration : 'n/a'));
+    console.log('============================================');
+    console.log('JSON: ' + JSON.stringify({
+      level: level,
+      timestamp: ts,
+      snapshots: report.snapshots,
+      avgPressure: report.avgPressure,
+      peakPressure: report.peakPressure,
+      reliefCount: report.reliefCount,
+      silenceCount: report.silenceCount,
+      avgDensity: report.avgDensity,
+      eliteOverlapWindows: report.eliteOverlapWindows,
+      sniperUptime: report.sniperUptime,
+      cleanupDuration: report.cleanupDuration
+    }));
+  };
 })(window);

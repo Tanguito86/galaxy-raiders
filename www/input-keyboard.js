@@ -49,6 +49,18 @@ document.addEventListener('keydown', e => {
     return;
   }
 
+  // HC-146: export encounter director telemetry baseline: F5
+  if (e.code === 'F5') {
+    if (typeof global.printEncounterDirectorCaptureReport === 'function') {
+      global.printEncounterDirectorCaptureReport();
+    }
+    if (typeof setBalanceDebugNotice === 'function') {
+      setBalanceDebugNotice('ENC DIR TELEMETRY EXPORTED', 1600);
+    }
+    e.preventDefault();
+    return;
+  }
+
   // Iniciar musica del menu con cualquier tecla
   if (state === 'menu' && !menuMusicStarted && !isMuted) {
     initAudio();
