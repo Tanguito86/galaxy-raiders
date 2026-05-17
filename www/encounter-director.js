@@ -626,4 +626,62 @@
       console.table([global.getEncounterDirectorSnapshot()]);
     }
   };
+
+  // HC-135: dev-only session capture
+  var _captureInterval = null;
+  var _captureData = [];
+
+  global.startEncounterDirectorCapture = function(intervalMs) {
+    if (_captureInterval) return;
+    var ms = (typeof intervalMs === 'number' && intervalMs > 0) ? intervalMs : 1000;
+    _captureData = [];
+    _captureInterval = setInterval(function() {
+      if (typeof global.getEncounterDirectorSnapshot === 'function') {
+        _captureData.push(global.getEncounterDirectorSnapshot());
+      }
+    }, ms);
+  };
+
+  global.stopEncounterDirectorCapture = function() {
+    if (_captureInterval) {
+      clearInterval(_captureInterval);
+      _captureInterval = null;
+    }
+  };
+
+  global.getEncounterDirectorCaptureReport = function() {
+    var data = _captureData;
+    if (!data.length) return { snapshots: 0, message: 'no data captured' };
+
+    var pressures = [], silences = [], enemies = [], bullets = [];
+    var personalities = {};
+    for (var i = 0; i < data.length; i++) {
+      var s = data[i];
+      pressures.push(s.pressure || 0);
+      silences.push(s.silenceTimer || 0);
+      enemies.push(s.enemyCount || 0);
+      bullets.push(s.bulletCount || 0);
+      var p = s.currentWavePersonality || '?';
+      personalities[p] = (personalities[p] || 0) + 1;
+    }
+
+    var last5 = data.slice(-5).map(function(s) {
+      return { pressure: s.pressure, personality: s.currentWavePersonality, enemies: s.enemyCount, bullets: s.bulletCount };
+    });
+
+    return {
+      duration: data.length + ' snapshots',
+      snapshots: data.length,
+      pressure: {
+        min: parseFloat(Math.min.apply(null, pressures).toFixed(4)),
+        max: parseFloat(Math.max.apply(null, pressures).toFixed(4)),
+        avg: parseFloat((pressures.reduce(function(a,b){return a+b;},0) / pressures.length).toFixed(4))
+      },
+      silenceMax: Math.max.apply(null, silences),
+      enemyMax: Math.max.apply(null, enemies),
+      bulletMax: Math.max.apply(null, bullets),
+      personalities: personalities,
+      lastSnapshots: last5
+    };
+  };
 })(window);
