@@ -35,7 +35,7 @@
     var panelY = 4;
     var panelW = 114;
     var lineH = 8;
-    var rows = 19;
+    var rows = 22;
     var panelH = rows * lineH + 6;
 
     ctx.globalAlpha = 0.62;
@@ -134,6 +134,15 @@
     var eliteStr = safeStr(elite.role, '-') + ' ' + (elite.allowed ? 'OK' : 'NO');
     var eliteReason = elite.reason ? ' (' + elite.reason + ')' : '';
     row('elite:', eliteStr + eliteReason, elite.allowed ? '#0f0' : '#f44');
+
+    var relEnt = safeNum(st.reliefEnterCount, 0);
+    row('reliefEnt:', relEnt, st.reliefEnterCount > 0 ? '#0f0' : '#888');
+
+    var silTrig = safeNum(st.silenceTriggerCount, 0);
+    row('silTrig:', silTrig, st.silenceTriggerCount > 0 ? '#ff0' : '#888');
+
+    var eliteDen = safeNum(st.eliteDenyCount, 0);
+    row('eliteDeny:', eliteDen, st.eliteDenyCount > 0 ? '#f44' : '#888');
 
     ctx.restore();
   }

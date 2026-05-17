@@ -118,22 +118,20 @@ window.GALAXY_CONFIG = {
   },
 
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============
-  // Override internal defaults. Leave commented to use built-in values.
-  // encounterDirector: {
-  //   enabled: true,                    // master kill switch
-  //   silenceOnDeathMs: 420,           // silence after enemy death
-  //   earlySilenceOnDeathMs: 320,      // shorter silence for levels ≤5
-  //   earlySilenceMaxLevel: 5,         // max level for early silence
-  //   silenceOnWaveClearMs: 900,       // silence after wave clear
-  //   silenceMaxMs: 2000,              // absolute silence cap
-  //   spawnStaggerMs: 220,             // min cooldown between spawns
-  //   pressureSmoothingIn: 0.08,       // pressure rise speed
-  //   pressureSmoothingOut: 0.035,     // pressure fall speed
-  //   levelResetPressureCarryMax: 0.45, // max pressure carried to next level
-  //   maxStaggerDelayMs: 850,          // max stagger delay per enemy
-  //   recentMemory: 12,                // cap for recent arrays
-  //   // roleRepeatCap is internal-only (hardcoded in director)
-  // },
+  encounterDirector: {
+    // enabled: true,                    // master kill switch (default: true)
+    // silenceOnDeathMs: 400,           // silence after enemy death (default: 420)
+    // earlySilenceOnDeathMs: 300,      // shorter silence for levels ≤5 (default: 320)
+    // earlySilenceMaxLevel: 5,         // max level for early silence (default: 5)
+    // silenceOnWaveClearMs: 900,       // silence after wave clear (default: 900)
+    // silenceMaxMs: 2000,              // absolute silence cap (default: 2000)
+    // spawnStaggerMs: 220,             // min cooldown between spawns (default: 220)
+    // pressureSmoothingIn: 0.08,       // pressure rise speed (default: 0.08)
+    pressureSmoothingOut: 0.040,        // pressure fall speed (was 0.035)
+    // levelResetPressureCarryMax: 0.45, // max pressure carried to next level (default: 0.45)
+    // maxStaggerDelayMs: 850,          // max stagger delay per enemy (default: 850)
+    // recentMemory: 12,                // cap for recent arrays (default: 12)
+  },
 
   // ============ DEBUG ============
   debug: {

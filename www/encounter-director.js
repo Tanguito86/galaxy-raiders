@@ -44,6 +44,10 @@
     lastEliteDecision: { role: null, allowed: true, reason: '' },
     spawnPacingBias: 1,
     _wasBossActive: false,
+    _wasReliefActive: false,
+    reliefEnterCount: 0,
+    silenceTriggerCount: 0,
+    eliteDenyCount: 0,
     lastTransition: ''
   };
 
@@ -236,6 +240,7 @@
     });
 
     director.silenceTimer = Math.min(getNumCfg('silenceMaxMs', 100, 5000), Math.max(director.silenceTimer, getSilenceOnDeathMs()));
+    director.silenceTriggerCount++;
     recountActiveRoles();
     return true;
   }
@@ -450,6 +455,10 @@
     director.reliefActive = false;
     director.spawnPacingBias = 1;
     director._wasBossActive = false;
+    director._wasReliefActive = false;
+    director.reliefEnterCount = 0;
+    director.silenceTriggerCount = 0;
+    director.eliteDenyCount = 0;
     director.lastTransition = '';
     director.currentWavePersonality = 'balanced';
     director.recentPersonalities = [];
@@ -505,6 +514,7 @@
     }
     if (!isBossWindowActive() && aliveCount === 0) {
       director.silenceTimer = Math.min(getNumCfg('silenceMaxMs', 100, 5000), Math.max(director.silenceTimer, getNumCfg('silenceOnWaveClearMs', 0, 5000)));
+      director.silenceTriggerCount++;
     }
 
     director.targetPressure = computeTargetPressure();
@@ -531,6 +541,11 @@
     // HC-139: spawn pacing bias — modulates stagger timing (pressure only; personality/relief already in chain)
     director.spawnPacingBias = 1;
     if (director.pressure >= 0.70) director.spawnPacingBias *= 1.14;
+    if (director.reliefActive && !director._wasReliefActive) {
+      director.reliefEnterCount++;
+    }
+    director._wasReliefActive = director.reliefActive;
+
     director.spawnPacingBias = clamp(director.spawnPacingBias, 0.85, 1.30);
 
     return director.pressure;
@@ -551,6 +566,7 @@
       var _aggressive = role === 'sniper' || role === 'kamikaze' || role === 'diver';
       if (_aggressive) {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'silence' };
+        director.eliteDenyCount++;
         return false;
       }
     }
@@ -560,14 +576,17 @@
       var roles = director.activeRoles || {};
       if (role === 'sniper' && (roles.sniper || 0) > 0) {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'sniper overlap' };
+        director.eliteDenyCount++;
         return false;
       }
       if (role === 'kamikaze' && ((roles.dive || 0) > 0 || (roles.kamikaze || 0) > 0)) {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'kamikaze+dive overlap' };
+        director.eliteDenyCount++;
         return false;
       }
       if (role === 'diver' && ((roles.kamikaze || 0) > 0 || (roles.dive || 0) >= 2)) {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'diver+kamikaze overlap' };
+        director.eliteDenyCount++;
         return false;
       }
     }
@@ -576,10 +595,12 @@
     if (personality === 'cleanup') {
       if (role === 'kamikaze' || role === 'sniper') {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'cleanup conservative' };
+        director.eliteDenyCount++;
         return false;
       }
       if (role === 'diver' && director.pressure >= 0.55) {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'cleanup dive cap' };
+        director.eliteDenyCount++;
         return false;
       }
     }
@@ -589,6 +610,7 @@
       var _roles = director.activeRoles || {};
       if (role === 'diver' && (_roles.dive || 0) >= 3) {
         director.lastEliteDecision = { role: role, allowed: false, reason: 'pressure dive cap' };
+        director.eliteDenyCount++;
         return false;
       }
     }
@@ -631,7 +653,10 @@
       currentWavePersonality: director.currentWavePersonality,
       lastEliteDecision: director.lastEliteDecision,
       spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3)),
-      lastTransition: director.lastTransition
+      lastTransition: director.lastTransition,
+      reliefEnterCount: director.reliefEnterCount,
+      silenceTriggerCount: director.silenceTriggerCount,
+      eliteDenyCount: director.eliteDenyCount
     };
   };
 
@@ -666,7 +691,10 @@
       silenceOnDeathMs: getSilenceOnDeathMs(),
       repeatedRoleCount: director.repeatedRoleCount,
       spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3)),
-      lastTransition: director.lastTransition
+      lastTransition: director.lastTransition,
+      reliefEnterCount: director.reliefEnterCount,
+      silenceTriggerCount: director.silenceTriggerCount,
+      eliteDenyCount: director.eliteDenyCount
     };
   };
 
@@ -701,21 +729,32 @@
     }
   };
 
+  global.isEncounterDirectorCapturing = function() {
+    return !!_captureInterval;
+  };
+
   global.getEncounterDirectorCaptureReport = function() {
     var data = _captureData;
     if (!data.length) return { snapshots: 0, message: 'no data captured' };
 
-    var pressures = [], silences = [], enemies = [], bullets = [];
+    var pressures = [], silences = [], enemies = [], bullets = [], densities = [];
     var personalities = {};
+    var sniperSnapshots = 0;
+    var cleanupSnapshots = 0;
     for (var i = 0; i < data.length; i++) {
       var s = data[i];
       pressures.push(s.pressure || 0);
       silences.push(s.silenceTimer || 0);
       enemies.push(s.enemyCount || 0);
       bullets.push(s.bulletCount || 0);
+      densities.push((s.enemyCount || 0) + (s.bulletCount || 0));
       var p = s.currentWavePersonality || '?';
       personalities[p] = (personalities[p] || 0) + 1;
+      if (s.activeRoles && (s.activeRoles.sniper || 0) > 0) sniperSnapshots++;
+      if (s.currentWavePersonality === 'cleanup') cleanupSnapshots++;
     }
+
+    var last = data[data.length - 1] || {};
 
     var last5 = data.slice(-5).map(function(s) {
       return { pressure: s.pressure, personality: s.currentWavePersonality, enemies: s.enemyCount, bullets: s.bulletCount };
@@ -724,11 +763,19 @@
     return {
       duration: data.length + ' snapshots',
       snapshots: data.length,
+      avgPressure: parseFloat((pressures.reduce(function(a,b){return a+b;},0) / pressures.length).toFixed(4)),
+      peakPressure: parseFloat(Math.max.apply(null, pressures).toFixed(4)),
       pressure: {
         min: parseFloat(Math.min.apply(null, pressures).toFixed(4)),
         max: parseFloat(Math.max.apply(null, pressures).toFixed(4)),
         avg: parseFloat((pressures.reduce(function(a,b){return a+b;},0) / pressures.length).toFixed(4))
       },
+      reliefCount: last.reliefEnterCount || 0,
+      silenceCount: last.silenceTriggerCount || 0,
+      avgDensity: parseFloat((densities.reduce(function(a,b){return a+b;},0) / densities.length).toFixed(2)),
+      eliteOverlapWindows: last.eliteDenyCount || 0,
+      sniperUptime: data.length ? parseFloat((sniperSnapshots / data.length * 100).toFixed(1)) : 0,
+      cleanupDuration: cleanupSnapshots,
       silenceMax: Math.max.apply(null, silences),
       enemyMax: Math.max.apply(null, enemies),
       bulletMax: Math.max.apply(null, bullets),
