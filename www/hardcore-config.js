@@ -15,7 +15,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   rhythm:    { enabled: true, wavePauseMinScale: 0.75, introMinScale: 0.72, entryDelayMinScale: 0.70 },
   background:{ hc90Enabled: true, nebulaEnabled: true, colorGradingEnabled: true, maxStars: 180 },
   atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
-  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false }
+  debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false, showLevelSkipButton: false }
 };
 
 function getGalaxyConfig() {
@@ -78,7 +78,8 @@ function getHardcoreDebugConfig() {
   var sbd = (typeof d.showBossDispatch === 'boolean') ? d.showBossDispatch : false;
   var sbs = (typeof d.showBackgroundStats === 'boolean') ? d.showBackgroundStats : false;
   var sas = (typeof d.showAtmosphereStats === 'boolean') ? d.showAtmosphereStats : false;
-  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp, showBossDispatch: sbd, showBackgroundStats: sbs, showAtmosphereStats: sas };
+  var sls = (typeof d.showLevelSkipButton === 'boolean') ? d.showLevelSkipButton : false;
+  return { showHardcoreInfo: si, showEnemyRoles: ser, showBossPattern: sbp, showBossDispatch: sbd, showBackgroundStats: sbs, showAtmosphereStats: sas, showLevelSkipButton: sls };
 }
 
 function getPressureConfig() {

@@ -111,7 +111,8 @@ window.GALAXY_CONFIG = {
     showBossPattern: false,
     showBossDispatch: false,
     showBackgroundStats: false,
-    showAtmosphereStats: false
+    showAtmosphereStats: false,
+    showLevelSkipButton: false
   }
 
 };

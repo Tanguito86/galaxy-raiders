@@ -252,6 +252,52 @@ if (pauseBtn) {
   });
 }
 
+// --- DEBUG LEVEL SKIP BUTTON ---
+function shouldShowDebugLevelSkipButton() {
+  if (typeof getHardcoreDebugConfig !== 'function') return false;
+  return getHardcoreDebugConfig().showLevelSkipButton === true;
+}
+
+function requestDebugLevelSkip() {
+  if (!shouldShowDebugLevelSkipButton()) return;
+  if (state !== 'playing') return;
+  if (pendingNextLevel) return;
+  if (boss && boss.active) {
+    debugLevelJumpText = 'BOSS ACTIVE';
+    debugLevelJumpTimer = 700;
+    return;
+  }
+  if (typeof beginWaveTransition !== 'function') return;
+
+  debugLevelJumpText = '+LVL';
+  debugLevelJumpTimer = 900;
+  beginWaveTransition(level, level + 1);
+}
+
+function initDebugLevelSkipButton() {
+  if (!shouldShowDebugLevelSkipButton()) return;
+
+  const controls = document.querySelector('.control-deck-row') || document.getElementById('game-container');
+  if (!controls || document.getElementById('btn-debug-level-skip')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'btn-debug-level-skip';
+  btn.className = 'debug-next-level-btn';
+  btn.type = 'button';
+  btn.textContent = '+LVL';
+  btn.title = 'Debug: avanzar nivel';
+  btn.setAttribute('aria-label', 'Debug avanzar nivel');
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    requestDebugLevelSkip();
+    vibrate('tap');
+  });
+
+  controls.appendChild(btn);
+}
+
+initDebugLevelSkipButton();
+
 // --- MUTE BUTTON (MOBILE) ---
 const muteBtn = document.getElementById('btn-mute');
 
