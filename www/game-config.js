@@ -132,7 +132,7 @@ window.GALAXY_CONFIG = {
   //   levelResetPressureCarryMax: 0.45, // max pressure carried to next level
   //   maxStaggerDelayMs: 850,          // max stagger delay per enemy
   //   recentMemory: 12,                // cap for recent arrays
-  //   roleRepeatCap: 3                 // roles repeat before rotation
+  //   // roleRepeatCap is internal-only (hardcoded in director)
   // },
 
   // ============ DEBUG ============
