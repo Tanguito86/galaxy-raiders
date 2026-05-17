@@ -981,7 +981,11 @@ function initEnemies() {
     assignInitialShmupRoutes(enemies, level);
     trimFormationForExternalShmupWave(enemies, level);
     addInitialExternalShmupWave(enemies, level);
-    applyEncounterFormationPacing(enemies, formation, waveType);
+    if (waveType === 'normal') {
+      applyEncounterFormationPacing(enemies, formation, waveType);
+    } else if (typeof window.resetWavePersonality === 'function') {
+      window.resetWavePersonality();
+    }
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
     setPieceIntroTimer = 0;

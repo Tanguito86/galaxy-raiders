@@ -284,7 +284,7 @@
     var level = getCurrentLevel();
     var pool = ['swarm', 'sniper', 'pressure', 'cleanup', 'flanker', 'balanced'];
 
-    // avoid last personality if possible (allow repeat after 2 cycles)
+    // avoid last personality
     var last2 = director.recentPersonalities.slice(-2);
     var candidates = pool.filter(function(p) {
       return last2[last2.length - 1] !== p || director.recentPersonalities.length < 2;
@@ -308,6 +308,10 @@
   function getPersonalityBias(key) {
     var p = WAVE_PERSONALITIES[director.currentWavePersonality] || WAVE_PERSONALITIES.balanced;
     return p[key] !== undefined ? p[key] : 1;
+  }
+
+  function resetWavePersonality() {
+    director.currentWavePersonality = 'balanced';
   }
 
   function shouldBypassStagger(context) {
@@ -493,6 +497,7 @@
   global.getEncounterStaggerDelay = getEncounterStaggerDelay;
   global.selectNextWavePersonality = selectNextWavePersonality;
   global.getCurrentWavePersonality = function() { return director.currentWavePersonality; };
+  global.resetWavePersonality = resetWavePersonality;
   global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
