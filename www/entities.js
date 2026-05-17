@@ -745,8 +745,12 @@ function applyFormationGeometry(enemies, personality) {
         var gapCol = (laneGapCol + l * 3) % 10;
         var colDist = colIdx - gapCol;
         if (Math.abs(colDist) <= 1) {
-          en.x += Math.round((colDist > 0 ? 1 : -1) * c.laneWiden * 0.5);
-          en.x = clamp(en.x, 10, W - 10 - en.w);
+          if (colDist === 0) {
+            // gap center column: no push
+          } else {
+            en.x += Math.round((colDist > 0 ? 1 : -1) * c.laneWiden * 0.5);
+            en.x = clamp(en.x, 10, W - 10 - en.w);
+          }
         }
       }
     }
