@@ -3542,11 +3542,11 @@ if (shouldShow) {
     };
 
     var _BOSS_READABILITY_MULT = {
-      crossfire: 1.30,
-      zigzag: 1.25,
-      rotate: 1.30,
-      divebomb: 1.30,
-      supreme: 1.15
+      crossfire: 1.53,
+      zigzag: 1.53,
+      rotate: 1.53,
+      divebomb: 1.56,
+      supreme: 1.27
     };
 
     function getBossSpriteId(boss) {
@@ -3594,6 +3594,42 @@ if (shouldShow) {
       
       const bossColor = boss.color || '#f00';
       const bossGlow = 0.08 + 0.03 * Math.sin(globalTime * 0.018);
+
+      // HC-121: ambient darkening overlay (behind boss, subtle tint)
+      ctx.save();
+      ctx.globalAlpha = 0.04 + 0.015 * Math.sin(globalTime * 0.009 + 1.2);
+      ctx.fillStyle = bossColor;
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+      ctx.globalAlpha = 0.03;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+      ctx.restore();
+
+      // HC-121: idle menace motion per boss
+      var _menaceOX = 0;
+      var _menaceOY = 0;
+      switch (boss.pattern) {
+        case 'crossfire':
+          _menaceOX = Math.sin(globalTime * 0.025 + 1) * 1.5;
+          _menaceOY = Math.cos(globalTime * 0.025 + 2) * 0.8;
+          break;
+        case 'zigzag':
+          _menaceOY = Math.sin(globalTime * 0.012) * 2.5;
+          break;
+        case 'rotate':
+          _menaceOY = Math.sin(globalTime * 0.015) * 2.0;
+          break;
+        case 'divebomb':
+          _menaceOX = Math.sin(globalTime * 0.020 + 3) * 2.0;
+          _menaceOY = Math.cos(globalTime * 0.018 + 1) * 1.2;
+          break;
+        case 'supreme':
+          _menaceOY = Math.sin(globalTime * 0.008) * 1.2;
+          break;
+      }
+      ctx.save();
+      ctx.translate(_menaceOX, _menaceOY);
+
       ctx.save();
       ctx.globalAlpha = bossGlow;
       drawSprite(ctx, bossSprite, boss.x - 4, boss.y, bossColor, 5);
@@ -3684,7 +3720,25 @@ if (shouldShow) {
         ctx.restore();
       }
 
+      // HC-121: radial boss aura (soft concentric glow behind sprite)
+      ctx.save();
+      for (var _ai = 4; _ai >= 0; _ai--) {
+        var _aa = 0.025 * (5 - _ai);
+        var _as = (_ai + 1) * 8;
+        ctx.globalAlpha = _aa;
+        ctx.fillStyle = bossColor;
+        ctx.fillRect(boss.x - _as, boss.y - _as, boss.w + _as * 2, boss.h + _as * 2);
+      }
+      ctx.restore();
+
       drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+
+      // HC-121: core pulse brightness
+      var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
+      ctx.save();
+      ctx.globalAlpha = 0.06 + _corePulse * 0.05;
+      drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
+      ctx.restore();
 
       if (boss.pattern === 'zigzag') {
         drawSerpentrixWave(ctx, boss, bossColor, globalTime);
@@ -3725,6 +3779,8 @@ if (shouldShow) {
         drawEmperorCore(ctx, boss, bossColor, globalTime);
         drawEmperorPhaseOverload(ctx, boss, bossColor, globalTime);
       }
+
+      ctx.restore();
            
       const hpPct = Math.max(0, Math.min(1, boss.hp / boss.maxHp));
 
@@ -5179,7 +5235,7 @@ if (player.weaponType !== 'normal') {
       ctx.restore();
     }
 
-    // BOSS WARNING overlay (HC-96: cleaner arcade style)
+    // BOSS WARNING overlay (HC-96: cleaner arcade style / HC-121: intro pressure)
     if (boss && boss.active) {
       ctx.save();
 
@@ -5189,8 +5245,16 @@ if (player.weaponType !== 'normal') {
       var _bwH = 22;
       var _bwColor = boss.color || '#f44';
 
+      // HC-121: intro pressure — full-screen subtle dark flash
+      ctx.globalAlpha = 0.03 + 0.025 * bwPulseF;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+      ctx.globalAlpha = 0.015 * bwPulse;
+      ctx.fillStyle = _bwColor;
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+
       // Dark band
-      ctx.globalAlpha = 0.25;
+      ctx.globalAlpha = 0.30;
       ctx.fillStyle = '#000';
       ctx.fillRect(0, _bwY, W, _bwH);
 
