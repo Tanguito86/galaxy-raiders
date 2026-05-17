@@ -949,6 +949,7 @@ function getFormationPacingDelay(baseDelay, directorState) {
 
   if (silenceTimer > 0) delay += Math.min(80, silenceTimer * 0.08);
   if (st.reliefActive) delay *= 0.82;
+  if (st.spawnPacingBias) delay *= st.spawnPacingBias;
   if (level <= 5) delay *= 0.90;
 
   return Math.max(0, Math.min(850, Math.round(delay)));

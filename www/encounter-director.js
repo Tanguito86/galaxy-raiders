@@ -41,7 +41,8 @@
     currentWavePersonality: 'balanced',
     recentPersonalities: [],
     lastPersonality: null,
-    lastEliteDecision: { role: null, allowed: true, reason: '' }
+    lastEliteDecision: { role: null, allowed: true, reason: '' },
+    spawnPacingBias: 1
   };
 
   function getCfg(key) {
@@ -426,6 +427,7 @@
     director.lastStaggerRole = null;
     director.lastStaggerGroupSize = 0;
     director.reliefActive = false;
+    director.spawnPacingBias = 1;
     director.currentWavePersonality = 'balanced';
     director.recentPersonalities = [];
     director.lastPersonality = null;
@@ -487,6 +489,17 @@
     var normalizedDt = clamp(dt / 16.6667, 0, 3);
     director.pressure += (director.targetPressure - director.pressure) * smoothing * normalizedDt;
     director.pressure = clamp(director.pressure, 0, 1);
+
+    // HC-139: spawn pacing bias — modulates stagger timing
+    director.spawnPacingBias = 1;
+    if (director.pressure >= 0.70) director.spawnPacingBias *= 1.14;
+    if (director.reliefActive) director.spawnPacingBias *= 0.82;
+    var _pers = director.currentWavePersonality || 'balanced';
+    if (_pers === 'pressure') director.spawnPacingBias *= 1.06;
+    else if (_pers === 'cleanup') director.spawnPacingBias *= 0.85;
+    else if (_pers === 'swarm') director.spawnPacingBias *= 0.88;
+    else if (_pers === 'sniper') director.spawnPacingBias *= 1.12;
+    director.spawnPacingBias = clamp(director.spawnPacingBias, 0.60, 1.50);
 
     return director.pressure;
   }
@@ -584,7 +597,8 @@
       lastStaggerGroupSize: director.lastStaggerGroupSize,
       reliefActive: director.reliefActive,
       currentWavePersonality: director.currentWavePersonality,
-      lastEliteDecision: director.lastEliteDecision
+      lastEliteDecision: director.lastEliteDecision,
+      spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3))
     };
   };
 
@@ -617,7 +631,8 @@
       bulletCount: bullets.length,
       enabled: director.enabled,
       silenceOnDeathMs: getSilenceOnDeathMs(),
-      repeatedRoleCount: director.repeatedRoleCount
+      repeatedRoleCount: director.repeatedRoleCount,
+      spawnPacingBias: parseFloat(director.spawnPacingBias.toFixed(3))
     };
   };
 
