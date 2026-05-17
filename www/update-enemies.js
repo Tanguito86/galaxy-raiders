@@ -33,6 +33,11 @@ function syncEncounterDirectorEnemyState() {
     if (!enemy.alive && typeof window.registerEnemyDeath === 'function' && enemy._encounterDirectorTracked && !enemy._encounterDirectorDeathRegistered) {
       window.registerEnemyDeath(enemy);
     }
+
+    // HC-125H: decay encounter stagger timer
+    if (enemy._encounterDelayTimer > 0) {
+      enemy._encounterDelayTimer = Math.max(0, enemy._encounterDelayTimer - 16.667);
+    }
   }
 }
 

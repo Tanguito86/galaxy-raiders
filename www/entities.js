@@ -904,6 +904,30 @@ function initEnemies() {
     assignInitialShmupRoutes(enemies, level);
     trimFormationForExternalShmupWave(enemies, level);
     addInitialExternalShmupWave(enemies, level);
+
+    // HC-125H: apply encounter stagger delays to normal wave enemies
+    if (typeof window.getEncounterStaggerDelay === 'function') {
+      var _groupSize = enemies.length;
+      for (var _si = 0; _si < enemies.length; _si++) {
+        var _e = enemies[_si];
+        if (!_e || _e._encounterDelayTimer) continue;
+        var _role = 'standard';
+        if (_e.type === 'alien2') _role = 'sniper';
+        else if (_e.type === 'alien3') _role = 'tank';
+        else if (_e.type === 'alien4') _role = 'flanker';
+        else if (_e.type === 'alien5') _role = 'kamikaze';
+        else if (_e.type === 'alien6') _role = 'splitter';
+        var _delay = window.getEncounterStaggerDelay(_role, _si, _groupSize, {
+          isBoss: false,
+          isSetPiece: false,
+          isScripted: false,
+          allowStagger: true
+        });
+        if (_delay > 0) {
+          _e._encounterDelayTimer = _delay;
+        }
+      }
+    }
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
     setPieceIntroTimer = 0;
