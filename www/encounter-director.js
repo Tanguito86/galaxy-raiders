@@ -27,7 +27,11 @@
     trackedAliveIds: {},
     nextEnemyId: 1,
     lastLevel: Math.max(1, global.level || 1),
-    enabled: config.enabled !== false && global.ENCOUNTER_DIRECTOR_ENABLED !== false
+    enabled: config.enabled !== false && global.ENCOUNTER_DIRECTOR_ENABLED !== false,
+    recentRoles: [],
+    lastRole: null,
+    repeatedRoleCount: 0,
+    roleRepeatCap: 3
   };
 
   function getCfg(key) {
@@ -198,6 +202,53 @@
     return true;
   }
 
+  var ROTATION_MAP = {
+    dive:     { alt: ['flanker', 'standard'], aggressive: true },
+    sniper:   { alt: ['standard', 'flanker'], aggressive: true },
+    kamikaze: { alt: ['standard'],              aggressive: true },
+    flanker:  { alt: ['dive', 'standard'],      aggressive: false },
+    external: { alt: ['standard'],              aggressive: true },
+    standard: { alt: ['flanker', 'dive'],       aggressive: false }
+  };
+
+  function suggestEncounterRole(preferredRole, context) {
+    if (!director.enabled) return preferredRole;
+
+    context = context || {};
+    if (context.isBoss || context.isSetPiece || context.isScripted) {
+      return preferredRole;
+    }
+
+    var role = preferredRole || 'standard';
+    var map = ROTATION_MAP[role] || { alt: ['standard'], aggressive: false };
+
+    if (director.silenceTimer > 0 && map.aggressive) {
+      return null;
+    }
+
+    if (director.pressure >= 0.82 && (role === 'sniper' || role === 'kamikaze')) {
+      return 'standard';
+    }
+
+    if (role === director.lastRole) {
+      director.repeatedRoleCount++;
+      pushRecent(director.recentRoles, { role: role, t: global.globalTime || 0 });
+      if (director.repeatedRoleCount >= director.roleRepeatCap) {
+        var alt = map.alt[director.repeatedRoleCount % map.alt.length];
+        director.lastRole = alt;
+        director.repeatedRoleCount = 0;
+        pushRecent(director.recentRoles, { role: alt, t: global.globalTime || 0, rotated: true });
+        return alt;
+      }
+      return role;
+    }
+
+    director.lastRole = role;
+    director.repeatedRoleCount = 1;
+    pushRecent(director.recentRoles, { role: role, t: global.globalTime || 0 });
+    return role;
+  }
+
   function canSpawnRoleInternal(role, consumeCooldown) {
     if (!director.enabled) return true;
     if (isBossWindowActive()) return true;
@@ -233,6 +284,9 @@
     director.trackedAliveIds = {};
     director.recentSpawns = [];
     director.recentDeaths = [];
+    director.recentRoles = [];
+    director.lastRole = null;
+    director.repeatedRoleCount = 0;
     director.spawnCooldown = 0;
     director.silenceTimer = 0;
     director.pressure = Math.min(director.pressure, getCfg('levelResetPressureCarryMax'));
@@ -284,6 +338,7 @@
   global.registerEnemyDeath = registerEnemyDeath;
   global.canSpawnRole = canSpawnRole;
   global.peekCanSpawnRole = peekCanSpawnRole;
+  global.suggestEncounterRole = suggestEncounterRole;
   global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
@@ -297,7 +352,9 @@
       activeRoles: Object.assign({}, director.activeRoles),
       recentSpawnCount: director.recentSpawns.length,
       recentDeathCount: director.recentDeaths.length,
-      silenceOnDeathMs: getSilenceOnDeathMs()
+      silenceOnDeathMs: getSilenceOnDeathMs(),
+      lastRole: director.lastRole,
+      repeatedRoleCount: director.repeatedRoleCount
     };
   };
 })(window);

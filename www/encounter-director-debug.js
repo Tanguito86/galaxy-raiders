@@ -35,7 +35,7 @@
     var panelY = 4;
     var panelW = 114;
     var lineH = 8;
-    var rows = 15;
+    var rows = 17;
     var panelH = rows * lineH + 6;
 
     ctx.globalAlpha = 0.62;
@@ -116,6 +116,9 @@
 
     var bullets = Array.isArray(global.enemyBullets) ? global.enemyBullets.length : 0;
     row('bullets:', bullets.toString(), bullets > 20 ? '#f44' : bullets > 10 ? '#f80' : '#0f0');
+
+    row('lastRole:', safeStr(st.lastRole, '(none)'), '#8cf');
+    row('repeat:', safeStr(st.repeatedRoleCount, '0'), st.repeatedRoleCount >= 3 ? '#f44' : '#fff');
 
     ctx.restore();
   }
