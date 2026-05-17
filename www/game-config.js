@@ -117,6 +117,24 @@ window.GALAXY_CONFIG = {
     decisionIntervalMs: 500
   },
 
+  // ============ ENCOUNTER DIRECTOR (HC-125→129) ============
+  // Override internal defaults. Leave commented to use built-in values.
+  // encounterDirector: {
+  //   enabled: true,                    // master kill switch
+  //   silenceOnDeathMs: 420,           // silence after enemy death
+  //   earlySilenceOnDeathMs: 320,      // shorter silence for levels ≤5
+  //   earlySilenceMaxLevel: 5,         // max level for early silence
+  //   silenceOnWaveClearMs: 900,       // silence after wave clear
+  //   silenceMaxMs: 2000,              // absolute silence cap
+  //   spawnStaggerMs: 220,             // min cooldown between spawns
+  //   pressureSmoothingIn: 0.08,       // pressure rise speed
+  //   pressureSmoothingOut: 0.035,     // pressure fall speed
+  //   levelResetPressureCarryMax: 0.45, // max pressure carried to next level
+  //   maxStaggerDelayMs: 850,          // max stagger delay per enemy
+  //   recentMemory: 12,                // cap for recent arrays
+  //   roleRepeatCap: 3                 // roles repeat before rotation
+  // },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
@@ -131,3 +149,8 @@ window.GALAXY_CONFIG = {
   }
 
 };
+
+// HC-130: wire Encounter Director config from GALAXY_CONFIG.encounterDirector
+if (window.GALAXY_CONFIG && window.GALAXY_CONFIG.encounterDirector) {
+  window.ENCOUNTER_DIRECTOR_CONFIG = window.GALAXY_CONFIG.encounterDirector;
+}
