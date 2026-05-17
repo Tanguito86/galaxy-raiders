@@ -815,22 +815,38 @@ if (!boss.active && activeEnemies.length > 0) {
   }
 
   if (diveSlotsLeft > 0 && Math.random() < diffSettings.diveChance) {
-    const candidates = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.canDive !== false);
     const encounterAllowsDive = (typeof window.canSpawnRole !== 'function') || window.canSpawnRole('dive');
-    if (candidates.length > 0 && encounterAllowsDive) {
-      const diver = candidates[Math.floor(Math.random() * candidates.length)];
-      diver.diving = true;
 
-      const angle = Math.atan2(
-        player.y - diver.y,
-        (player.x + player.width / 2) - diver.x
-      );
+    // HC-125F: role rotation — suggest or skip discretionary dive
+    var _diveRole = 'dive';
+    if (typeof window.suggestEncounterRole === 'function') {
+      var _suggested = window.suggestEncounterRole('dive', {
+        isBoss: false,
+        isSetPiece: false,
+        isScripted: false
+      });
+      if (_suggested === null || _suggested !== 'dive') {
+        _diveRole = null;
+      }
+    }
 
-      const data = ENEMY_TYPES[diver.type] || ENEMY_TYPES.alien1;
-      const speed = diffSettings.diveSpeed * (data.speed || 1);
-      diver.vx = Math.cos(angle) * speed;
-      diver.vy = Math.sin(angle) * speed;
-      setEnemyMovePattern(diver, chooseEnemyDivePattern(diver));
+    if (_diveRole === 'dive' && encounterAllowsDive) {
+      const candidates = activeEnemies.filter(e => !e.diving && !e._shmupHandled && ENEMY_TYPES[e.type]?.canDive !== false);
+      if (candidates.length > 0) {
+        const diver = candidates[Math.floor(Math.random() * candidates.length)];
+        diver.diving = true;
+
+        const angle = Math.atan2(
+          player.y - diver.y,
+          (player.x + player.width / 2) - diver.x
+        );
+
+        const data = ENEMY_TYPES[diver.type] || ENEMY_TYPES.alien1;
+        const speed = diffSettings.diveSpeed * (data.speed || 1);
+        diver.vx = Math.cos(angle) * speed;
+        diver.vy = Math.sin(angle) * speed;
+        setEnemyMovePattern(diver, chooseEnemyDivePattern(diver));
+      }
     }
   }
 
