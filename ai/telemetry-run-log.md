@@ -232,3 +232,69 @@ Play LV1 / LV2 / LV3 manually without capture. Record qualitative notes only. Us
 2. `<pressure range vs target>`
 3. `<sniper feel check>`
 4. `<density check>`
+
+---
+
+## HC-156 — Relief Gate Verification (after HC-155)
+
+**Build:** ae28a6e (HC-155: reliefMaxBullets default 6 → config override 24)
+
+**Conditions:** HARDCORE / TOURNAMENT, Level 1. Press **U** to capture, **I** to export.
+
+**HC-155 change:** Bullet gate raised from 6 to 24. LV1 normal formation has ~25 bullets; kills should dip below 24 periodically, allowing relief to activate.
+
+**Expected:**
+- `reliefCount` should now be >0 in runs with kills
+- `reliefBlockedReasons.bullets` should appear less frequently than in HC-154 audit
+- `avgPressure` should remain 0.40–0.58 (relief pulls it down from peaks)
+- `peakPressure` should stay < 0.75
+- `silenceCount` unchanged (gate is per-frame, silence is kill-driven)
+
+### Run 9
+
+- **Build/commit:** `ae28a6e`
+- **Level:** `<level>`
+- **Duration:** `<snapshot count>`
+- **Player result:** `<cleared / died / game over>`
+- **Perceived feel:** `<subjective>`
+
+#### JSON Report
+```json
+<replace>
+```
+
+#### Tuning Notes
+- `<observations>`
+
+---
+
+### Run 10
+
+- **Build/commit:** `ae28a6e`
+- **Level:** `<level>`
+- **Duration:** `<snapshot count>`
+- **Player result:** `<cleared / died / game over>`
+- **Perceived feel:** `<subjective>`
+
+#### JSON Report
+```json
+<replace>
+```
+
+#### Tuning Notes
+- `<observations>`
+
+---
+
+### HC-156 Cross-Run Summary
+
+| Run | snapshots | avgPressure | peakPressure | silenceCount | reliefCount | avgDensity | reliefBlockedReasons |
+|---|---|---|---|---|---|---|---|
+| 9 | | | | | | | |
+| 10 | | | | | | | |
+
+### Findings
+1. `reliefCount > 0?` `<yes / no>`
+2. `reliefBlockedReasons shift?` `<bullets decreased? new blocker emerged?>`
+3. `pressure stable?` `<avgPressure range>`
+4. `peak safe?` `<peakPressure value>`
