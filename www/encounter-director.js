@@ -69,6 +69,7 @@
     if (!enemy) return 'default';
     if (enemy.diving) return 'dive';
     if (enemy.isExternalShmup) return 'external';
+    if (enemy.type === 'alien2') return 'sniper';
     if (enemy.type === 'alien5') return 'kamikaze';
     if (enemy.type === 'alien3') return 'tank';
     if (enemy.type === 'alien6') return 'splitter';
@@ -100,6 +101,7 @@
       dive: 0,
       external: 0,
       kamikaze: 0,
+      sniper: 0,
       tank: 0,
       shooter: 0,
       splitter: 0,
