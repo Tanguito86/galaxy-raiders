@@ -657,6 +657,10 @@ switch (boss.pattern) {
   }
 }
 
+if (typeof window.updateBossAIMovement === 'function') {
+  window.updateBossAIMovement(boss, player, dt);
+}
+
 boss.shootTimer += dt;
 
 handleBossImmediateCounter(step);

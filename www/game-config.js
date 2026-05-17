@@ -102,6 +102,13 @@ window.GALAXY_CONFIG = {
     debugMissingSprites: false
   },
 
+  // ============ BOSS AI MOVEMENT ============
+  bossAI: {
+    enabled: true,
+    maxOffsetX: 70,
+    maxOffsetY: 35
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
@@ -112,7 +119,7 @@ window.GALAXY_CONFIG = {
     showBossDispatch: false,
     showBackgroundStats: false,
     showAtmosphereStats: false,
-    showLevelSkipButton: true
+    showLevelSkipButton: false
   }
 
 };

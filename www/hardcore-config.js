@@ -15,6 +15,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   rhythm:    { enabled: true, wavePauseMinScale: 0.75, introMinScale: 0.72, entryDelayMinScale: 0.70 },
   background:{ hc90Enabled: true, nebulaEnabled: true, colorGradingEnabled: true, maxStars: 180 },
   atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
+  bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false, showLevelSkipButton: false }
 };
 
@@ -120,6 +121,15 @@ function getAtmosphereConfig() {
   var sl = (typeof a.speedLinesEnabled === 'boolean') ? a.speedLinesEnabled : true;
   var af = (typeof a.ambientFlashEnabled === 'boolean') ? a.ambientFlashEnabled : true;
   return { enabled: en, dustEnabled: de, speedLinesEnabled: sl, ambientFlashEnabled: af };
+}
+
+function getBossAIConfig() {
+  var cfg = getGalaxyConfig();
+  var ai = (cfg.bossAI && typeof cfg.bossAI === 'object') ? cfg.bossAI : _GALAXY_CONFIG_DEFAULTS.bossAI;
+  var en = (typeof ai.enabled === 'boolean') ? ai.enabled : true;
+  var maxX = (typeof ai.maxOffsetX === 'number' && ai.maxOffsetX >= 0) ? Math.min(120, ai.maxOffsetX) : 70;
+  var maxY = (typeof ai.maxOffsetY === 'number' && ai.maxOffsetY >= 0) ? Math.min(80, ai.maxOffsetY) : 35;
+  return { enabled: en, maxOffsetX: maxX, maxOffsetY: maxY };
 }
 
 // ============================================================
