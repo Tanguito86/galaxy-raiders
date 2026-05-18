@@ -254,18 +254,11 @@ function fireBossOrbitalPattern(step) {
     }
 
     // Rayo tractor (fase 2+): línea vertical que sigue al jugador
+    // HC-170: 300ms ground telegraph before beam activation
     if (phase >= 2 && Math.random() < 0.3) {
-      for (let i = 0; i < 5; i++) {
-        enemyBullets.push({
-          x: player.x + player.width / 2 + (Math.random() - 0.5) * 30,
-          y: 50 + i * 25,
-          w: 4,
-          h: 12,
-          vx: 0,
-          vy: 5
-        });
-      }
-      sfxEnemyHit();
+      boss._tractorBeamTimer = 300;
+      boss._tractorBeamX = player.x + player.width / 2;
+      if (typeof sfxBossWarning === 'function') sfxBossWarning();
     }
   }
 }
@@ -938,13 +931,30 @@ if (Math.random() < 0.5 && mines.length < 8) {
   }
   break;
       
-     case 'rotate':
-       // HC-75: central hardcore boss dispatch
-       if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
-         break;
-       }
-       fireBossOrbitalPattern(step);
-       break;
+      case 'rotate':
+        // HC-75: central hardcore boss dispatch
+        if (typeof updateHardcoreBossPatternFromRegistry === 'function' && updateHardcoreBossPatternFromRegistry(boss, dt)) {
+          break;
+        }
+        fireBossOrbitalPattern(step);
+
+        // HC-170: tractor beam telegraph countdown + fire
+        if (typeof boss._tractorBeamTimer === 'number' && boss._tractorBeamTimer > 0) {
+          boss._tractorBeamTimer -= dt;
+          if (boss._tractorBeamTimer <= 0) {
+            var _bx = boss._tractorBeamX || (player.x + player.width / 2);
+            for (var _bi = 0; _bi < 5; _bi++) {
+              enemyBullets.push({
+                x: _bx + (Math.random() - 0.5) * 30,
+                y: 50 + _bi * 25,
+                w: 4, h: 12,
+                vx: 0, vy: 5
+              });
+            }
+            sfxEnemyHit();
+          }
+        }
+        break;
        
       case 'divebomb':
        // HC-75: central hardcore boss dispatch

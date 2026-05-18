@@ -1782,6 +1782,38 @@ function drawOrbitalPulseWarning(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// HC-170: draw vertical column indicator for tractor beam ground telegraph
+function drawOrbitalTractorBeamIndicator(ctx, boss, color, time) {
+  if (!boss || typeof boss._tractorBeamTimer !== 'number' || boss._tractorBeamTimer <= 0) return;
+  var bx = boss._tractorBeamX;
+  if (typeof bx !== 'number') return;
+  var progress = 1 - Math.min(1, boss._tractorBeamTimer / 300);
+  var alpha = 0.08 + Math.sin(progress * Math.PI) * 0.12;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#6699ff';
+  ctx.lineWidth = 2;
+  // vertical column: dotted line from top of beam to mid-screen
+  var topY = 40;
+  var botY = 200;
+  ctx.beginPath();
+  for (var ty = topY; ty < botY; ty += 12) {
+    ctx.rect(bx - 3, ty, 6, 6);
+  }
+  ctx.fillStyle = '#6699ff';
+  ctx.fill();
+
+  ctx.globalAlpha = alpha * 0.5;
+  ctx.strokeStyle = '#aaccff';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bx, topY);
+  ctx.lineTo(bx, botY);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // --- TENIENTE VISUALS ---
 function drawTenienteAura(ctx, boss, color, time) {
   var cx = boss.x + boss.w / 2;
@@ -3771,6 +3803,7 @@ if (shouldShow) {
         drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
         drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
         drawOrbitalPulseWarning(ctx, boss, bossColor, globalTime);
+        drawOrbitalTractorBeamIndicator(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
         drawTenienteAura(ctx, boss, bossColor, globalTime);
         drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
