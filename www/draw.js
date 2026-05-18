@@ -1256,6 +1256,36 @@ function drawCrabtronShootTelegraph(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// HC-165: dash direction arrow visible during dashMode === 'telegraph'
+function drawCrabtronDashTelegraph(ctx, boss, color, time) {
+  if (!boss || boss.dashMode !== 'telegraph') return;
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var tx = boss.dashTargetX || cx;
+  var dir = tx > cx ? 1 : -1;
+  var progress = 1 - Math.min(1, (boss._dashTelegraphTimer || 0) / 200);
+  var alpha = 0.18 + Math.sin(progress * Math.PI) * 0.22;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#ff6633';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx + dir * 10, cy);
+  ctx.lineTo(cx + dir * 34, cy - 10);
+  ctx.moveTo(cx + dir * 10, cy);
+  ctx.lineTo(cx + dir * 34, cy + 10);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#ffaa66';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx + dir * 12, cy);
+  ctx.lineTo(cx + dir * 28, cy);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // --- SERPENTRIX VISUALS ---
 function drawSerpentrixAura(ctx, boss, color, time) {
   var cx = boss.x + boss.w / 2;
@@ -2198,6 +2228,40 @@ function drawTenienteCore(ctx, boss, color, time) {
     }
   }
 
+  ctx.restore();
+}
+
+// HC-165: impact ring visible during chargeMode === 'impact'
+function drawTenienteImpactWarning(ctx, boss, color, time) {
+  if (!boss || boss.chargeMode !== 'impact') return;
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var timer = boss._chargeImpactTimer || 0;
+  var progress = 1 - Math.min(1, timer / 250);
+  var alpha = 0.12 + Math.sin(progress * Math.PI) * 0.18;
+  var ringR = 20 + (1 - progress) * 40;
+  var innerR = 14 + (1 - progress) * 24;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#ff5533';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = alpha * 0.7;
+  ctx.strokeStyle = '#ffaa44';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = alpha * 0.35;
+  ctx.fillStyle = '#ff4422';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8 + Math.sin(time * 0.04) * 3, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
@@ -3649,6 +3713,7 @@ if (shouldShow) {
         drawBossHardcoreTelegraph(ctx, boss);
         drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
         drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
+        drawCrabtronDashTelegraph(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'zigzag') {
         drawSerpentrixAura(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'rotate') {
@@ -3657,6 +3722,7 @@ if (shouldShow) {
       } else if (boss.pattern === 'divebomb') {
         drawTenienteAura(ctx, boss, bossColor, globalTime);
         drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
+        drawTenienteImpactWarning(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'supreme') {
         drawEmperorImperialAura(ctx, boss, bossColor, globalTime);
         drawEmperorEnergyMantle(ctx, boss, bossColor, globalTime);
