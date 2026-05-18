@@ -11,6 +11,44 @@ function requestBossMinorDuck(ms = 120, level = 0.66) {
   requestMusicDuck(ms, level);
 }
 
+// HC-162A: boss arena mobility helpers
+function getBossArenaBounds(boss) {
+  var bw = boss.w || 90;
+  var bh = boss.h || 45;
+  var sw = (typeof W === 'number' ? W : 360);
+  var sh = (typeof H === 'number' ? H : 640);
+  // player safe zone: bottom 80px
+  return {
+    minX: 10,
+    maxX: sw - bw - 10,
+    minY: 40,
+    maxY: sh - bh - 80
+  };
+}
+
+function clampBossToArena(boss) {
+  var bounds = getBossArenaBounds(boss);
+  boss.x = clamp(boss.x, bounds.minX, bounds.maxX);
+  boss.y = clamp(boss.y, bounds.minY, bounds.maxY);
+}
+
+function moveBossTowardPoint(boss, targetX, targetY, speed, step) {
+  var dx = targetX - boss.x;
+  var dy = targetY - boss.y;
+  var dist = Math.hypot(dx, dy);
+  var moveAmount = speed * step;
+  if (dist < 0.001 || dist <= moveAmount) {
+    boss.x = targetX;
+    boss.y = targetY;
+    clampBossToArena(boss);
+    return true;
+  }
+  boss.x += (dx / dist) * moveAmount;
+  boss.y += (dy / dist) * moveAmount;
+  clampBossToArena(boss);
+  return false;
+}
+
 function applyBossDefaultMovement(phase) {
   // Velocidad según fase (continua)
   const patternOverridesMove =
@@ -98,6 +136,7 @@ function updateBossZigzagMovement(step) {
   } else {
     boss.y = baseY + Math.cos(globalTime * vertFreq) * vertAmp;
   }
+  clampBossToArena(boss);
 }
 
 function updateBossRotateMovement(step) {
@@ -115,6 +154,7 @@ function updateBossRotateMovement(step) {
     boss.x = Math.max(30, Math.min(W - boss.w - 30, W / 2 + Math.cos(globalTime * rotSpeed) * radiusX));
     boss.y = Math.max(80, Math.min(H - boss.h - 80, 140 + Math.sin(globalTime * rotSpeed) * radiusY));
   }
+  clampBossToArena(boss);
 }
 
 function fireBossOrbitalPattern(step) {
@@ -246,9 +286,7 @@ if (useAI) {
       const evadeAngle = Math.atan2(player.y - boss.y, player.x - boss.x) + Math.PI / 2;
       boss.x += Math.cos(evadeAngle) * 2 * step;
       boss.y += Math.sin(evadeAngle) * 1.5 * step;
-
-      boss.x = Math.max(30, Math.min(W - boss.w - 30, boss.x));
-      boss.y = Math.max(80, Math.min(H - boss.h - 80, boss.y));
+      clampBossToArena(boss);
       break;
       
     case 'counter':
@@ -351,8 +389,7 @@ switch (boss.pattern) {
     }
     
     // Clamp final
-    boss.x = clamp(boss.x, 10, W - boss.w - 10);
-    boss.y = clamp(boss.y, 60, H - boss.h - 60);
+    clampBossToArena(boss);
     break;
   }
 
@@ -522,8 +559,7 @@ switch (boss.pattern) {
     }
 
     // clamp final
-    boss.x = clamp(boss.x, 10, W - boss.w - 10);
-    boss.y = clamp(boss.y, 60, H - boss.h - 60);
+    clampBossToArena(boss);
     break;
   }
 
@@ -650,9 +686,10 @@ switch (boss.pattern) {
       }
     }
     
-    // Clamp final - no baja tanto
+    // Clamp final - no baja tanto, arena safety net
     boss.x = clamp(boss.x, 10, W - boss.w - 10);
     boss.y = clamp(boss.y, 70, 180);
+    clampBossToArena(boss);
     break;
   }
 }
@@ -660,6 +697,7 @@ switch (boss.pattern) {
 if (typeof window.updateBossAIMovement === 'function') {
   window.updateBossAIMovement(boss, player, dt);
 }
+clampBossToArena(boss);
 
 boss.shootTimer += dt;
 
