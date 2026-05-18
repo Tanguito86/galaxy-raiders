@@ -214,6 +214,154 @@ window.GALAXY_CONFIG = {
       suppressOverlaysDuringTelegraph: true,
       // death explosion particle cap
       maxExplosionParticles: 60          // was 100 default
+    },
+
+    // ================================================================
+    // HC-RD-02: BULLET CLARITY PASS
+    // ================================================================
+    // Every enemy bullet gets a dark outline for instant background
+    // separation. Trails are enhanced for motion tracking. Bullet types
+    // are visually differentiated by outline thickness and direction
+    // markers. Glow stacking is capped to prevent density blobs.
+    // ================================================================
+    bulletClarity: {
+      enabled: true,
+
+      // --- outline system ---
+      outline: {
+        enabled: true,
+        color:            '#050308',     // near-black for max contrast
+        alpha:             0.42,         // enough to read, not too heavy
+        lineWidth:         1,            // 1px standard
+        bossLineWidth:     1.5,          // thicker for boss bullets
+        tankLineWidth:     1.5,          // thicker for tank (alien3)
+        orbConcentric:     true          // orb gets inner + outer outline
+      },
+
+      // --- motion readability ---
+      motion: {
+        enabled: true,
+        bossTrailSteps:    4,            // was 3
+        orbTrailSteps:     3,            // was 2
+        sharedTrailSteps:  3,            // was 2
+        trailAlphaMul:     0.72          // was 0.6 (slightly brighter trails)
+      },
+
+      // --- bullet type language ---
+      typeLanguage: {
+        enabled: true,
+        fastDirectionalTip: true,        // tiny bright dot at leading edge
+        heavyInnerOutline:  true,        // orb double outline
+        splitterPulseEnable: true        // splitter outline pulses
+      },
+
+      // --- density readability ---
+      density: {
+        enabled: true,
+        outerHaloCap:       0.10,        // max outer halo alpha (was 0.12)
+        innerGlowCap:       0.20,        // max inner glow alpha (unchanged)
+        trailStepsMin:      2            // minimum trail steps for any bullet
+      }
+    },
+
+    // ================================================================
+    // HC-RD-03: TELEGRAPH CONSISTENCY SYSTEM
+    // ================================================================
+    // Unified visual language for all attack warnings: boss rings,
+    // sniper lines, chaser flares, suppressor cones, diver signals,
+    // set piece stripes, threat dots, phase transitions.
+    // Every telegraph gets a dark outline for background separation
+    // plus standardized alpha ranges and color language.
+    // ================================================================
+    telegraphConsistency: {
+      enabled: true,
+
+      // --- outline system (shared with HC-RD-02 bullet pattern) ---
+      outline: {
+        enabled: true,
+        color:         '#050308',         // near-black for max contrast
+        alpha:          0.40,             // subtle but readable
+        lineWidth:      1,                // 1px standard
+        bossLineWidth:  1.5               // thicker for boss rings
+      },
+
+      // --- alpha standardization ---
+      alpha: {
+        enabled: true,
+        floor:          0.12,             // minimum alpha for any telegraph
+        ceiling:        0.55,             // maximum alpha to avoid dominance
+        pulseRange:     0.35              // max pulse amplitude
+      },
+
+      // --- color language (hardcore meaning) ---
+      colors: {
+        fatal:         '#ff3333',         // red — lethal immediate
+        aggressive:    '#ff6622',         // orange — aggressive threat
+        charge:        '#ffaa00',         // yellow — preparation/charging
+        energy:        '#4488ff',         // blue — energy/non-lethal
+        clarity:       '#ffffff',         // white — pure readability
+        caution:       '#ffdd44',         // amber — general warning
+        sniper:        '#44ffff',         // cyan — precision threat
+        chaser:        '#ff6622',         // orange — flanking
+        suppressor:    '#bbff44',         // lime — area denial
+        diver:         '#ff4422',         // red-orange — dive
+        teleport:      '#bb88ff',         // purple — displacement
+        setPiece:      '#ff6633'          // red-orange for formations
+      },
+
+      // --- shape conventions ---
+      shape: {
+        ringDash:      [6, 4],            // dotted ring pattern
+        arrowLength:    16,               // direction arrow length
+        coneAngle:      0.28,             // suppressor fan angle
+        dotRadius:      3.5               // threat dot size
+      }
+    },
+
+    // ================================================================
+    // HC-RD-04: BACKGROUND READABILITY PASS
+    // ================================================================
+    // Background and ambient FX must never compete with gameplay.
+    // Theme foreground elements are capped. Stars are subdued.
+    // Dynamic dimming reduces ambient intensity during combat.
+    // ================================================================
+    backgroundReadability: {
+      enabled: true,
+
+      // --- background theme element caps ---
+      themeCaps: {
+        enabled: true,
+        foregroundMax:      0.30,          // earth buildings/ground (was 0.90-0.96)
+        mountainMax:        0.10,          // mountain silhouettes (was 0.12-0.16)
+        snowHazeMax:        0.06,          // snow/mist/haze layers (was 0.07-0.10)
+        planetGlowMax:      0.12,          // planet curve/limb (was 0.18-0.22)
+        imperialPillarMax:  0.04           // imperial pillar glow (was 0.05-0.09)
+      },
+
+      // --- starfield ---
+      stars: {
+        enabled: true,
+        alphaCap:           0.42,          // was 0.70 (HC-RD-01), now tighter
+        coreAlphaCap:       0.28,          // bright star core (was up to 0.70)
+        flickerReduction:   0.80           // multiply twinkle amplitude by 0.8
+      },
+
+      // --- ambient FX multiplier (applied to HC-90/HC-97) ---
+      ambientFX: {
+        enabled: true,
+        nebulaAlphaMul:     0.55,          // reduce nebula intensity
+        atmosphereAlphaMul: 0.60,          // reduce atmosphere FX
+        speedLineAlphaMul:  0.45           // reduce speed lines
+      },
+
+      // --- dynamic combat dimming ---
+      dynamicDimming: {
+        enabled: true,
+        densityThreshold:   18,            // total enemy bullets to trigger dimming
+        maxDimFactor:       0.50,          // max multiplier on ambient alpha
+        dimSpeed:           0.015,         // transition speed per frame (smooth)
+        recoverSpeed:       0.008          // recovery speed per frame (slower)
+      }
     }
   },
 

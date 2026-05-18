@@ -82,9 +82,9 @@ function drawEarthBackground(ctx, time) {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Ground base
+  // HC-RD-04: Ground base — capped foreground alpha
   ctx.fillStyle = '#060e1a';
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 0.30;  // was 0.92
   ctx.fillRect(0, H - 50, W, 50);
   ctx.globalAlpha = 0.18;
   ctx.fillStyle = '#8899bb';
@@ -130,7 +130,7 @@ function drawEarthBackground(ctx, time) {
   ];
 
   ctx.fillStyle = '#060e1c';
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 0.30;  // HC-RD-04: was 0.92
   for (var i = 0; i < buildings.length; i++) {
     var b = buildings[i];
     var bx = b.x, bw = b.w, bh = b.h;
@@ -171,7 +171,7 @@ function drawEarthBackground(ctx, time) {
   ctx.globalAlpha = 1;
 
   // Minimal attack damage: just a few subtle broken edges
-  ctx.globalAlpha = 0.96;
+  ctx.globalAlpha = 0.30;  // HC-RD-04: was 0.96
   ctx.fillStyle = '#02050b';
   ctx.fillRect(78 + 5, H - 50 - 52, 6, 8);
   ctx.fillRect(204 + 7, H - 50 - 34, 5, 14);
@@ -220,7 +220,7 @@ function drawEarthBackground(ctx, time) {
   ctx.globalAlpha = 1;
 
   // Simplified destroyed foreground silhouettes
-  ctx.globalAlpha = 0.94;
+  ctx.globalAlpha = 0.30;  // HC-RD-04: was 0.94
   ctx.fillStyle = '#020308';
   ctx.beginPath();
   ctx.moveTo(14, H - 50);
@@ -241,7 +241,7 @@ function drawEarthBackground(ctx, time) {
   ctx.globalAlpha = 1;
 
   // Military dome/bunker
-  ctx.globalAlpha = 0.90;
+  ctx.globalAlpha = 0.30;  // HC-RD-04: was 0.90
   ctx.fillStyle = '#060e1c';
   ctx.beginPath();
   ctx.arc(148, H - 50, 20, Math.PI, 0);
@@ -394,7 +394,7 @@ function drawAtmosphereBackground(ctx, time) {
   ctx.fillStyle = horizon;
   ctx.fillRect(0, H * 0.58, W, H * 0.42);
 
-  ctx.globalAlpha = 0.22;
+  ctx.globalAlpha = 0.12;  // HC-RD-04: was 0.22 — planet glow subdued
   ctx.fillStyle = '#d8f8ff';
   ctx.beginPath();
   ctx.ellipse(W / 2, H + 118, W * 0.78, 158, 0, Math.PI, Math.PI * 2);
@@ -529,7 +529,7 @@ function drawImperialBackground(ctx, time) {
   ctx.fillRect(0, H * 0.5, W, H * 0.5);
 
   var pillarPulse = 0.5 + Math.sin(time * 0.0015) * 0.5;
-  ctx.globalAlpha = 0.05 + pillarPulse * 0.04;
+  ctx.globalAlpha = Math.min(0.04, 0.05 + pillarPulse * 0.04);  // HC-RD-04: capped at 0.04
   ctx.fillStyle = '#ffd700';
   ctx.fillRect(8, 0, 3, H);
   ctx.fillRect(W - 11, 0, 3, H);
@@ -692,6 +692,17 @@ var FLASH_BY_WEAPON = {
   machine: ['#f0f', '#faf'],
   laser: ['#0ff', '#aff']
 };
+
+// ================================================================
+// HC-RD-03: TELEGRAPH OUTLINE HELPER
+// Provides a dark contrast outline for any telegraph stroke,
+// ensuring visibility against bright backgrounds.
+// ================================================================
+function _getTelegraphOutlineStyle() {
+  var tc = (typeof getTelegraphConsistencyConfig === 'function')
+    ? getTelegraphConsistencyConfig() : null;
+  return (tc && tc.outline) || { enabled: true, color: '#050308', alpha: 0.40, lineWidth: 1, bossLineWidth: 1.5 };
+}
 
 // --- BOSS ARM RENDER HELPERS ---
 function drawBossArmSegment(ctx, x1, y1, x2, y2, thickness, color, alpha) {
@@ -1259,6 +1270,7 @@ function drawCrabtronShootTelegraph(ctx, boss, color, time) {
 // HC-165: dash direction arrow visible during dashMode === 'telegraph'
 function drawCrabtronDashTelegraph(ctx, boss, color, time) {
   if (!boss || boss.dashMode !== 'telegraph') return;
+  var _tcs8 = _getTelegraphOutlineStyle();
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
   var tx = boss.dashTargetX || cx;
@@ -1267,6 +1279,17 @@ function drawCrabtronDashTelegraph(ctx, boss, color, time) {
   var alpha = 0.18 + Math.sin(progress * Math.PI) * 0.22;
 
   ctx.save();
+  // HC-RD-03: dark outline behind dash arrow
+  ctx.globalAlpha = _tcs8.alpha;
+  ctx.strokeStyle = _tcs8.color;
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(cx + dir * 10, cy);
+  ctx.lineTo(cx + dir * 34, cy - 10);
+  ctx.moveTo(cx + dir * 10, cy);
+  ctx.lineTo(cx + dir * 34, cy + 10);
+  ctx.stroke();
+
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = '#ff6633';
   ctx.lineWidth = 2;
@@ -2773,6 +2796,7 @@ function drawEmperorPhaseOverload(ctx, boss, color, time) {
 
 // --- DRAW ---
 var _lastControlDeckTheme = '';
+var _combatDimFactor = 0;  // HC-RD-04: dynamic background dimming (0=full ambient, 1=fully dimmed)
 function draw() {
   // ================================================================
   // HC-RD-01: PRIORITY_AMBIENT — background, nebula, atmosphere
@@ -2810,6 +2834,28 @@ function draw() {
     document.body.dataset.theme = deckTheme;
   }
 
+  // HC-RD-04: dynamic combat dimming — reduce ambient when bullets are dense
+  if (state === 'playing' || state === 'paused') {
+    var _ddCfg = (typeof getBackgroundReadabilityConfig === 'function')
+      ? (getBackgroundReadabilityConfig().dynamicDimming || {}) : {};
+    var _ddEnabled = _ddCfg.enabled !== false;
+    if (_ddEnabled) {
+      var _ddThreshold = _ddCfg.densityThreshold || 18;
+      var _ddMax = _ddCfg.maxDimFactor || 0.50;
+      var _ddSpeed = _ddCfg.dimSpeed || 0.015;
+      var _ddRecover = _ddCfg.recoverSpeed || 0.008;
+      var _bulletCount = (typeof enemyBullets !== 'undefined' && enemyBullets) ? enemyBullets.length : 0;
+      var _targetDim = (_bulletCount >= _ddThreshold) ? _ddMax : 0;
+      if (_combatDimFactor < _targetDim) {
+        _combatDimFactor = Math.min(_targetDim, _combatDimFactor + _ddSpeed);
+      } else if (_combatDimFactor > _targetDim) {
+        _combatDimFactor = Math.max(_targetDim, _combatDimFactor - _ddRecover);
+      }
+    }
+  } else {
+    _combatDimFactor = 0;
+  }
+
   // 2) HC-90: nebula overlay + color grading (behind stars, after theme BG)
   drawHC90Nebula(ctx, level, globalTime);
   applyHC90ColorGrading(ctx, level);
@@ -2837,9 +2883,11 @@ function draw() {
     const tw = 0.65 + 0.35 * twinkle;
     const depthAlpha = 0.45 + depth * 0.55;
 
-    var _starAlphaMax = (typeof getGlowPolicyConfig === 'function')
-      ? getGlowPolicyConfig().starAlphaMax || 0.70
-      : 0.70;
+    // HC-RD-04: star alpha cap from backgroundReadability config, fallback 0.42
+    var _brCfg = (typeof getBackgroundReadabilityConfig === 'function') ? getBackgroundReadabilityConfig() : null;
+    var _starAlphaMax = (_brCfg && _brCfg.stars && typeof _brCfg.stars.alphaCap === 'number')
+      ? _brCfg.stars.alphaCap
+      : 0.42;
     ctx.globalAlpha = Math.min(_starAlphaMax, depthAlpha * tw);
     ctx.fillStyle = s.color;
 
@@ -2851,7 +2899,10 @@ function draw() {
     );
 
     if (depth > 0.7 && warpSpeed <= 2) {
-      ctx.globalAlpha = Math.min(_starAlphaMax, (depth - 0.7) * 2.0 * tw);
+      var _starCoreCap = (_brCfg && _brCfg.stars && typeof _brCfg.stars.coreAlphaCap === 'number')
+        ? _brCfg.stars.coreAlphaCap
+        : 0.28;
+      ctx.globalAlpha = Math.min(_starCoreCap, (depth - 0.7) * 2.0 * tw);
       ctx.fillStyle = '#fff';
       ctx.fillRect(
         s.x + starShakeX * mult,
@@ -2861,6 +2912,13 @@ function draw() {
       );
     }
   });
+
+  // HC-RD-04: subtle combat dimming overlay (darkens background when bullet density is high)
+  if (_combatDimFactor > 0.02) {
+    ctx.globalAlpha = _combatDimFactor * 0.18;
+    ctx.fillStyle = '#000002';
+    ctx.fillRect(0, 0, W, H);
+  }
 
   ctx.globalAlpha = 1;
 
@@ -4357,6 +4415,7 @@ if (shouldShow) {
     }
 
     // HC-129: threat telegraph — subtle role indicator (render-only)
+    // HC-RD-03: added outline for contrast
     if (window.ENCOUNTER_THREAT_TELEGRAPH === true && e.alive) {
       var _threatColor = null;
       if (e.type === 'alien1')        { _threatColor = '#8df'; }
@@ -4367,14 +4426,24 @@ if (shouldShow) {
       else if (e.type === 'alien6')   { _threatColor = '#c8f'; }
       else if (e.type === 'alien_mini') { _threatColor = '#f96'; }
       if (_threatColor) {
+        var _tcs0 = _getTelegraphOutlineStyle();
         var _tcx = e.x + e.w / 2;
         var _tcy = e.y + e.h / 2;
         var _tpulse = 0.5 + 0.5 * Math.sin(globalTime * 0.012 + e.x * 0.05);
+        var _tdR = 3.5; // HC-RD-03: slightly larger radius
         ctx.save();
+        // dark outline
+        ctx.globalAlpha = _tcs0.alpha;
+        ctx.strokeStyle = _tcs0.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(_tcx, _tcy - e.h * 0.5 - 4, _tdR + 1, 0, Math.PI * 2);
+        ctx.stroke();
+        // colored fill
         ctx.globalAlpha = 0.12 + _tpulse * 0.06;
         ctx.fillStyle = _threatColor;
         ctx.beginPath();
-        ctx.arc(_tcx, _tcy - e.h * 0.5 - 4, 3, 0, Math.PI * 2);
+        ctx.arc(_tcx, _tcy - e.h * 0.5 - 4, _tdR, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
@@ -4457,9 +4526,10 @@ if (shouldShow) {
 
         // HC-46: SNIPER TELEGRAPH — thin cyan line toward player
         if (e._sniperTelegraphActive && typeof player !== 'undefined' && player) {
+          var _tcs = _getTelegraphOutlineStyle();
           var telElapsed = globalTime - (e._sniperTelegraphFiredAt || globalTime);
           var telProgress = Math.min(1, telElapsed / 280);
-          var telAlpha = 0.10 + 0.12 * Math.sin(telProgress * Math.PI) * (1 - telProgress);
+          var telAlpha = Math.max(0.12, 0.10 + 0.12 * Math.sin(telProgress * Math.PI) * (1 - telProgress));
           var ex = e.x + (e.w || 24) / 2;
           var ey = e.y + (e.h || 24);
           var px = player.x + player.width / 2;
@@ -4470,6 +4540,16 @@ if (shouldShow) {
           var endY = ey + Math.sin(angle) * lineLen;
 
           ctx.save();
+
+          // HC-RD-03: dark outline behind sniper line for contrast
+          ctx.globalAlpha = _tcs.alpha;
+          ctx.strokeStyle = _tcs.color;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+
           ctx.globalAlpha = telAlpha;
           ctx.strokeStyle = '#4ff';
           ctx.lineWidth = 1;
@@ -4490,13 +4570,25 @@ if (shouldShow) {
 
         // HC-47: CHASER TELEGRAPH — orange side glow/flare before side shots
         if (e._chaserTelegraphActive) {
+          var _tcs2 = _getTelegraphOutlineStyle();
           var chTelElapsed = globalTime - (e._chaserTelegraphFiredAt || globalTime);
           var chTelProgress = Math.min(1, chTelElapsed / 180);
-          var chTelAlpha = 0.12 + 0.14 * Math.sin(chTelProgress * Math.PI) * (1 - chTelProgress);
+          var chTelAlpha = Math.max(0.12, 0.12 + 0.14 * Math.sin(chTelProgress * Math.PI) * (1 - chTelProgress));
           var ccx = e.x + (e.w || 24) / 2;
           var ccy = e.y + (e.h || 24);
 
           ctx.save();
+          // HC-RD-03: outline first
+          ctx.globalAlpha = _tcs2.alpha;
+          ctx.strokeStyle = _tcs2.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(ccx - 14, ccy, 5 + chTelProgress * 4, 3, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(ccx + 14, ccy, 5 + chTelProgress * 4, 3, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
           ctx.globalAlpha = chTelAlpha;
           ctx.fillStyle = '#f62';
           ctx.beginPath();
@@ -4521,9 +4613,10 @@ if (shouldShow) {
 
         // HC-48: SUPPRESSOR TELEGRAPH — translucent lime cone/fan
         if (e._suppressorTelegraphActive) {
+          var _tcs3 = _getTelegraphOutlineStyle();
           var supTelElapsed = globalTime - (e._suppressorTelegraphFiredAt || globalTime);
           var supTelProgress = Math.min(1, supTelElapsed / 180);
-          var supTelAlpha = 0.08 + 0.10 * Math.sin(supTelProgress * Math.PI) * (1 - supTelProgress);
+          var supTelAlpha = Math.max(0.12, 0.08 + 0.10 * Math.sin(supTelProgress * Math.PI) * (1 - supTelProgress));
           var scx = e.x + (e.w || 24) / 2;
           var scy = e.y + (e.h || 24);
           var fanAngle = 0.25; // slightly wider than bullet spread (0.22)
@@ -4531,6 +4624,17 @@ if (shouldShow) {
           var fanTop = -4; // start slightly above muzzle
 
           ctx.save();
+          // HC-RD-03: dark outline first
+          ctx.globalAlpha = _tcs3.alpha;
+          ctx.strokeStyle = _tcs3.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(scx, scy + fanTop);
+          ctx.lineTo(scx - Math.sin(fanAngle) * fanLen, scy + fanTop + Math.cos(fanAngle) * fanLen);
+          ctx.lineTo(scx + Math.sin(fanAngle) * fanLen, scy + fanTop + Math.cos(fanAngle) * fanLen);
+          ctx.closePath();
+          ctx.stroke();
+
           ctx.globalAlpha = supTelAlpha;
           ctx.fillStyle = '#bf4';
           ctx.beginPath();
@@ -4549,8 +4653,9 @@ if (shouldShow) {
 
         // HC-49: DIVER TELEGRAPH — afterimage, red/orange glow, direction to target
         if (e._hcDiverState === 'telegraph') {
+          var _tcs4 = _getTelegraphOutlineStyle();
           var dTelProgress = Math.min(1, e._hcDiverTimer / 380);
-          var dTelAlpha = 0.10 + 0.12 * Math.sin(dTelProgress * Math.PI) * (1 - dTelProgress);
+          var dTelAlpha = Math.max(0.12, 0.10 + 0.12 * Math.sin(dTelProgress * Math.PI) * (1 - dTelProgress));
           var dcx = e.x + (e.w || 24) / 2;
           var dcy = e.y + (e.h || 24) / 2;
 
@@ -4565,19 +4670,34 @@ if (shouldShow) {
             tint: '#f52'
           });
 
-          // pulsating red/orange glow
+          // pulsating red/orange glow — HC-RD-03: outline first
+          ctx.globalAlpha = _tcs4.alpha;
+          ctx.strokeStyle = _tcs4.color;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(dcx, dcy, 12 + dTelProgress * 8 + 1, 0, Math.PI * 2);
+          ctx.stroke();
+
           ctx.globalAlpha = dTelAlpha;
           ctx.fillStyle = '#f42';
           ctx.beginPath();
           ctx.arc(dcx, dcy, 12 + dTelProgress * 8, 0, Math.PI * 2);
           ctx.fill();
 
-          // direction line toward target
+          // direction line toward target — HC-RD-03: outline first
           if (typeof e._hcDiverTargetX === 'number' && typeof e._hcDiverTargetY === 'number') {
             var dLineLen = 16 + dTelProgress * 20;
             var dAngle = Math.atan2(e._hcDiverTargetY - dcy, e._hcDiverTargetX - dcx);
             var dEndX = dcx + Math.cos(dAngle) * dLineLen;
             var dEndY = dcy + Math.sin(dAngle) * dLineLen;
+            ctx.globalAlpha = _tcs4.alpha;
+            ctx.strokeStyle = _tcs4.color;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(dcx, dcy);
+            ctx.lineTo(dEndX, dEndY);
+            ctx.stroke();
+
             ctx.globalAlpha = dTelAlpha * 0.8;
             ctx.strokeStyle = '#f52';
             ctx.lineWidth = 1.2;
@@ -5162,6 +5282,7 @@ ufoRewards.forEach(d => {
       }
 
       if (setPieceTelegraphTimer > 0 && currentSetPiece === 'imperial_guard') {
+        var _tcs5 = _getTelegraphOutlineStyle();
         const pulse = 0.55 + 0.45 * Math.sin(globalTime * 0.05);
         const side = setPieceTelegraphSide === -1 ? -1 : 1;
         const x = side < 0 ? 24 : W - 24;
@@ -5175,9 +5296,25 @@ ufoRewards.forEach(d => {
         const flashColor = isSecondTelegraph
           ? `rgba(255,60,60,${0.28 + 0.40 * pulse})`
           : `rgba(255,190,70,${0.24 + 0.36 * pulse})`;
+        var _spX = side < 0 ? 4 : W - 14;
+
+        // HC-RD-03: dark outline behind vertical stripe
+        ctx.globalAlpha = _tcs5.alpha;
+        ctx.strokeStyle = _tcs5.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(_spX - 1, 90 - 1, 12, H - 210 + 2);
 
         ctx.fillStyle = flashColor;
-        ctx.fillRect(side < 0 ? 4 : W - 14, 90, 10, H - 210);
+        ctx.fillRect(_spX, 90, 10, H - 210);
+
+        // HC-RD-03: dark outline behind vertical line
+        ctx.globalAlpha = _tcs5.alpha;
+        ctx.strokeStyle = _tcs5.color;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(x, 94);
+        ctx.lineTo(x, H - 120);
+        ctx.stroke();
 
         ctx.strokeStyle = lineColor;
         ctx.lineWidth = 4;
@@ -5196,6 +5333,7 @@ ufoRewards.forEach(d => {
       }
 
       if (setPieceTelegraphTimer > 0 && currentSetPiece === 'fortress') {
+        var _tcs6 = _getTelegraphOutlineStyle();
         const pulse = 0.55 + 0.45 * Math.sin(globalTime * 0.05);
         const lane = Math.max(0, Math.floor(setPieceTelegraphSide || 0));
         const rowEnemies = enemies.filter(e => e.alive && !e.diving && e.row === lane);
@@ -5203,8 +5341,23 @@ ufoRewards.forEach(d => {
           ? rowEnemies.reduce((acc, e) => acc + (e.y + e.h * 0.55), 0) / rowEnemies.length
           : (118 + lane * 34);
 
+        // HC-RD-03: dark outline behind horizontal bar
+        ctx.globalAlpha = _tcs6.alpha;
+        ctx.strokeStyle = _tcs6.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(7, y - 13, W - 14, 26);
+
         ctx.fillStyle = `rgba(255,170,70,${0.14 + 0.22 * pulse})`;
         ctx.fillRect(8, y - 12, W - 16, 24);
+
+        // HC-RD-03: dark outline behind horizontal line
+        ctx.globalAlpha = _tcs6.alpha;
+        ctx.strokeStyle = _tcs6.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(8, y);
+        ctx.lineTo(W - 8, y);
+        ctx.stroke();
 
         ctx.strokeStyle = `rgba(255,205,95,${0.35 + 0.45 * pulse})`;
         ctx.lineWidth = 2;
@@ -5220,12 +5373,29 @@ ufoRewards.forEach(d => {
       }
 
       if (setPieceTelegraphTimer > 0 && currentSetPiece === 'split_storm') {
+        var _tcs7 = _getTelegraphOutlineStyle();
         const pulse = 0.55 + 0.45 * Math.sin(globalTime * 0.055);
         const side = setPieceTelegraphSide === -1 ? -1 : 1;
         const x = side < 0 ? 18 : W - 18;
+        var _spX2 = side < 0 ? 4 : W - 14;
+
+        // HC-RD-03: dark outline behind vertical stripe
+        ctx.globalAlpha = _tcs7.alpha;
+        ctx.strokeStyle = _tcs7.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(_spX2 - 1, 100 - 1, 12, H - 220 + 2);
 
         ctx.fillStyle = `rgba(120,255,200,${0.16 + 0.25 * pulse})`;
-        ctx.fillRect(side < 0 ? 4 : W - 14, 100, 10, H - 220);
+        ctx.fillRect(_spX2, 100, 10, H - 220);
+
+        // HC-RD-03: dark outline behind vertical line
+        ctx.globalAlpha = _tcs7.alpha;
+        ctx.strokeStyle = _tcs7.color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x, 104);
+        ctx.lineTo(x, H - 120);
+        ctx.stroke();
 
         ctx.strokeStyle = `rgba(150,255,210,${0.40 + 0.44 * pulse})`;
         ctx.lineWidth = 3;

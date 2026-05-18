@@ -22,7 +22,10 @@ var _GALAXY_CONFIG_DEFAULTS = {
     visualPriority: { enabled: true, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 },
     glowPolicy: { enabled: true, starAlphaMax: 0.70, backgroundAmbientMax: 0.10, bossAmbientGlowMax: 0.06, enemyBulletHaloMin: 0.10, telegraphGlowMin: 0.08, explosionAlphaMax: 0.55 },
     alphaPolicy: { enabled: true },
-    fxSuppression: { enabled: true, particlesBeforeBullets: true, hitFlashBodyAlpha: 0.42, hitFlashWhiteAlpha: 0.30, suppressOverlaysDuringTelegraph: true, maxExplosionParticles: 60 }
+    fxSuppression: { enabled: true, particlesBeforeBullets: true, hitFlashBodyAlpha: 0.42, hitFlashWhiteAlpha: 0.30, suppressOverlaysDuringTelegraph: true, maxExplosionParticles: 60 },
+    bulletClarity: { enabled: true, outline: { enabled: true, color: '#050308', alpha: 0.42, lineWidth: 1, bossLineWidth: 1.5, tankLineWidth: 1.5, orbConcentric: true }, motion: { enabled: true, bossTrailSteps: 4, orbTrailSteps: 3, sharedTrailSteps: 3, trailAlphaMul: 0.72 }, typeLanguage: { enabled: true, fastDirectionalTip: true, heavyInnerOutline: true, splitterPulseEnable: true }, density: { enabled: true, outerHaloCap: 0.10, innerGlowCap: 0.20, trailStepsMin: 2 } },
+    telegraphConsistency: { enabled: true, outline: { enabled: true, color: '#050308', alpha: 0.40, lineWidth: 1, bossLineWidth: 1.5 }, alpha: { enabled: true, floor: 0.12, ceiling: 0.55, pulseRange: 0.35 }, colors: { fatal: '#ff3333', aggressive: '#ff6622', charge: '#ffaa00', energy: '#4488ff', clarity: '#ffffff', caution: '#ffdd44', sniper: '#44ffff', chaser: '#ff6622', suppressor: '#bbff44', diver: '#ff4422', teleport: '#bb88ff', setPiece: '#ff6633' }, shape: { ringDash: [6,4], arrowLength: 16, coneAngle: 0.28, dotRadius: 3.5 } },
+    backgroundReadability: { enabled: true, themeCaps: { enabled: true, foregroundMax: 0.30, mountainMax: 0.10, snowHazeMax: 0.06, planetGlowMax: 0.12, imperialPillarMax: 0.04 }, stars: { enabled: true, alphaCap: 0.42, coreAlphaCap: 0.28, flickerReduction: 0.80 }, ambientFX: { enabled: true, nebulaAlphaMul: 0.55, atmosphereAlphaMul: 0.60, speedLineAlphaMul: 0.45 }, dynamicDimming: { enabled: true, densityThreshold: 18, maxDimFactor: 0.50, dimSpeed: 0.015, recoverSpeed: 0.008 } }
   },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false, showLevelSkipButton: false }
 };
@@ -211,6 +214,30 @@ function getFXSuppressionConfig() {
   return (r && r.fxSuppression && typeof r.fxSuppression === 'object')
     ? r.fxSuppression
     : { enabled: false, particlesBeforeBullets: true, hitFlashBodyAlpha: 0.42, hitFlashWhiteAlpha: 0.30, suppressOverlaysDuringTelegraph: true, maxExplosionParticles: 60 };
+}
+
+// HC-RD-02: bullet clarity accessor
+function getBulletClarityConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.bulletClarity && typeof r.bulletClarity === 'object')
+    ? r.bulletClarity
+    : { enabled: false, outline: { enabled: false }, motion: { enabled: false }, typeLanguage: { enabled: false }, density: { enabled: false } };
+}
+
+// HC-RD-03: telegraph consistency accessor
+function getTelegraphConsistencyConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.telegraphConsistency && typeof r.telegraphConsistency === 'object')
+    ? r.telegraphConsistency
+    : { enabled: false, outline: { enabled: false }, alpha: { enabled: false }, colors: {}, shape: {} };
+}
+
+// HC-RD-04: background readability accessor
+function getBackgroundReadabilityConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.backgroundReadability && typeof r.backgroundReadability === 'object')
+    ? r.backgroundReadability
+    : { enabled: false, themeCaps: { enabled: false }, stars: { enabled: false }, ambientFX: { enabled: false }, dynamicDimming: { enabled: false } };
 }
 
 // ============================================================
