@@ -666,9 +666,11 @@ switch (boss.pattern) {
     if (boss.isTeleporting) {
       boss.teleportFlash -= dt;
       if (boss.teleportFlash <= 0) {
-        // Reaparecer en nueva posición
-        boss.x = 30 + Math.random() * (W - boss.w - 60);
-        boss.y = 80 + Math.random() * 60;
+        // Reaparecer en posición precalculada
+        boss.x = boss._teleportDestX || (30 + Math.random() * (W - boss.w - 60));
+        boss.y = boss._teleportDestY || (80 + Math.random() * 60);
+        boss._teleportDestX = undefined;
+        boss._teleportDestY = undefined;
         boss.isTeleporting = false;
         boss.teleportCooldown = 4000 + Math.random() * 2000;
         
@@ -703,11 +705,13 @@ switch (boss.pattern) {
         boss.x += boss.supremeVx * step;
         boss.y = 100 + Math.sin(globalTime * 0.005) * 25;
         
-        // Activar teletransporte
+        // Activar teletransporte — HC-167: store destination for visual indicator
         if (boss.teleportTimer > boss.teleportCooldown) {
           boss.teleportTimer = 0;
           boss.isTeleporting = true;
           boss.teleportFlash = 500;
+          boss._teleportDestX = 30 + Math.random() * (W - boss.w - 60);
+          boss._teleportDestY = 80 + Math.random() * 60;
           pushScreenShake('medium', 8);
           requestBossMinorDuck(150, 0.60);
           sfxBossWarning();
@@ -726,11 +730,13 @@ switch (boss.pattern) {
         boss.x += boss.supremeVx * step + Math.sin(globalTime * 0.008) * 3 * step;
         boss.y += boss.supremeVy * step;
         
-        // Teletransporte en fase 3 (menos frecuente)
+        // Teletransporte en fase 3 (menos frecuente) — HC-167: store destination
         if (boss.teleportTimer > boss.teleportCooldown * 0.8) {
           boss.teleportTimer = 0;
           boss.isTeleporting = true;
           boss.teleportFlash = 400;
+          boss._teleportDestX = 30 + Math.random() * (W - boss.w - 60);
+          boss._teleportDestY = 80 + Math.random() * 60;
           pushScreenShake('heavy', 10);
           requestBossMinorDuck(150, 0.58);
           sfxBossWarning();

@@ -1756,6 +1756,32 @@ function drawOrbitalCore(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// HC-167: draw expanding warning ring during orbital pulse mode
+function drawOrbitalPulseWarning(ctx, boss, color, time) {
+  if (!boss || !boss.pulseMode) return;
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var timer = boss.pulseTimer || 0;
+  var progress = 1 - Math.min(1, timer / 1500);
+  var alpha = 0.08 + Math.sin(progress * Math.PI) * 0.14;
+  var r = 20 + progress * 55;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#5588ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = alpha * 0.5;
+  ctx.strokeStyle = '#aaccff';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
 // --- TENIENTE VISUALS ---
 function drawTenienteAura(ctx, boss, color, time) {
   var cx = boss.x + boss.w / 2;
@@ -2262,6 +2288,31 @@ function drawTenienteImpactWarning(ctx, boss, color, time) {
   ctx.beginPath();
   ctx.arc(cx, cy, 8 + Math.sin(time * 0.04) * 3, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+}
+
+// HC-167: draw glow at teleport destination during flash
+function drawEmperorTeleportIndicator(ctx, boss, color, time) {
+  if (!boss || !boss.isTeleporting) return;
+  var dx = boss._teleportDestX;
+  var dy = boss._teleportDestY;
+  if (typeof dx !== 'number' || typeof dy !== 'number') return;
+  var progress = 1 - Math.min(1, (boss.teleportFlash || 0) / (boss.teleportFlash > 400 ? 500 : 400));
+  var alpha = 0.10 + Math.sin(progress * Math.PI) * 0.16;
+  var r = 16 + progress * 24;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#bb88ff';
+  ctx.beginPath();
+  ctx.arc(dx + boss.w / 2, dy + boss.h / 2, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = alpha * 0.6;
+  ctx.strokeStyle = '#ddbbff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(dx + boss.w / 2, dy + boss.h / 2, r + 4, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -3719,6 +3770,7 @@ if (shouldShow) {
       } else if (boss.pattern === 'rotate') {
         drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
         drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
+        drawOrbitalPulseWarning(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
         drawTenienteAura(ctx, boss, bossColor, globalTime);
         drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
@@ -3726,6 +3778,7 @@ if (shouldShow) {
       } else if (boss.pattern === 'supreme') {
         drawEmperorImperialAura(ctx, boss, bossColor, globalTime);
         drawEmperorEnergyMantle(ctx, boss, bossColor, globalTime);
+        drawEmperorTeleportIndicator(ctx, boss, bossColor, globalTime);
       }
 
       // HC-19: hardcore boss telegraph (all patterns)
