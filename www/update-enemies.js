@@ -934,7 +934,7 @@ if (!boss.active && activeEnemies.length > 0) {
   const didScriptedSetPieceShot = runSetPieceFirePattern(activeEnemies, dt, baseCooldown);
 
   if (!didScriptedSetPieceShot && globalTime - enemyLastShot > baseCooldown) {
-    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots && e._hcDiverState !== 'telegraph' && !(typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(e)));
+    const shooters = activeEnemies.filter(e => !e.diving && !e.isExternalShmup && ENEMY_TYPES[e.type]?.shoots && e._hcDiverState !== 'telegraph' && !(typeof shouldFireHardcoreSniperPattern === 'function' && shouldFireHardcoreSniperPattern(e)) && !(typeof shouldUseHardcoreSweeperPattern === 'function' && shouldUseHardcoreSweeperPattern(e)) && !(typeof shouldUseHardcoreFlankerPattern === 'function' && shouldUseHardcoreFlankerPattern(e)));
 
     if (shooters.length > 0) {
       const shooter = shooters[Math.floor(Math.random() * shooters.length)];

@@ -584,7 +584,6 @@ function fireHardcoreFlankerCrossfire(enemy) {
 function shouldUseHardcoreBaiterPattern(enemy) {
   if (!shouldUseHardcorePattern(enemy)) return false;
   if (getEnemyPatternRole(enemy) !== 'baiter') return false;
-  if (enemy.diving) return false;
   return true;
 }
 
