@@ -17,6 +17,13 @@ var _GALAXY_CONFIG_DEFAULTS = {
   atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
   bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
   enemyAI:   { enabled: true, maxOffsetX: 18, maxOffsetY: 10, decisionIntervalMs: 500 },
+  readability: {
+    enabled: true,
+    visualPriority: { enabled: true, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 },
+    glowPolicy: { enabled: true, starAlphaMax: 0.70, backgroundAmbientMax: 0.10, bossAmbientGlowMax: 0.06, enemyBulletHaloMin: 0.10, telegraphGlowMin: 0.08, explosionAlphaMax: 0.55 },
+    alphaPolicy: { enabled: true },
+    fxSuppression: { enabled: true, particlesBeforeBullets: true, hitFlashBodyAlpha: 0.42, hitFlashWhiteAlpha: 0.30, suppressOverlaysDuringTelegraph: true, maxExplosionParticles: 60 }
+  },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false, showLevelSkipButton: false }
 };
 
@@ -143,6 +150,67 @@ function getEnemyAIConfig() {
     ? Math.min(2000, ai.decisionIntervalMs)
     : 500;
   return { enabled: en, maxOffsetX: maxX, maxOffsetY: maxY, decisionIntervalMs: interval };
+}
+
+// ============================================================
+// HC-RD-01: VISUAL PRIORITY LAYERS — render-only readability
+// ============================================================
+// These constants define the draw-order separation so that lethal
+// threats dominate visually. They are used as comment markers in
+// draw.js and as reference values for alpha/glow policies.
+window.VISUAL_PRIORITY = {
+  FATAL:     100,  // enemy bullets, boss lethal attacks
+  TELEGRAPH: 90,   // attack warnings, sniper lines, diver signals
+  ENEMY:     75,   // enemy sprites, boss visuals
+  FEEDBACK:  50,   // player, powerups, explosions, popups
+  AMBIENT:   10    // background, stars, atmospheric FX
+};
+
+function getReadabilityConfig() {
+  var cfg = getGalaxyConfig();
+  var r = (cfg.readability && typeof cfg.readability === 'object') ? cfg.readability : null;
+  if (!r) return {
+    enabled: false,
+    visualPriority: { enabled: false },
+    glowPolicy: { enabled: false },
+    alphaPolicy: { enabled: false },
+    fxSuppression: { enabled: false }
+  };
+  return r;
+}
+
+function isReadabilityEnabled() {
+  if (!isHardcoreEnabled()) return false;
+  var r = getReadabilityConfig();
+  return !!(r && r.enabled);
+}
+
+function getVisualPriorityConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.visualPriority && typeof r.visualPriority === 'object')
+    ? r.visualPriority
+    : { enabled: false, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 };
+}
+
+function getGlowPolicyConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.glowPolicy && typeof r.glowPolicy === 'object')
+    ? r.glowPolicy
+    : { enabled: false, starAlphaMax: 0.70, backgroundAmbientMax: 0.10, bossAmbientGlowMax: 0.06, enemyBulletHaloMin: 0.10, telegraphGlowMin: 0.08, explosionAlphaMax: 0.55 };
+}
+
+function getAlphaPolicyConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.alphaPolicy && typeof r.alphaPolicy === 'object')
+    ? r.alphaPolicy
+    : { enabled: false };
+}
+
+function getFXSuppressionConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.fxSuppression && typeof r.fxSuppression === 'object')
+    ? r.fxSuppression
+    : { enabled: false, particlesBeforeBullets: true, hitFlashBodyAlpha: 0.42, hitFlashWhiteAlpha: 0.30, suppressOverlaysDuringTelegraph: true, maxExplosionParticles: 60 };
 }
 
 // ============================================================

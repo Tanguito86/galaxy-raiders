@@ -1,5 +1,5 @@
 // =====================
-// GALAXY RAIDERS - render-hud.js
+// GALAXY RAIDERS - render-hud.js (HC-RD-01: no changes needed — high-score screen only)
 // =====================
 
 // --- DIBUJAR HIGH SCORES EN EL MENÚ ---

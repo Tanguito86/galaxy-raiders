@@ -2774,6 +2774,9 @@ function drawEmperorPhaseOverload(ctx, boss, color, time) {
 // --- DRAW ---
 var _lastControlDeckTheme = '';
 function draw() {
+  // ================================================================
+  // HC-RD-01: PRIORITY_AMBIENT — background, nebula, atmosphere
+  // ================================================================
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
   ctx.clearRect(0, 0, W, H);
   drawThemedBackground(ctx, level, globalTime);
@@ -2822,6 +2825,9 @@ function draw() {
   starShakeX = starShakeX * SHAKE_CONFIG.starSmoothingKeep + ((Math.random() - 0.5) * shakeAmt) * SHAKE_CONFIG.starSmoothingNoise;
   starShakeY = starShakeY * SHAKE_CONFIG.starSmoothingKeep + ((Math.random() - 0.5) * shakeAmt) * SHAKE_CONFIG.starSmoothingNoise;
 
+  // ================================================================
+  // HC-RD-01: PRIORITY_AMBIENT — stars (decorative, keep readable but subdued)
+  // ================================================================
   stars.forEach(s => {
     const height = (warpSpeed > 2) ? s.size * (warpSpeed * 1.5) : s.size;
     const depth = (s.depth ?? 0.5);
@@ -2831,7 +2837,10 @@ function draw() {
     const tw = 0.65 + 0.35 * twinkle;
     const depthAlpha = 0.45 + depth * 0.55;
 
-    ctx.globalAlpha = depthAlpha * tw;
+    var _starAlphaMax = (typeof getGlowPolicyConfig === 'function')
+      ? getGlowPolicyConfig().starAlphaMax || 0.70
+      : 0.70;
+    ctx.globalAlpha = Math.min(_starAlphaMax, depthAlpha * tw);
     ctx.fillStyle = s.color;
 
     ctx.fillRect(
@@ -2842,7 +2851,7 @@ function draw() {
     );
 
     if (depth > 0.7 && warpSpeed <= 2) {
-      ctx.globalAlpha = (depth - 0.7) * 2.0 * tw;
+      ctx.globalAlpha = Math.min(_starAlphaMax, (depth - 0.7) * 2.0 * tw);
       ctx.fillStyle = '#fff';
       ctx.fillRect(
         s.x + starShakeX * mult,
@@ -3451,6 +3460,9 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     return; // No dibujar nada más
   }
   if (state === 'playing' || state === 'paused') {
+    // ================================================================
+    // HC-RD-01: PRIORITY_FEEDBACK — player ship
+    // ================================================================
     // Player
     const pColor = '#fff';
 const shipKey = (animationFrame === 0) ? 'player_a' : 'player_b';
@@ -3735,12 +3747,18 @@ if (shouldShow) {
       return false;
     }
 
-    // Boss
+    // ================================================================
+    // HC-RD-01: PRIORITY_ENEMY — boss
+    // ================================================================
     if (boss.active) {
       const bossSprite = getBossLegacySprite(boss);
       
       const bossColor = boss.color || '#f00';
-      const bossGlow = 0.08 + 0.03 * Math.sin(globalTime * 0.018);
+      var _bossAmbientMax = (typeof getGlowPolicyConfig === 'function')
+        ? getGlowPolicyConfig().bossAmbientGlowMax || 0.06
+        : 0.06;
+      var _rawBossGlow = 0.08 + 0.03 * Math.sin(globalTime * 0.018);
+      const bossGlow = Math.min(_bossAmbientMax, _rawBossGlow);
 
       // HC-121: ambient darkening overlay (behind boss, subtle tint)
       ctx.save();
@@ -4247,7 +4265,9 @@ if (shouldShow) {
       });
     }
 
-    // Enemies
+    // ================================================================
+    // HC-RD-01: PRIORITY_ENEMY — enemies (sprites, telegraphs, hit flashes)
+    // ================================================================
     enemies.forEach(e => {
       if (e.alive) {
         var spawnT = 0;
@@ -4360,17 +4380,24 @@ if (shouldShow) {
       }
     }
 
+        // HC-RD-01: hit flash alpha reduced so flashes don't mask bullets
         if (e.flashTimer > 0) {
           var _ft = e.flashTimer / 150;
           var _hi = _ft * _ft * _ft;
           var flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
           var hitColor = currentPalette[e.color] || currentPalette[1] || '#ff5050';
+          var _hitWhiteAlpha = (typeof getFXSuppressionConfig === 'function')
+            ? getFXSuppressionConfig().hitFlashWhiteAlpha || 0.30
+            : 0.30;
+          var _hitBodyAlpha = (typeof getFXSuppressionConfig === 'function')
+            ? getFXSuppressionConfig().hitFlashBodyAlpha || 0.42
+            : 0.42;
           ctx.save();
           if (_hi > 0.25) {
-            ctx.globalAlpha = _hi * 0.62;
+            ctx.globalAlpha = Math.min(_hitWhiteAlpha, _hi * 0.62);
             drawEnemySpriteOrLegacy(ctx, e, spriteKey, '#ffffff', size, { tint: '#ffffff' });
           }
-          ctx.globalAlpha = flicker * (0.35 + 0.45 * _hi);
+          ctx.globalAlpha = Math.min(_hitBodyAlpha, flicker * (0.35 + 0.45 * _hi));
           drawEnemySpriteOrLegacy(ctx, e, spriteKey, hitColor, size, { tint: hitColor });
   ctx.restore();
 }
@@ -4634,95 +4661,9 @@ if (shouldShow) {
       }
     });
 
-	    // Player bullets (HC-93 visual polish)
-	    bullets.forEach(b => {
-	      var bt = b.type || 'normal';
-	      var bc = b.color || '#fff';
-
-	      // --- HC-93: per-weapon glow profile ---
-	      var glowColor, glowOuter, glowInner;
-	      switch (bt) {
-	        case 'laser':   glowColor = '#0ff'; glowOuter = 0.16; glowInner = 0.10; break;
-	        case 'machine': glowColor = '#f5f'; glowOuter = 0.12; glowInner = 0.07; break;
-	        case 'spread':  glowColor = '#5f5'; glowOuter = 0.14; glowInner = 0.08; break;
-	        case 'double':  glowColor = '#ff8'; glowOuter = 0.13; glowInner = 0.07; break;
-	        default:        glowColor = '#fff'; glowOuter = 0.10; glowInner = 0.06; break;
-	      }
-
-	      // --- HC-93: trail with enhanced fade ---
-	      if (Array.isArray(b.trail) && b.trail.length > 0) {
-	        var trailLen = b.trail.length;
-	        for (var ti = 0; ti < trailLen; ti++) {
-	          var tf = (ti + 1) / trailLen;
-	          var tp = b.trail[ti];
-	          var ttw = Math.max(1, b.w * (0.35 + tf * 0.40));
-	          var tth = Math.max(1, b.h * (0.20 + tf * 0.35));
-
-	          ctx.globalAlpha = 0.02 + tf * 0.28;
-	          ctx.fillStyle = glowColor;
-	          ctx.fillRect(tp.x - ttw / 2 - 1, tp.y - tth / 2 - 1, ttw + 2, tth + 2);
-
-	          ctx.globalAlpha = 0.04 + tf * 0.22;
-	          ctx.fillStyle = bc;
-	          ctx.fillRect(tp.x - ttw / 2, tp.y - tth / 2, ttw, tth);
-	        }
-	      }
-
-	      // --- HC-93: outer glow halo ---
-	      var ow = bt === 'laser' ? 5 : 3;
-	      var oh = bt === 'laser' ? 7 : 3;
-	      ctx.globalAlpha = glowOuter;
-	      ctx.fillStyle = glowColor;
-	      ctx.fillRect(b.x - ow, b.y - oh, b.w + ow * 2, b.h + oh * 2);
-
-	      // --- HC-93: inner glow ring ---
-	      ctx.globalAlpha = glowInner;
-	      ctx.fillStyle = glowColor;
-	      ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
-
-	      // --- HC-93: main body ---
-	      ctx.globalAlpha = 1;
-	      ctx.fillStyle = bc;
-	      ctx.fillRect(b.x, b.y, b.w, b.h);
-
-	      // --- HC-93: bright core with pulse ---
-	      var corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.06 + b.x * 0.03);
-	      var cw = bt === 'laser' ? 2 : 1;
-	      var ch = bt === 'laser' ? 3 : 1;
-	      var coreAlpha = bt === 'laser' ? 0.55 + corePulse * 0.15 : 0.45 + corePulse * 0.15;
-	      ctx.globalAlpha = coreAlpha;
-	      ctx.fillStyle = '#fff';
-	      ctx.fillRect(b.x + cw, b.y + ch, Math.max(1, b.w - cw * 2), Math.max(1, b.h - ch * 2));
-
-	      // --- HC-93: per-type extras ---
-	      if (bt === 'laser') {
-	        ctx.globalAlpha = 0.20 + corePulse * 0.10;
-	        ctx.fillStyle = '#fff';
-	        ctx.fillRect(b.x + 1, b.y + b.h * 0.25, 1, b.h * 0.20);
-	        ctx.fillRect(b.x + b.w - 2, b.y + b.h * 0.25, 1, b.h * 0.20);
-	        ctx.fillRect(b.x + 1, b.y + b.h * 0.60, 1, b.h * 0.20);
-	        ctx.fillRect(b.x + b.w - 2, b.y + b.h * 0.60, 1, b.h * 0.20);
-	      } else if (bt === 'machine') {
-	        ctx.globalAlpha = 0.08 + corePulse * 0.05;
-	        ctx.fillStyle = '#fff';
-	        ctx.fillRect(b.x - 2, b.y + b.h * 0.3, 1, 2);
-	        ctx.fillRect(b.x + b.w + 1, b.y + b.h * 0.5, 1, 2);
-	      } else if (bt === 'spread') {
-	        ctx.globalAlpha = 0.10;
-	        ctx.fillStyle = '#8f8';
-	        ctx.fillRect(b.x - 3, b.y + 1, 2, b.h - 2);
-	        ctx.fillRect(b.x + b.w + 1, b.y + 1, 2, b.h - 2);
-	      } else if (bt === 'double') {
-	        ctx.globalAlpha = 0.12 + corePulse * 0.06;
-	        ctx.fillStyle = '#ff8';
-	        ctx.fillRect(b.x + b.w * 0.5 - 1, b.y - 2, 2, 2);
-	        ctx.fillRect(b.x + b.w * 0.5 - 1, b.y + b.h, 2, 2);
-	      }
-	    });
-	    ctx.globalAlpha = 1;
-
-    // Enemy bullets
-    enemyBullets.forEach(drawEnemyBullet);
+    // ================================================================
+    // HC-RD-01: PRIORITY_ENEMY — mines, satellites
+    // ================================================================
 
     // Minas flotantes (Serpentrix) — HC-94 visual upgrade
     mines.forEach(m => {
@@ -4812,6 +4753,10 @@ if (shouldShow) {
         ctx.fill();
       });
     }
+
+    // ================================================================
+    // HC-RD-01: PRIORITY_FEEDBACK — powerups, rewards, medals, explosions, popups
+    // ================================================================
 
     // Powerups
     powerUps.forEach(p => {
@@ -4908,19 +4853,23 @@ ufoRewards.forEach(d => {
 
     drawMedals(ctx);
 
+    // HC-RD-01: Particles (explosions) render BEFORE bullets so they never cover lethal threats.
     // Particles (HC-95: core glow + ring depth)
     particles.forEach(p => {
-      ctx.globalAlpha = Math.max(0, p.life);
+      var _maxParticleAlpha = (typeof getFXSuppressionConfig === 'function')
+        ? getFXSuppressionConfig().explosionAlphaMax || 0.55
+        : 0.55;
+      ctx.globalAlpha = Math.min(_maxParticleAlpha, Math.max(0, p.life));
 
       if (p.isRing) {
         var ringAlpha = Math.max(0, p.life);
         ctx.strokeStyle = p.color;
         ctx.lineWidth = 1.5;
-        ctx.globalAlpha = ringAlpha * 0.55;
+        ctx.globalAlpha = Math.min(_maxParticleAlpha, ringAlpha * 0.55);
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.ringRadius + 2, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.globalAlpha = ringAlpha;
+        ctx.globalAlpha = Math.min(_maxParticleAlpha, ringAlpha);
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.ringRadius, 0, Math.PI * 2);
@@ -4929,9 +4878,9 @@ ufoRewards.forEach(d => {
       } else if (p.isSpark) {
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, p.size, p.size);
-        ctx.globalAlpha = p.life * 0.45;
+        ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.45, p.life * 0.45);
         ctx.fillRect(p.x - p.vx * 0.3, p.y - p.vy * 0.3, p.size, p.size);
-        ctx.globalAlpha = p.life * 0.35;
+        ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.35, p.life * 0.35);
         ctx.fillStyle = '#fff';
         ctx.fillRect(p.x + 1, p.y + 1, Math.max(1, p.size - 2), Math.max(1, p.size - 2));
       } else {
@@ -4939,7 +4888,7 @@ ufoRewards.forEach(d => {
         ctx.fillStyle = p.color;
         ctx.fillRect(p.x, p.y, size, size);
         if (p.life > 0.25) {
-          ctx.globalAlpha = p.life * 0.4;
+          ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.4, p.life * 0.4);
           ctx.fillStyle = '#fff';
           ctx.fillRect(p.x + 1, p.y + 1, Math.max(1, size - 2), Math.max(1, size - 2));
         }
@@ -4948,7 +4897,108 @@ ufoRewards.forEach(d => {
     ctx.globalAlpha = 1;
     drawPopups(ctx);
 
+    // ================================================================
+    // HC-RD-01: PRIORITY_FEEDBACK — player bullets
+    // ================================================================
 
+    // Player bullets (HC-93 visual polish)
+    bullets.forEach(b => {
+      var bt = b.type || 'normal';
+      var bc = b.color || '#fff';
+
+      // --- HC-93: per-weapon glow profile ---
+      var glowColor, glowOuter, glowInner;
+      switch (bt) {
+        case 'laser':   glowColor = '#0ff'; glowOuter = 0.16; glowInner = 0.10; break;
+        case 'machine': glowColor = '#f5f'; glowOuter = 0.12; glowInner = 0.07; break;
+        case 'spread':  glowColor = '#5f5'; glowOuter = 0.14; glowInner = 0.08; break;
+        case 'double':  glowColor = '#ff8'; glowOuter = 0.13; glowInner = 0.07; break;
+        default:        glowColor = '#fff'; glowOuter = 0.10; glowInner = 0.06; break;
+      }
+
+      // --- HC-93: trail with enhanced fade ---
+      if (Array.isArray(b.trail) && b.trail.length > 0) {
+        var trailLen = b.trail.length;
+        for (var ti = 0; ti < trailLen; ti++) {
+          var tf = (ti + 1) / trailLen;
+          var tp = b.trail[ti];
+          var ttw = Math.max(1, b.w * (0.35 + tf * 0.40));
+          var tth = Math.max(1, b.h * (0.20 + tf * 0.35));
+
+          ctx.globalAlpha = 0.02 + tf * 0.28;
+          ctx.fillStyle = glowColor;
+          ctx.fillRect(tp.x - ttw / 2 - 1, tp.y - tth / 2 - 1, ttw + 2, tth + 2);
+
+          ctx.globalAlpha = 0.04 + tf * 0.22;
+          ctx.fillStyle = bc;
+          ctx.fillRect(tp.x - ttw / 2, tp.y - tth / 2, ttw, tth);
+        }
+      }
+
+      // --- HC-93: outer glow halo ---
+      var ow = bt === 'laser' ? 5 : 3;
+      var oh = bt === 'laser' ? 7 : 3;
+      ctx.globalAlpha = glowOuter;
+      ctx.fillStyle = glowColor;
+      ctx.fillRect(b.x - ow, b.y - oh, b.w + ow * 2, b.h + oh * 2);
+
+      // --- HC-93: inner glow ring ---
+      ctx.globalAlpha = glowInner;
+      ctx.fillStyle = glowColor;
+      ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
+
+      // --- HC-93: main body ---
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = bc;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // --- HC-93: bright core with pulse ---
+      var corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.06 + b.x * 0.03);
+      var cw = bt === 'laser' ? 2 : 1;
+      var ch = bt === 'laser' ? 3 : 1;
+      var coreAlpha = bt === 'laser' ? 0.55 + corePulse * 0.15 : 0.45 + corePulse * 0.15;
+      ctx.globalAlpha = coreAlpha;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(b.x + cw, b.y + ch, Math.max(1, b.w - cw * 2), Math.max(1, b.h - ch * 2));
+
+      // --- HC-93: per-type extras ---
+      if (bt === 'laser') {
+        ctx.globalAlpha = 0.20 + corePulse * 0.10;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(b.x + 1, b.y + b.h * 0.25, 1, b.h * 0.20);
+        ctx.fillRect(b.x + b.w - 2, b.y + b.h * 0.25, 1, b.h * 0.20);
+        ctx.fillRect(b.x + 1, b.y + b.h * 0.60, 1, b.h * 0.20);
+        ctx.fillRect(b.x + b.w - 2, b.y + b.h * 0.60, 1, b.h * 0.20);
+      } else if (bt === 'machine') {
+        ctx.globalAlpha = 0.08 + corePulse * 0.05;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(b.x - 2, b.y + b.h * 0.3, 1, 2);
+        ctx.fillRect(b.x + b.w + 1, b.y + b.h * 0.5, 1, 2);
+      } else if (bt === 'spread') {
+        ctx.globalAlpha = 0.10;
+        ctx.fillStyle = '#8f8';
+        ctx.fillRect(b.x - 3, b.y + 1, 2, b.h - 2);
+        ctx.fillRect(b.x + b.w + 1, b.y + 1, 2, b.h - 2);
+      } else if (bt === 'double') {
+        ctx.globalAlpha = 0.12 + corePulse * 0.06;
+        ctx.fillStyle = '#ff8';
+        ctx.fillRect(b.x + b.w * 0.5 - 1, b.y - 2, 2, 2);
+        ctx.fillRect(b.x + b.w * 0.5 - 1, b.y + b.h, 2, 2);
+      }
+    });
+    ctx.globalAlpha = 1;
+
+    // ================================================================
+    // HC-RD-01: PRIORITY_FATAL — enemy bullets (LAST gameplay layer, nothing covers them)
+    // ================================================================
+
+    // Enemy bullets
+    enemyBullets.forEach(drawEnemyBullet);
+
+
+    // ================================================================
+    // HC-RD-01: PRIORITY_FEEDBACK — HUD overlays
+    // ================================================================
     // HUD (HC-96: improved contrast + value glow)
     ctx.save();
     const hudTop = 7;

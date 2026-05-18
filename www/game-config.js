@@ -136,6 +136,87 @@ window.GALAXY_CONFIG = {
     // recentMemory: 12,                // cap for recent arrays (default: 12)
   },
 
+  // ================================================================
+  // HC-RD-01: VISUAL PRIORITY SYSTEM — readability config
+  // ================================================================
+  // Layers enforce draw order separation so lethal threats dominate:
+  //   PRIORITY_FATAL     — enemy bullets, boss lethal patterns
+  //   PRIORITY_TELEGRAPH — attack warnings, sniper lines, diver signals
+  //   PRIORITY_ENEMY     — enemy sprites, boss visuals
+  //   PRIORITY_FEEDBACK  — player, powerups, explosions, popups, HUD
+  //   PRIORITY_AMBIENT   — background, stars, atmospheric FX
+  // ================================================================
+  readability: {
+    enabled: true,                       // master kill switch (render-only)
+
+    // --- VISUAL PRIORITY LAYERS ---
+    visualPriority: {
+      enabled: true,
+      // draw-order grouping enforced via comment markers in draw.js
+      fatalAlphaFloor:     0.85,        // PRIORITY_FATAL minimum body alpha
+      telegraphAlphaFloor: 0.60,        // PRIORITY_TELEGRAPH minimum alpha
+      enemyAlphaFloor:     0.70,        // PRIORITY_ENEMY minimum body alpha
+      feedbackAlphaMax:    0.70,        // PRIORITY_FEEDBACK alpha ceiling
+      ambientAlphaMax:     0.55         // PRIORITY_AMBIENT alpha ceiling
+    },
+
+    // --- GLOW POLICY ---
+    // Reduce decorative glow; keep bullets/telegraphs legible.
+    glowPolicy: {
+      enabled: true,
+      // ambient / decorative glow caps
+      starAlphaMax:         0.70,        // was effectively 1.0 (computed)
+      backgroundAmbientMax: 0.10,        // was up to 0.18
+      bossAmbientGlowMax:   0.06,        // was up to 0.11+0.03*sin
+      // bullet / telegraph glow floor
+      enemyBulletHaloMin:   0.10,        // outer halo min alpha
+      telegraphGlowMin:     0.08,        // telegraph visibility floor
+      // explosion policy
+      explosionAlphaMax:    0.55         // prevent explosions from dominating
+    },
+
+    // --- ALPHA POLICY ---
+    // Fatal threats ALTA, feedback MEDIA, ambient BAJA.
+    alphaPolicy: {
+      enabled: true,
+      fatal: {
+        enemyBulletBody:    0.95,        // was 1.0  (slight reduction avoids burn-in)
+        enemyBulletCore:    0.55,        // was 0.48-0.65
+        enemyBulletOuterHalo: 0.12,      // was 0.10-0.12
+        enemyBulletInnerGlow: 0.22       // was 0.18-0.22
+      },
+      feedback: {
+        playerGlow:         0.14,        // was 0.18 (core glow)
+        explosionParticle:  0.65,        // was up to 1.0 (particle life)
+        hitFlashMax:        0.45,        // was up to 0.62 (hit flash body)
+        popupAlpha:         0.85,        // was 1.0
+        powerupGlow:        0.20         // was up to 0.28
+      },
+      ambient: {
+        starDepthAlphaMax:  0.70,        // was up to 1.0 computed
+        backgroundLayer:    0.08,        // was up to 0.12-0.18
+        nebulaAlpha:        0.04,        // was up to 1.0 (HC-90)
+        dustAlpha:          0.18         // was up to 0.25 (HC-97)
+      }
+    },
+
+    // --- FX SUPPRESSION ---
+    // Explosions no tapan bullets. Hit flashes no ocultan disparos.
+    // Overlays no compiten con telegraphs.
+    fxSuppression: {
+      enabled: true,
+      // particles (explosions) render BEFORE enemy bullets
+      particlesBeforeBullets: true,
+      // hit flash alpha reduction
+      hitFlashBodyAlpha:     0.42,       // was up to 0.62
+      hitFlashWhiteAlpha:    0.30,       // was up to ~0.36
+      // overlay suppression during telegraphs
+      suppressOverlaysDuringTelegraph: true,
+      // death explosion particle cap
+      maxExplosionParticles: 60          // was 100 default
+    }
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,

@@ -1,5 +1,5 @@
 // =====================
-// GALAXY RAIDERS - render-entities.js (HC-94 pass)
+// GALAXY RAIDERS - render-entities.js (HC-94 pass / HC-RD-01 readability)
 // =====================
 
 function getEnemyBulletRenderStyle(b) {
@@ -89,7 +89,7 @@ function drawEnemyBullet(b) {
     ctx.fillRect(x, y, w, h);
 
     // --- BRIGHT CORE ---
-    ctx.globalAlpha = 0.65;
+    ctx.globalAlpha = 0.55;
     ctx.fillStyle = '#fff';
     ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(2, h - 2));
 
@@ -127,14 +127,14 @@ function drawEnemyBullet(b) {
     _drawEnemyTrail(b, color, 2, 0.12, 2.5);
 
     // --- BODY ---
-    ctx.globalAlpha = 0.9;
+    ctx.globalAlpha = 0.95;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
 
     // --- BRIGHT CORE ---
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.55;
     ctx.fillStyle = '#fff';
     ctx.beginPath();
     ctx.arc(cx, cy, Math.max(1, r * 0.45), 0, Math.PI * 2);
@@ -255,7 +255,7 @@ function drawEnemyBullet(b) {
     ctx.fillRect(x, y, w, h);
 
     // --- BRIGHT CORE ---
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.55;
     ctx.fillStyle = '#fff';
     ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(2, h - 2));
 
