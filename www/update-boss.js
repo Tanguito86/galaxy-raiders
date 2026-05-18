@@ -387,26 +387,34 @@ switch (boss.pattern) {
     boss.advanceTimer += dt;
     
     if (boss.dashMode) {
-      // DASH en progreso
-      const dx = boss.dashTargetX - boss.x;
-      const speed = 12;
-      
-      boss.crabVx = boss.crabVx * 0.8 + (dx > 0 ? speed : -speed) * 0.2;
-      boss.x += boss.crabVx * step;
-      
-      boss.dashTimer -= dt;
-      
-      if (boss.dashTimer <= 0 || Math.abs(dx) < 20) {
-        boss.dashMode = false;
-        boss.dashCooldown = 2500 + Math.random() * 1500;
-        boss.crabVx = 0;
+      if (boss.dashMode === 'telegraph') {
+        boss._dashTelegraphTimer -= dt;
+        if (boss._dashTelegraphTimer <= 0) {
+          boss.dashMode = true;
+          boss.dashTimer = 600;
+        }
+      } else {
+        // DASH en progreso
+        const dx = boss.dashTargetX - boss.x;
+        const speed = 12;
         
-        // Disparo de pinzas al terminar dash
-        enemyBullets.push(
-          { x: boss.x + 10, y: boss.y + boss.h / 2, w: 8, h: 8, vx: -3, vy: 3 },
-          { x: boss.x + boss.w - 10, y: boss.y + boss.h / 2, w: 8, h: 8, vx: 3, vy: 3 }
-        );
-        sfxEnemyHit();
+        boss.crabVx = boss.crabVx * 0.8 + (dx > 0 ? speed : -speed) * 0.2;
+        boss.x += boss.crabVx * step;
+        
+        boss.dashTimer -= dt;
+        
+        if (boss.dashTimer <= 0 || Math.abs(dx) < 20) {
+          boss.dashMode = false;
+          boss.dashCooldown = 2500 + Math.random() * 1500;
+          boss.crabVx = 0;
+          
+          // Disparo de pinzas al terminar dash
+          enemyBullets.push(
+            { x: boss.x + 10, y: boss.y + boss.h / 2, w: 8, h: 8, vx: -3, vy: 3 },
+            { x: boss.x + boss.w - 10, y: boss.y + boss.h / 2, w: 8, h: 8, vx: 3, vy: 3 }
+          );
+          sfxEnemyHit();
+        }
       }
     } else {
       // Movimiento normal de cangrejo
@@ -432,10 +440,11 @@ switch (boss.pattern) {
       boss.y += boss.crabVy * step;
       boss.y = clamp(boss.y, 80, 160);
       
-      // Iniciar DASH (fase 2+ o random)
+      // Iniciar DASH (fase 2+ o random) — HC-164: 200ms telegraph first
       if (boss.dashCooldown <= 0 && (phase >= 2 || Math.random() < 0.3)) {
-        boss.dashMode = true;
-        boss.dashTimer = 600;
+        boss.dashMode = 'telegraph';
+        boss._dashTelegraphTimer = 200;
+        boss.flashTimer = 200;
         // Dash hacia el jugador o lado opuesto
         if (Math.random() < 0.7) {
           boss.dashTargetX = player.x - boss.w / 2;
@@ -517,8 +526,30 @@ switch (boss.pattern) {
 
     if (boss.chargeMode) {
 
-      // TELEGRAPH
-      if (boss.telegraphTimer > 0) {
+      // HC-164: impact telegraph — warn before radial burst
+      if (boss.chargeMode === 'impact') {
+        boss._chargeImpactTimer -= dt;
+        if (boss._chargeImpactTimer <= 0) {
+          const bombCount = 8 + phase * 2;
+          for (let i = 0; i < bombCount; i++) {
+            const ang = (Math.PI * 2 * i / bombCount);
+            enemyBullets.push({
+              x: boss.x + boss.w / 2,
+              y: boss.y + boss.h,
+              w: 8, h: 8,
+              vx: Math.cos(ang) * 4,
+              vy: Math.sin(ang) * 4
+            });
+          }
+          pushScreenShake('heavy', 12);
+          sfxBigExplosion();
+          createExplosion(boss.x + boss.w / 2, boss.y + boss.h, '#ff0', 25);
+          boss.chargeMode = false;
+          boss.retreating = true;
+          boss.chargeTimer = 950;
+        }
+      } else if (boss.telegraphTimer > 0) {
+        // TELEGRAPH
         boss.telegraphTimer -= dt;
 
         boss.x += (Math.random() - 0.5) * 2.0 * step;
@@ -547,34 +578,18 @@ switch (boss.pattern) {
         boss.x += boss.vx * step;
         boss.y += boss.vy * step;
 
-        // LLEGÓ
+        // LLEGÓ — HC-164: 250ms impact telegraph before radial burst
         if (dist < 22) {
           boss.x = tx - boss.w / 2;
           boss.y = ty - boss.h / 2;
 
-          boss.chargeMode = false;
-          boss.retreating = true;
-          boss.chargeTimer = 950;
-
-          // 💣 descarga radial al impactar
-          const bombCount = 8 + phase * 2;
-          for (let i = 0; i < bombCount; i++) {
-            const ang = (Math.PI * 2 * i / bombCount);
-            enemyBullets.push({
-              x: boss.x + boss.w / 2,
-              y: boss.y + boss.h,
-              w: 8, h: 8,
-              vx: Math.cos(ang) * 4,
-              vy: Math.sin(ang) * 4
-            });
-          }
-
-          pushScreenShake('heavy', 12);
-          sfxBigExplosion();
-          createExplosion(boss.x + boss.w / 2, boss.y + boss.h, '#ff0', 25);
-
+          boss.chargeMode = 'impact';
+          boss._chargeImpactTimer = 250;
+          boss.flashTimer = 250;
           boss.vx = 0;
           boss.vy = 0;
+          pushScreenShake('medium', 6);
+          sfxBossWarning();
         }
       }
 
