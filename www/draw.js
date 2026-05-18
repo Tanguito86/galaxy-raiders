@@ -4187,10 +4187,13 @@ if (shouldShow) {
     // HC-129: threat telegraph — subtle role indicator (render-only)
     if (window.ENCOUNTER_THREAT_TELEGRAPH === true && e.alive) {
       var _threatColor = null;
-      if (e.type === 'alien2')        { _threatColor = '#ff4'; }
-      else if (e.type === 'alien5')   { _threatColor = '#f44'; }
-      else if (e.diving)              { _threatColor = '#f80'; }
-      else if (e.type === 'alien4')   { _threatColor = '#4fc'; }
+      if (e.type === 'alien1')        { _threatColor = '#8df'; }
+      else if (e.type === 'alien2')   { _threatColor = '#4ff'; }
+      else if (e.type === 'alien3')   { _threatColor = '#f55'; }
+      else if (e.type === 'alien4')   { _threatColor = '#bf4'; }
+      else if (e.type === 'alien5')   { _threatColor = '#f62'; }
+      else if (e.type === 'alien6')   { _threatColor = '#c8f'; }
+      else if (e.type === 'alien_mini') { _threatColor = '#f96'; }
       if (_threatColor) {
         var _tcx = e.x + e.w / 2;
         var _tcy = e.y + e.h / 2;
@@ -4306,35 +4309,33 @@ if (shouldShow) {
           ctx.restore();
         }
 
-        // HC-47: ELITE TELEGRAPH — amber side glow / flare before side shots
-        if (e._eliteTelegraphActive) {
-          var elTelElapsed = globalTime - (e._eliteTelegraphFiredAt || globalTime);
-          var elTelProgress = Math.min(1, elTelElapsed / 220);
-          var elTelAlpha = 0.12 + 0.14 * Math.sin(elTelProgress * Math.PI) * (1 - elTelProgress);
-          var ecx = e.x + (e.w || 24) / 2;
-          var ecy = e.y + (e.h || 24);
+        // HC-47: CHASER TELEGRAPH — orange side glow/flare before side shots
+        if (e._chaserTelegraphActive) {
+          var chTelElapsed = globalTime - (e._chaserTelegraphFiredAt || globalTime);
+          var chTelProgress = Math.min(1, chTelElapsed / 180);
+          var chTelAlpha = 0.12 + 0.14 * Math.sin(chTelProgress * Math.PI) * (1 - chTelProgress);
+          var ccx = e.x + (e.w || 24) / 2;
+          var ccy = e.y + (e.h || 24);
 
           ctx.save();
-          ctx.globalAlpha = elTelAlpha;
-          // side glow ellipses
-          ctx.fillStyle = '#fa3';
+          ctx.globalAlpha = chTelAlpha;
+          ctx.fillStyle = '#f62';
           ctx.beginPath();
-          ctx.ellipse(ecx - 14, ecy, 5 + elTelProgress * 4, 3, 0, 0, Math.PI * 2);
+          ctx.ellipse(ccx - 14, ccy, 5 + chTelProgress * 4, 3, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.beginPath();
-          ctx.ellipse(ecx + 14, ecy, 5 + elTelProgress * 4, 3, 0, 0, Math.PI * 2);
+          ctx.ellipse(ccx + 14, ccy, 5 + chTelProgress * 4, 3, 0, 0, Math.PI * 2);
           ctx.fill();
-          // diagonal mini-lines
-          ctx.strokeStyle = '#fb5';
+          ctx.strokeStyle = '#f84';
           ctx.lineWidth = 1;
-          var diagLen = 6 + elTelProgress * 8;
+          var diagLen = 6 + chTelProgress * 8;
           ctx.beginPath();
-          ctx.moveTo(ecx - 8, ecy - 2);
-          ctx.lineTo(ecx - 8 - diagLen, ecy - 2 - diagLen * 0.7);
+          ctx.moveTo(ccx - 8, ccy - 2);
+          ctx.lineTo(ccx - 8 - diagLen, ccy - 2 - diagLen * 0.7);
           ctx.stroke();
           ctx.beginPath();
-          ctx.moveTo(ecx + 8, ecy - 2);
-          ctx.lineTo(ecx + 8 + diagLen, ecy - 2 - diagLen * 0.7);
+          ctx.moveTo(ccx + 8, ccy - 2);
+          ctx.lineTo(ccx + 8 + diagLen, ccy - 2 - diagLen * 0.7);
           ctx.stroke();
           ctx.restore();
         }
@@ -4456,14 +4457,18 @@ if (shouldShow) {
             cdStr = 'SNP ' + (e._hcSniperCooldown / 1000).toFixed(1) + 's';
           } else if (typeof e._hcSuppressorCooldown === 'number' && e._hcSuppressorCooldown > 0 && e._hcSuppressorCooldown < 900000) {
             cdStr = 'SUP ' + (e._hcSuppressorCooldown / 1000).toFixed(1) + 's';
-          } else if (typeof e._hcEliteCooldown === 'number' && e._hcEliteCooldown > 0 && e._hcEliteCooldown < 900000) {
-            cdStr = 'ELT ' + (e._hcEliteCooldown / 1000).toFixed(1) + 's';
+          } else if (typeof e._hcChaserCooldown === 'number' && e._hcChaserCooldown > 0 && e._hcChaserCooldown < 900000) {
+            cdStr = 'CHS ' + (e._hcChaserCooldown / 1000).toFixed(1) + 's';
           } else if (typeof e._hcDiverCooldown === 'number' && e._hcDiverCooldown > 0 && e._hcDiverCooldown < 900000) {
             cdStr = 'DVR ' + (e._hcDiverCooldown / 1000).toFixed(1) + 's';
+          } else if (typeof e._hcSweeperCooldown === 'number' && e._hcSweeperCooldown > 0 && e._hcSweeperCooldown < 900000) {
+            cdStr = 'SWP ' + (e._hcSweeperCooldown / 1000).toFixed(1) + 's';
+          } else if (typeof e._hcFlankerCooldown === 'number' && e._hcFlankerCooldown > 0 && e._hcFlankerCooldown < 900000) {
+            cdStr = 'FLK ' + (e._hcFlankerCooldown / 1000).toFixed(1) + 's';
           }
           if (e._hcDiverState && e._hcDiverState !== 'idle') cdStr = 'DIV:' + e._hcDiverState;
           if (e._sniperTelegraphActive) cdStr = 'SNP:TG';
-          if (e._eliteTelegraphActive) cdStr = 'ELT:TG';
+          if (e._chaserTelegraphActive) cdStr = 'CHS:TG';
           if (e._suppressorTelegraphActive) cdStr = 'SUP:TG';
           if (cdStr) {
             ctx.globalAlpha = 0.72;

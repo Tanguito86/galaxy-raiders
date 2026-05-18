@@ -5,39 +5,39 @@
 
 var _ENEMY_IDENTITY_MAP = {
   alien1: {
-    role: 'swarm',
-    patternHint: 'basic_pressure',
-    label: 'Drone'
+    role: 'sweeper',
+    patternHint: 'wide_sweep',
+    label: 'Sweeper'
   },
   alien2: {
     role: 'sniper',
     patternHint: 'aimed_shots',
-    label: 'Marksman'
+    label: 'Sniper'
   },
   alien3: {
     role: 'diver',
     patternHint: 'aggressive_dive',
-    label: 'Breacher'
+    label: 'Diver'
   },
   alien4: {
     role: 'suppressor',
     patternHint: 'lateral_sweep',
-    label: 'Flanker'
+    label: 'Suppressor'
   },
   alien5: {
-    role: 'elite',
-    patternHint: 'mixed_pressure',
-    label: 'Elite'
+    role: 'chaser',
+    patternHint: 'player_pursuit',
+    label: 'Chaser'
   },
   alien6: {
-    role: 'splitter',
-    patternHint: 'frag_swarm',
-    label: 'Splitter'
+    role: 'flanker',
+    patternHint: 'side_flank',
+    label: 'Flanker'
   },
   alien_mini: {
-    role: 'fragment',
-    patternHint: 'rush',
-    label: 'Fragment'
+    role: 'baiter',
+    patternHint: 'erratic_bait',
+    label: 'Baiter'
   },
   ufo: {
     role: 'bonus',

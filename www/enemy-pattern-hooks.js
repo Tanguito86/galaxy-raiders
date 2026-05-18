@@ -350,61 +350,61 @@ function fireHardcoreSuppressorBurst(enemy) {
   return true;
 }
 
-// HC-47: fires elite side shots after telegraph expires (called from update loop)
-function _fireEliteTelegraphSideShots(enemy) {
+// HC-47: fires chaser side shots after telegraph expires (called from update loop)
+function _fireChaserTelegraphSideShots(enemy) {
   if (!enemy || typeof pushEnemyBullet !== 'function') return;
 
   var sx = enemy.x + (enemy.w || 24) / 2;
   var sy = enemy.y + (enemy.h || 24);
-  var bulletSpeed = (typeof enemy._eliteTelegraphBulletSpeed === 'number') ? enemy._eliteTelegraphBulletSpeed : 2.8;
+  var bulletSpeed = (typeof enemy._chaserTelegraphBulletSpeed === 'number') ? enemy._chaserTelegraphBulletSpeed : 2.8;
 
-  var sideAngle = 0.44;
+  var sideAngle = 0.38;
   var dAngle = Math.PI / 2;
-  var sideVxLeft = Math.cos(dAngle - sideAngle) * bulletSpeed * 0.85;
-  var sideVyLeft = Math.sin(dAngle - sideAngle) * bulletSpeed * 0.85;
-  var sideVxRight = Math.cos(dAngle + sideAngle) * bulletSpeed * 0.85;
-  var sideVyRight = Math.sin(dAngle + sideAngle) * bulletSpeed * 0.85;
+  var sideVxLeft = Math.cos(dAngle - sideAngle) * bulletSpeed * 0.88;
+  var sideVyLeft = Math.sin(dAngle - sideAngle) * bulletSpeed * 0.88;
+  var sideVxRight = Math.cos(dAngle + sideAngle) * bulletSpeed * 0.88;
+  var sideVyRight = Math.sin(dAngle + sideAngle) * bulletSpeed * 0.88;
 
-  var eliteSeed = (typeof enemy._eliteTelegraphSeed === 'number') ? enemy._eliteTelegraphSeed : ((enemy.x * 7919 + enemy.y * 65537) | 0);
-  var eliteOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(eliteSeed, 50) : 0;
-  var eliteAbs = Math.abs(eliteOffset);
+  var chaserSeed = (typeof enemy._chaserTelegraphSeed === 'number') ? enemy._chaserTelegraphSeed : ((enemy.x * 7919 + enemy.y * 65537) | 0);
+  var chaserOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(chaserSeed, 50) : 0;
+  var chaserAbs = Math.abs(chaserOffset);
 
   function _push() {
     pushEnemyBullet(sx - 2, sy, sideVxLeft, sideVyLeft, 5, 9, {
       kind: 'basic',
-      color: '#ffcc66',
+      color: '#ff7744',
       sourceType: enemy.type || 'alien5'
     });
     pushEnemyBullet(sx - 2, sy, sideVxRight, sideVyRight, 5, 9, {
       kind: 'basic',
-      color: '#ffcc66',
+      color: '#ff7744',
       sourceType: enemy.type || 'alien5'
     });
   }
 
-  if (eliteAbs > 0) {
-    setTimeout(_push, eliteAbs);
+  if (chaserAbs > 0) {
+    setTimeout(_push, chaserAbs);
   } else {
     _push();
   }
 }
 
 // ============================================================
-// HARDCORE SWARM PATTERN (alien1)
+// HARDCORE SWEEPER PATTERN (alien1)
 // ============================================================
 
-function shouldUseHardcoreSwarmPattern(enemy) {
+function shouldUseHardcoreSweeperPattern(enemy) {
   if (!shouldUseHardcorePattern(enemy)) return false;
-  if (getEnemyPatternRole(enemy) !== 'swarm') return false;
+  if (getEnemyPatternRole(enemy) !== 'sweeper') return false;
   if (enemy.diving) return false;
   return true;
 }
 
-function updateHardcoreSwarmOscillation(enemy) {
-  if (enemy._hcSwarmPhase === undefined) {
-    enemy._hcSwarmPhase = enemy.x * 0.14 + enemy.y * 0.11 + (enemy.row || 0) * 1.9 + Math.random() * 0.45;
-    enemy._hcSwarmOscX = 0;
-    enemy._hcSwarmOscY = 0;
+function updateHardcoreSweeperOscillation(enemy) {
+  if (enemy._hcSweeperPhase === undefined) {
+    enemy._hcSweeperPhase = enemy.x * 0.14 + enemy.y * 0.11 + (enemy.row || 0) * 1.9 + Math.random() * 0.45;
+    enemy._hcSweeperOscX = 0;
+    enemy._hcSweeperOscY = 0;
   }
 
   var time = typeof globalTime === 'number' ? globalTime : 0;
@@ -413,37 +413,26 @@ function updateHardcoreSwarmOscillation(enemy) {
   var ampX = 2.2;
   var ampY = 1.3;
 
-  var newOscX = Math.sin(time * freqX + enemy._hcSwarmPhase) * ampX;
-  var newOscY = Math.cos(time * freqY + enemy._hcSwarmPhase + 1.1) * ampY;
+  var newOscX = Math.sin(time * freqX + enemy._hcSweeperPhase) * ampX;
+  var newOscY = Math.cos(time * freqY + enemy._hcSweeperPhase + 1.1) * ampY;
 
-  enemy.x += newOscX - enemy._hcSwarmOscX;
-  enemy.y += newOscY - enemy._hcSwarmOscY;
+  enemy.x += newOscX - enemy._hcSweeperOscX;
+  enemy.y += newOscY - enemy._hcSweeperOscY;
 
-  enemy._hcSwarmOscX = newOscX;
-  enemy._hcSwarmOscY = newOscY;
+  enemy._hcSweeperOscX = newOscX;
+  enemy._hcSweeperOscY = newOscY;
 }
 
-// ============================================================
-// HARDCORE ELITE PATTERN (alien5)
-// ============================================================
+var HC_SWEEPER_COOLDOWN_MIN = 3200;
+var HC_SWEEPER_COOLDOWN_MAX = 5500;
 
-function shouldUseHardcoreElitePattern(enemy) {
-  if (!shouldUseHardcorePattern(enemy)) return false;
-  if (getEnemyPatternRole(enemy) !== 'elite') return false;
-  return true;
-}
-
-var HC_ELITE_COOLDOWN_MIN = 2400;
-var HC_ELITE_COOLDOWN_MAX = 4200;
-
-function fireHardcoreEliteBurst(enemy) {
+function fireHardcoreSweeperFan(enemy) {
   if (!enemy) return false;
-  if (enemy.diving) return false;
   if (typeof pushEnemyBullet !== 'function') return false;
 
   var sx = enemy.x + (enemy.w || 24) / 2;
   var sy = enemy.y + (enemy.h || 24);
-  var bulletSpeed = 2.8;
+  var bulletSpeed = 2.4;
 
   if (typeof getDifficultySettings === 'function') {
     var settings = getDifficultySettings(typeof level === 'number' ? level : 1);
@@ -452,30 +441,185 @@ function fireHardcoreEliteBurst(enemy) {
     }
   }
 
-  // Aimed center shot toward player — fires immediately
+  var fanCount = 5;
+  var spreadAngle = 0.70;
+  var startAngle = Math.PI / 2 - spreadAngle / 2;
+
+  for (var i = 0; i < fanCount; i++) {
+    var angle = startAngle + (spreadAngle / (fanCount - 1)) * i;
+    pushEnemyBullet(sx - 2, sy, Math.cos(angle) * bulletSpeed, Math.sin(angle) * bulletSpeed, 5, 9, {
+      kind: 'basic',
+      color: '#88ddff',
+      sourceType: enemy.type || 'alien1'
+    });
+  }
+
+  if (typeof createEnemyMuzzleFlash === 'function') {
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien1');
+  }
+
+  return true;
+}
+
+// ============================================================
+// HARDCORE CHASER PATTERN (alien5)
+// ============================================================
+
+function shouldUseHardcoreChaserPattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'chaser') return false;
+  return true;
+}
+
+var HC_CHASER_COOLDOWN_MIN = 2000;
+var HC_CHASER_COOLDOWN_MAX = 3600;
+
+function fireHardcoreChaserBurst(enemy) {
+  if (!enemy) return false;
+  if (enemy.diving) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+
+  var sx = enemy.x + (enemy.w || 24) / 2;
+  var sy = enemy.y + (enemy.h || 24);
+  var bulletSpeed = 2.9;
+
+  if (typeof getDifficultySettings === 'function') {
+    var settings = getDifficultySettings(typeof level === 'number' ? level : 1);
+    if (settings && typeof settings.bulletSpeed === 'number') {
+      bulletSpeed = settings.bulletSpeed * 0.82;
+    }
+  }
+
   var angleToPlayer = typeof getAngleToPlayer === 'function'
     ? getAngleToPlayer(enemy)
     : Math.PI / 2;
 
   pushEnemyBullet(sx - 3, sy, Math.cos(angleToPlayer) * bulletSpeed, Math.sin(angleToPlayer) * bulletSpeed, 6, 10, {
     kind: 'crossfire_a',
-    color: '#ffb938',
+    color: '#ff6633',
     sourceType: enemy.type || 'alien5'
   });
 
-  // Side shots — delayed by telegraph (HC-47)
-  // Store data for later firing by update loop
-  enemy._eliteTelegraphActive = true;
-  enemy._eliteTelegraphTimer = 220;
-  enemy._eliteTelegraphFiredAt = (typeof globalTime !== 'undefined') ? globalTime : Date.now();
-  enemy._eliteTelegraphBulletSpeed = bulletSpeed;
-  enemy._eliteTelegraphSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
+  enemy._chaserTelegraphActive = true;
+  enemy._chaserTelegraphTimer = 180;
+  enemy._chaserTelegraphFiredAt = (typeof globalTime !== 'undefined') ? globalTime : Date.now();
+  enemy._chaserTelegraphBulletSpeed = bulletSpeed;
+  enemy._chaserTelegraphSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
 
   if (typeof createEnemyMuzzleFlash === 'function') {
     createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien5');
   }
 
   if (typeof sfxUIClick === 'function') sfxUIClick();
+
+  return true;
+}
+
+// ============================================================
+// HARDCORE FLANKER PATTERN (alien6)
+// ============================================================
+
+function shouldUseHardcoreFlankerPattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'flanker') return false;
+  if (enemy.diving) return false;
+  return true;
+}
+
+var HC_FLANKER_COOLDOWN_MIN = 2800;
+var HC_FLANKER_COOLDOWN_MAX = 4600;
+
+function fireHardcoreFlankerCrossfire(enemy) {
+  if (!enemy) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+
+  var sx = enemy.x + (enemy.w || 24) / 2;
+  var sy = enemy.y + (enemy.h || 24);
+  var bulletSpeed = 2.5;
+
+  if (typeof getDifficultySettings === 'function') {
+    var settings = getDifficultySettings(typeof level === 'number' ? level : 1);
+    if (settings && typeof settings.bulletSpeed === 'number') {
+      bulletSpeed = settings.bulletSpeed * 0.80;
+    }
+  }
+
+  var screenCenterX = (typeof W === 'number' ? W : 360) / 2;
+  var isLeft = sx < screenCenterX;
+  var aimAngle;
+
+  if (typeof player !== 'undefined' && player) {
+    var px = player.x + player.width / 2;
+    var py = player.y + player.height / 2;
+    aimAngle = isLeft
+      ? Math.atan2(py - sy, px - sx + 40)
+      : Math.atan2(py - sy, px - sx - 40);
+  } else {
+    aimAngle = isLeft ? Math.PI / 2 - 0.30 : Math.PI / 2 + 0.30;
+  }
+
+  pushEnemyBullet(sx - 2, sy, Math.cos(aimAngle) * bulletSpeed, Math.sin(aimAngle) * bulletSpeed, 5, 9, {
+    kind: 'crossfire_b',
+    color: '#cc88ff',
+    sourceType: enemy.type || 'alien6'
+  });
+
+  pushEnemyBullet(sx - 2, sy, Math.cos(aimAngle + 0.18) * bulletSpeed * 0.90, Math.sin(aimAngle + 0.18) * bulletSpeed * 0.90, 5, 9, {
+    kind: 'crossfire_b',
+    color: '#cc88ff',
+    sourceType: enemy.type || 'alien6'
+  });
+
+  if (typeof createEnemyMuzzleFlash === 'function') {
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien6');
+  }
+
+  return true;
+}
+
+// ============================================================
+// HARDCORE BAITER PATTERN (alien_mini)
+// ============================================================
+
+function shouldUseHardcoreBaiterPattern(enemy) {
+  if (!shouldUseHardcorePattern(enemy)) return false;
+  if (getEnemyPatternRole(enemy) !== 'baiter') return false;
+  if (enemy.diving) return false;
+  return true;
+}
+
+var HC_BAITER_COOLDOWN_MIN = 1800;
+var HC_BAITER_COOLDOWN_MAX = 3200;
+
+function fireHardcoreBaiterBurst(enemy) {
+  if (!enemy) return false;
+  if (typeof pushEnemyBullet !== 'function') return false;
+
+  var sx = enemy.x + (enemy.w || 12) / 2;
+  var sy = enemy.y + (enemy.h || 12);
+  var bulletSpeed = 2.1;
+
+  if (typeof getDifficultySettings === 'function') {
+    var settings = getDifficultySettings(typeof level === 'number' ? level : 1);
+    if (settings && typeof settings.bulletSpeed === 'number') {
+      bulletSpeed = settings.bulletSpeed * 0.65;
+    }
+  }
+
+  var count = 3;
+  for (var i = 0; i < count; i++) {
+    var offsetAngle = (i - 1) * 0.22 + (Math.random() - 0.5) * 0.15;
+    var angle = Math.PI / 2 + offsetAngle;
+    pushEnemyBullet(sx - 2, sy, Math.cos(angle) * bulletSpeed, Math.sin(angle) * bulletSpeed, 4, 8, {
+      kind: 'basic',
+      color: '#ff9966',
+      sourceType: enemy.type || 'alien_mini'
+    });
+  }
+
+  if (typeof createEnemyMuzzleFlash === 'function') {
+    createEnemyMuzzleFlash(sx, sy, enemy.type || 'alien_mini');
+  }
 
   return true;
 }

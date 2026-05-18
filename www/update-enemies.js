@@ -771,9 +771,9 @@ if (!boss.active && activeEnemies.length > 0) {
     // HC-13: skip hardcore divers in active pattern (telegraph/recovering)
     if (e._hcDiverState && e._hcDiverState !== 'idle') return;
 
-    // HC-15: swarm micro-oscillation (alien1)
-    if (typeof shouldUseHardcoreSwarmPattern === 'function' && shouldUseHardcoreSwarmPattern(e)) {
-      if (typeof updateHardcoreSwarmOscillation === 'function') updateHardcoreSwarmOscillation(e);
+    // HC-15: sweeper micro-oscillation (alien1)
+    if (typeof shouldUseHardcoreSweeperPattern === 'function' && shouldUseHardcoreSweeperPattern(e)) {
+      if (typeof updateHardcoreSweeperOscillation === 'function') updateHardcoreSweeperOscillation(e);
     }
 
     e.x += enemySpeedX * enemyDir * step;
@@ -988,38 +988,36 @@ if (!boss.active && activeEnemies.length > 0) {
     }
   });
 
-  // HC-16/47: hardcore elite pattern (alien5) - independent cooldown with telegraph
+  // HC-16/47: hardcore chaser pattern (alien5) - independent cooldown with telegraph
   activeEnemies.forEach(e => {
-    if (typeof shouldUseHardcoreElitePattern === 'function' && shouldUseHardcoreElitePattern(e)) {
-      // HC-47: telegraph active — wait for telegraph to expire, then fire side shots
-      if (e._eliteTelegraphActive) {
-        e._eliteTelegraphTimer -= dt;
-        if (e._eliteTelegraphTimer <= 0) {
-          e._eliteTelegraphActive = false;
-          e._eliteTelegraphTimer = 0;
-          _fireEliteTelegraphSideShots(e);
+    if (typeof shouldUseHardcoreChaserPattern === 'function' && shouldUseHardcoreChaserPattern(e)) {
+      if (e._chaserTelegraphActive) {
+        e._chaserTelegraphTimer -= dt;
+        if (e._chaserTelegraphTimer <= 0) {
+          e._chaserTelegraphActive = false;
+          e._chaserTelegraphTimer = 0;
+          _fireChaserTelegraphSideShots(e);
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
           var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-          e._hcEliteCooldown = Math.max(1300, (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2 * pressScale2);
+          e._hcChaserCooldown = Math.max(1100, (HC_CHASER_COOLDOWN_MIN + Math.random() * (HC_CHASER_COOLDOWN_MAX - HC_CHASER_COOLDOWN_MIN)) * rankMult2 * pressScale2);
         }
         return;
       }
 
-      if (e._hcEliteCooldown === undefined) {
+      if (e._hcChaserCooldown === undefined) {
         var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
         var pressScale = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-        e._hcEliteCooldown = Math.max(1300, (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult * pressScale);
+        e._hcChaserCooldown = Math.max(1100, (HC_CHASER_COOLDOWN_MIN + Math.random() * (HC_CHASER_COOLDOWN_MAX - HC_CHASER_COOLDOWN_MIN)) * rankMult * pressScale);
       }
-      e._hcEliteCooldown -= dt;
-      if (e._hcEliteCooldown <= 0) {
-        if (typeof fireHardcoreEliteBurst === 'function' && fireHardcoreEliteBurst(e)) {
-          // HC-47: telegraph started — prevent re-trigger until telegraph expires
-          if (e._eliteTelegraphActive) {
-            e._hcEliteCooldown = 999999;
+      e._hcChaserCooldown -= dt;
+      if (e._hcChaserCooldown <= 0) {
+        if (typeof fireHardcoreChaserBurst === 'function' && fireHardcoreChaserBurst(e)) {
+          if (e._chaserTelegraphActive) {
+            e._hcChaserCooldown = 999999;
           } else {
             var rankMult2b = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
             var pressScale2b = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
-            e._hcEliteCooldown = Math.max(1300, (HC_ELITE_COOLDOWN_MIN + Math.random() * (HC_ELITE_COOLDOWN_MAX - HC_ELITE_COOLDOWN_MIN)) * rankMult2b * pressScale2b);
+            e._hcChaserCooldown = Math.max(1100, (HC_CHASER_COOLDOWN_MIN + Math.random() * (HC_CHASER_COOLDOWN_MAX - HC_CHASER_COOLDOWN_MIN)) * rankMult2b * pressScale2b);
           }
         }
       }
@@ -1059,6 +1057,48 @@ if (!boss.active && activeEnemies.length > 0) {
         e._sniperTelegraphTimer = 280;
         e._sniperTelegraphFiredAt = globalTime;
         e._hcSniperCooldown = 999999; // prevent re-trigger during telegraph
+      }
+    }
+  });
+
+  // HC-160: hardcore sweeper fan (alien1) - independent cooldown
+  activeEnemies.forEach(e => {
+    if (typeof shouldUseHardcoreSweeperPattern === 'function' && shouldUseHardcoreSweeperPattern(e)) {
+      if (e._hcSweeperCooldown === undefined) {
+        e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN);
+      }
+      e._hcSweeperCooldown -= dt;
+      if (e._hcSweeperCooldown <= 0) {
+        if (typeof fireHardcoreSweeperFan === 'function') fireHardcoreSweeperFan(e);
+        e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN);
+      }
+    }
+  });
+
+  // HC-160: hardcore flanker crossfire (alien6) - independent cooldown
+  activeEnemies.forEach(e => {
+    if (typeof shouldUseHardcoreFlankerPattern === 'function' && shouldUseHardcoreFlankerPattern(e)) {
+      if (e._hcFlankerCooldown === undefined) {
+        e._hcFlankerCooldown = HC_FLANKER_COOLDOWN_MIN + Math.random() * (HC_FLANKER_COOLDOWN_MAX - HC_FLANKER_COOLDOWN_MIN);
+      }
+      e._hcFlankerCooldown -= dt;
+      if (e._hcFlankerCooldown <= 0) {
+        if (typeof fireHardcoreFlankerCrossfire === 'function') fireHardcoreFlankerCrossfire(e);
+        e._hcFlankerCooldown = HC_FLANKER_COOLDOWN_MIN + Math.random() * (HC_FLANKER_COOLDOWN_MAX - HC_FLANKER_COOLDOWN_MIN);
+      }
+    }
+  });
+
+  // HC-160: hardcore baiter burst (alien_mini) - independent cooldown
+  activeEnemies.forEach(e => {
+    if (typeof shouldUseHardcoreBaiterPattern === 'function' && shouldUseHardcoreBaiterPattern(e)) {
+      if (e._hcBaiterCooldown === undefined) {
+        e._hcBaiterCooldown = HC_BAITER_COOLDOWN_MIN + Math.random() * (HC_BAITER_COOLDOWN_MAX - HC_BAITER_COOLDOWN_MIN);
+      }
+      e._hcBaiterCooldown -= dt;
+      if (e._hcBaiterCooldown <= 0) {
+        if (typeof fireHardcoreBaiterBurst === 'function') fireHardcoreBaiterBurst(e);
+        e._hcBaiterCooldown = HC_BAITER_COOLDOWN_MIN + Math.random() * (HC_BAITER_COOLDOWN_MAX - HC_BAITER_COOLDOWN_MIN);
       }
     }
   });

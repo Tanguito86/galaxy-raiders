@@ -5,13 +5,13 @@
 
 (function () {
   var PROFILE_BY_ROLE = {
-    swarm: {
-      label: 'micro flanking / formation cohesion',
-      track: 0.004,
-      xAmp: 0.42,
-      yAmp: 0.20,
-      smoothing: 0.045,
-      intervalScale: 0.90
+    sweeper: {
+      label: 'wide lateral sweep coverage',
+      track: 0.003,
+      xAmp: 0.58,
+      yAmp: 0.12,
+      smoothing: 0.038,
+      intervalScale: 0.88
     },
     sniper: {
       label: 'maintain useful horizontal distance and firing line',
@@ -38,21 +38,29 @@
       smoothing: 0.030,
       intervalScale: 1.05
     },
-    elite: {
-      label: 'light player-aware reposition',
-      track: 0.009,
-      xAmp: 0.44,
-      yAmp: 0.20,
-      smoothing: 0.048,
-      intervalScale: 0.95
-    },
-    splitter: {
-      label: 'seek useful split position',
-      track: 0.006,
-      xAmp: 0.34,
+    chaser: {
+      label: 'aggressive player pursuit',
+      track: 0.012,
+      xAmp: 0.52,
       yAmp: 0.18,
-      smoothing: 0.038,
-      intervalScale: 1.00
+      smoothing: 0.055,
+      intervalScale: 0.78
+    },
+    flanker: {
+      label: 'attack from screen edges',
+      track: 0.004,
+      xAmp: 0.48,
+      yAmp: 0.10,
+      smoothing: 0.032,
+      intervalScale: 1.10
+    },
+    baiter: {
+      label: 'erratic bait and dart',
+      track: 0.002,
+      xAmp: 0.64,
+      yAmp: 0.28,
+      smoothing: 0.025,
+      intervalScale: 0.72
     }
   };
 
@@ -69,12 +77,13 @@
   function resolveEnemyRole(enemy) {
     if (typeof getEnemyRole === 'function') return getEnemyRole(enemy);
     if (!enemy || !enemy.type) return 'basic';
-    if (enemy.type === 'alien1') return 'swarm';
+    if (enemy.type === 'alien1') return 'sweeper';
     if (enemy.type === 'alien2') return 'sniper';
     if (enemy.type === 'alien3') return 'diver';
     if (enemy.type === 'alien4') return 'suppressor';
-    if (enemy.type === 'alien5') return 'elite';
-    if (enemy.type === 'alien6') return 'splitter';
+    if (enemy.type === 'alien5') return 'chaser';
+    if (enemy.type === 'alien6') return 'flanker';
+    if (enemy.type === 'alien_mini') return 'baiter';
     return 'basic';
   }
 
@@ -131,9 +140,11 @@
     var desiredX = waveX + clampValue(dx * profile.track, -maxX, maxX);
     var desiredY = waveY;
 
-    if (role === 'swarm') {
-      desiredX += ((enemy.col || 0) % 2 === 0 ? -1 : 1) * maxX * 0.16;
-      state.state = 'cohesion';
+    if (role === 'sweeper') {
+      var sweepSign = Math.sin(time * 0.0012 + state.seed * 0.37) > 0 ? 1 : -1;
+      desiredX = sweepSign * maxX * 0.72;
+      desiredY *= 0.22;
+      state.state = 'sweep_lane';
     } else if (role === 'sniper') {
       var side = dx >= 0 ? -1 : 1;
       desiredX += side * Math.min(maxX, profile.preferredDx || 0) * 0.20;
@@ -147,14 +158,21 @@
       desiredX += dx > 0 ? maxX * 0.18 : -maxX * 0.18;
       desiredY *= 0.45;
       state.state = 'control_lane';
-    } else if (role === 'elite') {
-      desiredX += clampValue(dx * 0.004, -maxX * 0.45, maxX * 0.45);
-      desiredY += Math.sin(time * 0.0016 + state.seed) * maxY * 0.12;
-      state.state = 'reposition';
-    } else if (role === 'splitter') {
-      desiredX += (enemyCenterX(enemy) < (typeof W === 'number' ? W : 360) / 2 ? 1 : -1) * maxX * 0.20;
-      desiredY += maxY * 0.08;
-      state.state = 'split_lane';
+    } else if (role === 'chaser') {
+      desiredX += clampValue(dx * 0.006, -maxX * 0.58, maxX * 0.58);
+      desiredY += Math.sin(time * 0.0013 + state.seed) * maxY * 0.16;
+      state.state = 'pursue';
+    } else if (role === 'flanker') {
+      var edgeSide = (enemyCenterX(enemy) < (typeof W === 'number' ? W : 360) * 0.5) ? -1 : 1;
+      desiredX = edgeSide * maxX * 0.55;
+      desiredY *= 0.30;
+      state.state = 'flank_edge';
+    } else if (role === 'baiter') {
+      var baitX = Math.sin(time * 0.0035 + state.seed) * maxX * 0.70;
+      var baitY = Math.cos(time * 0.0028 + state.seed * 0.53) * maxY * 0.55;
+      desiredX = baitX;
+      desiredY = baitY;
+      state.state = 'bait_dart';
     }
 
     state.targetX = clampValue(desiredX, -maxX, maxX);
