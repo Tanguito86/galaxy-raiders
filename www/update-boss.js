@@ -86,8 +86,8 @@ function updateBossArenaReposition(boss, dt, step) {
         ar.targetX = bounds.minX + (bounds.maxX - bounds.minX) * (0.30 + Math.random() * 0.40);
       }
 
-      // Y: upper 55% of arena, avoid player zone
-      var yMid = bounds.minY + (bounds.maxY - bounds.minY) * 0.55;
+      // Y: upper 30% of arena, avoid player zone
+      var yMid = bounds.minY + (bounds.maxY - bounds.minY) * 0.30;
       ar.targetY = bounds.minY + Math.random() * (yMid - bounds.minY);
 
       ar.active = true;
