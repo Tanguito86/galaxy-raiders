@@ -49,6 +49,66 @@ function moveBossTowardPoint(boss, targetX, targetY, speed, step) {
   return false;
 }
 
+// HC-162B: arena reposition — periodic smooth drift to explore arena
+function updateBossArenaReposition(boss, dt, step) {
+  if (!boss._arenaReposition) {
+    boss._arenaReposition = {
+      targetX: boss.x,
+      targetY: boss.y,
+      timer: 0,
+      active: false,
+      duration: 0,
+      nextInterval: 7000 + Math.random() * 5000
+    };
+  }
+  var ar = boss._arenaReposition;
+
+  // Pause during special movement states
+  if (boss.dashMode || boss.chargeMode || boss.retreating ||
+      boss.isTeleporting || boss.pulseMode || boss.counterFlag) {
+    if (ar.active) { ar.active = false; ar.timer = 0; }
+    return false;
+  }
+
+  var bounds = getBossArenaBounds(boss);
+
+  if (!ar.active) {
+    ar.timer += dt;
+    if (ar.timer >= ar.nextInterval) {
+      ar.timer = 0;
+      ar.nextInterval = 6000 + Math.random() * 7000;
+
+      // Target: prefer laterals (55%) or mid zone (45%)
+      if (Math.random() < 0.55) {
+        var sideFrac = Math.random() < 0.5 ? 0.12 : 0.88;
+        ar.targetX = bounds.minX + (bounds.maxX - bounds.minX) * (sideFrac + (Math.random() - 0.5) * 0.20);
+      } else {
+        ar.targetX = bounds.minX + (bounds.maxX - bounds.minX) * (0.30 + Math.random() * 0.40);
+      }
+
+      // Y: upper 55% of arena, avoid player zone
+      var yMid = bounds.minY + (bounds.maxY - bounds.minY) * 0.55;
+      ar.targetY = bounds.minY + Math.random() * (yMid - bounds.minY);
+
+      ar.active = true;
+      ar.duration = 0;
+      ar.maxDuration = 1800 + Math.random() * 1200;
+    }
+    return false;
+  }
+
+  // Active: smooth drift toward target
+  ar.duration += dt;
+  if (ar.duration >= ar.maxDuration) {
+    ar.active = false;
+    ar.timer = 0;
+    return false;
+  }
+
+  moveBossTowardPoint(boss, ar.targetX, ar.targetY, 1.4, step);
+  return true;
+}
+
 function applyBossDefaultMovement(phase) {
   // Velocidad según fase (continua)
   const patternOverridesMove =
@@ -320,6 +380,8 @@ switch (boss.pattern) {
       boss.crabVx = 0;
       boss.crabVy = 0;
     }
+
+    if (updateBossArenaReposition(boss, dt, step)) { clampBossToArena(boss); break; }
     
     boss.dashCooldown -= dt;
     boss.advanceTimer += dt;
@@ -394,7 +456,9 @@ switch (boss.pattern) {
   }
 
   case 'zigzag':
-    updateBossZigzagMovement(step);
+    if (!updateBossArenaReposition(boss, dt, step)) {
+      updateBossZigzagMovement(step);
+    }
     break;
 
   case 'rotate':
@@ -417,7 +481,9 @@ switch (boss.pattern) {
       boss.pulseTimer = 1500;
     }
     
-    updateBossRotateMovement(step);
+    if (!updateBossArenaReposition(boss, dt, step)) {
+      updateBossRotateMovement(step);
+    }
     
     if (boss.pulseMode) {
       boss.pulseTimer -= dt;
@@ -446,6 +512,8 @@ switch (boss.pattern) {
 
     const clampTargetX = (tx) => clamp(tx, 20 + boss.w / 2, W - 20 - boss.w / 2);
     const clampTargetY = (ty) => clamp(ty, 80, H / 2 + 60);
+
+    if (updateBossArenaReposition(boss, dt, step)) { clampBossToArena(boss); break; }
 
     if (boss.chargeMode) {
 
