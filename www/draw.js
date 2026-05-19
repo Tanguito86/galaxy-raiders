@@ -638,7 +638,10 @@ function drawGameplayHudPanel(x, y, w, h, accentColor) {
 
 function drawOverlayPanel(x, y, w, h, accentColor) {
   ctx.save();
-  ctx.fillStyle = 'rgba(2,4,12,0.94)';
+  // HC-RD-06: config-driven overlay panel alpha
+  var _ovCfg = (typeof getHUDReadabilityConfig === 'function') ? (getHUDReadabilityConfig().overlays || {}) : {};
+  var _ovAlpha = (typeof _ovCfg.overlayPanelAlpha === 'number') ? _ovCfg.overlayPanelAlpha : 0.90;
+  ctx.fillStyle = 'rgba(2,4,12,' + _ovAlpha + ')';
   ctx.fillRect(x, y, w, h);
 
   // Accent glow bars (top / bottom)
@@ -673,8 +676,11 @@ function drawGlowText(text, x, y, font, fillColor, glowColor) {
   ctx.save();
   ctx.font = font;
   ctx.textAlign = 'center';
+  // HC-RD-06: configurable shadow blur
+  var _tgCfg = (typeof getHUDReadabilityConfig === 'function') ? (getHUDReadabilityConfig().textGlow || {}) : {};
+  var _tgBlur = (typeof _tgCfg.shadowBlurMax === 'number') ? _tgCfg.shadowBlurMax : 5;
   ctx.shadowColor = glowColor;
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = _tgBlur;
   ctx.fillStyle = glowColor;
   ctx.fillText(text, x + 2, y + 2);
   ctx.shadowBlur = 0;
@@ -4059,19 +4065,28 @@ if (shouldShow) {
 
       ctx.save();
 
+      // HC-RD-06: boss HP bar readability — config-driven alphas
+      var _hudCfg = (typeof getHUDReadabilityConfig === 'function') ? getHUDReadabilityConfig() : null;
+      var _hpCfg = (_hudCfg && _hudCfg.bossHP) || {};
+      var _hpFill = (typeof _hpCfg.fillAlpha === 'number') ? _hpCfg.fillAlpha : 0.65;
+      var _hpAccent = (typeof _hpCfg.accentAlpha === 'number') ? _hpCfg.accentAlpha : 0.35;
+      var _hpBg = (typeof _hpCfg.bgAlpha === 'number') ? _hpCfg.bgAlpha : 0.18;
+      var _hpBorder = (typeof _hpCfg.borderAlpha === 'number') ? _hpCfg.borderAlpha : 0.20;
+      var _hpLowPulseMax = (typeof _hpCfg.lowHPPulseMax === 'number') ? _hpCfg.lowHPPulseMax : 0.18;
+
       // Outer panel bg
-      ctx.globalAlpha = 0.28;
+      ctx.globalAlpha = _hpBg + 0.10;
       ctx.fillStyle = '#000';
       ctx.fillRect(_barX - _pad, _barY - _pad, _barW + _pad * 2, _barH + _pad * 2);
 
       // Outer border
-      ctx.globalAlpha = 0.30;
+      ctx.globalAlpha = _hpBorder;
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
       ctx.strokeRect(_barX - _pad + 0.5, _barY - _pad + 0.5, _barW + _pad * 2 - 1, _barH + _pad * 2 - 1);
 
       // Accent top line
-      ctx.globalAlpha = 0.55;
+      ctx.globalAlpha = _hpAccent;
       ctx.strokeStyle = boss.color || '#f44';
       ctx.beginPath();
       ctx.moveTo(_barX - _pad, _barY - _pad + 0.5);
@@ -4079,7 +4094,7 @@ if (shouldShow) {
       ctx.stroke();
 
       // Bar background
-      ctx.globalAlpha = 0.25;
+      ctx.globalAlpha = _hpBg;
       ctx.fillStyle = '#200';
       ctx.fillRect(_barX, _barY, _barW, _barH);
 
@@ -4096,7 +4111,7 @@ if (shouldShow) {
       var _fillW = _barW * hpPct;
 
       // Gradient fill for bar (top half bright, bottom solid)
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = _hpFill;
       ctx.fillStyle = _barColor;
       ctx.fillRect(_barX, _barY, _fillW, _barH);
 
@@ -4122,11 +4137,17 @@ if (shouldShow) {
 
       // Low HP pulse
       if (hpPct <= 0.33) {
-        var _pulse = 0.12 + 0.18 * Math.sin(globalTime * 0.012);
+        var _pulse = 0.08 + _hpLowPulseMax * Math.sin(globalTime * 0.012);
         ctx.globalAlpha = _pulse;
         ctx.fillStyle = '#f00';
         ctx.fillRect(_barX, _barY, _fillW, _barH);
       }
+
+      // HC-RD-06: dark outline around bar for readability
+      ctx.globalAlpha = 0.25;
+      ctx.strokeStyle = '#050510';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(_barX - 0.5, _barY - 0.5, _barW + 1, _barH + 1);
 
       // Boss name
       ctx.textAlign = 'center';
@@ -5549,9 +5570,15 @@ if (player.weaponType !== 'normal') {
       ctx.globalAlpha = 1;
     }
 
-    // LEVEL CLEAR overlay
+    // LEVEL CLEAR overlay — HC-RD-06: subdued readability
     if (pendingNextLevel) {
       ctx.save();
+
+      var _lcCfg = (_hudCfg && _hudCfg.levelClear) || {};
+      var _lcDark = (typeof _lcCfg.darkBandAlpha === 'number') ? _lcCfg.darkBandAlpha : 0.22;
+      var _lcBracket = (typeof _lcCfg.bracketAlpha === 'number') ? _lcCfg.bracketAlpha : 0.45;
+      var _lcBorder = (typeof _lcCfg.borderAlpha === 'number') ? _lcCfg.borderAlpha : 0.30;
+      var _lcGlowBlur = (typeof _lcCfg.glowShadowBlur === 'number') ? _lcCfg.glowShadowBlur : 12;
 
       var lcPulse = 0.6 + 0.4 * Math.sin(globalTime * 0.003);
       var lcAlpha = Math.min(1, levelClearTimer / 300);
@@ -5560,7 +5587,7 @@ if (player.weaponType !== 'normal') {
       var _lm = 20;
 
       // Dark band
-      ctx.globalAlpha = 0.35 * lcAlpha;
+      ctx.globalAlpha = _lcDark * lcAlpha;
       ctx.fillStyle = '#010a14';
       ctx.fillRect(0, _ly, W, _lh);
 
@@ -5583,7 +5610,7 @@ if (player.weaponType !== 'normal') {
       }
 
       // Arcade corner brackets
-      ctx.globalAlpha = 0.75 * lcAlpha * lcPulse;
+      ctx.globalAlpha = _lcBracket * lcAlpha * lcPulse;
       ctx.strokeStyle = '#0ff';
       ctx.lineWidth = 2;
       var _bl = 16;
@@ -5605,7 +5632,7 @@ if (player.weaponType !== 'normal') {
       ctx.stroke();
 
       // Main border lines (between corner brackets)
-      ctx.globalAlpha = 0.50 * lcAlpha * lcPulse;
+      ctx.globalAlpha = _lcBorder * lcAlpha * lcPulse;
       ctx.strokeStyle = '#0cf';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -5629,7 +5656,7 @@ if (player.weaponType !== 'normal') {
       // Cyan glow
       ctx.globalAlpha = 0.35 * lcAlpha * lcPulse;
       ctx.shadowColor = '#0ff';
-      ctx.shadowBlur = 18;
+      ctx.shadowBlur = _lcGlowBlur;
       ctx.fillStyle = '#0ff';
       ctx.fillText('LEVEL CLEAR', W / 2, H / 2 - 7);
       ctx.shadowBlur = 0;
@@ -5696,9 +5723,16 @@ if (player.weaponType !== 'normal') {
       ctx.restore();
     }
 
-    // BOSS WARNING overlay (HC-96: cleaner arcade style / HC-121: intro pressure)
+    // BOSS WARNING overlay (HC-96/HC-RD-06: subdued readability)
     if (boss && boss.active) {
       ctx.save();
+
+      var _hwCfg = (_hudCfg && _hudCfg.bossWarning) || {};
+      var _hwDarkBand = (typeof _hwCfg.darkBandAlpha === 'number') ? _hwCfg.darkBandAlpha : 0.18;
+      var _hwAccent = (typeof _hwCfg.accentAlpha === 'number') ? _hwCfg.accentAlpha : 0.40;
+      var _hwText = (typeof _hwCfg.textAlpha === 'number') ? _hwCfg.textAlpha : 0.60;
+      var _hwPillarMax = (typeof _hwCfg.sidePillarMax === 'number') ? _hwCfg.sidePillarMax : 0.25;
+      var _hwStripe = (typeof _hwCfg.stripeAlpha === 'number') ? _hwCfg.stripeAlpha : 0.05;
 
       var bwPulse = 0.7 + 0.3 * Math.sin(globalTime * 0.004);
       var bwPulseF = 0.55 + 0.45 * Math.sin(globalTime * 0.006 + 1.5);
@@ -5715,35 +5749,35 @@ if (player.weaponType !== 'normal') {
       ctx.fillRect(-10, -10, W + 20, H + 20);
 
       // Dark band
-      ctx.globalAlpha = 0.30;
+      ctx.globalAlpha = _hwDarkBand;
       ctx.fillStyle = '#000';
       ctx.fillRect(0, _bwY, W, _bwH);
 
       // Subtle warning stripes
-      ctx.globalAlpha = 0.06 + 0.03 * bwPulseF;
+      ctx.globalAlpha = _hwStripe + _hwStripe * bwPulseF;
       ctx.fillStyle = _bwColor;
       for (var sd = -20; sd < W + 20; sd += 16) {
         ctx.fillRect(sd, _bwY, 8, _bwH);
       }
 
       // Top/bottom accent lines
-      ctx.globalAlpha = 0.65 * bwPulse;
+      ctx.globalAlpha = _hwAccent * bwPulse;
       ctx.fillStyle = _bwColor;
       ctx.fillRect(0, _bwY, W, 2);
       ctx.fillRect(0, _bwY + _bwH - 2, W, 2);
 
       // Side pillars
-      ctx.globalAlpha = 0.25 + 0.18 * bwPulseF;
+      ctx.globalAlpha = Math.min(_hwPillarMax, 0.25 + 0.18 * bwPulseF);
       ctx.fillRect(0, _bwY + 2, 3, _bwH - 4);
       ctx.fillRect(W - 3, _bwY + 2, 3, _bwH - 4);
 
       // WARNING text
       ctx.textAlign = 'center';
       ctx.font = '10px "Press Start 2P"';
-      ctx.globalAlpha = 0.78 * bwPulse;
+      ctx.globalAlpha = (_hwText - 0.10) * bwPulse;
       ctx.fillStyle = '#000';
       ctx.fillText('WARNING', W / 2 + 1, _bwY + 10);
-      ctx.globalAlpha = 0.90 * bwPulse;
+      ctx.globalAlpha = _hwText * bwPulse;
       ctx.fillStyle = '#fff';
       ctx.fillText('WARNING', W / 2, _bwY + 9);
 
@@ -5753,7 +5787,7 @@ if (player.weaponType !== 'normal') {
         ctx.globalAlpha = 0.35 * bwPulse;
         ctx.fillStyle = _bwColor;
         ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 20);
-        ctx.globalAlpha = 0.72 * bwPulseF;
+        ctx.globalAlpha = _hwText * bwPulseF;
         ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 19);
       }
 
@@ -5764,6 +5798,7 @@ if (player.weaponType !== 'normal') {
 
     // Pause overlay - ESTILO ARCADE
     if (state === 'paused') {
+      var _ovCfg2 = (typeof getHUDReadabilityConfig === 'function') ? (getHUDReadabilityConfig().overlays || {}) : {};
       const pausePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
       const panelW = Math.min(W - 40, 300);
       const panelH = 330;
@@ -5771,7 +5806,8 @@ if (player.weaponType !== 'normal') {
       const panelY = Math.max(52, (H - panelH) / 2);
       const accent = currentPalette[0] || '#0ff';
 
-      ctx.fillStyle = 'rgba(0,0,0,0.72)';
+      var _pauseBg = (_ovCfg2 && typeof _ovCfg2.pauseBgAlpha === 'number') ? _ovCfg2.pauseBgAlpha : 0.65;
+      ctx.fillStyle = 'rgba(0,0,0,' + _pauseBg + ')';
       ctx.fillRect(0, 0, W, H);
 
       ctx.globalAlpha = 0.18 + pausePulse * 0.08;
@@ -5890,9 +5926,13 @@ if (player.weaponType !== 'normal') {
 
   // TRY AGAIN overlay (gameover transient)
   if (state === 'gameover' && showTryAgain) {
+    var _ovCfg3 = (typeof getHUDReadabilityConfig === 'function') ? (getHUDReadabilityConfig().overlays || {}) : {};
+    var _govAlpha = (typeof _ovCfg3.gameoverBgAlpha === 'number') ? _ovCfg3.gameoverBgAlpha : 0.72;
     const overPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
     const panelW = Math.min(W - 56, 300);
     const panelH = 138;
+    ctx.fillStyle = 'rgba(0,0,0,' + _govAlpha + ')';
+    ctx.fillRect(-10, -10, W + 20, H + 20);
     const panelX = (W - panelW) / 2;
     const panelY = (H - panelH) / 2 - 8;
     const accent = '#ff365f';

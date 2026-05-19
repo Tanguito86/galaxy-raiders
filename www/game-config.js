@@ -412,6 +412,61 @@ window.GALAXY_CONFIG = {
         enabled: true,
         screenFlashAlphaCap: 0.06          // was up to 0.08 (flash overlay)
       }
+    },
+
+    // ================================================================
+    // HC-RD-06: HUD READABILITY PASS
+    // ================================================================
+    // HUD must inform without distracting from gameplay.
+    // Boss HP bar subdued, warning overlays restrained,
+    // text glow reduced, overlays never compete with bullets.
+    // ================================================================
+    hudReadability: {
+      enabled: true,
+
+      // --- boss HP bar ---
+      bossHP: {
+        enabled: true,
+        fillAlpha:          0.65,          // was 0.85
+        accentAlpha:        0.35,          // was 0.55
+        bgAlpha:            0.18,          // was 0.25
+        borderAlpha:        0.20,          // was 0.30
+        lowHPPulseMax:      0.18           // was 0.30
+      },
+
+      // --- boss WARNING overlay ---
+      bossWarning: {
+        enabled: true,
+        darkBandAlpha:      0.18,          // was 0.30
+        accentAlpha:        0.40,          // was 0.65 * pulse
+        textAlpha:          0.60,          // was 0.90 * pulse
+        sidePillarMax:      0.25,          // was 0.43
+        stripeAlpha:        0.05           // was 0.09
+      },
+
+      // --- level clear overlay ---
+      levelClear: {
+        enabled: true,
+        darkBandAlpha:      0.22,          // was 0.35
+        bracketAlpha:       0.45,          // was 0.75
+        borderAlpha:        0.30,          // was 0.50
+        glowShadowBlur:     12             // was 18
+      },
+
+      // --- text glow ---
+      textGlow: {
+        enabled: true,
+        shadowBlurMax:      5,             // was 8 (drawGlowText default)
+        shadowAlphaMul:     0.60           // multiply glow alpha
+      },
+
+      // --- overlay darkening ---
+      overlays: {
+        enabled: true,
+        pauseBgAlpha:       0.65,          // was 0.72
+        gameoverBgAlpha:    0.72,          // was 0.82
+        overlayPanelAlpha:  0.90           // was 0.94 (drawOverlayPanel)
+      }
     }
   },
 

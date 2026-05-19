@@ -26,7 +26,8 @@ var _GALAXY_CONFIG_DEFAULTS = {
     bulletClarity: { enabled: true, outline: { enabled: true, color: '#050308', alpha: 0.42, lineWidth: 1, bossLineWidth: 1.5, tankLineWidth: 1.5, orbConcentric: true }, motion: { enabled: true, bossTrailSteps: 4, orbTrailSteps: 3, sharedTrailSteps: 3, trailAlphaMul: 0.72 }, typeLanguage: { enabled: true, fastDirectionalTip: true, heavyInnerOutline: true, splitterPulseEnable: true }, density: { enabled: true, outerHaloCap: 0.10, innerGlowCap: 0.20, trailStepsMin: 2 } },
     telegraphConsistency: { enabled: true, outline: { enabled: true, color: '#050308', alpha: 0.40, lineWidth: 1, bossLineWidth: 1.5 }, alpha: { enabled: true, floor: 0.12, ceiling: 0.55, pulseRange: 0.35 }, colors: { fatal: '#ff3333', aggressive: '#ff6622', charge: '#ffaa00', energy: '#4488ff', clarity: '#ffffff', caution: '#ffdd44', sniper: '#44ffff', chaser: '#ff6622', suppressor: '#bbff44', diver: '#ff4422', teleport: '#bb88ff', setPiece: '#ff6633' }, shape: { ringDash: [6,4], arrowLength: 16, coneAngle: 0.28, dotRadius: 3.5 } },
     backgroundReadability: { enabled: true, themeCaps: { enabled: true, foregroundMax: 0.30, mountainMax: 0.10, snowHazeMax: 0.06, planetGlowMax: 0.12, imperialPillarMax: 0.04 }, stars: { enabled: true, alphaCap: 0.42, coreAlphaCap: 0.28, flickerReduction: 0.80 }, ambientFX: { enabled: true, nebulaAlphaMul: 0.55, atmosphereAlphaMul: 0.60, speedLineAlphaMul: 0.45 }, dynamicDimming: { enabled: true, densityThreshold: 18, maxDimFactor: 0.50, dimSpeed: 0.015, recoverSpeed: 0.008 } },
-    playerFeedback: { enabled: true, playerBullets: { enabled: true, glowMul: 0.65, bodyAlphaMax: 0.90, trailAlphaCap: 0.22 }, thruster: { enabled: true, maxAlpha: 0.45, midAlpha: 0.35, glowAlpha: 0.04 }, invincibility: { enabled: true, constantOutlineAlpha: 0.15, fillAlpha: 0.08, strokeAlpha: 0.28, innerStrokeAlpha: 0.12 }, silhouette: { enabled: true, outlineColor: '#040815', outlineAlpha: 0.25, outlineWidth: 1 }, damage: { enabled: true, screenFlashAlphaCap: 0.06 } }
+    playerFeedback: { enabled: true, playerBullets: { enabled: true, glowMul: 0.65, bodyAlphaMax: 0.90, trailAlphaCap: 0.22 }, thruster: { enabled: true, maxAlpha: 0.45, midAlpha: 0.35, glowAlpha: 0.04 }, invincibility: { enabled: true, constantOutlineAlpha: 0.15, fillAlpha: 0.08, strokeAlpha: 0.28, innerStrokeAlpha: 0.12 }, silhouette: { enabled: true, outlineColor: '#040815', outlineAlpha: 0.25, outlineWidth: 1 }, damage: { enabled: true, screenFlashAlphaCap: 0.06 } },
+    hudReadability: { enabled: true, bossHP: { enabled: true, fillAlpha: 0.65, accentAlpha: 0.35, bgAlpha: 0.18, borderAlpha: 0.20, lowHPPulseMax: 0.18 }, bossWarning: { enabled: true, darkBandAlpha: 0.18, accentAlpha: 0.40, textAlpha: 0.60, sidePillarMax: 0.25, stripeAlpha: 0.05 }, levelClear: { enabled: true, darkBandAlpha: 0.22, bracketAlpha: 0.45, borderAlpha: 0.30, glowShadowBlur: 12 }, textGlow: { enabled: true, shadowBlurMax: 5, shadowAlphaMul: 0.60 }, overlays: { enabled: true, pauseBgAlpha: 0.65, gameoverBgAlpha: 0.72, overlayPanelAlpha: 0.90 } }
   },
   debug:     { showHardcoreInfo: false, showRank: false, showHardcoreSystems: false, showEnemyRoles: false, showBossPattern: false, showBossDispatch: false, showBackgroundStats: false, showAtmosphereStats: false, showLevelSkipButton: false }
 };
@@ -247,6 +248,14 @@ function getPlayerFeedbackConfig() {
   return (r && r.playerFeedback && typeof r.playerFeedback === 'object')
     ? r.playerFeedback
     : { enabled: false, playerBullets: { enabled: false }, thruster: { enabled: false }, invincibility: { enabled: false }, silhouette: { enabled: false }, damage: { enabled: false } };
+}
+
+// HC-RD-06: HUD readability accessor
+function getHUDReadabilityConfig() {
+  var r = getReadabilityConfig();
+  return (r && r.hudReadability && typeof r.hudReadability === 'object')
+    ? r.hudReadability
+    : { enabled: false, bossHP: { enabled: false }, bossWarning: { enabled: false }, levelClear: { enabled: false }, textGlow: { enabled: false }, overlays: { enabled: false } };
 }
 
 // ============================================================
