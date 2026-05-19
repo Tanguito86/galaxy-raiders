@@ -352,12 +352,11 @@ if (bossDefeated) {
     }
 
     
-    // Powerups
+    // Powerups — HC-HB-04: hardcore hurtbox-aware collection
     for (let i = powerUps.length - 1; i >= 0; i--) {
       const p = powerUps[i];
       p.y += p.vy * step;
-      if (p.x < player.x + player.width && p.x + p.w > player.x &&
-          p.y < player.y + player.height && p.y + p.h > player.y) {
+      if (checkPickupCollectionFairness(p.x, p.y, p.w, p.h)) {
         recordPowerupCollected();
         activateWeapon(p.type);
         powerUps.splice(i, 1);
@@ -367,19 +366,13 @@ if (bossDefeated) {
       }
     }
 
-    // UFO reward drops
+    // UFO reward drops — HC-HB-04: hardcore hurtbox-aware collection
 for (let i = ufoRewards.length - 1; i >= 0; i--) {
   const d = ufoRewards[i];
 
   d.y += d.vy * step;
 
-  // colisiÃ³n con el jugador
-  if (
-    d.x < player.x + player.width &&
-    d.x + d.w > player.x &&
-    d.y < player.y + player.height &&
-    d.y + d.h > player.y
-  ) {
+  if (checkPickupCollectionFairness(d.x, d.y, d.w, d.h)) {
     const rw = d.reward;
     recordPowerupCollected();
 

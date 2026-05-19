@@ -7,7 +7,12 @@ function pushEnemyBullet(x, y, vx, vy, w = 4, h = 10, meta = {}) {
   var speedMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
     ? window.getHardcoreRankBulletSpeedMultiplier()
     : 1.00;
-  enemyBullets.push({ x, y, w, h, vx: vx * speedMult, vy: vy * speedMult, ...meta });
+  var bullet = { x, y, w, h, vx: vx * speedMult, vy: vy * speedMult, ...meta };
+  // HC-HB-04: validate bullet fairness (skip if spawned inside player hurtbox)
+  if (typeof validateBulletFairness === 'function' && !validateBulletFairness(bullet)) {
+    return;
+  }
+  enemyBullets.push(bullet);
 }
 
 function pickVolleyShooters(shooters, maxCount) {
