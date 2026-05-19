@@ -13,6 +13,9 @@ function _kbSyncMove() {
 document.addEventListener('keydown', e => {
   if (handleBalanceDebugKeydown(e)) return;
 
+  // HC-HB-02: hitbox debug overlay cycle
+  if (typeof handleHCHitboxDebugKeydown === 'function' && handleHCHitboxDebugKeydown(e)) return;
+
   // A/B de mezcla de musica (ducks): F3
   if (e.code === 'F3') {
     const preset = cycleMusicDuckingPreset();

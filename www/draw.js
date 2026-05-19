@@ -6186,4 +6186,9 @@ if (player.weaponType !== 'normal') {
   if (typeof window.drawEncounterDirectorDebug === 'function') {
     window.drawEncounterDirectorDebug(ctx);
   }
+
+  // HC-HB-02: collision debug overlay (render-only, no gameplay changes)
+  if (typeof window.drawHCHitboxDebug === 'function') {
+    window.drawHCHitboxDebug(ctx);
+  }
 }
