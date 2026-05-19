@@ -306,6 +306,11 @@ function updateBossStep(step, dt) {
 
   if (boss.flashTimer > 0) boss.flashTimer -= dt;
 
+  // HC-HB-03: process deterministic queued burst (replaces setTimeout)
+  if (typeof processBossQueuedBurst === 'function') {
+    processBossQueuedBurst(boss, dt);
+  }
+
   const phase = boss.phase;
 
   // 🔥 MEJORA 4: modo desesperación (fase 3)
@@ -737,20 +742,24 @@ switch (boss.pattern) {
         }
       }
       
-      // INVOCAR MINIONS (fase 2+, cada 10 segundos)
+      // INVOCAR MINIONS (fase 2+, cada 10 segundos) — HC-HB-03: spawn safety
       if (phase >= 2 && boss.minionTimer > 10000 && enemies.filter(e => e.alive).length < 2) {
         boss.minionTimer = 0;
-        
-        // Spawnear 1-2 minions
+
         const minionCount = phase === 3 ? 2 : 1;
         for (let i = 0; i < minionCount; i++) {
           const spawnX = boss.x + boss.w / 2 + (i - Math.floor(minionCount / 2)) * 50;
+          const spawnY = boss.y + boss.h + 10;
           const angle = Math.atan2(player.y - (boss.y + boss.h), player.x - spawnX);
           const speed = 3 + Math.random() * 2;
-          
+
+          var safe = checkSpawnSafety(spawnX, spawnY, 24, 24);
+          var fx = safe.adjustedX;
+          var fy = safe.adjustedY;
+
           enemies.push({
-            x: clamp(spawnX, 30, W - 54),
-            y: boss.y + boss.h + 10,
+            x: clamp(fx, 30, W - 54),
+            y: clamp(fy, 70, H - 120),
             w: 24, h: 24,
             row: 0,
             type: 'alien1',
@@ -846,22 +855,23 @@ if (boss.shootTimer > shootRate) {
           );
         }
       } else if (phase >= 2) {
-        // LÁSER VERTICAL: Columna de balas que sale del cangrejo hacia abajo
-        for (let i = 0; i < 4; i++) {
-          setTimeout(() => {
-            if (boss.active) {
-              enemyBullets.push({
-                x: boss.x + boss.w / 2 + (Math.random() - 0.5) * 20,
-                y: boss.y + boss.h,
-                w: 5,
-                h: 15,
-                vx: 0,
-                vy: 6
-              });
-              sfxEnemyHit();
-            }
-          }, i * 100);
-        }
+        // LASER VERTICAL: Columna de balas determinista (HC-HB-03: replaced setTimeout)
+        var _clx = boss.x + boss.w / 2;
+        var _cly = boss.y + boss.h;
+        scheduleBossQueuedBurst(boss, 4, 100, (function(originX, originY) {
+          return function(bossRef) {
+            if (!bossRef.active) return;
+            enemyBullets.push({
+              x: originX + (Math.random() - 0.5) * 20,
+              y: originY,
+              w: 5,
+              h: 15,
+              vx: 0,
+              vy: 6
+            });
+            sfxEnemyHit();
+          };
+        })(_clx, _cly));
         
         pushScreenShake('medium', 4);
         requestBossMinorDuck(130, 0.64);
@@ -1014,25 +1024,25 @@ if (Math.random() < 0.5 && mines.length < 8) {
             });
           }
         } else if (attackRoll < 0.7) {
-          // Rayo imperial: línea de balas hacia el jugador
-          const dx = player.x + player.width / 2 - empCenter.x;
-          const dy = player.y - empCenter.y;
-          const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-          
-          for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-              if (boss.active && !boss.isTeleporting) {
-                enemyBullets.push({
-                  x: empCenter.x,
-                  y: empCenter.y,
-                  w: 10, h: 10,
-                  vx: (dx / dist) * 6,
-                  vy: (dy / dist) * 6
-                });
-                sfxEnemyHit();
-              }
-            }, i * 80);
-          }
+          // Rayo imperial: linea de balas determinista (HC-HB-03: replaced setTimeout)
+          var _irDx = player.x + player.width / 2 - empCenter.x;
+          var _irDy = player.y - empCenter.y;
+          var _irDist = Math.max(1, Math.sqrt(_irDx * _irDx + _irDy * _irDy));
+          var _irOx = empCenter.x;
+          var _irOy = empCenter.y;
+          scheduleBossQueuedBurst(boss, 5, 80, (function(ox, oy, rdx, rdy, rdist) {
+            return function(bossRef) {
+              if (!bossRef.active || bossRef.isTeleporting) return;
+              enemyBullets.push({
+                x: ox,
+                y: oy,
+                w: 10, h: 10,
+                vx: (rdx / rdist) * 6,
+                vy: (rdy / rdist) * 6
+              });
+              sfxEnemyHit();
+            };
+          })(_irOx, _irOy, _irDx, _irDy, _irDist));
           sfxBossWarning();
         } else {
           // Cruz imperial
