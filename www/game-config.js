@@ -362,6 +362,56 @@ window.GALAXY_CONFIG = {
         dimSpeed:           0.015,         // transition speed per frame (smooth)
         recoverSpeed:       0.008          // recovery speed per frame (slower)
       }
+    },
+
+    // ================================================================
+    // HC-RD-05: PLAYER FEEDBACK READABILITY
+    // ================================================================
+    // Player visuals must never compete with enemy threats.
+    // Bullets subdued, thruster toned down, invincibility always
+    // readable, silhouette preserved against backgrounds.
+    // ================================================================
+    playerFeedback: {
+      enabled: true,
+
+      // --- player bullet glow reduction ---
+      playerBullets: {
+        enabled: true,
+        glowMul:            0.65,          // multiply all glow values by 0.65
+        bodyAlphaMax:       0.90,          // max body alpha (was 1.0)
+        trailAlphaCap:      0.22           // trail alpha cap (was 0.28)
+      },
+
+      // --- thruster reduction ---
+      thruster: {
+        enabled: true,
+        maxAlpha:           0.45,          // was 0.70 (yellow core)
+        midAlpha:           0.35,          // was 0.50 + 0.35*pulse (orange)
+        glowAlpha:          0.04           // was 0.06 + 0.06*pulse (cyan engine)
+      },
+
+      // --- invincibility readability ---
+      invincibility: {
+        enabled: true,
+        constantOutlineAlpha: 0.15,        // subtle outline always visible
+        fillAlpha:            0.08,        // was 0.12 + shieldPulse * 0.08
+        strokeAlpha:          0.28,        // was 0.35 + shieldBlink * 0.20
+        innerStrokeAlpha:     0.12         // was 0.18 + shieldPulse * 0.12
+      },
+
+      // --- player silhouette outline ---
+      silhouette: {
+        enabled: true,
+        outlineColor:        '#040815',    // dark outline for separation
+        outlineAlpha:        0.25,         // subtle but present
+        outlineWidth:        1             // 1px
+      },
+
+      // --- damage feedback ---
+      damage: {
+        enabled: true,
+        screenFlashAlphaCap: 0.06          // was up to 0.08 (flash overlay)
+      }
     }
   },
 

@@ -3559,7 +3559,11 @@ if (shouldShow) {
   ctx.fillRect(player.x + 4, player.y + 13, 1, 1);
   ctx.fillRect(player.x + player.width - 5, player.y + 13, 1, 1);
 
-  // --- HC-92: THRUSTER (banking-aware + enhanced) ---
+  // --- HC-92: THRUSTER (banking-aware + enhanced, HC-RD-05: subdued)
+  var _pfbThr = (typeof getPlayerFeedbackConfig === 'function') ? (getPlayerFeedbackConfig().thruster || {}) : {};
+  var _thrMax = (typeof _pfbThr.maxAlpha === 'number') ? _pfbThr.maxAlpha : 0.45;
+  var _thrMid = (typeof _pfbThr.midAlpha === 'number') ? _pfbThr.midAlpha : 0.35;
+  var _thrGlow = (typeof _pfbThr.glowAlpha === 'number') ? _pfbThr.glowAlpha : 0.04;
   const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.035);
   const thrust = player.movingUp ? 1.4 : player.movingDown ? 0.6 : 1.0;
   const flameH = Math.max(4, (10 + 6 * pulse) * thrust);
@@ -3576,19 +3580,19 @@ if (shouldShow) {
   ctx.fillStyle = bayGrad;
   ctx.fillRect(cx - 8, fy - 4, 16, 16);
 
-  ctx.globalAlpha = (0.06 + 0.06 * pulse) * thrust;
+  ctx.globalAlpha = Math.min(_thrGlow, (0.06 + 0.06 * pulse) * thrust);
   ctx.fillStyle = '#0ff';
   ctx.fillRect(fx - 7 + tiltLean * 0.6, fy - 2, 14, flameH + 6);
 
-  ctx.globalAlpha = 0.5 + 0.35 * pulse;
+  ctx.globalAlpha = Math.min(_thrMax, 0.5 + 0.35 * pulse);
   ctx.fillStyle = '#f80';
   ctx.fillRect(fx - 3 + tiltLean * 0.3, fy, 6, flameH);
 
-  ctx.globalAlpha = 0.7;
+  ctx.globalAlpha = Math.min(_thrMax, 0.7);
   ctx.fillStyle = '#ff0';
   ctx.fillRect(fx - 2 + tiltLean * 0.15, fy + 2, 4, Math.max(2, flameH - 3));
 
-  ctx.globalAlpha = 0.6;
+  ctx.globalAlpha = Math.min(_thrMid, 0.6);
   ctx.fillStyle = '#fff';
   ctx.fillRect(fx - 1, fy + 3, 2, Math.max(1, flameH - 5));
 
@@ -3645,25 +3649,38 @@ if (shouldShow) {
   }
 
   if (isInvincible) {
+    var _pfbInv = (typeof getPlayerFeedbackConfig === 'function') ? (getPlayerFeedbackConfig().invincibility || {}) : {};
+    var _invFill = (typeof _pfbInv.fillAlpha === 'number') ? _pfbInv.fillAlpha : 0.08;
+    var _invStroke = (typeof _pfbInv.strokeAlpha === 'number') ? _pfbInv.strokeAlpha : 0.28;
+    var _invInner = (typeof _pfbInv.innerStrokeAlpha === 'number') ? _pfbInv.innerStrokeAlpha : 0.12;
+    var _invConst = (typeof _pfbInv.constantOutlineAlpha === 'number') ? _pfbInv.constantOutlineAlpha : 0.15;
     const shieldPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.045);
     const shieldBlink = 0.5 + 0.5 * Math.sin(globalTime * 0.09);
     const shieldW = player.width + 18 + shieldPulse * 5;
     const shieldH = player.height + 16 + shieldPulse * 4;
 
-    ctx.globalAlpha = 0.12 + shieldPulse * 0.08;
+    // HC-RD-05: subtle constant outline always visible as base
+    ctx.globalAlpha = _invConst;
+    ctx.strokeStyle = '#64f5ff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + 1, shieldW * 0.5, shieldH * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = _invFill + shieldPulse * 0.05;
     ctx.fillStyle = '#64f5ff';
     ctx.beginPath();
     ctx.ellipse(cx, cy + 1, shieldW * 0.5, shieldH * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.35 + shieldBlink * 0.20;
+    ctx.globalAlpha = _invStroke + shieldBlink * 0.12;
     ctx.strokeStyle = '#64f5ff';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.ellipse(cx, cy + 1, shieldW * 0.5, shieldH * 0.5, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.globalAlpha = 0.18 + shieldPulse * 0.12;
+    ctx.globalAlpha = _invInner + shieldPulse * 0.06;
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -3680,6 +3697,16 @@ if (shouldShow) {
     drawSprite(ctx, SPRITES[shipKey], player.x + 1, player.y, '#6cf', 3);
     ctx.globalAlpha = 0.06 + corePulse * 0.03;
     drawSprite(ctx, SPRITES[shipKey], player.x, player.y - 1, '#8df', 3);
+
+    // HC-RD-05: dark silhouette outline for background separation
+    var _pfbSil = (typeof getPlayerFeedbackConfig === 'function') ? (getPlayerFeedbackConfig().silhouette || {}) : {};
+    var _silColor = _pfbSil.outlineColor || '#040815';
+    var _silAlpha = (typeof _pfbSil.outlineAlpha === 'number') ? _pfbSil.outlineAlpha : 0.25;
+    ctx.globalAlpha = _silAlpha;
+    drawSprite(ctx, SPRITES[shipKey], player.x - 1, player.y - 1, _silColor, 3);
+    drawSprite(ctx, SPRITES[shipKey], player.x + 1, player.y - 1, _silColor, 3);
+    drawSprite(ctx, SPRITES[shipKey], player.x - 1, player.y + 1, _silColor, 3);
+    drawSprite(ctx, SPRITES[shipKey], player.x + 1, player.y + 1, _silColor, 3);
 
     ctx.globalAlpha = 1;
     drawSprite(ctx, SPRITES[shipKey], player.x, player.y, pColor, 3);
@@ -3722,6 +3749,16 @@ if (shouldShow) {
       anchorY: 0,
       tint: '#8df'
     });
+
+    // HC-RD-05: dark silhouette outline for background separation
+    var _pfbSil2 = (typeof getPlayerFeedbackConfig === 'function') ? (getPlayerFeedbackConfig().silhouette || {}) : {};
+    var _silColor2 = _pfbSil2.outlineColor || '#040815';
+    var _silAlpha2 = (typeof _pfbSil2.outlineAlpha === 'number') ? _pfbSil2.outlineAlpha : 0.25;
+    ctx.globalAlpha = _silAlpha2;
+    window.drawSpriteFrame(ctx, spriteId, player.x - 1, player.y - 1, { frame: frameIndex, tint: _silColor2 });
+    window.drawSpriteFrame(ctx, spriteId, player.x + 1, player.y - 1, { frame: frameIndex, tint: _silColor2 });
+    window.drawSpriteFrame(ctx, spriteId, player.x - 1, player.y + 1, { frame: frameIndex, tint: _silColor2 });
+    window.drawSpriteFrame(ctx, spriteId, player.x + 1, player.y + 1, { frame: frameIndex, tint: _silColor2 });
 
     ctx.globalAlpha = 1;
     window.drawSpriteFrame(ctx, spriteId, player.x, player.y, {
@@ -5021,7 +5058,13 @@ ufoRewards.forEach(d => {
     // HC-RD-01: PRIORITY_FEEDBACK — player bullets
     // ================================================================
 
-    // Player bullets (HC-93 visual polish)
+    // Player bullets (HC-93 visual polish / HC-RD-05: subdued glow)
+    var _pfb = (typeof getPlayerFeedbackConfig === 'function') ? getPlayerFeedbackConfig() : null;
+    var _pfbBullets = (_pfb && _pfb.playerBullets) || {};
+    var _pbGlowMul = (typeof _pfbBullets.glowMul === 'number') ? _pfbBullets.glowMul : 0.65;
+    var _pbBodyMax = (typeof _pfbBullets.bodyAlphaMax === 'number') ? _pfbBullets.bodyAlphaMax : 0.90;
+    var _pbTrailCap = (typeof _pfbBullets.trailAlphaCap === 'number') ? _pfbBullets.trailAlphaCap : 0.22;
+
     bullets.forEach(b => {
       var bt = b.type || 'normal';
       var bc = b.color || '#fff';
@@ -5035,6 +5078,8 @@ ufoRewards.forEach(d => {
         case 'double':  glowColor = '#ff8'; glowOuter = 0.13; glowInner = 0.07; break;
         default:        glowColor = '#fff'; glowOuter = 0.10; glowInner = 0.06; break;
       }
+      glowOuter *= _pbGlowMul;
+      glowInner *= _pbGlowMul;
 
       // --- HC-93: trail with enhanced fade ---
       if (Array.isArray(b.trail) && b.trail.length > 0) {
@@ -5045,11 +5090,11 @@ ufoRewards.forEach(d => {
           var ttw = Math.max(1, b.w * (0.35 + tf * 0.40));
           var tth = Math.max(1, b.h * (0.20 + tf * 0.35));
 
-          ctx.globalAlpha = 0.02 + tf * 0.28;
+          ctx.globalAlpha = Math.min(_pbTrailCap, 0.02 + tf * 0.28);
           ctx.fillStyle = glowColor;
           ctx.fillRect(tp.x - ttw / 2 - 1, tp.y - tth / 2 - 1, ttw + 2, tth + 2);
 
-          ctx.globalAlpha = 0.04 + tf * 0.22;
+          ctx.globalAlpha = Math.min(_pbTrailCap * 0.8, 0.04 + tf * 0.22);
           ctx.fillStyle = bc;
           ctx.fillRect(tp.x - ttw / 2, tp.y - tth / 2, ttw, tth);
         }
@@ -5068,7 +5113,7 @@ ufoRewards.forEach(d => {
       ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
 
       // --- HC-93: main body ---
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = _pbBodyMax;
       ctx.fillStyle = bc;
       ctx.fillRect(b.x, b.y, b.w, b.h);
 
