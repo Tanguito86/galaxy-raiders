@@ -710,6 +710,30 @@ function _getTelegraphOutlineStyle() {
   return (tc && tc.outline) || { enabled: true, color: '#050308', alpha: 0.40, lineWidth: 1, bossLineWidth: 1.5 };
 }
 
+// ================================================================
+// HC-RD-08: SMALL-SCREEN READABILITY BOOST
+// On phones/small viewports, increase sprite readability so threats
+// remain identifiable despite CSS-scaling compression.
+// ================================================================
+var _smallScreenBoost = 1.0;
+function _updateScreenBoost() {
+  _smallScreenBoost = 1.0;
+  try {
+    var canvas = document.getElementById('game');
+    if (!canvas) return;
+    var ch = canvas.clientHeight || canvas.getBoundingClientRect().height;
+    if (!ch || ch <= 0) return;
+    var cfg = (typeof getMobileReadabilityConfig === 'function') ? getMobileReadabilityConfig() : null;
+    var ssCfg = (cfg && cfg.smallScreen) || {};
+    var threshold = (typeof ssCfg.thresholdHeight === 'number') ? ssCfg.thresholdHeight : 500;
+    if (ch < threshold) {
+      var bossBoost = (typeof ssCfg.bossScaleBoost === 'number') ? ssCfg.bossScaleBoost : 1.12;
+      var enemyBoost = (typeof ssCfg.enemyScaleBoost === 'number') ? ssCfg.enemyScaleBoost : 1.10;
+      _smallScreenBoost = Math.max(bossBoost, enemyBoost);
+    }
+  } catch (e) { /* silent */ }
+}
+
 // --- BOSS ARM RENDER HELPERS ---
 function drawBossArmSegment(ctx, x1, y1, x2, y2, thickness, color, alpha) {
   ctx.save();
@@ -1333,7 +1357,7 @@ function drawSerpentrixAura(ctx, boss, color, time) {
 
   ctx.save();
 
-  ctx.globalAlpha = (0.05 + hitAlpha) * pulse * pm;
+  ctx.globalAlpha = Math.min(0.30, (0.05 + hitAlpha) * pulse * pm); // HC-RD-07: aura cap
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.ellipse(cx + hitShake, cy, boss.w * 0.55, boss.h * 0.7, 0, 0, Math.PI * 2);
@@ -1594,7 +1618,7 @@ function drawOrbitalEnergyField(ctx, boss, color, time) {
 
   ctx.save();
 
-  ctx.globalAlpha = (0.04 + hitT * 0.1) * pulse * phaseMul;
+  ctx.globalAlpha = Math.min(0.30, (0.04 + hitT * 0.1) * pulse * phaseMul); // HC-RD-07: Orbital aura cap
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(cx + hitShake, cy, boss.w * 0.65, 0, Math.PI * 2);
@@ -1862,7 +1886,7 @@ function drawTenienteAura(ctx, boss, color, time) {
 
   ctx.save();
 
-  ctx.globalAlpha = (0.06 + hitT * 0.12 + chargeBoost * 0.14) * pulse * phaseMul;
+  ctx.globalAlpha = Math.min(0.30, (0.06 + hitT * 0.12 + chargeBoost * 0.14) * pulse * phaseMul); // HC-RD-07: Teniente aura cap
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.ellipse(cx + hitShake, cy, boss.w * 0.58, boss.h * 0.82, 0, 0, Math.PI * 2);
@@ -2396,7 +2420,7 @@ function drawEmperorImperialAura(ctx, boss, color, time) {
 
   ctx.save();
 
-  ctx.globalAlpha = (0.04 + hitT * 0.1) * pulse * phaseMul * teleFade;
+  ctx.globalAlpha = Math.min(0.30, (0.04 + hitT * 0.1) * pulse * phaseMul * teleFade); // HC-RD-07: Emperor aura cap
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   ctx.ellipse(cx + hitShake, cy, boss.w * 0.68, boss.h * 0.95, 0, 0, Math.PI * 2);
@@ -2804,6 +2828,8 @@ function drawEmperorPhaseOverload(ctx, boss, color, time) {
 var _lastControlDeckTheme = '';
 var _combatDimFactor = 0;  // HC-RD-04: dynamic background dimming (0=full ambient, 1=fully dimmed)
 function draw() {
+  // HC-RD-08: small-screen readability boost
+  _updateScreenBoost();
   // ================================================================
   // HC-RD-01: PRIORITY_AMBIENT — background, nebula, atmosphere
   // ================================================================
@@ -2817,7 +2843,12 @@ function draw() {
     const overlayControlStates = ['paused', 'gameover'];
     const controlsDimmed = menuControlStates.includes(state);
     const controlsSoftened = overlayControlStates.includes(state);
-    const targetOpacity = controlsDimmed ? '0.22' : (controlsSoftened ? '0.34' : '');
+    // HC-RD-08: semi-transparent controls during gameplay so threats are visible
+    var _mobCfg = (typeof getMobileReadabilityConfig === 'function') ? (getMobileReadabilityConfig().controlDeck || {}) : {};
+    var _mobGameOpacity = (typeof _mobCfg.gameplayOpacity === 'number') ? _mobCfg.gameplayOpacity : 0.64;
+    const targetOpacity = controlsDimmed ? '0.22'
+      : (controlsSoftened ? '0.34'
+      : String(_mobGameOpacity));
     const targetFilter = controlsDimmed
       ? 'saturate(0.55) brightness(0.72)'
       : (controlsSoftened ? 'saturate(0.7) brightness(0.82)' : '');
@@ -3615,6 +3646,8 @@ if (shouldShow) {
 
   const playerFiring = typeof isFiring !== 'undefined' && isFiring;
   if (playerFiring && state === 'playing' && !pendingNextLevel) {
+    // HC-RD-07: muzzle flash alpha capped
+    var _mzMax = 0.55;
     const colors = FLASH_BY_WEAPON[player.weaponType] || FLASH_BY_WEAPON.normal;
     const pulse = 0.45 + 0.55 * Math.sin(globalTime * 0.07 + player.x * 0.01);
 
@@ -3622,10 +3655,10 @@ if (shouldShow) {
       ctx.globalAlpha = 0.10 + 0.12 * pulse;
       ctx.fillStyle = colors[1];
       ctx.fillRect(player.x - 2, player.y - 7, 6, 10);
-      ctx.globalAlpha = 0.28 + 0.22 * pulse;
+      ctx.globalAlpha = Math.min(_mzMax, 0.28 + 0.22 * pulse);
       ctx.fillStyle = colors[0];
       ctx.fillRect(player.x - 1, player.y - 5, 4, 7);
-      ctx.globalAlpha = 0.50 + 0.28 * pulse;
+      ctx.globalAlpha = Math.min(_mzMax, 0.50 + 0.28 * pulse);
       ctx.fillStyle = '#fff';
       ctx.fillRect(player.x, player.y - 3, 2, 4);
 
@@ -3633,20 +3666,20 @@ if (shouldShow) {
       ctx.globalAlpha = 0.10 + 0.12 * pulse;
       ctx.fillStyle = colors[1];
       ctx.fillRect(rx - 2, player.y - 7, 6, 10);
-      ctx.globalAlpha = 0.28 + 0.22 * pulse;
+      ctx.globalAlpha = Math.min(_mzMax, 0.28 + 0.22 * pulse);
       ctx.fillStyle = colors[0];
       ctx.fillRect(rx - 1, player.y - 5, 4, 7);
-      ctx.globalAlpha = 0.50 + 0.28 * pulse;
+      ctx.globalAlpha = Math.min(_mzMax, 0.50 + 0.28 * pulse);
       ctx.fillStyle = '#fff';
       ctx.fillRect(rx, player.y - 3, 2, 4);
     } else {
       ctx.globalAlpha = 0.12 + 0.14 * pulse;
       ctx.fillStyle = colors[1];
       ctx.fillRect(cx - 5, player.y - 9, 10, 14);
-      ctx.globalAlpha = 0.32 + 0.24 * pulse;
+      ctx.globalAlpha = Math.min(_mzMax, 0.32 + 0.24 * pulse);
       ctx.fillStyle = colors[0];
       ctx.fillRect(cx - 3, player.y - 7, 6, 11);
-      ctx.globalAlpha = 0.55 + 0.28 * pulse;
+      ctx.globalAlpha = Math.min(_mzMax, 0.55 + 0.28 * pulse);
       ctx.fillStyle = '#fff';
       ctx.fillRect(cx - 1.5, player.y - 5, 3, 7);
     }
@@ -3808,6 +3841,12 @@ if (shouldShow) {
       divebomb: 1.56,
       supreme: 1.45
     };
+    // HC-RD-08: small-screen readability boost
+    if (_smallScreenBoost > 1.0) {
+      for (var _bk in _BOSS_READABILITY_MULT) {
+        if (_BOSS_READABILITY_MULT.hasOwnProperty(_bk)) _BOSS_READABILITY_MULT[_bk] *= _smallScreenBoost;
+      }
+    }
 
     function getBossSpriteId(boss) {
       return _BOSS_SPRITE_ID_MAP[boss.pattern] || 'boss_crabtron';
@@ -4309,6 +4348,12 @@ if (shouldShow) {
       alien5: 1.55,
       alien6: 1.45
     };
+    // HC-RD-08: small-screen readability boost
+    if (_smallScreenBoost > 1.0) {
+      for (var _ek in _ENEMY_READABILITY_MULT) {
+        if (_ENEMY_READABILITY_MULT.hasOwnProperty(_ek)) _ENEMY_READABILITY_MULT[_ek] *= _smallScreenBoost;
+      }
+    }
 
     function getEnemySpriteReadabilityScale(e, spriteId) {
       if (!spriteId || spriteId.indexOf('_strip') === -1) return 1;
@@ -5262,7 +5307,7 @@ ufoRewards.forEach(d => {
       if (typeof isMedalFeverActive === 'function' && isMedalFeverActive()) {
         var feverLeft = typeof getMedalFeverTimeLeft === 'function' ? getMedalFeverTimeLeft() : 0;
         var feverPulse = 0.65 + 0.35 * Math.sin(globalTime * 0.012);
-        var feverAlpha = feverPulse;
+        var feverAlpha = Math.min(0.70, feverPulse); // HC-RD-07: capped
 
         ctx.save();
         ctx.textAlign = 'center';
@@ -5281,10 +5326,11 @@ ufoRewards.forEach(d => {
         ctx.restore();
       }
 
-      // Wave number announcement
+      // Wave number announcement — HC-RD-07: alpha capped
       if (waveAnnounceTimer > 0) {
         var waPulse = 0.55 + 0.45 * Math.sin(globalTime * 0.025);
         var waAlpha = Math.min(1, waveAnnounceTimer / 400);
+        var waMaxAlpha = 0.65; // cap for center-screen text
         var waY = H / 2 - 60;
         var waColor = pendingNextLevel ? '#64f5ff' : '#fff36a';
 
@@ -5296,7 +5342,7 @@ ufoRewards.forEach(d => {
         ctx.font = '28px "Press Start 2P"';
         ctx.fillText(waveAnnounceText, W / 2 + 2, waY + 2);
 
-        ctx.globalAlpha = waAlpha * waPulse;
+        ctx.globalAlpha = Math.min(waMaxAlpha, waAlpha * waPulse);
         ctx.fillStyle = '#000';
         ctx.font = '28px "Press Start 2P"';
         ctx.fillText(waveAnnounceText, W / 2 + 2, waY + 3);
@@ -6115,7 +6161,10 @@ if (player.weaponType !== 'normal') {
 
   // Flash overlay (HC-95: soft alpha + vignette for heavy hits)
   if (flashScreen > 0) {
-    var fsAlpha = Math.min(1, flashScreen * 0.08);
+    // HC-RD-07: flash alpha cap from playerFeedback.damage config
+    var _pfbFlash = (typeof getPlayerFeedbackConfig === 'function') ? (getPlayerFeedbackConfig().damage || {}) : {};
+    var _flCap = (typeof _pfbFlash.screenFlashAlphaCap === 'number') ? _pfbFlash.screenFlashAlphaCap : 0.06;
+    var fsAlpha = Math.min(_flCap, flashScreen * 0.06);
     if (flashScreen > 20) {
       var fsGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.8);
       fsGrad.addColorStop(0, 'rgba(255,255,255,' + (fsAlpha * 0.55) + ')');

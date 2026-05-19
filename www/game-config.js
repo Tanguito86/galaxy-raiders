@@ -467,6 +467,32 @@ window.GALAXY_CONFIG = {
         gameoverBgAlpha:    0.72,          // was 0.82
         overlayPanelAlpha:  0.90           // was 0.94 (drawOverlayPanel)
       }
+    },
+
+    // ================================================================
+    // HC-RD-08: MOBILE / SMALL-SCREEN READABILITY
+    // ================================================================
+    // On small viewports (phones), increase readability multipliers
+    // and reduce control deck opacity so threats remain visible
+    // behind the touch control overlay at the bottom.
+    // ================================================================
+    mobileReadability: {
+      enabled: true,
+
+      // --- control deck transparency during gameplay ---
+      controlDeck: {
+        enabled: true,
+        gameplayOpacity:    0.64           // was 1.0 (fully opaque), now semi-transparent
+      },
+
+      // --- small-screen sprite readability boost ---
+      smallScreen: {
+        enabled: true,
+        thresholdHeight:    500,           // CSS px below which we consider "small screen"
+        bossScaleBoost:     1.12,          // multiply BOSS_READABILITY_MULT by this
+        enemyScaleBoost:    1.10,          // multiply ENEMY_READABILITY_MULT by this
+        hudFontBoost:       1              // extra px for HUD fonts (NOT applied — HUD is fixed canvas)
+      }
     }
   },
 
