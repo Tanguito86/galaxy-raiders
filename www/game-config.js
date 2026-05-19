@@ -493,6 +493,27 @@ window.GALAXY_CONFIG = {
         enemyScaleBoost:    1.10,          // multiply ENEMY_READABILITY_MULT by this
         hudFontBoost:       1              // extra px for HUD fonts (NOT applied — HUD is fixed canvas)
       }
+    },
+
+    // ================================================================
+    // HC-RD-07/09: FREEZE AUDIT — final tuning caps
+    // ================================================================
+    // Fine-tuning caps applied during freeze-frame audit.
+    // Prevents specific elements from competing with threats.
+    // ================================================================
+    freezeAudit: {
+      enabled: true,
+
+      // --- boss ambient aura caps ---
+      bossAuraCap:         0.30,          // max outer fill alpha for all 4 boss auras
+
+      // --- muzzle flash ---
+      muzzleFlashCoreMax:  0.55,          // player weapon muzzle flash white core cap
+
+      // --- center-screen overlays ---
+      waveAnnounceAlphaCap: 0.65,         // wave announcement text max alpha
+      medalFeverAlphaCap:   0.70,         // medal FEVER text max alpha
+      flashOverlayMult:     0.06          // damage flash overlay multiplier (was 0.08)
     }
   },
 

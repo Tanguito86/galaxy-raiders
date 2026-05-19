@@ -1341,6 +1341,7 @@ function drawCrabtronDashTelegraph(ctx, boss, color, time) {
 
 // --- SERPENTRIX VISUALS ---
 function drawSerpentrixAura(ctx, boss, color, time) {
+  var _auraMax = (typeof getFreezeAuditConfig === 'function') ? (getFreezeAuditConfig().bossAuraCap || 0.30) : 0.30;
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
   var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
@@ -1357,7 +1358,7 @@ function drawSerpentrixAura(ctx, boss, color, time) {
 
   ctx.save();
 
-  ctx.globalAlpha = Math.min(0.30, (0.05 + hitAlpha) * pulse * pm); // HC-RD-07: aura cap
+  ctx.globalAlpha = Math.min(_auraMax, (0.05 + hitAlpha) * pulse * pm); // HC-RD-07: aura cap
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.ellipse(cx + hitShake, cy, boss.w * 0.55, boss.h * 0.7, 0, 0, Math.PI * 2);
@@ -1602,6 +1603,7 @@ function drawSerpentrixWave(ctx, boss, color, time) {
 
 // --- ORBITAL VISUALS ---
 function drawOrbitalEnergyField(ctx, boss, color, time) {
+  var _auraMax = (typeof getFreezeAuditConfig === 'function') ? (getFreezeAuditConfig().bossAuraCap || 0.30) : 0.30;
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
   var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
@@ -1869,6 +1871,7 @@ function drawOrbitalTractorBeamIndicator(ctx, boss, color, time) {
 
 // --- TENIENTE VISUALS ---
 function drawTenienteAura(ctx, boss, color, time) {
+  var _auraMax = (typeof getFreezeAuditConfig === 'function') ? (getFreezeAuditConfig().bossAuraCap || 0.30) : 0.30;
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
   var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
@@ -2403,6 +2406,7 @@ function drawEmperorTeleportIndicator(ctx, boss, color, time) {
 
 // --- EMPERADOR VISUALS ---
 function drawEmperorImperialAura(ctx, boss, color, time) {
+  var _auraMax = (typeof getFreezeAuditConfig === 'function') ? (getFreezeAuditConfig().bossAuraCap || 0.30) : 0.30;
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
   var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
@@ -3646,8 +3650,9 @@ if (shouldShow) {
 
   const playerFiring = typeof isFiring !== 'undefined' && isFiring;
   if (playerFiring && state === 'playing' && !pendingNextLevel) {
-    // HC-RD-07: muzzle flash alpha capped
-    var _mzMax = 0.55;
+    // HC-RD-07: muzzle flash alpha capped (config-driven)
+    var _fzCfg = (typeof getFreezeAuditConfig === 'function') ? getFreezeAuditConfig() : {};
+    var _mzMax = (typeof _fzCfg.muzzleFlashCoreMax === 'number') ? _fzCfg.muzzleFlashCoreMax : 0.55;
     const colors = FLASH_BY_WEAPON[player.weaponType] || FLASH_BY_WEAPON.normal;
     const pulse = 0.45 + 0.55 * Math.sin(globalTime * 0.07 + player.x * 0.01);
 
@@ -5307,7 +5312,7 @@ ufoRewards.forEach(d => {
       if (typeof isMedalFeverActive === 'function' && isMedalFeverActive()) {
         var feverLeft = typeof getMedalFeverTimeLeft === 'function' ? getMedalFeverTimeLeft() : 0;
         var feverPulse = 0.65 + 0.35 * Math.sin(globalTime * 0.012);
-        var feverAlpha = Math.min(0.70, feverPulse); // HC-RD-07: capped
+        var feverAlpha = Math.min((typeof _fzCfg.medalFeverAlphaCap === 'number') ? _fzCfg.medalFeverAlphaCap : 0.70, feverPulse); // HC-RD-07: capped
 
         ctx.save();
         ctx.textAlign = 'center';
@@ -5330,7 +5335,7 @@ ufoRewards.forEach(d => {
       if (waveAnnounceTimer > 0) {
         var waPulse = 0.55 + 0.45 * Math.sin(globalTime * 0.025);
         var waAlpha = Math.min(1, waveAnnounceTimer / 400);
-        var waMaxAlpha = 0.65; // cap for center-screen text
+        var waMaxAlpha = (typeof _fzCfg.waveAnnounceAlphaCap === 'number') ? _fzCfg.waveAnnounceAlphaCap : 0.65; // HC-RD-07: cap
         var waY = H / 2 - 60;
         var waColor = pendingNextLevel ? '#64f5ff' : '#fff36a';
 
