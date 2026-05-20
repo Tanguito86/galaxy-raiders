@@ -160,6 +160,55 @@ function getEnemyAIConfig() {
 }
 
 // ============================================================
+// HC-PD-01: PATTERN DIRECTOR — composicion hardcore de patrones
+// ============================================================
+// Estos limites controlan la convivencia segura entre patrones
+// simultaneos. NO aumentan dificultad: evitan combos injustos.
+
+window.HC_PATTERN_DIRECTOR = {
+  enabled: false,  // OFF por defecto — se activa cuando HC-PD este listo
+
+  maxThreatBudget: 10,
+  maxSimultaneousDominantPatterns: 1,
+
+  allowDoublePrecisionThreats: false,
+  preserveEscapeLanes: true,
+
+  telegraphSpacingFrames: 20,
+
+  densityCaps: {
+    bullets: 40,
+    occupancy: 0.55,
+    convergence: 0.35
+  },
+
+  debug: {
+    enabled: false
+  }
+};
+
+function getPatternDirectorConfig() {
+  var pd = window.HC_PATTERN_DIRECTOR;
+  if (!pd || typeof pd !== 'object') {
+    return {
+      enabled: false,
+      maxThreatBudget: 10,
+      maxSimultaneousDominantPatterns: 1,
+      allowDoublePrecisionThreats: false,
+      preserveEscapeLanes: true,
+      telegraphSpacingFrames: 20,
+      densityCaps: { bullets: 40, occupancy: 0.55, convergence: 0.35 },
+      debug: { enabled: false }
+    };
+  }
+  return pd;
+}
+
+function isPatternDirectorEnabled() {
+  return !!(window.HC_PATTERN_DIRECTOR && window.HC_PATTERN_DIRECTOR.enabled);
+}
+
+// ============================================================
 // HC-RD-01: VISUAL PRIORITY LAYERS — render-only readability
 // ============================================================
 // These constants define the draw-order separation so that lethal
