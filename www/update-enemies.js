@@ -55,6 +55,9 @@ function updateEnemiesAndProjectiles(step, dt) {
     if (typeof window.updateEncounterDirector === 'function') {
       window.updateEncounterDirector(dt);
     }
+    if (typeof window.updateWaveComposer === 'function') {
+      window.updateWaveComposer(dt);
+    }
     syncEncounterDirectorEnemyState(dt);
 
     // UFO spawn/move
@@ -591,6 +594,9 @@ if (!boss.active && activeEnemies.length > 0) {
 
     // --- external shmup shooting ---
     if (e.isExternalShmup && e.shmupShotsRemaining > 0) {
+      // Only fire external shmup if not gated by wave composer
+      var _extGated = (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e));
+      if (!_extGated) {
       e.shmupShootTimer -= dt;
       if (e.shmupShootTimer <= 0) {
         e.shmupShootTimer = e.shmupShootCooldown;
@@ -651,6 +657,7 @@ if (!boss.active && activeEnemies.length > 0) {
 
         createEnemyMuzzleFlash(sx, sy, e.type);
       }
+      } // end if (!_extGated)
     }
   });
 
@@ -932,17 +939,24 @@ if (!boss.active && activeEnemies.length > 0) {
     if (shooters.length > 0) {
       const shooter = shooters[Math.floor(Math.random() * shooters.length)];
 
-      pushEnemyBullet(
-        shooter.x + shooter.w / 2,
-        shooter.y + shooter.h,
-        0,
-        getDifficultySettings(level).bulletSpeed,
-        4,
-        10,
-        { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
-      );
-      createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
-      enemyLastShot = globalTime;
+      if (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(shooter)) {
+        // gated by wave composer phase — skip this shot but don't advance timer
+      } else {
+        pushEnemyBullet(
+          shooter.x + shooter.w / 2,
+          shooter.y + shooter.h,
+          0,
+          getDifficultySettings(level).bulletSpeed,
+          4,
+          10,
+          { kind: 'basic', color: '#ff5050', sourceType: shooter.type }
+        );
+        createEnemyMuzzleFlash(shooter.x + shooter.w / 2, shooter.y + shooter.h, shooter.type);
+        enemyLastShot = globalTime;
+        if (typeof window.registerWaveComposerPatternFire === 'function') {
+          window.registerWaveComposerPatternFire();
+        }
+      }
     }
   }
 
@@ -955,8 +969,12 @@ if (!boss.active && activeEnemies.length > 0) {
         if (e._suppressorTelegraphTimer <= 0) {
           e._suppressorTelegraphActive = false;
           e._suppressorTelegraphTimer = 0;
-          if (typeof fireHardcoreSuppressorBurst === 'function') {
+          var _supGated = (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e));
+          if (!_supGated && typeof fireHardcoreSuppressorBurst === 'function') {
             fireHardcoreSuppressorBurst(e);
+            if (typeof window.registerWaveComposerPatternFire === 'function') {
+              window.registerWaveComposerPatternFire();
+            }
           }
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
           var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
@@ -989,7 +1007,13 @@ if (!boss.active && activeEnemies.length > 0) {
         if (e._chaserTelegraphTimer <= 0) {
           e._chaserTelegraphActive = false;
           e._chaserTelegraphTimer = 0;
-          _fireChaserTelegraphSideShots(e);
+          var _chGated = (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e));
+          if (!_chGated) {
+            _fireChaserTelegraphSideShots(e);
+            if (typeof window.registerWaveComposerPatternFire === 'function') {
+              window.registerWaveComposerPatternFire();
+            }
+          }
           var rankMult2 = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
           var pressScale2 = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
           e._hcChaserCooldown = Math.max(1100, (HC_CHASER_COOLDOWN_MIN + Math.random() * (HC_CHASER_COOLDOWN_MAX - HC_CHASER_COOLDOWN_MIN)) * rankMult2 * pressScale2);
@@ -1004,7 +1028,8 @@ if (!boss.active && activeEnemies.length > 0) {
       }
       e._hcChaserCooldown -= dt;
       if (e._hcChaserCooldown <= 0) {
-        if (typeof fireHardcoreChaserBurst === 'function' && fireHardcoreChaserBurst(e)) {
+        var _chBGated = (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e));
+        if (!_chBGated && typeof fireHardcoreChaserBurst === 'function' && fireHardcoreChaserBurst(e)) {
           if (e._chaserTelegraphActive) {
             e._hcChaserCooldown = 999999;
           } else {
@@ -1012,6 +1037,10 @@ if (!boss.active && activeEnemies.length > 0) {
             var pressScale2b = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
             e._hcChaserCooldown = Math.max(1100, (HC_CHASER_COOLDOWN_MIN + Math.random() * (HC_CHASER_COOLDOWN_MAX - HC_CHASER_COOLDOWN_MIN)) * rankMult2b * pressScale2b);
           }
+        } else {
+          var rankMult2c = (typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1;
+          var pressScale2c = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+          e._hcChaserCooldown = Math.max(1100, (HC_CHASER_COOLDOWN_MIN + Math.random() * (HC_CHASER_COOLDOWN_MAX - HC_CHASER_COOLDOWN_MIN)) * rankMult2c * pressScale2c);
         }
       }
     }
@@ -1026,12 +1055,17 @@ if (!boss.active && activeEnemies.length > 0) {
         if (e._sniperTelegraphTimer <= 0) {
           e._sniperTelegraphActive = false;
           e._sniperTelegraphTimer = 0;
-          if (typeof fireHardcoreSniperShot === 'function' && fireHardcoreSniperShot(e)) {
+          if (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e)) {
+            e._hcSniperCooldown = Math.max(1400, HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN));
+          } else if (typeof fireHardcoreSniperShot === 'function' && fireHardcoreSniperShot(e)) {
             var sniperBase2 = HC_SNIPER_COOLDOWN_MIN + Math.random() * (HC_SNIPER_COOLDOWN_MAX - HC_SNIPER_COOLDOWN_MIN);
             var sniperSeed2 = e.x * 7919 + e.y * 65537 + globalTime;
             var sniperOffset2 = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(sniperSeed2, 50) : 0;
             e._hcSniperCooldown = Math.max(1400, sniperBase2 + sniperOffset2);
             e._sniperTelegraphFiredAt = 0;
+            if (typeof window.registerWaveComposerPatternFire === 'function') {
+              window.registerWaveComposerPatternFire();
+            }
           }
         }
         return;
@@ -1071,8 +1105,18 @@ if (!boss.active && activeEnemies.length > 0) {
             _swDelay = Math.round(_swDelay * 16.667);
           }
         }
-        if (typeof fireHardcoreSweeperFan === 'function') fireHardcoreSweeperFan(e);
-        e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN) + _swDelay;
+        if (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e)) {
+          // gated — skip fire, just reset cooldown
+          e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN) + _swDelay;
+        } else {
+          if (typeof fireHardcoreSweeperFan === 'function') {
+            fireHardcoreSweeperFan(e);
+            if (typeof window.registerWaveComposerPatternFire === 'function') {
+              window.registerWaveComposerPatternFire();
+            }
+          }
+          e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN) + _swDelay;
+        }
       }
     }
   });
@@ -1085,7 +1129,16 @@ if (!boss.active && activeEnemies.length > 0) {
       }
       e._hcFlankerCooldown -= dt;
       if (e._hcFlankerCooldown <= 0) {
-        if (typeof fireHardcoreFlankerCrossfire === 'function') fireHardcoreFlankerCrossfire(e);
+        if (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e)) {
+          // gated — skip fire
+        } else {
+          if (typeof fireHardcoreFlankerCrossfire === 'function') {
+            fireHardcoreFlankerCrossfire(e);
+            if (typeof window.registerWaveComposerPatternFire === 'function') {
+              window.registerWaveComposerPatternFire();
+            }
+          }
+        }
         e._hcFlankerCooldown = HC_FLANKER_COOLDOWN_MIN + Math.random() * (HC_FLANKER_COOLDOWN_MAX - HC_FLANKER_COOLDOWN_MIN);
       }
     }
@@ -1107,7 +1160,16 @@ if (!boss.active && activeEnemies.length > 0) {
             _btDelay = Math.round(_btDelay * 16.667);
           }
         }
-        if (typeof fireHardcoreBaiterBurst === 'function') fireHardcoreBaiterBurst(e);
+        if (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(e)) {
+          // gated — skip fire
+        } else {
+          if (typeof fireHardcoreBaiterBurst === 'function') {
+            fireHardcoreBaiterBurst(e);
+            if (typeof window.registerWaveComposerPatternFire === 'function') {
+              window.registerWaveComposerPatternFire();
+            }
+          }
+        }
         e._hcBaiterCooldown = HC_BAITER_COOLDOWN_MIN + Math.random() * (HC_BAITER_COOLDOWN_MAX - HC_BAITER_COOLDOWN_MIN) + _btDelay;
       }
     }

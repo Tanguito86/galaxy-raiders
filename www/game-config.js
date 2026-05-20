@@ -517,6 +517,63 @@ window.GALAXY_CONFIG = {
     }
   },
 
+  // ============ HC WAVE COMPOSER (HC-WC-03) ============
+  HC_WAVE_COMPOSER: {
+    enabled: true,
+    phaseDurations: {
+      INTRO:   { normal: 1200, setpiece: 2000 },
+      BUILD:   { normal: 4000, setpiece: 5000 },
+      PEAK:    { threshold: 0.40, minDuration: 3000 },
+      RESOLVE: { threshold: 0.40, maxDuration: 8000 },
+      RELIEF:  { afterClear: 900, maxContinuous: 3000 }
+    },
+    spawnSpacing: {
+      entryBaseMs: 180,
+      entryMaxMs: 600,
+      groupGapMs: 800,
+      roleActivationOffset: 1200
+    },
+    buildTiming: {
+      sweeperDelay:    0,
+      baiterDelay:     200,
+      suppressorDelay: 1500,
+      flankerDelay:    1800,
+      sniperDelay:     2800,
+      anchorDelay:     3500,
+      diverDelay:      4000,
+      chaserDelay:     4200
+    },
+    peakLimits: {
+      maxSimultaneousPatterns: 3,
+      maxBullets: 30,
+      interPatternGapMs: 200,
+      diveWaveGapMs: 2500
+    },
+    resolveTiming: {
+      decayDelayMs: 500,
+      diverSuspend: true,
+      sniperSuspend: true,
+      suppressorSuspend: true,
+      chaserSuspend: true
+    },
+    reliefTiming: {
+      bulletMax: 6,
+      silenceAfterClear: 900,
+      powerupEligible: true
+    },
+    threatCaps: {
+      totalActiveRoles: 5,
+      simultaneousDivers: 2,
+      simultaneousSnipers: 3,
+      simultaneousChasers: 1
+    },
+    telegraphLeadIn: {
+      introVisualMs: 600,
+      phaseTransitionFlash: 200,
+      ambushWarningMs: 400
+    }
+  },
+
   // ============ DEBUG ============
   debug: {
     showHardcoreInfo: false,
@@ -528,7 +585,8 @@ window.GALAXY_CONFIG = {
     showBackgroundStats: false,
     showAtmosphereStats: false,
     showLevelSkipButton: false,
-    showHitboxDebug: false
+    showHitboxDebug: false,
+    showWaveComposer: false
   }
 
 };

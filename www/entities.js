@@ -1089,6 +1089,10 @@ function initEnemies() {
   const stage = Math.floor((level - 1) / 5);
   enemySpeedX = 0.65 + stage * 0.4;
   enemyDir = 1;
+
+  if (typeof window.initWaveComposer === 'function') {
+    window.initWaveComposer();
+  }
 }
 
 function initBoss() {
