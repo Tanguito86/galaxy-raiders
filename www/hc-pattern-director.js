@@ -206,17 +206,44 @@
   };
   var _delayTelemetry = [];
 
-  // HC-PD-06: Hook tracking
+  // HC-PD-06/07: Hook tracking with detailed telemetry
   var _hookState = {
+    // Per-hook aggregated counters
     sweeperSuggested: 0,
     sweeperApplied: 0,
+    sweeperBlockedByApplyFalse: 0,
+    sweeperFallbackAllow: 0,
+    sweeperTotalDelayFrames: 0,
+    sweeperLastReason: null,
+    sweeperLastSeverity: null,
+    sweeperLastFrame: -9999,
     baiterSuggested: 0,
     baiterApplied: 0,
+    baiterBlockedByApplyFalse: 0,
+    baiterFallbackAllow: 0,
+    baiterTotalDelayFrames: 0,
+    baiterLastReason: null,
+    baiterLastSeverity: null,
+    baiterLastFrame: -9999,
+    // Global
     lastHookName: null,
     lastHookFrame: -9999,
     lastHookDelay: 0,
-    fallbackAllowCount: 0
+    lastHookReason: null,
+    lastHookSeverity: null,
+    fallbackAllowCount: 0,
+    // HC-PD-07: Budget snapshot log (last 30)
+    budgetSnapshots: []
   };
+
+  // Per-hook counters accessor
+  function _hookCounters(hookName, patternId) {
+    if (hookName === 'enemySupportFire') {
+      if (patternId === 'wideFan') return { sug: 'sweeperSuggested', app: 'sweeperApplied', blk: 'sweeperBlockedByApplyFalse', fb: 'sweeperFallbackAllow', tf: 'sweeperTotalDelayFrames', lr: 'sweeperLastReason', ls: 'sweeperLastSeverity', lf: 'sweeperLastFrame' };
+      if (patternId === 'baiterSpread') return { sug: 'baiterSuggested', app: 'baiterApplied', blk: 'baiterBlockedByApplyFalse', fb: 'baiterFallbackAllow', tf: 'baiterTotalDelayFrames', lr: 'baiterLastReason', ls: 'baiterLastSeverity', lf: 'baiterLastFrame' };
+    }
+    return null;
+  }
 
   // ============================================================
   // PATTERN TAXONOMY CONSTANTS
@@ -1645,15 +1672,29 @@
       framesSinceLastDelay: _currentFrame() - _delayState.lastDelayFrame,
       totalSuggestedDelays: _delayState.totalSuggestedDelays,
       totalAppliedDelays: _delayState.totalAppliedDelays,
-      // HC-PD-06: Hook state
+      // HC-PD-06/07: Hook state with full telemetry
       hooks: {
         sweeperSuggested: _hookState.sweeperSuggested,
         sweeperApplied: _hookState.sweeperApplied,
+        sweeperBlockedByApplyFalse: _hookState.sweeperBlockedByApplyFalse,
+        sweeperFallback: _hookState.sweeperFallbackAllow,
+        sweeperTotalDelayFrames: _hookState.sweeperTotalDelayFrames,
+        sweeperAvgDelay: _hookState.sweeperApplied > 0 ? Math.round(_hookState.sweeperTotalDelayFrames / _hookState.sweeperApplied) : 0,
+        sweeperLastReason: _hookState.sweeperLastReason,
+        sweeperLastSeverity: _hookState.sweeperLastSeverity,
         baiterSuggested: _hookState.baiterSuggested,
         baiterApplied: _hookState.baiterApplied,
+        baiterBlockedByApplyFalse: _hookState.baiterBlockedByApplyFalse,
+        baiterFallback: _hookState.baiterFallbackAllow,
+        baiterTotalDelayFrames: _hookState.baiterTotalDelayFrames,
+        baiterAvgDelay: _hookState.baiterApplied > 0 ? Math.round(_hookState.baiterTotalDelayFrames / _hookState.baiterApplied) : 0,
+        baiterLastReason: _hookState.baiterLastReason,
+        baiterLastSeverity: _hookState.baiterLastSeverity,
         lastHook: _hookState.lastHookName,
         lastHookFramesAgo: _currentFrame() - _hookState.lastHookFrame,
         lastHookDelay: _hookState.lastHookDelay,
+        lastHookReason: _hookState.lastHookReason,
+        lastHookSeverity: _hookState.lastHookSeverity,
         fallbackAllowCount: _hookState.fallbackAllowCount
       },
       config: {
@@ -1719,6 +1760,38 @@
 
     // Run the delay gate check
     var result = shouldDelayPattern(patternId, source, meta);
+    var counters = _hookCounters(hookName, patternId);
+
+    // Record budget snapshot for telemetry
+    var snapshot = {
+      f: _currentFrame(),
+      hk: hookName,
+      id: patternId,
+      bb: _pdState.activeBudget,
+      pb: _pdState.activeBudget + getPatternDefinition(patternId).weight,
+      rb: _pdState.readabilityLoad,
+      pr: _pdState.readabilityLoad + getPatternDefinition(patternId).readabilityCost,
+      r: result.reason,
+      sev: result.severity,
+      app: false
+    };
+
+    // Track per-hook telemetry
+    if (counters) {
+      _hookState[counters.sug]++;
+      _hookState[counters.lr] = result.reason;
+      _hookState[counters.ls] = result.severity;
+      _hookState[counters.lf] = _currentFrame();
+
+      // Track suggested but not applied because applyDelay is off
+      if (!dgc.applyDelay) {
+        _hookState[counters.blk]++;
+        snapshot.app = false;
+        _hookState.budgetSnapshots.push(snapshot);
+        if (_hookState.budgetSnapshots.length > 30) _hookState.budgetSnapshots.shift();
+        return 0;
+      }
+    }
 
     // Only actually delay if applyDelay is true
     if (!dgc.applyDelay) {
@@ -1728,6 +1801,10 @@
     // Fallback allow — never delay
     if (result.fallbackAllow) {
       _hookState.fallbackAllowCount++;
+      if (counters) _hookState[counters.fb]++;
+      snapshot.app = false;
+      _hookState.budgetSnapshots.push(snapshot);
+      if (_hookState.budgetSnapshots.length > 30) _hookState.budgetSnapshots.shift();
       return 0;
     }
 
@@ -1736,20 +1813,25 @@
       _hookState.lastHookName = hookName;
       _hookState.lastHookFrame = _currentFrame();
       _hookState.lastHookDelay = result.delayFrames;
+      _hookState.lastHookReason = result.reason;
+      _hookState.lastHookSeverity = result.severity;
 
-      if (hookName === 'enemySupportFire') {
-        if (patternId === 'wideFan' || patternId === 'baiterSpread') {
-          if (patternId === 'wideFan') _hookState.sweeperApplied++;
-          if (patternId === 'baiterSpread') _hookState.baiterApplied++;
-        }
-        _hookState.sweeperSuggested++;
+      if (counters) {
+        _hookState[counters.app]++;
+        _hookState[counters.tf] += result.delayFrames;
       }
-      if (hookName === 'externalPressure') {
-        _hookState.baiterSuggested++;
-      }
+
+      snapshot.app = true;
+      _hookState.budgetSnapshots.push(snapshot);
+      if (_hookState.budgetSnapshots.length > 30) _hookState.budgetSnapshots.shift();
 
       return result.delayFrames;
     }
+
+    // No delay needed
+    snapshot.app = false;
+    _hookState.budgetSnapshots.push(snapshot);
+    if (_hookState.budgetSnapshots.length > 30) _hookState.budgetSnapshots.shift();
 
     return 0;
   }
@@ -2133,6 +2215,72 @@
   }
 
   // ================================================================
+  // HC-PD-07: CONTROLLED HOOK TELEMETRY — per-hook detailed stats
+  // ================================================================
+
+  function _perHookStats(prefix) {
+    return {
+      suggested: _hookState[prefix + 'Suggested'] || 0,
+      applied: _hookState[prefix + 'Applied'] || 0,
+      blockedByApplyFalse: _hookState[prefix + 'BlockedByApplyFalse'] || 0,
+      fallbackAllow: _hookState[prefix + 'FallbackAllow'] || 0,
+      totalDelayFrames: _hookState[prefix + 'TotalDelayFrames'] || 0,
+      avgDelayFrames: _hookState[prefix + 'Applied'] > 0
+        ? Math.round((_hookState[prefix + 'TotalDelayFrames'] || 0) / _hookState[prefix + 'Applied'])
+        : 0,
+      maxDelayFrames: (_delayGateConfig().maxDelayFrames || 30),
+      lastReason: _hookState[prefix + 'LastReason'] || null,
+      lastSeverity: _hookState[prefix + 'LastSeverity'] || null,
+      lastFrame: _hookState[prefix + 'LastFrame'] || -9999,
+      framesSinceLast: _currentFrame() - (_hookState[prefix + 'LastFrame'] || -9999),
+      ratioApplied: _hookState[prefix + 'Suggested'] > 0
+        ? ((_hookState[prefix + 'Applied'] || 0) / _hookState[prefix + 'Suggested'] * 100).toFixed(1) + '%'
+        : '0%',
+      health: _hookHealth(prefix)
+    };
+  }
+
+  function _hookHealth(prefix) {
+    var sug = _hookState[prefix + 'Suggested'] || 0;
+    var app = _hookState[prefix + 'Applied'] || 0;
+    var fb = _hookState[prefix + 'FallbackAllow'] || 0;
+    var blk = _hookState[prefix + 'BlockedByApplyFalse'] || 0;
+    var avg = app > 0 ? (_hookState[prefix + 'TotalDelayFrames'] || 0) / app : 0;
+
+    if (sug === 0) return 'idle';        // no activity — safe
+    if (fb > sug * 0.3) return 'risky';  // >30% fallback — softlock-prone
+    if (app > sug * 0.8) return 'tense'; // >80% applied — too aggressive
+    if (avg > 25) return 'tense';        // high avg delay — pacing risk
+    return 'healthy';
+  }
+
+  function getControlledHookTelemetry() {
+    var sw = _perHookStats('sweeper');
+    var bt = _perHookStats('baiter');
+    var totalSug = (sw.suggested || 0) + (bt.suggested || 0);
+    var totalApp = (sw.applied || 0) + (bt.applied || 0);
+
+    return {
+      hooks: { sweeper: sw, baiter: bt },
+      totals: {
+        suggested: totalSug,
+        applied: totalApp,
+        blockedByApplyFalse: (sw.blockedByApplyFalse || 0) + (bt.blockedByApplyFalse || 0),
+        fallbackAllow: (sw.fallbackAllow || 0) + (bt.fallbackAllow || 0),
+        avgDelayFrames: totalApp > 0 ? Math.round(((sw.totalDelayFrames || 0) + (bt.totalDelayFrames || 0)) / totalApp) : 0,
+        maxDelayFrames: (_delayGateConfig().maxDelayFrames || 30)
+      },
+      lastBudgetSnapshots: _hookState.budgetSnapshots.slice(-10),
+      activeHooks: (_controlledHooksConfig().enemySupportFire ? 'enemySupportFire' : '') +
+                   ((_controlledHooksConfig().externalPressure ? ' externalPressure' : '')),
+      summary: {
+        overallHealth: _hookState.sweeperSuggested === 0 && _hookState.baiterSuggested === 0
+          ? 'idle' : (sw.health === 'risky' || bt.health === 'risky') ? 'risky' : 'healthy'
+      }
+    };
+  }
+
+  // ================================================================
   // HC-PD-04: SOFT GATING ADVICE — last recommendation + telemetry
   // ================================================================
 
@@ -2214,8 +2362,9 @@
     getDelayGateState: getDelayGateState,
     registerPatternDelay: registerPatternDelay,
 
-    // HC-PD-06: Controlled delay hooks
+    // HC-PD-06/07: Controlled delay hooks + telemetry
     tryApplyPatternDelay: tryApplyPatternDelay,
+    getControlledHookTelemetry: getControlledHookTelemetry,
 
     // Constants
     CLASS: CATEGORY,

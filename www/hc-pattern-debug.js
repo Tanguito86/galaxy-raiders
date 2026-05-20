@@ -374,23 +374,64 @@
       ctx.fillText('sug:' + delay.totalSuggestedDelays + ' app:' + delay.totalAppliedDelays, x, y);
       y += lineH;
 
-      // HC-PD-06: Hook status
+      // HC-PD-06/07: Hook status with telemetry
       if (delay.hooks) {
         var hk = delay.hooks;
-        var swColor = hk.sweeperApplied > 0 ? '#44ff44' : '#888';
-        var btColor = hk.baiterApplied > 0 ? '#44ff44' : '#888';
+        var swApplied = hk.sweeperApplied || 0;
+        var swSug = hk.sweeperSuggested || 0;
+        var swColor = swApplied > 0 ? '#44ff44' : (swSug > 0 ? '#ffaa44' : '#888');
+        var btApplied = hk.baiterApplied || 0;
+        var btSug = hk.baiterSuggested || 0;
+        var btColor = btApplied > 0 ? '#44ff44' : (btSug > 0 ? '#ffaa44' : '#888');
+
         ctx.fillStyle = '#888';
-        ctx.fillText('HK:', x, y);
+        ctx.fillText('HK', x, y);
         ctx.fillStyle = swColor;
-        ctx.fillText('SW:' + hk.sweeperApplied + '/' + hk.sweeperSuggested, x + 16, y);
+        ctx.fillText('SW:' + swApplied + '/' + swSug, x + 14, y);
         ctx.fillStyle = btColor;
-        ctx.fillText('BT:' + hk.baiterApplied + '/' + hk.baiterSuggested, x + 58, y);
+        ctx.fillText('BT:' + btApplied + '/' + btSug, x + 58, y);
         y += lineH;
 
+        // Extra telemetry row
+        ctx.globalAlpha = 0.55;
+        var swAvg = hk.sweeperAvgDelay || 0;
+        var btAvg = hk.baiterAvgDelay || 0;
+        var swBlk = hk.sweeperBlockedByApplyFalse || 0;
+        var btBlk = hk.baiterBlockedByApplyFalse || 0;
+        ctx.fillStyle = '#666';
+        ctx.fillText('avg', x, y);
+        ctx.fillStyle = swApplied > 0 ? '#44ff44' : '#555';
+        ctx.fillText('a' + swAvg + 'f', x + 18, y);
+        ctx.fillStyle = btApplied > 0 ? '#44ff44' : '#555';
+        ctx.fillText('a' + btAvg + 'f', x + 52, y);
+        y += lineH;
+
+        ctx.fillStyle = '#666';
+        ctx.fillText('blk', x, y);
+        ctx.fillStyle = swBlk > 0 ? '#ffaa44' : '#555';
+        ctx.fillText('b' + swBlk, x + 18, y);
+        ctx.fillStyle = btBlk > 0 ? '#ffaa44' : '#555';
+        ctx.fillText('b' + btBlk, x + 52, y);
+        y += lineH;
+
+        // Last hook detail
         if (hk.lastHook) {
-          ctx.globalAlpha = 0.50;
+          ctx.globalAlpha = 0.48;
+          var sevColor = '#888';
+          if (hk.lastHookSeverity === 'critical') sevColor = '#ff4444';
+          else if (hk.lastHookSeverity === 'risky') sevColor = '#ffaa44';
           ctx.fillStyle = '#666';
-          ctx.fillText('  last:' + hk.lastHook + ' ' + hk.lastHookDelay + 'f', x, y);
+          ctx.fillText('last:' + hk.lastHook + ' ' + hk.lastHookFramesAgo + 'f', x, y);
+          ctx.fillStyle = sevColor;
+          ctx.fillText(' ' + (hk.lastHookSeverity || '?'), x + 78, y);
+          y += lineH;
+        }
+
+        // Fallback count
+        if (hk.fallbackAllowCount > 0) {
+          ctx.globalAlpha = 0.50;
+          ctx.fillStyle = '#ffaa44';
+          ctx.fillText('fb:' + hk.fallbackAllowCount, x, y);
           y += lineH;
         }
       }
