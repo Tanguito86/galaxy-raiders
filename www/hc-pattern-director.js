@@ -2,8 +2,9 @@
 // GALAXY RAIDERS — hc-pattern-director.js
 // HC-PD-01: Safe initial structure
 // HC-PD-02: Runtime threat classification + passive tracking
+// HC-PD-03: Passive threat budget audit
 // ============================================================
-// STATUS: PASSIVE — observes, classifies, measures. No combat control.
+// STATUS: PASSIVE — observes, classifies, measures, audits. No combat control.
 // Integrates with: HC-ED (encounter director), HC-RD (readability),
 // HC-HB (hitbox fairness). Does NOT break any existing system.
 // ============================================================
@@ -30,6 +31,18 @@
       densityCaps: { bullets: 40, occupancy: 0.55, convergence: 0.35 },
       readability: { maxLoad: 8 },
       warnings: { multiplePrimaryThreats: true, laneClosureRisk: true, telegraphMissing: true },
+      budgetAudit: {
+        enabled: true,
+        maxThreatBudget: 10,
+        softWarningBudget: 8,
+        maxReadabilityLoad: 8,
+        softReadabilityWarning: 6,
+        maxPrimaryThreats: 1,
+        maxSupportThreats: 2,
+        laneRisk: { maxHighRiskPatterns: 1, warnOnHighHighOverlap: true, warnOnSpaceControlStack: true },
+        telegraph: { minSpacingFrames: 20, warnOnOverlap: true },
+        history: { maxFrames: 300, sampleEveryFrames: 10 }
+      },
       debug: { enabled: false }
     };
   }
@@ -41,6 +54,26 @@
   function _pdClassificationEnabled() {
     if (_pdEnabled()) return true;
     return _pdConfig().runtimeClassification === true;
+  }
+
+  function _auditConfig() {
+    var cfg = _pdConfig();
+    return (cfg.budgetAudit && typeof cfg.budgetAudit === 'object')
+      ? cfg.budgetAudit
+      : {
+          enabled: true,
+          maxThreatBudget: 10, softWarningBudget: 8,
+          maxReadabilityLoad: 8, softReadabilityWarning: 6,
+          maxPrimaryThreats: 1, maxSupportThreats: 2,
+          laneRisk: { maxHighRiskPatterns: 1, warnOnHighHighOverlap: true, warnOnSpaceControlStack: true },
+          telegraph: { minSpacingFrames: 20, warnOnOverlap: true },
+          history: { maxFrames: 300, sampleEveryFrames: 10 }
+        };
+  }
+
+  function _auditEnabled() {
+    if (!_pdClassificationEnabled()) return false;
+    return _auditConfig().enabled !== false;
   }
 
   // ============================================================
@@ -709,12 +742,25 @@
     // Cross-frame accumulators
     totalPatternActivations: 0,
     patternFrequency: {},
-    dominantPatternHistory: [],  // last N dominant pattern activations
+    dominantPatternHistory: [],
     supportPatternHistory: [],
     simultaneousPrimaryCount: 0,
     activeDensityClass: DENSITY_CLASS.LOW,
     readabilityLoad: 0,
     warnings: [],
+
+    // HC-PD-03: Budget audit fields
+    categoryCounts: {},
+    highestLaneRisk: LANE_RISK.SAFE,
+    laneRiskScore: 0,
+    spaceControlCount: 0,
+    highLaneRiskCount: 0,
+    activeTelegraphCount: 0,
+    telegraphOverlapDetected: false,
+    missingTelegraphCount: 0,
+    dangerousCombo: null,
+    auditHistory: [],
+    auditHistorySampleCounter: 0,
 
     // Density snapshot (per-frame)
     _lastDensityCheck: null,
@@ -747,6 +793,15 @@
     _pdState.lastTelegraphFrame = 0;
     _pdState.readabilityLoad = 0;
     _pdState.simultaneousPrimaryCount = 0;
+    _pdState.categoryCounts = {};
+    _pdState.highestLaneRisk = LANE_RISK.SAFE;
+    _pdState.laneRiskScore = 0;
+    _pdState.spaceControlCount = 0;
+    _pdState.highLaneRiskCount = 0;
+    _pdState.activeTelegraphCount = 0;
+    _pdState.telegraphOverlapDetected = false;
+    _pdState.missingTelegraphCount = 0;
+    _pdState.dangerousCombo = null;
   }
 
   // ============================================================
@@ -910,54 +965,249 @@
   }
 
   // ============================================================
+  // HC-PD-03: DANGEROUS COMBO DETECTION
+  // ============================================================
+  // Known dangerous pattern combinations.
+  // Detection only — never blocks gameplay.
+  // ============================================================
+
+  var DANGEROUS_COMBOS = [
+    { combo: 'wall+sweep',         classes: [CATEGORY.SPACE_CONTROL, CATEGORY.PRESSURE],  tags: [['wall', 'lane_closure'], ['fan', 'sweep']] },
+    { combo: 'sniper+suppression', classes: [CATEGORY.PRECISION, CATEGORY.PRESSURE],     tags: [['sniper'], ['suppressor', 'suppression']] },
+    { combo: 'spiral+denseSpread', classes: [CATEGORY.ESCALATION, CATEGORY.PRESSURE],    tags: [['wave', 'spiral'], ['spread']] },
+    { combo: 'doubleAimedSync',    classes: [CATEGORY.PRECISION, CATEGORY.PRECISION],    tags: [[], []] },
+    { combo: 'areaDenial+chase',   classes: [CATEGORY.SPACE_CONTROL, CATEGORY.PRESSURE], tags: [['area_denial'], ['pursuit', 'chaser']] },
+    { combo: 'rotating+tractor',   classes: [CATEGORY.ESCALATION, CATEGORY.SPACE_CONTROL], tags: [['rotating'], ['beam']] },
+    { combo: 'crossfire+sniper',   classes: [CATEGORY.PRECISION, CATEGORY.PRECISION],    tags: [['crossfire'], ['sniper']] },
+    { combo: 'wall+highLaneRisk',  classes: [CATEGORY.SPACE_CONTROL, null],              tags: [['wall', 'lane_closure'], []] }
+  ];
+
+  function _matchesTags(patternTags, requiredTags) {
+    if (!requiredTags || requiredTags.length === 0) return true;
+    for (var i = 0; i < requiredTags.length; i++) {
+      if (patternTags.indexOf(requiredTags[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function _detectDangerousCombos() {
+    if (!_auditEnabled()) return;
+    var patterns = _pdState.activePatterns;
+    if (patterns.length < 2) return;
+
+    for (var c = 0; c < DANGEROUS_COMBOS.length; c++) {
+      var dc = DANGEROUS_COMBOS[c];
+      var foundA = false, foundB = false;
+      var idA = null, idB = null;
+
+      for (var i = 0; i < patterns.length; i++) {
+        var p = patterns[i];
+        var def = getPatternDefinition(p.id);
+        var tags = def.tags || [];
+
+        if (!foundA) {
+          if (p.category === dc.classes[0] && _matchesTags(tags, dc.tags[0])) {
+            foundA = true; idA = p.id;
+          }
+        } else if (!foundB) {
+          if ((dc.classes[1] === null || p.category === dc.classes[1]) && _matchesTags(tags, dc.tags[1])) {
+            foundB = true; idB = p.id;
+          }
+        }
+      }
+
+      if (foundA && foundB) {
+        _pdState.dangerousCombo = dc.combo + ':' + (idA || '?') + '+' + (idB || '?');
+        _pdState.warnings.push('COMBO:' + dc.combo + ' (' + (idA || '?') + '+' + (idB || '?') + ')');
+        return;
+      }
+    }
+  }
+
+  // ============================================================
+  // HC-PD-03: LANE RISK AUDIT
+  // ============================================================
+
+  var LANE_RISK_SCORE = { safe: 0, low: 1, medium: 2, high: 3 };
+
+  function _auditLaneRisk() {
+    if (!_auditEnabled()) return;
+    var auditCfg = _auditConfig();
+    var laneCfg = auditCfg.laneRisk || {};
+    var patterns = _pdState.activePatterns;
+    var score = 0;
+    var spaceControlCount = 0;
+    var highCount = 0;
+    var highest = LANE_RISK.SAFE;
+
+    for (var i = 0; i < patterns.length; i++) {
+      var risk = patterns[i].laneRisk;
+      score += LANE_RISK_SCORE[risk] || 0;
+      if (risk === LANE_RISK.HIGH) highCount++;
+      if (risk === LANE_RISK.MEDIUM || risk === LANE_RISK.HIGH) {
+        if (LANE_RISK_SCORE[risk] > (LANE_RISK_SCORE[highest] || 0)) highest = risk;
+      }
+      if (patterns[i].category === CATEGORY.SPACE_CONTROL) spaceControlCount++;
+    }
+
+    _pdState.laneRiskScore = score;
+    _pdState.spaceControlCount = spaceControlCount;
+    _pdState.highLaneRiskCount = highCount;
+    _pdState.highestLaneRisk = highest;
+
+    // Warnings
+    var maxHigh = laneCfg.maxHighRiskPatterns || 1;
+    if (highCount > maxHigh) {
+      _pdState.warnings.push('LANE_HIGH:' + highCount + ' high lane-risk patterns (max ' + maxHigh + ')');
+    }
+    if (laneCfg.warnOnHighHighOverlap && highCount >= 2) {
+      _pdState.warnings.push('LANE_OVERLAP:' + highCount + ' high-risk patterns overlapping');
+    }
+    if (laneCfg.warnOnSpaceControlStack && spaceControlCount >= 2) {
+      _pdState.warnings.push('SPACE_STACK:' + spaceControlCount + ' space-control patterns active');
+    }
+  }
+
+  // ============================================================
+  // HC-PD-03: TELEGRAPH AUDIT
+  // ============================================================
+
+  function _auditTelegraph() {
+    if (!_auditEnabled()) return;
+    var auditCfg = _auditConfig();
+    var tgCfg = auditCfg.telegraph || {};
+    var patterns = _pdState.activePatterns;
+    var activeCount = 0;
+    var missingCount = 0;
+    var minSpacing = tgCfg.minSpacingFrames || 20;
+    var cf = _currentFrame();
+
+    for (var i = 0; i < patterns.length; i++) {
+      var def = getPatternDefinition(patterns[i].id);
+      if (def.telegraphRequired) {
+        activeCount++;
+        if (!patterns[i].meta._hasTelegraph) {
+          missingCount++;
+        }
+      }
+    }
+
+    _pdState.activeTelegraphCount = activeCount;
+    _pdState.missingTelegraphCount = missingCount;
+
+    // Overlap detection
+    if (activeCount >= 2 && tgCfg.warnOnOverlap) {
+      _pdState.telegraphOverlapDetected = true;
+      _pdState.warnings.push('TG_OVERLAP:' + activeCount + ' telegraphs overlapping, spacing<' + minSpacing);
+    } else if (activeCount >= 2) {
+      _pdState.telegraphOverlapDetected = true;
+    }
+
+    if (missingCount > 0) {
+      _pdState.warnings.push('TG_MISSING:' + missingCount + ' patterns need telegraph, none registered');
+    }
+  }
+
+  // ============================================================
+  // HC-PD-03: COMPACT HISTORY
+  // ============================================================
+
+  function _recordAuditHistory() {
+    if (!_auditEnabled()) return;
+    var auditCfg = _auditConfig();
+    var histCfg = auditCfg.history || {};
+    var sampleEvery = histCfg.sampleEveryFrames || 10;
+    var maxFrames = histCfg.maxFrames || 300;
+
+    _pdState.auditHistorySampleCounter++;
+    if (_pdState.auditHistorySampleCounter < sampleEvery) return;
+    _pdState.auditHistorySampleCounter = 0;
+
+    var entry = {
+      f: _currentFrame(),
+      w: _pdState.activeBudget,
+      r: _pdState.readabilityLoad,
+      p: _pdState.simultaneousPrimaryCount,
+      s: (_pdState.activePatterns.filter(function (p) { return p.dominance === DOMINANCE.SUPPORT; })).length,
+      l: _pdState.laneRiskScore,
+      n: _pdState.warnings.length,
+      d: _pdState.dangerousCombo ? 1 : 0
+    };
+
+    _pdState.auditHistory.push(entry);
+    if (_pdState.auditHistory.length > maxFrames) {
+      _pdState.auditHistory.splice(0, _pdState.auditHistory.length - maxFrames);
+    }
+  }
+
+  // ============================================================
+  // HC-PD-03: BUDGET AUDIT COMPUTATION
+  // ============================================================
+
+  function _computeBudgetAudit() {
+    if (!_auditEnabled()) return;
+
+    var patterns = _pdState.activePatterns;
+    var auditCfg = _auditConfig();
+
+    // Category counts
+    var counts = {};
+    for (var i = 0; i < patterns.length; i++) {
+      var cat = patterns[i].category;
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    _pdState.categoryCounts = counts;
+
+    // Threat weight total (already tracked via activeBudget)
+
+    // Budget warnings
+    if (_pdState.activeBudget >= auditCfg.maxThreatBudget) {
+      _pdState.warnings.push('BUDGET_HARD:threat budget ' + _pdState.activeBudget + '/' + auditCfg.maxThreatBudget);
+    } else if (_pdState.activeBudget >= (auditCfg.softWarningBudget || 8)) {
+      _pdState.warnings.push('BUDGET_SOFT:threat budget ' + _pdState.activeBudget + '/' + auditCfg.softWarningBudget);
+    }
+
+    // Readability warnings
+    var maxRead = auditCfg.maxReadabilityLoad || 8;
+    if (_pdState.readabilityLoad >= maxRead) {
+      _pdState.warnings.push('READ_HARD:readability ' + _pdState.readabilityLoad + '/' + maxRead);
+    } else if (_pdState.readabilityLoad >= (auditCfg.softReadabilityWarning || 6)) {
+      _pdState.warnings.push('READ_SOFT:readability ' + _pdState.readabilityLoad + '/' + auditCfg.softReadabilityWarning);
+    }
+
+    // Primary threat cap
+    var maxPrimary = auditCfg.maxPrimaryThreats || 1;
+    if (_pdState.simultaneousPrimaryCount > maxPrimary) {
+      _pdState.warnings.push('MULTI_PRIMARY:' + _pdState.simultaneousPrimaryCount + ' primary threats (max ' + maxPrimary + ')');
+    }
+
+    // Support threat cap
+    var maxSupport = auditCfg.maxSupportThreats || 2;
+    var supportCount = (counts[DOMINANCE.SUPPORT] || 0);
+    if (supportCount > maxSupport) {
+      _pdState.warnings.push('SUPPORT_OVER:' + supportCount + ' support threats (max ' + maxSupport + ')');
+    }
+
+    // Density risk (based on bullet count vs pattern count)
+    if (_pdState._lastBulletCount > 30 && _pdState.activePatterns.length > 4) {
+      _pdState.warnings.push('DENSITY_RISK:' + _pdState._lastBulletCount + ' bullets x ' + _pdState.activePatterns.length + ' patterns');
+    }
+
+    // Run sub-audits
+    _detectDangerousCombos();
+    _auditLaneRisk();
+    _auditTelegraph();
+    _recordAuditHistory();
+  }
+
+  // ============================================================
   // VALIDATION WARNINGS — debug only, never blocks
   // ============================================================
 
   function _runValidationWarnings() {
-    var cfg = _pdConfig();
-    var warnCfg = cfg.warnings || {};
-
-    // Multiple primary threats
-    if (warnCfg.multiplePrimaryThreats && _pdState.simultaneousPrimaryCount > 1) {
-      _pdState.warnings.push('MULTI_PRIMARY:' + _pdState.simultaneousPrimaryCount + ' primary threats active');
-    }
-
-    // Lane closure risk
-    if (warnCfg.laneClosureRisk) {
-      var highLanePatterns = _pdState.activePatterns.filter(function (p) {
-        return p.laneRisk === LANE_RISK.HIGH || p.laneRisk === LANE_RISK.MEDIUM;
-      });
-      if (highLanePatterns.length >= 2) {
-        _pdState.warnings.push('LANE_CLOSURE:' + highLanePatterns.length + ' med/high lane-risk patterns');
-      }
-    }
-
-    // Missing telegraph
-    if (warnCfg.telegraphMissing) {
-      var missingTelegraph = _pdState.activePatterns.filter(function (p) {
-        var def = getPatternDefinition(p.id);
-        return def.telegraphRequired && !p.meta._hasTelegraph;
-      });
-      if (missingTelegraph.length > 0) {
-        _pdState.warnings.push('TELEGRAPH:' + missingTelegraph.length + ' patterns missing telegraph');
-      }
-    }
-
-    // Readability overload
-    var readCfg = cfg.readability || {};
-    var maxLoad = readCfg.maxLoad || 8;
-    if (_pdState.readabilityLoad >= maxLoad) {
-      _pdState.warnings.push('READ_LOAD:readability at ' + _pdState.readabilityLoad + '/' + maxLoad);
-    }
-
-    // Excessive simultaneous patterns
-    if (_pdState.activePatterns.length > 6) {
-      _pdState.warnings.push('DENSITY:' + _pdState.activePatterns.length + ' simultaneous patterns');
-    }
-
-    // Budget near limit
-    if (_pdState.activeBudget >= cfg.maxThreatBudget * 0.8) {
-      _pdState.warnings.push('BUDGET:' + _pdState.activeBudget + '/' + cfg.maxThreatBudget);
+    // HC-PD-03: Run the full budget audit
+    if (_auditEnabled()) {
+      _computeBudgetAudit();
     }
   }
 
@@ -1135,9 +1385,11 @@
     return {
       enabled: _pdEnabled(),
       classification: _pdClassificationEnabled(),
+      auditing: _auditEnabled(),
       // Budget
       budget: _pdState.activeBudget,
-      maxBudget: cfg.maxThreatBudget,
+      maxBudget: (cfg.budgetAudit || {}).maxThreatBudget || cfg.maxThreatBudget,
+      softBudget: (cfg.budgetAudit || {}).softWarningBudget || 8,
       // Dominance
       dominantCount: _pdState.activeDominantCount,
       dominantMax: cfg.maxSimultaneousDominantPatterns,
@@ -1148,6 +1400,7 @@
       supportPatterns: supportPatterns,
       utilityPatterns: utilityPatterns,
       dominantPattern: primaryPatterns.length > 0 ? primaryPatterns[0] : null,
+      categoryCounts: Object.assign({}, _pdState.categoryCounts),
       // Density
       densityCheck: _pdState._lastDensityCheck || null,
       bulletCount: _pdState._lastBulletCount || 0,
@@ -1155,11 +1408,25 @@
       activeDensityClass: _pdState.activeDensityClass,
       // Readability
       readabilityLoad: _pdState.readabilityLoad,
-      readabilityMax: (cfg.readability || {}).maxLoad || 8,
+      readabilityMax: ((cfg.budgetAudit || {}).maxReadabilityLoad) || (cfg.readability || {}).maxLoad || 8,
+      readabilitySoft: (cfg.budgetAudit || {}).softReadabilityWarning || 6,
+      // Lane risk audit
+      laneRiskScore: _pdState.laneRiskScore,
+      highestLaneRisk: _pdState.highestLaneRisk,
+      spaceControlCount: _pdState.spaceControlCount,
+      highLaneRiskCount: _pdState.highLaneRiskCount,
+      // Telegraph audit
+      activeTelegraphCount: _pdState.activeTelegraphCount,
+      telegraphOverlap: _pdState.telegraphOverlapDetected,
+      missingTelegraphCount: _pdState.missingTelegraphCount,
+      // Dangerous combo
+      dangerousCombo: _pdState.dangerousCombo,
       // Accumulated
       totalActivations: _pdState.totalPatternActivations,
       patternFrequency: Object.assign({}, _pdState.patternFrequency),
       dominantHistory: _pdState.dominantPatternHistory.slice(-20),
+      // History
+      auditHistory: _pdState.auditHistory.slice(-60),
       // Warnings
       warnings: _pdState.warnings.slice(),
       // Config snapshot
@@ -1197,8 +1464,63 @@
   }
 
   // ============================================================
-  // EXPORT — safe global namespace
+  // HC-PD-03: BUDGET AUDIT REPORT — structured audit output
   // ============================================================
+
+  function getBudgetAudit() {
+    var st = getFullState();
+    return {
+      frame: _currentFrame(),
+      // Threat budget
+      threatWeight: st.budget,
+      threatWeightMax: st.maxBudget,
+      threatWeightSoft: st.softBudget,
+      budgetExceeded: st.budget >= st.maxBudget,
+      budgetNearLimit: st.budget >= st.softBudget,
+      // Readability
+      readabilityLoad: st.readabilityLoad,
+      readabilityMax: st.readabilityMax,
+      readabilitySoft: st.readabilitySoft,
+      readabilityOverloaded: st.readabilityLoad >= st.readabilityMax,
+      readabilityNearLimit: st.readabilityLoad >= st.readabilitySoft,
+      // Dominance
+      primaryThreatCount: st.simultaneousPrimaryCount,
+      supportThreatCount: st.supportPatterns ? st.supportPatterns.length : 0,
+      utilityThreatCount: st.utilityPatterns ? st.utilityPatterns.length : 0,
+      // Categories
+      categoryCounts: st.categoryCounts,
+      // Lane risk
+      laneRiskScore: st.laneRiskScore,
+      highestLaneRisk: st.highestLaneRisk,
+      highLaneRiskCount: st.highLaneRiskCount,
+      spaceControlCount: st.spaceControlCount,
+      // Telegraph
+      activeTelegraphs: st.activeTelegraphCount,
+      telegraphOverlap: st.telegraphOverlap,
+      missingTelegraphs: st.missingTelegraphCount,
+      // Dangers
+      dangerousCombo: st.dangerousCombo,
+      // Warnings
+      warnings: st.warnings,
+      warningCount: st.warnings.length,
+      // Cost per category
+      precisionCost: (st.categoryCounts[CATEGORY.PRECISION] || 0),
+      spaceControlCost: (st.categoryCounts[CATEGORY.SPACE_CONTROL] || 0),
+      pressureCost: (st.categoryCounts[CATEGORY.PRESSURE] || 0),
+      rhythmCost: (st.categoryCounts[CATEGORY.RHYTHM] || 0),
+      escalationCost: (st.categoryCounts[CATEGORY.ESCALATION] || 0),
+      // Quick summary
+      summary: {
+        ok: st.warnings.length === 0 && !st.budgetExceeded,
+        critical: st.budget >= st.maxBudget || st.dangerousCombo !== null,
+        tense: st.warnings.length > 0 && !st.dangerousCombo
+      }
+    };
+  }
+
+  // ================================================================
+  // EXPORT — safe global namespace
+  // ================================================================
 
   global.HC_PATTERN_REGISTRY = HC_PATTERN_REGISTRY;
 
@@ -1233,6 +1555,7 @@
     // State & telemetry
     getState: getFullState,
     getTelemetrySnapshot: getTelemetrySnapshot,
+    getBudgetAudit: getBudgetAudit,
 
     // Constants
     CLASS: CATEGORY,

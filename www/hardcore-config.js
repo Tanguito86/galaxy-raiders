@@ -195,6 +195,36 @@ window.HC_PATTERN_DIRECTOR = {
     telegraphMissing: true
   },
 
+  // HC-PD-03: Budget Audit — passive threat budget checking
+  budgetAudit: {
+    enabled: true,
+
+    maxThreatBudget: 10,
+    softWarningBudget: 8,
+
+    maxReadabilityLoad: 8,
+    softReadabilityWarning: 6,
+
+    maxPrimaryThreats: 1,
+    maxSupportThreats: 2,
+
+    laneRisk: {
+      maxHighRiskPatterns: 1,
+      warnOnHighHighOverlap: true,
+      warnOnSpaceControlStack: true
+    },
+
+    telegraph: {
+      minSpacingFrames: 20,
+      warnOnOverlap: true
+    },
+
+    history: {
+      maxFrames: 300,
+      sampleEveryFrames: 10
+    }
+  },
+
   debug: {
     enabled: false
   }
@@ -214,6 +244,15 @@ function getPatternDirectorConfig() {
       densityCaps: { bullets: 40, occupancy: 0.55, convergence: 0.35 },
       readability: { maxLoad: 8 },
       warnings: { multiplePrimaryThreats: true, laneClosureRisk: true, telegraphMissing: true },
+      budgetAudit: {
+        enabled: true,
+        maxThreatBudget: 10, softWarningBudget: 8,
+        maxReadabilityLoad: 8, softReadabilityWarning: 6,
+        maxPrimaryThreats: 1, maxSupportThreats: 2,
+        laneRisk: { maxHighRiskPatterns: 1, warnOnHighHighOverlap: true, warnOnSpaceControlStack: true },
+        telegraph: { minSpacingFrames: 20, warnOnOverlap: true },
+        history: { maxFrames: 300, sampleEveryFrames: 10 }
+      },
       debug: { enabled: false }
     };
   }

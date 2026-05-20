@@ -1,8 +1,9 @@
 // ============================================================
 // GALAXY RAIDERS — hc-pattern-debug.js
 // HC-PD-01: Initial debug overlay
-// HC-PD-02: Expanded telemetry — dominant threat, support, lane
-//           risk, readability load, telegraph queue, warnings
+// HC-PD-02: Expanded telemetry
+// HC-PD-03: Budget audit display — limits, lane score,
+//           telegraph overlap, dangerous combos, history trend
 // ============================================================
 // SAFE: Only renders when debug.enabled is true.
 // No gameplay changes. Overlays only.
@@ -28,14 +29,6 @@
   function _pdActive() {
     try {
       return !!(global.HC_PATTERN_DIRECTOR && global.HC_PATTERN_DIRECTOR.enabled);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _pdClassification() {
-    try {
-      return !!(global.HC_PATTERN_DIRECTOR && global.HC_PATTERN_DIRECTOR.runtimeClassification !== false);
     } catch (e) {
       return false;
     }
@@ -69,11 +62,16 @@
     return '#44ff44';
   }
 
-  function _loadColor(load, max) {
+  function _pctColor(pct, soft, hard) {
+    if (hard > 0 && pct >= hard / (hard || 1)) return '#ff4444';
+    if (soft > 0 && pct >= soft / (hard || 1)) return '#ffaa44';
+    return '#44ff44';
+  }
+
+  function _scoreColor(score, max) {
     if (max <= 0) return '#888';
-    var pct = load / max;
-    if (pct >= 0.8) return '#ff4444';
-    if (pct >= 0.5) return '#ffaa44';
+    if (score >= max) return '#ff4444';
+    if (score >= max * 0.6) return '#ffaa44';
     return '#44ff44';
   }
 
@@ -91,18 +89,60 @@
     return _shortIds[id] || (id.length > 5 ? id.substring(0, 4) : id);
   }
 
+  function _drawMiniBar(ctx, x, y, w, h, pct, softPct, color) {
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#222';
+    ctx.fillRect(x, y, w, h);
+    if (softPct > 0) {
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = '#ffaa44';
+      ctx.fillRect(x, y, w * Math.min(1, softPct), h);
+    }
+    ctx.globalAlpha = 0.50;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w * Math.min(1, pct), h);
+  }
+
+  function _drawHistoryTrend(ctx, x, y, w, h, history, key, maxVal) {
+    if (!history || history.length < 2) return;
+    var len = Math.min(history.length, 60);
+    var slice = history.slice(-len);
+    var stepX = w / (len - 1);
+    maxVal = maxVal || 10;
+
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y + h * 0.5);
+    ctx.lineTo(x + w, y + h * 0.5);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.60;
+    ctx.strokeStyle = '#ff9944';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var i = 0; i < len; i++) {
+      var val = slice[i][key] || 0;
+      var px = x + i * stepX;
+      var py = y + h - (val / maxVal) * h;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
   function _pdDrawDebugPanel(ctx) {
     if (!ctx) return;
     if (!_pdDebugEnabled()) return;
 
     var W = typeof global.W === 'number' ? global.W : 360;
-    var H = typeof global.H === 'number' ? global.H : 640;
 
     var panelX = 4;
-    var panelY = 108;
-    var panelW = 136;
+    var panelY = 94;
+    var panelW = 142;
     var lineH = 6;
-    var rows = 27;
+    var rows = 31;
     var padding = 4;
     var panelH = rows * lineH + padding * 2;
 
@@ -123,7 +163,7 @@
     ctx.globalAlpha = 0.52;
     ctx.fillStyle = '#000';
     ctx.fillRect(panelX, panelY, panelW, panelH);
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.16;
     ctx.strokeStyle = '#ff9944';
     ctx.lineWidth = 1;
     ctx.strokeRect(panelX, panelY, panelW, panelH);
@@ -134,26 +174,17 @@
     ctx.textAlign = 'left';
 
     // ---- HEADER ----
-    ctx.globalAlpha = 0.80;
+    ctx.globalAlpha = 0.82;
     ctx.fillStyle = '#ff9944';
     ctx.font = '5px "Press Start 2P"';
-    ctx.fillText('HC-PD', x, y + 5);
+    ctx.fillText('HC-PD AUDIT', x, y + 5);
     ctx.font = '4px "Press Start 2P"';
 
-    var statusX = x + 38;
     var enabled = _pdActive();
-    var classifying = _pdClassification();
     ctx.globalAlpha = enabled ? 0.75 : 0.35;
-    ctx.fillStyle = enabled ? '#44ff44' : '#ff4444';
-    ctx.fillText(enabled ? 'ACTIVE' : 'STBY', statusX, y + 5);
+    ctx.fillStyle = enabled ? '#44ff44' : '#ff8844';
+    ctx.fillText(enabled ? 'ACT' : 'OBS', x + 68, y + 5);
 
-    if (!enabled && classifying) {
-      ctx.globalAlpha = 0.60;
-      ctx.fillStyle = '#88ccff';
-      ctx.fillText(' CLASS', statusX + 31, y + 5);
-    }
-
-    // ---- SEPARATOR ----
     y += 8;
     ctx.globalAlpha = 0.12;
     ctx.strokeStyle = '#ff9944';
@@ -163,146 +194,86 @@
     ctx.stroke();
     y += 4;
 
-    ctx.globalAlpha = 0.72;
-
-    // ---- BUDGET BAR ----
+    // ---- THREAT BUDGET ----
+    ctx.globalAlpha = 0.75;
     var budgetPct = st.maxBudget > 0 ? st.budget / st.maxBudget : 0;
-    var budgetColor = budgetPct > 0.8 ? '#ff4444' : budgetPct > 0.5 ? '#ffaa44' : '#44ff44';
+    var budgetSoft = st.softBudget || 8;
+    var budgetColor = _pctColor(st.budget, budgetSoft, st.maxBudget);
     ctx.fillStyle = '#888';
-    ctx.fillText('THREAT', x, y);
+    ctx.fillText('BUDGET', x, y);
     ctx.fillStyle = budgetColor;
-    ctx.fillText(_safeNum(st.budget, 0) + '/' + st.maxBudget, x + 40, y);
-
-    // Mini bar
-    var barW = panelW - padding * 2 - 48;
-    ctx.globalAlpha = 0.20;
-    ctx.fillStyle = '#333';
-    ctx.fillRect(x + 72, y - 3, barW, 5);
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = budgetColor;
-    ctx.fillRect(x + 72, y - 3, barW * Math.min(1, budgetPct), 5);
-    y += lineH + 1;
-
-    // ---- DOMINANT THREAT ----
-    ctx.globalAlpha = 0.72;
-    ctx.fillStyle = '#aaa';
-    ctx.fillText('DOM:', x, y);
-    if (st.dominantPattern) {
-      var dp = st.dominantPattern;
-      ctx.fillStyle = '#ff6644';
-      ctx.fillText(_shortId(dp.id), x + 18, y);
-      ctx.fillStyle = '#888';
-      ctx.fillText(_safeStr(dp.category || dp.class, '?'), x + 50, y);
-    } else {
-      ctx.fillStyle = '#666';
-      ctx.fillText('none', x + 18, y);
+    ctx.fillText(_safeNum(st.budget) + '/' + st.maxBudget, x + 38, y);
+    if (st.budget >= st.softBudget) {
+      ctx.fillText('!', x + 36, y);
     }
+    _drawMiniBar(ctx, x + 64, y - 3, panelW - 68, 5, budgetPct, budgetSoft / st.maxBudget, budgetColor);
     y += lineH;
 
-    // ---- DOMINANCE COUNT ----
-    var domPct = st.dominantMax > 0 ? st.dominantCount / st.dominantMax : 0;
-    var domColor = domPct >= 1 ? '#ff4444' : '#ffaa44';
+    // ---- READABILITY ----
+    var readMax = st.readabilityMax || 8;
+    var readSoft = st.readabilitySoft || 6;
+    var readPct = readMax > 0 ? st.readabilityLoad / readMax : 0;
+    var readColor = _pctColor(st.readabilityLoad, readSoft, readMax);
     ctx.fillStyle = '#888';
-    ctx.fillText('PRI:', x, y);
-    ctx.fillStyle = domColor;
+    ctx.fillText('READ', x, y);
+    ctx.fillStyle = readColor;
+    ctx.fillText(_safeNum(st.readabilityLoad) + '/' + readMax, x + 38, y);
+    _drawMiniBar(ctx, x + 64, y - 3, panelW - 68, 5, readPct, readSoft / readMax, readColor);
+    y += lineH;
+
+    // ---- DOMINANCE ----
+    ctx.fillStyle = '#888';
+    ctx.fillText('PRI', x, y);
+    ctx.fillStyle = _scoreColor(st.simultaneousPrimaryCount, st.dominantMax);
     ctx.fillText(st.simultaneousPrimaryCount + '/' + st.dominantMax, x + 18, y);
     ctx.fillStyle = '#666';
-    ctx.fillText('SUP:' + (st.supportPatterns ? st.supportPatterns.length : 0), x + 48, y);
-    ctx.fillStyle = '#558';
-    ctx.fillText('UTL:' + (st.utilityPatterns ? st.utilityPatterns.length : 0), x + 78, y);
-    y += lineH;
-
-    // ---- DENSITY ----
-    ctx.fillStyle = '#888';
-    ctx.fillText('DENSITY:', x, y);
-    ctx.fillStyle = _densityColor(st.activeDensityClass);
-    ctx.fillText(st.activeDensityClass || '?', x + 42, y);
-
-    ctx.fillStyle = '#888';
-    ctx.fillText('B:' + _safeNum(st.bulletCount), x + 72, y);
-    ctx.fillText('C:' + _safeNum(st.convergencePct * 100, 0) + '%', x + 98, y);
-    y += lineH;
-
-    // ---- READABILITY LOAD ----
-    var readMax = st.readabilityMax || 8;
-    var readColor = _loadColor(st.readabilityLoad, readMax);
-    ctx.fillStyle = '#888';
-    ctx.fillText('READ:', x, y);
-    ctx.fillStyle = readColor;
-    ctx.fillText(_safeNum(st.readabilityLoad, 0) + '/' + readMax, x + 28, y);
-
-    // Mini bar
-    var readPct = readMax > 0 ? st.readabilityLoad / readMax : 0;
-    ctx.globalAlpha = 0.20;
-    ctx.fillStyle = '#333';
-    ctx.fillRect(x + 56, y - 3, barW * 0.6, 5);
-    ctx.globalAlpha = 0.45;
-    ctx.fillStyle = readColor;
-    ctx.fillRect(x + 56, y - 3, barW * 0.6 * Math.min(1, readPct), 5);
-    y += lineH + 1;
-
-    // ---- STATUS LINE ----
-    ctx.globalAlpha = 0.65;
-    if (st.densityCheck && st.densityCheck.exceeded) {
-      ctx.fillStyle = '#ff4444';
-      ctx.fillText('DENSITY OVER', x, y);
-    } else {
-      ctx.fillStyle = '#44ff44';
-      ctx.fillText('DENSITY OK', x, y);
+    ctx.fillText('S:' + (st.supportPatterns ? st.supportPatterns.length : 0), x + 42, y);
+    ctx.fillText('U:' + (st.utilityPatterns ? st.utilityPatterns.length : 0), x + 63, y);
+    // HC-PD-03: Dominant pattern
+    if (st.dominantPattern) {
+      ctx.fillStyle = '#ff6644';
+      ctx.fillText(_shortId(st.dominantPattern.id), x + 82, y);
     }
-    ctx.fillStyle = '#888';
-    ctx.fillText('ACT:' + st.totalActivations, x + 60, y);
     y += lineH;
 
-    // ---- SEPARATOR ----
-    y += 1;
-    ctx.globalAlpha = 0.12;
-    ctx.strokeStyle = '#ff9944';
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(panelX + panelW - padding, y);
-    ctx.stroke();
-    y += 3;
+    // ---- LANE RISK ----
+    ctx.fillStyle = '#888';
+    ctx.fillText('LANE', x, y);
+    ctx.fillStyle = _scoreColor(st.laneRiskScore, 5);
+    ctx.fillText('S:' + _safeNum(st.laneRiskScore), x + 28, y);
+    ctx.fillStyle = '#666';
+    ctx.fillText('H:' + _safeNum(st.highLaneRiskCount), x + 52, y);
+    ctx.fillText('SC:' + _safeNum(st.spaceControlCount), x + 68, y);
+    ctx.fillStyle = _laneColor(st.highestLaneRisk);
+    ctx.fillText(st.highestLaneRisk ? st.highestLaneRisk.substring(0, 3) : '-', x + 88, y);
+    y += lineH;
 
-    // ---- ACTIVE PATTERNS LIST ----
-    if (st.activePatterns && st.activePatterns.length > 0) {
-      ctx.globalAlpha = 0.72;
-      ctx.fillStyle = '#ffaa44';
-      ctx.fillText('ACTIVE (' + st.activePatterns.length + '):', x, y);
-      y += lineH;
+    // ---- TELEGRAPH ----
+    ctx.fillStyle = '#888';
+    ctx.fillText('TEL', x, y);
+    var tgColor = st.telegraphOverlap ? '#ff4444' : (st.missingTelegraphCount > 0 ? '#ffaa44' : '#44ff44');
+    ctx.fillStyle = tgColor;
+    ctx.fillText('A:' + _safeNum(st.activeTelegraphCount), x + 24, y);
+    ctx.fillText('M:' + _safeNum(st.missingTelegraphCount), x + 48, y);
+    if (st.telegraphOverlap) {
+      ctx.fillStyle = '#ff4444';
+      ctx.fillText('OVRLP', x + 72, y);
+    }
+    y += lineH;
 
-      var maxShow = Math.min(st.activePatterns.length, 8);
-      for (var i = 0; i < maxShow; i++) {
-        var p = st.activePatterns[i];
-        ctx.globalAlpha = 0.68;
-        ctx.fillStyle = _dominanceColor(p.dominance);
-        ctx.fillText(_shortId(p.id), x + 3, y);
-        ctx.fillStyle = _laneColor(p.laneRisk);
-        ctx.fillText(_safeStr(p.laneRisk, '?').substring(0, 3), x + 32, y);
-        ctx.fillStyle = '#666';
-        ctx.fillText('w' + p.weight, x + 52, y);
-        ctx.fillText('r' + p.readabilityCost, x + 70, y);
-        ctx.fillText(_safeStr(p.source, '?').substring(0, 4), x + 88, y);
-        y += lineH;
-      }
-
-      if (st.activePatterns.length > maxShow) {
-        ctx.globalAlpha = 0.50;
-        ctx.fillStyle = '#666';
-        ctx.fillText('  +' + (st.activePatterns.length - maxShow) + ' more', x + 3, y);
-        y += lineH;
-      }
-    } else {
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = '#666';
-      ctx.fillText('(no active patterns)', x, y);
+    // ---- DANGEROUS COMBO ----
+    if (st.dangerousCombo) {
+      ctx.globalAlpha = 0.85;
+      ctx.fillStyle = '#ff4444';
+      ctx.fillText('COMBO!', x, y);
+      ctx.fillText(st.dangerousCombo.length > 30 ? st.dangerousCombo.substring(0, 28) + '..' : st.dangerousCombo, x + 32, y);
       y += lineH;
     }
 
     // ---- SEPARATOR ----
     y += 1;
     ctx.globalAlpha = 0.10;
-    ctx.strokeStyle = '#ffaa44';
+    ctx.strokeStyle = '#ff9944';
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(panelX + panelW - padding, y);
@@ -311,48 +282,74 @@
 
     // ---- WARNINGS ----
     if (st.warnings && st.warnings.length > 0) {
-      ctx.globalAlpha = 0.78;
+      ctx.globalAlpha = 0.80;
       ctx.fillStyle = '#ff6644';
-      ctx.fillText('WARN (' + st.warnings.length + '):', x, y);
+      ctx.fillText('WARN (' + st.warnings.length + ')', x, y);
       y += lineH;
 
-      var maxWarn = Math.min(st.warnings.length, 5);
+      var maxWarn = Math.min(st.warnings.length, 6);
       for (var w = 0; w < maxWarn; w++) {
         var warn = st.warnings[w];
         ctx.globalAlpha = 0.70;
-        ctx.fillStyle = '#ffaa44';
-        var wl = warn.length > 32 ? warn.substring(0, 30) + '..' : warn;
-        ctx.fillText('  ' + wl, x + 2, y);
+        // Color-code by prefix
+        var wColor = '#ffaa44';
+        if (warn.indexOf('BUDGET_HARD') === 0 || warn.indexOf('COMBO') === 0) wColor = '#ff4444';
+        else if (warn.indexOf('BUDGET_SOFT') === 0 || warn.indexOf('READ_HARD') === 0) wColor = '#ff6622';
+        else if (warn.indexOf('MULTI') === 0 || warn.indexOf('LANE') === 0) wColor = '#ffaa44';
+        ctx.fillStyle = wColor;
+        var wl = warn.length > 36 ? warn.substring(0, 34) + '..' : warn;
+        ctx.fillText(' ' + wl, x + 1, y);
         y += lineH;
       }
     } else {
       ctx.globalAlpha = 0.40;
       ctx.fillStyle = '#44ff44';
-      ctx.fillText('_ no warnings', x, y);
+      ctx.fillText('_ clean', x, y);
       y += lineH;
     }
 
-    // ---- FREQUENCY TOPS ----
-    if (st.patternFrequency && Object.keys(st.patternFrequency).length > 0) {
-      y += 2;
-      ctx.globalAlpha = 0.55;
-      ctx.fillStyle = '#888';
-      ctx.fillText('TOP:', x, y);
-      y += lineH;
+    // ---- SEPARATOR ----
+    y += 1;
+    ctx.globalAlpha = 0.08;
+    ctx.strokeStyle = '#ffaa44';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(panelX + panelW - padding, y);
+    ctx.stroke();
+    y += 3;
 
-      var sorted = Object.keys(st.patternFrequency).sort(function (a, b) {
-        return (st.patternFrequency[b] || 0) - (st.patternFrequency[a] || 0);
-      }).slice(0, 3);
-
-      for (var f = 0; f < sorted.length; f++) {
-        var freqId = sorted[f];
-        ctx.globalAlpha = 0.55;
-        ctx.fillStyle = '#aaa';
-        ctx.fillText(_shortId(freqId), x + 3, y);
-        ctx.fillStyle = '#666';
-        ctx.fillText('x' + (st.patternFrequency[freqId] || 0), x + 32, y);
+    // ---- ACTIVE PATTERNS (compact) ----
+    if (st.activePatterns && st.activePatterns.length > 0) {
+      var maxShow = Math.min(st.activePatterns.length, 5);
+      for (var i = 0; i < maxShow; i++) {
+        var p = st.activePatterns[i];
+        ctx.globalAlpha = 0.60;
+        ctx.fillStyle = _dominanceColor(p.dominance);
+        ctx.fillText(_shortId(p.id), x + 2, y);
+        ctx.fillStyle = _laneColor(p.laneRisk);
+        ctx.fillText(p.laneRisk ? p.laneRisk.substring(0, 3) : '?', x + 28, y);
+        ctx.fillStyle = '#555';
+        ctx.fillText('w' + p.weight, x + 46, y);
+        ctx.fillStyle = _densityColor(p.densityClass);
+        ctx.fillText('d' + (p.densityClass || '?').substring(0, 1), x + 66, y);
+        ctx.fillStyle = '#555';
+        ctx.fillText(_safeStr(p.source, '?').substring(0, 3), x + 82, y);
         y += lineH;
       }
+    }
+
+    // ---- HISTORY TREND ----
+    if (st.auditHistory && st.auditHistory.length >= 2) {
+      y += 2;
+      ctx.globalAlpha = 0.65;
+      ctx.fillStyle = '#888';
+      ctx.fillText('TREND', x, y);
+      ctx.fillText('w:' + _safeNum(st.auditHistory[st.auditHistory.length - 1].w), x + 30, y);
+      ctx.fillText('p:' + _safeNum(st.auditHistory[st.auditHistory.length - 1].p), x + 54, y);
+      ctx.fillText('n:' + _safeNum(st.auditHistory[st.auditHistory.length - 1].n), x + 72, y);
+      y += lineH;
+      _drawHistoryTrend(ctx, x + 2, y, panelW - 8, 10, st.auditHistory, 'w', st.maxBudget || 10);
+      y += 12;
     }
 
     ctx.restore();
@@ -372,7 +369,7 @@
   }
 
   // ============================================================
-  // STANDALONE TELEMETRY MINI PANEL — compact, always-on if enabled
+  // TELEMETRY MINI PANEL
   // ============================================================
 
   function _pdDrawTelemetryMini(ctx) {
@@ -380,49 +377,61 @@
     if (!_pdDebugEnabled()) return;
     if (!_pdHasInstance()) return;
 
-    var st = global.HC_PATTERN_DIRECTOR_INSTANCE.getTelemetrySnapshot
-      ? global.HC_PATTERN_DIRECTOR_INSTANCE.getTelemetrySnapshot()
+    var st = global.HC_PATTERN_DIRECTOR_INSTANCE.getBudgetAudit
+      ? global.HC_PATTERN_DIRECTOR_INSTANCE.getBudgetAudit()
       : null;
     if (!st) return;
 
     var W = typeof global.W === 'number' ? global.W : 360;
-    var x = W - 80;
+    var x = W - 82;
     var y = 4;
-    var w = 76;
-    var h = 32;
+    var w = 78;
+    var h = 30;
 
     ctx.save();
 
     ctx.globalAlpha = 0.45;
     ctx.fillStyle = '#000';
     ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.15;
+    ctx.globalAlpha = 0.12;
     ctx.strokeStyle = '#4488ff';
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, w, h);
 
-    ctx.globalAlpha = 0.72;
+    ctx.globalAlpha = 0.70;
     ctx.font = '3px "Press Start 2P"';
-
     var lx = x + 3;
-    var ly = y + 7;
+    var ly = y + 5;
     var lh = 6;
 
     ctx.fillStyle = '#888';
-    ctx.fillText('PAT DIR', lx, ly);
+    ctx.fillText('PAT AUDIT', lx, ly);
+    ly += lh + 1;
 
+    var summary = st.summary || {};
+    if (summary.critical) {
+      ctx.fillStyle = '#ff4444';
+      ctx.fillText('CRITICAL', lx, ly);
+    } else if (summary.tense) {
+      ctx.fillStyle = '#ffaa44';
+      ctx.fillText('TENSE', lx, ly);
+    } else {
+      ctx.fillStyle = '#44ff44';
+      ctx.fillText('CLEAN', lx, ly);
+    }
     ly += lh;
-    ctx.fillStyle = '#aaa';
-    ctx.fillText('B:' + _safeNum(st.budgetPct * 100, 0) + '%', lx, ly);
-    ctx.fillText('D:' + _safeNum(st.primaryCount), lx + 34, ly);
-    ctx.fillText('BL:' + _safeNum(st.bulletCount), lx + 52, ly);
 
-    ly += lh;
-    ctx.fillStyle = st.warningCount > 0 ? '#ffaa44' : '#44ff44';
-    ctx.fillText('W:' + st.warningCount, lx, ly);
     ctx.fillStyle = '#aaa';
-    ctx.fillText('L:' + _safeStr(st.laneRiskMax), lx + 22, ly);
-    ctx.fillText('R:' + _safeNum(st.readabilityPct * 100, 0) + '%', lx + 38, ly);
+    ctx.fillText('B:' + st.threatWeight + '/' + st.threatWeightMax, lx, ly);
+    ctx.fillText('R:' + st.readabilityLoad + '/' + st.readabilityMax, lx + 38, ly);
+    ly += lh;
+    ctx.fillText('P:' + st.primaryThreatCount, lx, ly);
+    ctx.fillText('L:' + st.laneRiskScore, lx + 18, ly);
+    ctx.fillText('W:' + st.warningCount, lx + 34, ly);
+    if (st.dangerousCombo) {
+      ctx.fillStyle = '#ff4444';
+      ctx.fillText('C!', lx + 52, ly);
+    }
 
     ctx.restore();
   }
