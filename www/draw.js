@@ -5309,6 +5309,8 @@ ufoRewards.forEach(d => {
         ctx.fillText('TOUR', W / 2, 36);
       }
 
+      if (typeof _fzCfg === 'undefined') _fzCfg = (typeof getFreezeAuditConfig === 'function') ? getFreezeAuditConfig() : {}; // HC-RD-07: safe fallback
+
       if (typeof isMedalFeverActive === 'function' && isMedalFeverActive()) {
         var feverLeft = typeof getMedalFeverTimeLeft === 'function' ? getMedalFeverTimeLeft() : 0;
         var feverPulse = 0.65 + 0.35 * Math.sin(globalTime * 0.012);
