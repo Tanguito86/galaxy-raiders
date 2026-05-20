@@ -4,6 +4,7 @@
 // HC-PD-02: Expanded telemetry
 // HC-PD-03: Budget audit display — limits, lane score,
 //           telegraph overlap, dangerous combos, history trend
+// HC-PD-04: Soft gating advice section
 // ============================================================
 // SAFE: Only renders when debug.enabled is true.
 // No gameplay changes. Overlays only.
@@ -268,6 +269,69 @@
       ctx.fillText('COMBO!', x, y);
       ctx.fillText(st.dangerousCombo.length > 30 ? st.dangerousCombo.substring(0, 28) + '..' : st.dangerousCombo, x + 32, y);
       y += lineH;
+    }
+
+    // ---- HC-PD-04: ADVICE SECTION ----
+    var advice = global.HC_PATTERN_DIRECTOR_INSTANCE.getSoftGatingAdvice
+      ? global.HC_PATTERN_DIRECTOR_INSTANCE.getSoftGatingAdvice()
+      : null;
+    if (advice && advice.lastAdvice) {
+      y += 1;
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = '#88ccff';
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(panelX + panelW - padding, y);
+      ctx.stroke();
+      y += 3;
+
+      var la = advice.lastAdvice;
+      var recColor = '#44ff44';
+      if (la.recommendation === 'avoid' || la.recommendation === 'delay' && la.severity === 'critical') recColor = '#ff4444';
+      else if (la.recommendation === 'delay' || la.recommendation === 'isolate') recColor = '#ffaa44';
+      else if (la.recommendation === 'telegraph' || la.recommendation === 'soften') recColor = '#88ccff';
+
+      ctx.globalAlpha = 0.80;
+      ctx.fillStyle = '#88ccff';
+      ctx.fillText('ADVICE', x, y);
+      ctx.fillStyle = recColor;
+      ctx.fillText(la.recommendation.toUpperCase(), x + 36, y);
+      y += lineH;
+
+      ctx.globalAlpha = 0.68;
+      ctx.fillStyle = '#aaa';
+      ctx.fillText('last:', x, y);
+      ctx.fillText(_safeStr(la.patternId, '?').length > 8 ? _safeStr(la.patternId).substring(0, 7) : _safeStr(la.patternId, '?'), x + 22, y);
+      ctx.fillStyle = recColor;
+      ctx.fillText(la.severity || '?', x + 52, y);
+      ctx.fillStyle = '#888';
+      ctx.fillText('B:' + _safeNum(la.predictedBudget) + ' R:' + _safeNum(la.predictedReadability), x + 76, y);
+      y += lineH;
+
+      // Cooldown flags
+      var cd = advice.cooldownState || {};
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = '#666';
+      var cdPri = cd.framesSincePrimary < cd.minPrimary;
+      var cdSni = cd.framesSinceSniper < cd.minSniper;
+      var cdWall = cd.framesSinceWall < cd.minWall;
+      ctx.fillStyle = cdPri ? '#ffaa44' : '#444';
+      ctx.fillText('P' + cd.framesSincePrimary, x, y);
+      ctx.fillStyle = cdSni ? '#ffaa44' : '#444';
+      ctx.fillText(' S' + cd.framesSinceSniper, x + 28, y);
+      ctx.fillStyle = cdWall ? '#ffaa44' : '#444';
+      ctx.fillText(' W' + cd.framesSinceWall, x + 56, y);
+      y += lineH;
+
+      // Recent telemetry
+      var tel = (advice.telemetry || []).slice(-3);
+      if (tel.length > 0) {
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = '#555';
+        ctx.fillText('recent:', x, y);
+        ctx.fillText(tel.map(function (t) { return t.rec.substring(0, 3); }).join(' '), x + 32, y);
+        y += lineH;
+      }
     }
 
     // ---- SEPARATOR ----

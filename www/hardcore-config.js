@@ -225,6 +225,30 @@ window.HC_PATTERN_DIRECTOR = {
     }
   },
 
+  // HC-PD-04: Soft Gating — composition advice (advisory only)
+  softGating: {
+    enabled: true,
+    advisoryOnly: true,
+
+    allowWhenBudgetOk: true,
+
+    delayOnHardBudget: true,
+    delayOnReadabilityHard: true,
+    delayOnMultiPrimary: true,
+    delayOnDangerousCombo: true,
+
+    isolatePrimaryThreats: true,
+    requireTelegraphForPrimary: true,
+
+    cooldownAdvice: {
+      enabled: true,
+      minFramesBetweenPrimary: 45,
+      minFramesBetweenHighLaneRisk: 60,
+      minFramesBetweenSniper: 50,
+      minFramesBetweenWall: 70
+    }
+  },
+
   debug: {
     enabled: false
   }
@@ -252,6 +276,18 @@ function getPatternDirectorConfig() {
         laneRisk: { maxHighRiskPatterns: 1, warnOnHighHighOverlap: true, warnOnSpaceControlStack: true },
         telegraph: { minSpacingFrames: 20, warnOnOverlap: true },
         history: { maxFrames: 300, sampleEveryFrames: 10 }
+      },
+      softGating: {
+        enabled: true, advisoryOnly: true,
+        allowWhenBudgetOk: true,
+        delayOnHardBudget: true, delayOnReadabilityHard: true,
+        delayOnMultiPrimary: true, delayOnDangerousCombo: true,
+        isolatePrimaryThreats: true, requireTelegraphForPrimary: true,
+        cooldownAdvice: {
+          enabled: true,
+          minFramesBetweenPrimary: 45, minFramesBetweenHighLaneRisk: 60,
+          minFramesBetweenSniper: 50, minFramesBetweenWall: 70
+        }
       },
       debug: { enabled: false }
     };

@@ -3,8 +3,9 @@
 // HC-PD-01: Safe initial structure
 // HC-PD-02: Runtime threat classification + passive tracking
 // HC-PD-03: Passive threat budget audit
+// HC-PD-04: Soft gating + composition advice
 // ============================================================
-// STATUS: PASSIVE — observes, classifies, measures, audits. No combat control.
+// STATUS: ADVISORY — evaluates, recommends. Does NOT block. No combat control.
 // Integrates with: HC-ED (encounter director), HC-RD (readability),
 // HC-HB (hitbox fairness). Does NOT break any existing system.
 // ============================================================
@@ -43,6 +44,24 @@
         telegraph: { minSpacingFrames: 20, warnOnOverlap: true },
         history: { maxFrames: 300, sampleEveryFrames: 10 }
       },
+      softGating: {
+        enabled: true,
+        advisoryOnly: true,
+        allowWhenBudgetOk: true,
+        delayOnHardBudget: true,
+        delayOnReadabilityHard: true,
+        delayOnMultiPrimary: true,
+        delayOnDangerousCombo: true,
+        isolatePrimaryThreats: true,
+        requireTelegraphForPrimary: true,
+        cooldownAdvice: {
+          enabled: true,
+          minFramesBetweenPrimary: 45,
+          minFramesBetweenHighLaneRisk: 60,
+          minFramesBetweenSniper: 50,
+          minFramesBetweenWall: 70
+        }
+      },
       debug: { enabled: false }
     };
   }
@@ -75,6 +94,44 @@
     if (!_pdClassificationEnabled()) return false;
     return _auditConfig().enabled !== false;
   }
+
+  function _softGatingConfig() {
+    var cfg = _pdConfig();
+    return (cfg.softGating && typeof cfg.softGating === 'object')
+      ? cfg.softGating
+      : {
+          enabled: true, advisoryOnly: true,
+          allowWhenBudgetOk: true,
+          delayOnHardBudget: true, delayOnReadabilityHard: true,
+          delayOnMultiPrimary: true, delayOnDangerousCombo: true,
+          isolatePrimaryThreats: true, requireTelegraphForPrimary: true,
+          cooldownAdvice: {
+            enabled: true,
+            minFramesBetweenPrimary: 45, minFramesBetweenHighLaneRisk: 60,
+            minFramesBetweenSniper: 50, minFramesBetweenWall: 70
+          }
+        };
+  }
+
+  function _softGatingEnabled() {
+    if (!_pdClassificationEnabled()) return false;
+    return _softGatingConfig().enabled !== false;
+  }
+
+  // ============================================================
+  // HC-PD-04: COOLDOWN STATE — tracks last activation frames
+  // ============================================================
+
+  var _cooldownState = {
+    lastPrimaryFrame: -9999,
+    lastSniperFrame: -9999,
+    lastWallFrame: -9999,
+    lastHighLaneRiskFrame: -9999,
+    lastAnyPatternFrame: -9999
+  };
+
+  var _adviceTelemetry = [];
+  var _lastAdvice = null;
 
   // ============================================================
   // PATTERN TAXONOMY CONSTANTS
@@ -938,6 +995,11 @@
       if (_pdState.supportPatternHistory.length > 40) _pdState.supportPatternHistory.shift();
     }
 
+    // HC-PD-04: Evaluate what the director would recommend
+    if (_softGatingEnabled()) {
+      evaluatePatternRequest(id, source, meta);
+    }
+
     // Update readability load
     var readCfg = (_pdConfig().readability || {});
     var maxLoad = readCfg.maxLoad || 8;
@@ -1141,7 +1203,231 @@
   }
 
   // ============================================================
-  // HC-PD-03: BUDGET AUDIT COMPUTATION
+  // HC-PD-04: EVALUATE PATTERN REQUEST
+  // ============================================================
+  // ADVISORY ONLY — always returns allowed:true in advisoryOnly mode.
+  // Provides recommendation + severity + predicted budget for debug.
+  // ============================================================
+
+  /**
+   * evaluatePatternRequest(patternId, source, meta)
+   * Evaluates what the director WOULD recommend for this pattern.
+   * Returns { allowed, recommendation, reasons, severity, ... }
+   */
+  function evaluatePatternRequest(patternId, source, meta) {
+    var sgc = _softGatingConfig();
+    var def = getPatternDefinition(patternId);
+    if (!def || def.id === '_unknown') {
+      var unknownAdvice = {
+        patternId: patternId || '_unknown',
+        allowed: true,
+        recommendation: 'allow',
+        reasons: ['unknown pattern — default allow'],
+        severity: 'ok',
+        budgetBefore: _pdState.activeBudget,
+        predictedBudget: _pdState.activeBudget,
+        predictedReadability: _pdState.readabilityLoad,
+        cooldownState: {},
+        dangerousComboRisk: false,
+        laneRisk: LANE_RISK.SAFE,
+        telegraphRequired: false
+      };
+      _lastAdvice = unknownAdvice;
+      return unknownAdvice;
+    }
+
+    var auditCfg = _auditConfig();
+    var reasons = [];
+    var recommendation = 'allow';
+    var severity = 'ok';
+    var budgetBefore = _pdState.activeBudget;
+    var predictedBudget = budgetBefore + def.weight;
+    var predictedReadability = _pdState.readabilityLoad + def.readabilityCost;
+    var maxBudget = auditCfg.maxThreatBudget || 10;
+    var maxRead = auditCfg.maxReadabilityLoad || 8;
+    var cf = _currentFrame();
+
+    // Build cooldown state
+    var cdCfg = sgc.cooldownAdvice || {};
+    var cooldownInfo = {
+      framesSinceLastPrimary: cf - _cooldownState.lastPrimaryFrame,
+      framesSinceLastSniper: cf - _cooldownState.lastSniperFrame,
+      framesSinceLastWall: cf - _cooldownState.lastWallFrame,
+      framesSinceLastHighLaneRisk: cf - _cooldownState.lastHighLaneRiskFrame,
+      minPrimary: cdCfg.minFramesBetweenPrimary || 45,
+      minSniper: cdCfg.minFramesBetweenSniper || 50,
+      minWall: cdCfg.minFramesBetweenWall || 70,
+      minHighLane: cdCfg.minFramesBetweenHighLaneRisk || 60
+    };
+
+    // ---- CHECK 1: Budget ----
+    if (predictedBudget >= maxBudget) {
+      reasons.push('predicted budget ' + predictedBudget + ' >= hard limit ' + maxBudget);
+      if (sgc.delayOnHardBudget) {
+        recommendation = 'delay';
+        severity = 'critical';
+      }
+    } else if (predictedBudget >= (auditCfg.softWarningBudget || 8)) {
+      reasons.push('predicted budget ' + predictedBudget + ' >= soft limit ' + (auditCfg.softWarningBudget || 8));
+      if (severity === 'ok') severity = 'tense';
+    }
+
+    // ---- CHECK 2: Readability ----
+    if (predictedReadability >= maxRead) {
+      reasons.push('predicted readability ' + predictedReadability + ' >= hard limit ' + maxRead);
+      if (sgc.delayOnReadabilityHard && recommendation === 'allow') {
+        recommendation = 'delay';
+        severity = 'critical';
+      }
+    } else if (predictedReadability >= (auditCfg.softReadabilityWarning || 6)) {
+      reasons.push('predicted readability ' + predictedReadability + ' >= soft limit ' + (auditCfg.softReadabilityWarning || 6));
+      if (severity === 'ok') severity = 'tense';
+      if (recommendation === 'allow') recommendation = 'soften';
+    }
+
+    // ---- CHECK 3: Dominance conflict ----
+    if (def.dominance === DOMINANCE.PRIMARY && _pdState.simultaneousPrimaryCount >= 1) {
+      reasons.push('primary conflict: ' + _pdState.simultaneousPrimaryCount + ' primaries already active');
+      if (sgc.isolatePrimaryThreats) {
+        recommendation = 'isolate';
+        severity = severity === 'ok' ? 'risky' : severity;
+      }
+      if (sgc.delayOnMultiPrimary && recommendation !== 'isolate') {
+        recommendation = 'delay';
+        severity = 'risky';
+      }
+    }
+
+    // ---- CHECK 4: Dangerous combo ----
+    var comboRisk = _checkPatternCreatesDangerousCombo(patternId);
+    if (comboRisk) {
+      reasons.push('dangerous combo: ' + comboRisk);
+      if (sgc.delayOnDangerousCombo) {
+        recommendation = 'avoid';
+        severity = 'critical';
+      }
+    }
+
+    // ---- CHECK 5: Telegraph requirement ----
+    if (def.telegraphRequired && sgc.requireTelegraphForPrimary) {
+      var meta_hasTelegraph = meta && meta._hasTelegraph;
+      if (!meta_hasTelegraph) {
+        reasons.push('primary pattern requires telegraph, none detected');
+        if (recommendation === 'allow') recommendation = 'telegraph';
+      }
+    }
+
+    // ---- CHECK 6: Cooldown advice ----
+    if (cdCfg.enabled && recommendation === 'allow') {
+      if (def.dominance === DOMINANCE.PRIMARY && cooldownInfo.framesSinceLastPrimary < cooldownInfo.minPrimary) {
+        reasons.push('cooldown: last primary was ' + cooldownInfo.framesSinceLastPrimary + 'f ago (min ' + cooldownInfo.minPrimary + ')');
+        recommendation = 'delay';
+        if (severity === 'ok') severity = 'tense';
+      }
+      if (def.tags.indexOf('sniper') !== -1 && cooldownInfo.framesSinceLastSniper < cooldownInfo.minSniper) {
+        reasons.push('cooldown: last sniper was ' + cooldownInfo.framesSinceLastSniper + 'f ago');
+        recommendation = 'delay';
+        if (severity === 'ok') severity = 'tense';
+      }
+      if ((def.tags.indexOf('wall') !== -1 || def.tags.indexOf('lane_closure') !== -1) &&
+          cooldownInfo.framesSinceLastWall < cooldownInfo.minWall) {
+        reasons.push('cooldown: last wall was ' + cooldownInfo.framesSinceLastWall + 'f ago');
+        recommendation = 'delay';
+        if (severity === 'ok') severity = 'tense';
+      }
+      if (def.laneRisk === LANE_RISK.HIGH && cooldownInfo.framesSinceLastHighLaneRisk < cooldownInfo.minHighLane) {
+        reasons.push('cooldown: last high-lane was ' + cooldownInfo.framesSinceLastHighLaneRisk + 'f ago');
+        recommendation = 'delay';
+        if (severity === 'ok') severity = 'tense';
+      }
+    }
+
+    // ---- CHECK 7: Budget ok — default allow ----
+    if (sgc.allowWhenBudgetOk && recommendation === 'allow' && reasons.length === 0) {
+      reasons.push('budget ok, no conflicts');
+    }
+
+    // ---- BUILD RESULT ----
+    var result = {
+      patternId: patternId,
+      allowed: sgc.advisoryOnly !== false, // always true in advisory mode
+      recommendation: recommendation,
+      reasons: reasons,
+      severity: severity,
+      budgetBefore: budgetBefore,
+      predictedBudget: predictedBudget,
+      predictedReadability: predictedReadability,
+      cooldownState: cooldownInfo,
+      dangerousComboRisk: !!comboRisk,
+      laneRisk: def.laneRisk,
+      telegraphRequired: def.telegraphRequired
+    };
+
+    // Update cooldown state (passive — only records timing)
+    var f = _currentFrame();
+    if (def.dominance === DOMINANCE.PRIMARY) _cooldownState.lastPrimaryFrame = f;
+    if (def.tags.indexOf('sniper') !== -1) _cooldownState.lastSniperFrame = f;
+    if (def.tags.indexOf('wall') !== -1 || def.tags.indexOf('lane_closure') !== -1) _cooldownState.lastWallFrame = f;
+    if (def.laneRisk === LANE_RISK.HIGH) _cooldownState.lastHighLaneRiskFrame = f;
+    _cooldownState.lastAnyPatternFrame = f;
+
+    // Record telemetry
+    _adviceTelemetry.push({
+      f: f,
+      id: patternId,
+      src: source || 'unknown',
+      rec: recommendation,
+      sev: severity,
+      r: reasons.length,
+      pb: predictedBudget,
+      pr: predictedReadability
+    });
+    if (_adviceTelemetry.length > 20) _adviceTelemetry.shift();
+
+    _lastAdvice = result;
+    return result;
+  }
+
+  /**
+   * _checkPatternCreatesDangerousCombo(patternId)
+   * Checks if adding this pattern to current actives creates a dangerous combo.
+   */
+  function _checkPatternCreatesDangerousCombo(patternId) {
+    var def = getPatternDefinition(patternId);
+    if (!def || def.id === '_unknown') return null;
+
+    // Build hypothetical active set
+    var hypothetical = _pdState.activePatterns.slice();
+    hypothetical.push({
+      id: patternId,
+      category: def.category,
+      dominance: def.dominance
+    });
+
+    for (var c = 0; c < DANGEROUS_COMBOS.length; c++) {
+      var dc = DANGEROUS_COMBOS[c];
+      var foundA = false, foundB = false;
+
+      for (var i = 0; i < hypothetical.length; i++) {
+        var p = hypothetical[i];
+        if (p.id === patternId) {
+          // Check if THIS pattern matches A or B
+          var pTags = getPatternDefinition(p.id).tags || [];
+          if (!foundA && p.category === dc.classes[0] && _matchesTags(pTags, dc.tags[0])) foundA = true;
+          else if (!foundB && (dc.classes[1] === null || p.category === dc.classes[1]) && _matchesTags(pTags, dc.tags[1])) foundB = true;
+        } else {
+          var oTags = getPatternDefinition(p.id).tags || [];
+          if (!foundA && p.category === dc.classes[0] && _matchesTags(oTags, dc.tags[0])) foundA = true;
+          else if (!foundB && (dc.classes[1] === null || p.category === dc.classes[1]) && _matchesTags(oTags, dc.tags[1])) foundB = true;
+        }
+        if (foundA && foundB) return dc.combo;
+      }
+    }
+    return null;
+  }
+
+  // ============================================================
+  // HC-PD-03: BUDGET AUDIT COMPUTATION<span style="color:#888"> (continued)</span>
   // ============================================================
 
   function _computeBudgetAudit() {
@@ -1519,6 +1805,39 @@
   }
 
   // ================================================================
+  // HC-PD-04: SOFT GATING ADVICE — last recommendation + telemetry
+  // ================================================================
+
+  function getSoftGatingAdvice() {
+    var sgc = _softGatingConfig();
+    var cf = _currentFrame();
+    return {
+      enabled: _softGatingEnabled(),
+      advisoryOnly: sgc.advisoryOnly !== false,
+      lastAdvice: _lastAdvice ? {
+        patternId: _lastAdvice.patternId,
+        recommendation: _lastAdvice.recommendation,
+        severity: _lastAdvice.severity,
+        reasons: _lastAdvice.reasons ? _lastAdvice.reasons.slice(0, 3) : [],
+        predictedBudget: _lastAdvice.predictedBudget,
+        predictedReadability: _lastAdvice.predictedReadability,
+        budgetBefore: _lastAdvice.budgetBefore
+      } : null,
+      cooldownState: {
+        framesSincePrimary: cf - _cooldownState.lastPrimaryFrame,
+        framesSinceSniper: cf - _cooldownState.lastSniperFrame,
+        framesSinceWall: cf - _cooldownState.lastWallFrame,
+        framesSinceHighLane: cf - _cooldownState.lastHighLaneRiskFrame,
+        minPrimary: (sgc.cooldownAdvice || {}).minFramesBetweenPrimary || 45,
+        minSniper: (sgc.cooldownAdvice || {}).minFramesBetweenSniper || 50,
+        minWall: (sgc.cooldownAdvice || {}).minFramesBetweenWall || 70,
+        minHighLane: (sgc.cooldownAdvice || {}).minFramesBetweenHighLaneRisk || 60
+      },
+      telemetry: _adviceTelemetry.slice()
+    };
+  }
+
+  // ================================================================
   // EXPORT — safe global namespace
   // ================================================================
 
@@ -1556,6 +1875,10 @@
     getState: getFullState,
     getTelemetrySnapshot: getTelemetrySnapshot,
     getBudgetAudit: getBudgetAudit,
+    getSoftGatingAdvice: getSoftGatingAdvice,
+
+    // HC-PD-04: Evaluation + recommendation
+    evaluatePatternRequest: evaluatePatternRequest,
 
     // Constants
     CLASS: CATEGORY,
@@ -1577,5 +1900,7 @@
   global.getReadabilityCost = getReadabilityCost;
   global.updatePatternDirector = updatePatternDirector;
   global.getPatternDirectorState = getFullState;
+  global.evaluatePatternRequest = evaluatePatternRequest;
+  global.getSoftGatingAdvice = getSoftGatingAdvice;
 
 })(window);
