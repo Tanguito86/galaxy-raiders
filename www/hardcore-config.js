@@ -168,6 +168,9 @@ function getEnemyAIConfig() {
 window.HC_PATTERN_DIRECTOR = {
   enabled: false,  // OFF por defecto — se activa cuando HC-PD este listo
 
+  // HC-PD-02: Runtime classification (passive — no combat control)
+  runtimeClassification: true,
+
   maxThreatBudget: 10,
   maxSimultaneousDominantPatterns: 1,
 
@@ -182,6 +185,16 @@ window.HC_PATTERN_DIRECTOR = {
     convergence: 0.35
   },
 
+  readability: {
+    maxLoad: 8
+  },
+
+  warnings: {
+    multiplePrimaryThreats: true,
+    laneClosureRisk: true,
+    telegraphMissing: true
+  },
+
   debug: {
     enabled: false
   }
@@ -192,12 +205,15 @@ function getPatternDirectorConfig() {
   if (!pd || typeof pd !== 'object') {
     return {
       enabled: false,
+      runtimeClassification: true,
       maxThreatBudget: 10,
       maxSimultaneousDominantPatterns: 1,
       allowDoublePrecisionThreats: false,
       preserveEscapeLanes: true,
       telegraphSpacingFrames: 20,
       densityCaps: { bullets: 40, occupancy: 0.55, convergence: 0.35 },
+      readability: { maxLoad: 8 },
+      warnings: { multiplePrimaryThreats: true, laneClosureRisk: true, telegraphMissing: true },
       debug: { enabled: false }
     };
   }
