@@ -1062,8 +1062,17 @@ if (!boss.active && activeEnemies.length > 0) {
       }
       e._hcSweeperCooldown -= dt;
       if (e._hcSweeperCooldown <= 0) {
+        // HC-PD-06: controlled delay hook trial — sweeper support fire
+        var _swDelay = 0;
+        if (typeof tryApplyPatternDelay === 'function') {
+          _swDelay = tryApplyPatternDelay('wideFan', 'enemy', { enemyRole: 'sweeper' }, 'enemySupportFire');
+          if (_swDelay > 0) {
+            // Convert frames to ms for cooldown
+            _swDelay = Math.round(_swDelay * 16.667);
+          }
+        }
         if (typeof fireHardcoreSweeperFan === 'function') fireHardcoreSweeperFan(e);
-        e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN);
+        e._hcSweeperCooldown = HC_SWEEPER_COOLDOWN_MIN + Math.random() * (HC_SWEEPER_COOLDOWN_MAX - HC_SWEEPER_COOLDOWN_MIN) + _swDelay;
       }
     }
   });
@@ -1090,8 +1099,16 @@ if (!boss.active && activeEnemies.length > 0) {
       }
       e._hcBaiterCooldown -= dt;
       if (e._hcBaiterCooldown <= 0) {
+        // HC-PD-06: controlled delay hook trial — baiter utility fire
+        var _btDelay = 0;
+        if (typeof tryApplyPatternDelay === 'function') {
+          _btDelay = tryApplyPatternDelay('baiterSpread', 'enemy', { enemyRole: 'baiter' }, 'enemySupportFire');
+          if (_btDelay > 0) {
+            _btDelay = Math.round(_btDelay * 16.667);
+          }
+        }
         if (typeof fireHardcoreBaiterBurst === 'function') fireHardcoreBaiterBurst(e);
-        e._hcBaiterCooldown = HC_BAITER_COOLDOWN_MIN + Math.random() * (HC_BAITER_COOLDOWN_MAX - HC_BAITER_COOLDOWN_MIN);
+        e._hcBaiterCooldown = HC_BAITER_COOLDOWN_MIN + Math.random() * (HC_BAITER_COOLDOWN_MAX - HC_BAITER_COOLDOWN_MIN) + _btDelay;
       }
     }
   });

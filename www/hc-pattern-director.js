@@ -83,6 +83,11 @@
         },
         fallbackAllowAfterFrames: 90
       },
+      controlledHooks: {
+        enemySupportFire: true,
+        externalPressure: true,
+        bossPatterns: false
+      },
       debug: { enabled: false }
     };
   }
@@ -162,6 +167,19 @@
     return _delayGateConfig().enabled !== false;
   }
 
+  function _controlledHooksConfig() {
+    var cfg = _pdConfig();
+    return (cfg.controlledHooks && typeof cfg.controlledHooks === 'object')
+      ? cfg.controlledHooks
+      : { enemySupportFire: true, externalPressure: true, bossPatterns: false };
+  }
+
+  function _controlledHooksEnabled(hookName) {
+    if (!_pdClassificationEnabled()) return false;
+    var cfg = _controlledHooksConfig();
+    return cfg[hookName] === true;
+  }
+
   // ============================================================
   // HC-PD-04: COOLDOWN STATE — tracks last activation frames
   // ============================================================
@@ -187,6 +205,18 @@
     totalAppliedDelays: 0
   };
   var _delayTelemetry = [];
+
+  // HC-PD-06: Hook tracking
+  var _hookState = {
+    sweeperSuggested: 0,
+    sweeperApplied: 0,
+    baiterSuggested: 0,
+    baiterApplied: 0,
+    lastHookName: null,
+    lastHookFrame: -9999,
+    lastHookDelay: 0,
+    fallbackAllowCount: 0
+  };
 
   // ============================================================
   // PATTERN TAXONOMY CONSTANTS
@@ -1605,6 +1635,7 @@
    */
   function getDelayGateState() {
     var dgc = _delayGateConfig();
+    var chc = _controlledHooksConfig();
     return {
       enabled: _delayGateEnabled(),
       applyDelay: dgc.applyDelay === true,
@@ -1614,10 +1645,26 @@
       framesSinceLastDelay: _currentFrame() - _delayState.lastDelayFrame,
       totalSuggestedDelays: _delayState.totalSuggestedDelays,
       totalAppliedDelays: _delayState.totalAppliedDelays,
+      // HC-PD-06: Hook state
+      hooks: {
+        sweeperSuggested: _hookState.sweeperSuggested,
+        sweeperApplied: _hookState.sweeperApplied,
+        baiterSuggested: _hookState.baiterSuggested,
+        baiterApplied: _hookState.baiterApplied,
+        lastHook: _hookState.lastHookName,
+        lastHookFramesAgo: _currentFrame() - _hookState.lastHookFrame,
+        lastHookDelay: _hookState.lastHookDelay,
+        fallbackAllowCount: _hookState.fallbackAllowCount
+      },
       config: {
         maxDelayFrames: dgc.maxDelayFrames,
         maxConsecutiveDelays: dgc.maxConsecutiveDelays,
-        fallbackAllowAfterFrames: dgc.fallbackAllowAfterFrames
+        fallbackAllowAfterFrames: dgc.fallbackAllowAfterFrames,
+        controlledHooks: {
+          enemySupportFire: chc.enemySupportFire,
+          externalPressure: chc.externalPressure,
+          bossPatterns: chc.bossPatterns
+        }
       },
       telemetry: _delayTelemetry.slice(-10)
     };
@@ -1649,6 +1696,62 @@
       fb: false
     });
     if (_delayTelemetry.length > 20) _delayTelemetry.shift();
+  }
+
+  // ============================================================
+  // HC-PD-06: TRY APPLY PATTERN DELAY — controlled hook trial
+  // ============================================================
+
+  /**
+   * tryApplyPatternDelay(patternId, source, meta, hookName)
+   * Returns delay frames to apply (0 = no delay).
+   * Only returns > 0 when applyDelay:true AND hook is in controlledHooks.
+   */
+  function tryApplyPatternDelay(patternId, source, meta, hookName) {
+    var dgc = _delayGateConfig();
+    var chc = _controlledHooksConfig();
+    meta = meta || {};
+
+    // Check if this hook is enabled for controlled delay
+    if (hookName && !chc[hookName]) {
+      return 0;
+    }
+
+    // Run the delay gate check
+    var result = shouldDelayPattern(patternId, source, meta);
+
+    // Only actually delay if applyDelay is true
+    if (!dgc.applyDelay) {
+      return 0;
+    }
+
+    // Fallback allow — never delay
+    if (result.fallbackAllow) {
+      _hookState.fallbackAllowCount++;
+      return 0;
+    }
+
+    // Apply the delay
+    if (result.delay && result.delayFrames > 0) {
+      _hookState.lastHookName = hookName;
+      _hookState.lastHookFrame = _currentFrame();
+      _hookState.lastHookDelay = result.delayFrames;
+
+      if (hookName === 'enemySupportFire') {
+        if (patternId === 'wideFan' || patternId === 'baiterSpread') {
+          if (patternId === 'wideFan') _hookState.sweeperApplied++;
+          if (patternId === 'baiterSpread') _hookState.baiterApplied++;
+        }
+        _hookState.sweeperSuggested++;
+      }
+      if (hookName === 'externalPressure') {
+        _hookState.baiterSuggested++;
+      }
+
+      return result.delayFrames;
+    }
+
+    return 0;
   }
 
   // ============================================================
@@ -2111,6 +2214,9 @@
     getDelayGateState: getDelayGateState,
     registerPatternDelay: registerPatternDelay,
 
+    // HC-PD-06: Controlled delay hooks
+    tryApplyPatternDelay: tryApplyPatternDelay,
+
     // Constants
     CLASS: CATEGORY,
     DOMINANCE: DOMINANCE,
@@ -2135,5 +2241,6 @@
   global.getSoftGatingAdvice = getSoftGatingAdvice;
   global.shouldDelayPattern = shouldDelayPattern;
   global.getDelayGateState = getDelayGateState;
+  global.tryApplyPatternDelay = tryApplyPatternDelay;
 
 })(window);

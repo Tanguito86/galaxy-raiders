@@ -373,6 +373,27 @@
       ctx.fillStyle = '#888';
       ctx.fillText('sug:' + delay.totalSuggestedDelays + ' app:' + delay.totalAppliedDelays, x, y);
       y += lineH;
+
+      // HC-PD-06: Hook status
+      if (delay.hooks) {
+        var hk = delay.hooks;
+        var swColor = hk.sweeperApplied > 0 ? '#44ff44' : '#888';
+        var btColor = hk.baiterApplied > 0 ? '#44ff44' : '#888';
+        ctx.fillStyle = '#888';
+        ctx.fillText('HK:', x, y);
+        ctx.fillStyle = swColor;
+        ctx.fillText('SW:' + hk.sweeperApplied + '/' + hk.sweeperSuggested, x + 16, y);
+        ctx.fillStyle = btColor;
+        ctx.fillText('BT:' + hk.baiterApplied + '/' + hk.baiterSuggested, x + 58, y);
+        y += lineH;
+
+        if (hk.lastHook) {
+          ctx.globalAlpha = 0.50;
+          ctx.fillStyle = '#666';
+          ctx.fillText('  last:' + hk.lastHook + ' ' + hk.lastHookDelay + 'f', x, y);
+          y += lineH;
+        }
+      }
     }
 
     // ---- SEPARATOR ----

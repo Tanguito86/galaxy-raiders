@@ -274,6 +274,13 @@ window.HC_PATTERN_DIRECTOR = {
     fallbackAllowAfterFrames: 90
   },
 
+  // HC-PD-06: Controlled Hooks — which patterns can receive real delay
+  controlledHooks: {
+    enemySupportFire: true,
+    externalPressure: true,
+    bossPatterns: false
+  },
+
   debug: {
     enabled: false
   }
@@ -325,6 +332,9 @@ function getPatternDirectorConfig() {
           bossPhaseTransition: true, deathSequence: true, scriptedSetPiece: true
         },
         fallbackAllowAfterFrames: 90
+      },
+      controlledHooks: {
+        enemySupportFire: true, externalPressure: true, bossPatterns: false
       },
       debug: { enabled: false }
     };
