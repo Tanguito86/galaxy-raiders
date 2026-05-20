@@ -4,8 +4,10 @@
 // HC-PD-02: Runtime threat classification + passive tracking
 // HC-PD-03: Passive threat budget audit
 // HC-PD-04: Soft gating + composition advice
+// HC-PD-05: Safe delay gate
 // ============================================================
-// STATUS: ADVISORY — evaluates, recommends. Does NOT block. No combat control.
+// STATUS: GATE-READY — evaluates, recommends, can suggest delay.
+// applyDelay defaults to false. No automatic blocking.
 // Integrates with: HC-ED (encounter director), HC-RD (readability),
 // HC-HB (hitbox fairness). Does NOT break any existing system.
 // ============================================================
@@ -61,6 +63,25 @@
           minFramesBetweenSniper: 50,
           minFramesBetweenWall: 70
         }
+      },
+      safeDelayGate: {
+        enabled: true,
+        applyDelay: false,
+        maxDelayFrames: 30,
+        maxConsecutiveDelays: 2,
+        delayOnlyOn: {
+          hardBudget: true,
+          hardReadability: true,
+          dangerousCombo: true,
+          multiPrimary: true,
+          laneHighOverlap: true
+        },
+        neverDelay: {
+          bossPhaseTransition: true,
+          deathSequence: true,
+          scriptedSetPiece: true
+        },
+        fallbackAllowAfterFrames: 90
       },
       debug: { enabled: false }
     };
@@ -118,6 +139,29 @@
     return _softGatingConfig().enabled !== false;
   }
 
+  function _delayGateConfig() {
+    var cfg = _pdConfig();
+    return (cfg.safeDelayGate && typeof cfg.safeDelayGate === 'object')
+      ? cfg.safeDelayGate
+      : {
+          enabled: true, applyDelay: false,
+          maxDelayFrames: 30, maxConsecutiveDelays: 2,
+          delayOnlyOn: {
+            hardBudget: true, hardReadability: true, dangerousCombo: true,
+            multiPrimary: true, laneHighOverlap: true
+          },
+          neverDelay: {
+            bossPhaseTransition: true, deathSequence: true, scriptedSetPiece: true
+          },
+          fallbackAllowAfterFrames: 90
+        };
+  }
+
+  function _delayGateEnabled() {
+    if (!_pdClassificationEnabled()) return false;
+    return _delayGateConfig().enabled !== false;
+  }
+
   // ============================================================
   // HC-PD-04: COOLDOWN STATE — tracks last activation frames
   // ============================================================
@@ -132,6 +176,17 @@
 
   var _adviceTelemetry = [];
   var _lastAdvice = null;
+
+  // HC-PD-05: Delay gate state
+  var _delayState = {
+    consecutiveDelays: 0,
+    lastDelayedPatternId: null,
+    lastDelayFrame: -9999,
+    lastDelayReason: '',
+    totalSuggestedDelays: 0,
+    totalAppliedDelays: 0
+  };
+  var _delayTelemetry = [];
 
   // ============================================================
   // PATTERN TAXONOMY CONSTANTS
@@ -1000,6 +1055,11 @@
       evaluatePatternRequest(id, source, meta);
     }
 
+    // HC-PD-05: Check if delay should be suggested
+    if (_delayGateEnabled()) {
+      shouldDelayPattern(id, source, meta);
+    }
+
     // Update readability load
     var readCfg = (_pdConfig().readability || {});
     var maxLoad = readCfg.maxLoad || 8;
@@ -1427,7 +1487,172 @@
   }
 
   // ============================================================
-  // HC-PD-03: BUDGET AUDIT COMPUTATION<span style="color:#888"> (continued)</span>
+  // HC-PD-05: SHOULD DELAY PATTERN — safe delay gate
+  // ============================================================
+
+  /**
+   * shouldDelayPattern(patternId, source, meta)
+   * Returns delay recommendation. Always returns delay:false when applyDelay:false.
+   * When applyDelay:true, suggests delay frames for risky compositions.
+   */
+  function shouldDelayPattern(patternId, source, meta) {
+    var dgc = _delayGateConfig();
+    meta = meta || {};
+
+    // Never delay certain sources
+    var nd = dgc.neverDelay || {};
+    if (nd.bossPhaseTransition && meta.bossPhaseTransition) {
+      return { delay: false, delayFrames: 0, reason: 'never delay: boss phase transition', severity: 'ok', fallbackAllow: true };
+    }
+    if (nd.deathSequence && meta.deathSequence) {
+      return { delay: false, delayFrames: 0, reason: 'never delay: death sequence', severity: 'ok', fallbackAllow: true };
+    }
+    if (nd.scriptedSetPiece && meta.scriptedSetPiece) {
+      return { delay: false, delayFrames: 0, reason: 'never delay: scripted set piece', severity: 'ok', fallbackAllow: true };
+    }
+    if (meta.forceAllow) {
+      return { delay: false, delayFrames: 0, reason: 'force allow override', severity: 'ok', fallbackAllow: true };
+    }
+
+    // Utility patterns never need delay
+    var def = getPatternDefinition(patternId);
+    if (def.dominance === DOMINANCE.UTILITY) {
+      return { delay: false, delayFrames: 0, reason: 'utility pattern — always allow', severity: 'ok', fallbackAllow: true };
+    }
+
+    // Get prior advice from HC-PD-04
+    var advice = _lastAdvice;
+    if (!advice || advice.patternId !== patternId) {
+      // No prior advice — run evaluation
+      advice = evaluatePatternRequest(patternId, source, meta);
+    }
+
+    var recommend = advice.recommendation;
+    var severity = advice.severity;
+    var shouldDelay = false;
+    var delayFrames = 0;
+    var reason = 'ok';
+    var dol = dgc.delayOnlyOn || {};
+
+    // Anti-softlock: fallback after too many frames
+    var cf = _currentFrame();
+    var fallbackFrames = dgc.fallbackAllowAfterFrames || 90;
+    if (cf - _delayState.lastDelayFrame > fallbackFrames && _delayState.lastDelayFrame > 0) {
+      _delayState.consecutiveDelays = 0;
+      return { delay: false, delayFrames: 0, reason: 'fallback allow: ' + fallbackFrames + 'f since last delay', severity: 'ok', fallbackAllow: true };
+    }
+
+    // Determine if delay should be suggested
+    if (recommend === 'avoid') {
+      shouldDelay = true;
+      delayFrames = dgc.maxDelayFrames || 30;
+      reason = 'recommendation: avoid';
+    } else if (recommend === 'delay' && severity === 'critical') {
+      if (dol.hardBudget) { shouldDelay = true; reason = 'hard budget'; }
+    } else if (recommend === 'delay' && severity === 'risky') {
+      if (dol.dangerousCombo && advice.dangerousComboRisk) { shouldDelay = true; reason = 'dangerous combo'; }
+      else if (dol.multiPrimary && _pdState.simultaneousPrimaryCount > 0) { shouldDelay = true; reason = 'multi-primary conflict'; }
+    } else if (recommend === 'delay') {
+      if (dol.hardReadability) { shouldDelay = true; reason = 'hard readability'; }
+      else if (dol.laneHighOverlap && _pdState.highLaneRiskCount >= 2) { shouldDelay = true; reason = 'lane high overlap'; }
+    }
+
+    if (shouldDelay) {
+      delayFrames = dgc.maxDelayFrames || 30;
+      // Consecutive delay cap
+      var maxConsec = dgc.maxConsecutiveDelays || 2;
+      if (_delayState.consecutiveDelays >= maxConsec) {
+        return { delay: false, delayFrames: 0, reason: 'consecutive delay cap reached (' + maxConsec + ')', severity: severity, fallbackAllow: true };
+      }
+    }
+
+    // Build result
+    var applying = dgc.applyDelay === true && shouldDelay;
+    var result = {
+      delay: applying,
+      delayFrames: applying ? delayFrames : 0,
+      reason: reason,
+      severity: severity,
+      fallbackAllow: !shouldDelay
+    };
+
+    // Record
+    _delayState.lastDelayFrame = cf;
+    _delayState.lastDelayReason = reason;
+    _delayState.lastDelayedPatternId = shouldDelay ? patternId : null;
+    _delayState.totalSuggestedDelays += shouldDelay ? 1 : 0;
+    _delayState.totalAppliedDelays += applying ? 1 : 0;
+    _delayState.consecutiveDelays = shouldDelay ? _delayState.consecutiveDelays + 1 : 0;
+
+    _delayTelemetry.push({
+      f: cf,
+      id: patternId,
+      src: source || 'unknown',
+      df: applying ? delayFrames : 0,
+      r: reason,
+      sev: severity,
+      app: applying,
+      fb: result.fallbackAllow
+    });
+    if (_delayTelemetry.length > 20) _delayTelemetry.shift();
+
+    return result;
+  }
+
+  /**
+   * getDelayGateState()
+   * Returns current delay gate status.
+   */
+  function getDelayGateState() {
+    var dgc = _delayGateConfig();
+    return {
+      enabled: _delayGateEnabled(),
+      applyDelay: dgc.applyDelay === true,
+      consecutiveDelays: _delayState.consecutiveDelays,
+      lastDelayedPattern: _delayState.lastDelayedPatternId,
+      lastDelayReason: _delayState.lastDelayReason,
+      framesSinceLastDelay: _currentFrame() - _delayState.lastDelayFrame,
+      totalSuggestedDelays: _delayState.totalSuggestedDelays,
+      totalAppliedDelays: _delayState.totalAppliedDelays,
+      config: {
+        maxDelayFrames: dgc.maxDelayFrames,
+        maxConsecutiveDelays: dgc.maxConsecutiveDelays,
+        fallbackAllowAfterFrames: dgc.fallbackAllowAfterFrames
+      },
+      telemetry: _delayTelemetry.slice(-10)
+    };
+  }
+
+  /**
+   * registerPatternDelay(patternId, frames, reason)
+   * Manual delay registration for external callers.
+   */
+  function registerPatternDelay(patternId, frames, reason) {
+    var dgc = _delayGateConfig();
+    _delayState.lastDelayFrame = _currentFrame();
+    _delayState.lastDelayedPatternId = patternId;
+    _delayState.lastDelayReason = reason || 'manual';
+    _delayState.consecutiveDelays++;
+    _delayState.totalSuggestedDelays++;
+
+    var applying = dgc.applyDelay === true;
+    if (applying) _delayState.totalAppliedDelays++;
+
+    _delayTelemetry.push({
+      f: _currentFrame(),
+      id: patternId,
+      src: 'manual',
+      df: applying ? frames : 0,
+      r: reason || 'manual',
+      sev: 'risky',
+      app: applying,
+      fb: false
+    });
+    if (_delayTelemetry.length > 20) _delayTelemetry.shift();
+  }
+
+  // ============================================================
+  // HC-PD-03: BUDGET AUDIT COMPUTATION
   // ============================================================
 
   function _computeBudgetAudit() {
@@ -1879,6 +2104,12 @@
 
     // HC-PD-04: Evaluation + recommendation
     evaluatePatternRequest: evaluatePatternRequest,
+    getSoftGatingAdvice: getSoftGatingAdvice,
+
+    // HC-PD-05: Safe delay gate
+    shouldDelayPattern: shouldDelayPattern,
+    getDelayGateState: getDelayGateState,
+    registerPatternDelay: registerPatternDelay,
 
     // Constants
     CLASS: CATEGORY,
@@ -1902,5 +2133,7 @@
   global.getPatternDirectorState = getFullState;
   global.evaluatePatternRequest = evaluatePatternRequest;
   global.getSoftGatingAdvice = getSoftGatingAdvice;
+  global.shouldDelayPattern = shouldDelayPattern;
+  global.getDelayGateState = getDelayGateState;
 
 })(window);

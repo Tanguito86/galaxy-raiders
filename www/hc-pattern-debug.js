@@ -5,6 +5,7 @@
 // HC-PD-03: Budget audit display — limits, lane score,
 //           telegraph overlap, dangerous combos, history trend
 // HC-PD-04: Soft gating advice section
+// HC-PD-05: Delay gate display
 // ============================================================
 // SAFE: Only renders when debug.enabled is true.
 // No gameplay changes. Overlays only.
@@ -332,6 +333,46 @@
         ctx.fillText(tel.map(function (t) { return t.rec.substring(0, 3); }).join(' '), x + 32, y);
         y += lineH;
       }
+    }
+
+    // ---- HC-PD-05: DELAY GATE ----
+    var delay = global.HC_PATTERN_DIRECTOR_INSTANCE.getDelayGateState
+      ? global.HC_PATTERN_DIRECTOR_INSTANCE.getDelayGateState()
+      : null;
+    if (delay) {
+      y += 1;
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = '#ffaa44';
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(panelX + panelW - padding, y);
+      ctx.stroke();
+      y += 3;
+
+      ctx.globalAlpha = 0.78;
+      var applyOn = delay.applyDelay;
+      ctx.fillStyle = applyOn ? '#ff4444' : '#ffaa44';
+      ctx.fillText('GATE', x, y);
+      ctx.fillStyle = applyOn ? '#ff4444' : '#888';
+      ctx.fillText(applyOn ? 'ON' : 'OFF', x + 28, y);
+
+      ctx.fillStyle = '#888';
+      ctx.fillText('C:' + delay.consecutiveDelays + '/' + (delay.config || {}).maxConsecutiveDelays, x + 48, y);
+      y += lineH;
+
+      if (delay.lastDelayedPattern) {
+        ctx.globalAlpha = 0.68;
+        ctx.fillStyle = '#ffaa44';
+        ctx.fillText('delay:', x, y);
+        ctx.fillText(_safeStr(delay.lastDelayedPattern, '?').substring(0, 10), x + 28, y);
+        ctx.fillText(_safeNum(delay.framesSinceLastDelay) + 'f', x + 68, y);
+        y += lineH;
+      }
+
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = '#888';
+      ctx.fillText('sug:' + delay.totalSuggestedDelays + ' app:' + delay.totalAppliedDelays, x, y);
+      y += lineH;
     }
 
     // ---- SEPARATOR ----

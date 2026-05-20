@@ -249,6 +249,31 @@ window.HC_PATTERN_DIRECTOR = {
     }
   },
 
+  // HC-PD-05: Safe Delay Gate — delay risky patterns (applyDelay: false)
+  safeDelayGate: {
+    enabled: true,
+    applyDelay: false,
+
+    maxDelayFrames: 30,
+    maxConsecutiveDelays: 2,
+
+    delayOnlyOn: {
+      hardBudget: true,
+      hardReadability: true,
+      dangerousCombo: true,
+      multiPrimary: true,
+      laneHighOverlap: true
+    },
+
+    neverDelay: {
+      bossPhaseTransition: true,
+      deathSequence: true,
+      scriptedSetPiece: true
+    },
+
+    fallbackAllowAfterFrames: 90
+  },
+
   debug: {
     enabled: false
   }
@@ -288,6 +313,18 @@ function getPatternDirectorConfig() {
           minFramesBetweenPrimary: 45, minFramesBetweenHighLaneRisk: 60,
           minFramesBetweenSniper: 50, minFramesBetweenWall: 70
         }
+      },
+      safeDelayGate: {
+        enabled: true, applyDelay: false,
+        maxDelayFrames: 30, maxConsecutiveDelays: 2,
+        delayOnlyOn: {
+          hardBudget: true, hardReadability: true, dangerousCombo: true,
+          multiPrimary: true, laneHighOverlap: true
+        },
+        neverDelay: {
+          bossPhaseTransition: true, deathSequence: true, scriptedSetPiece: true
+        },
+        fallbackAllowAfterFrames: 90
       },
       debug: { enabled: false }
     };
