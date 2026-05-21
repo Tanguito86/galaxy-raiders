@@ -2,7 +2,11 @@
 // GALAXY RAIDERS - update.js
 // =====================
 
+var waveTransitionActive = false;
+
 function beginWaveTransition(completedLevel, nextLevel) {
+  if (waveTransitionActive) return;
+  waveTransitionActive = true;
   pendingNextLevel = true;
   levelClearTimer = (typeof window.getHardcoreRhythmWavePause === 'function') ? window.getHardcoreRhythmWavePause(900) : 900;
   pushScreenShake('medium', 10);
@@ -124,6 +128,7 @@ function update(dt) {
       level++;
       addScore(1000);
       startLevel();
+      waveTransitionActive = false;
     }
   }
 

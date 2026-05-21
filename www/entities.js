@@ -1062,7 +1062,9 @@ function initEnemies() {
     if (typeof globalThis.initEnemiesFromProfile === 'function') {
       _usedProfile = globalThis.initEnemiesFromProfile();
     }
-    if (!_usedProfile) {
+    if (_usedProfile) {
+      enemies = globalThis.enemies;
+    } else {
       const formation = getFormation(level);
       const waveType = getWaveType(level);
       enemies = createFormation(formation);
