@@ -520,6 +520,7 @@ window.GALAXY_CONFIG = {
   // ============ HC WAVE COMPOSER (HC-WC-03) ============
   HC_WAVE_COMPOSER: {
     enabled: true,
+    useProfiles: true,                    // HC-WC-04: enable curated wave profiles
     phaseDurations: {
       INTRO:   { normal: 1200, setpiece: 2000 },
       BUILD:   { normal: 4000, setpiece: 5000 },

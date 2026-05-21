@@ -381,22 +381,13 @@
       roles[r] = true;
     }
 
-    // Build activation sequence based on config timings
+    // Build activation sequence based on profile-resolved config timings
     var sequence = [];
-    var timings = [
-      { role: 'sweeper',   delay: _cfgVal('buildTiming.sweeperDelay', 0) },
-      { role: 'baiter',    delay: _cfgVal('buildTiming.baiterDelay', 200) },
-      { role: 'suppressor', delay: _cfgVal('buildTiming.suppressorDelay', 1500) },
-      { role: 'flanker',   delay: _cfgVal('buildTiming.flankerDelay', 1800) },
-      { role: 'sniper',    delay: _cfgVal('buildTiming.sniperDelay', 2800) },
-      { role: 'anchor',    delay: _cfgVal('buildTiming.anchorDelay', 3500) },
-      { role: 'diver',     delay: _cfgVal('buildTiming.diverDelay', 4000) },
-      { role: 'chaser',    delay: _cfgVal('buildTiming.chaserDelay', 4200) }
-    ];
-
-    for (var t = 0; t < timings.length; t++) {
-      if (roles[timings[t].role]) {
-        sequence.push({ role: timings[t].role, delay: timings[t].delay, active: false });
+    var timingRoles = ['sweeper','baiter','suppressor','flanker','sniper','anchor','diver','chaser'];
+    for (var t = 0; t < timingRoles.length; t++) {
+      if (roles[timingRoles[t]]) {
+        var delay = _resolveBuildTiming(timingRoles[t]);
+        sequence.push({ role: timingRoles[t], delay: delay, active: false });
       }
     }
 
@@ -627,6 +618,15 @@
     if (!_isHardcoreEnabled()) return;
     if (_isBossActive()) return;
 
+    // Apply active profile if available
+    if (typeof global.applyWaveProfileToComposer === 'function') {
+      var level = global.level || 1;
+      global.applyWaveProfileToComposer(level);
+      if (global._hcWcActiveProfile) {
+        _composer._profileActiveKey = global._hcWcActiveProfile._profileKey || null;
+      }
+    }
+
     _initComposerState();
     _composer.phase = PHASES.IDLE;
     _composer.phaseTimer = 0;
@@ -763,6 +763,106 @@
   global.initWaveComposer = initWaveComposer;
   global.updateWaveComposer = updateWaveComposer;
 
+  // ============================================================
+  // PROFILE OVERRIDE SETTERS — HC-WC-04 integration
+  // ============================================================
+
+  global.setWaveComposerBuildTiming = function(timing) {
+    if (!timing) return;
+    _composer._profileBuildTiming = Object.assign({}, timing);
+  };
+
+  global.setWaveComposerPeakLimits = function(limits) {
+    if (!limits) return;
+    _composer._profilePeakLimits = Object.assign({}, limits);
+  };
+
+  global.setWaveComposerResolveTiming = function(timing) {
+    if (!timing) return;
+    _composer._profileResolveTiming = Object.assign({}, timing);
+  };
+
+  global.setWaveComposerPhaseDurations = function(durations) {
+    if (!durations) return;
+    _composer._profilePhaseDurations = Object.assign({}, durations);
+  };
+
+  // ============================================================
+  // PROFILE-AWARE BUILD TIMING RESOLVER
+  // ============================================================
+
+  function _resolveBuildTiming(role) {
+    if (_composer._profileBuildTiming && _composer._profileBuildTiming[role + 'Delay'] !== undefined) {
+      return _composer._profileBuildTiming[role + 'Delay'];
+    }
+    return _cfgVal('buildTiming.' + role + 'Delay', 0);
+  }
+
+  function _resolvePhaseDuration(phase) {
+    if (_composer._profilePhaseDurations && _composer._profilePhaseDurations[phase] !== undefined) {
+      return _composer._profilePhaseDurations[phase];
+    }
+    return _cfgVal('phaseDurations.' + phase + '.normal', 1200);
+  }
+
+  function _resolvePeakLimit(key) {
+    if (_composer._profilePeakLimits && _composer._profilePeakLimits[key] !== undefined) {
+      return _composer._profilePeakLimits[key];
+    }
+    return _cfgVal('peakLimits.' + key, 3);
+  }
+
+  function _resolveResolveSetting(role) {
+    if (_composer._profileResolveTiming && _composer._profileResolveTiming[role + 'Suspend'] !== undefined) {
+      return _composer._profileResolveTiming[role + 'Suspend'];
+    }
+    return _cfgVal('resolveTiming.' + role + 'Suspend', true);
+  }
+
+  // ============================================================
+  // OVERRIDE-BASED GETTERS
+  // ============================================================
+
+  // Re-expose with profile-aware resolution
+  function _cfgValProfile(path, def) {
+    // Check profile overrides first
+    var parts = path.split('.');
+    if (parts[0] === 'buildTiming' && parts[1] && _composer._profileBuildTiming) {
+      var key = parts[1];
+      if (_composer._profileBuildTiming[key] !== undefined) return _composer._profileBuildTiming[key];
+    }
+    if (parts[0] === 'peakLimits' && parts[1] && _composer._profilePeakLimits) {
+      var k = parts[1];
+      if (_composer._profilePeakLimits[k] !== undefined) return _composer._profilePeakLimits[k];
+    }
+    if (parts[0] === 'resolveTiming' && parts[1] && _composer._profileResolveTiming) {
+      var rk = parts[1];
+      if (_composer._profileResolveTiming[rk] !== undefined) return _composer._profileResolveTiming[rk];
+    }
+    if (parts[0] === 'phaseDurations' && parts[1] && _composer._profilePhaseDurations) {
+      var pk = parts[1];
+      if (_composer._profilePhaseDurations[pk] !== undefined) return _composer._profilePhaseDurations[pk];
+    }
+    return _get(_cfg(), path, def);
+  }
+
+  // ============================================================
+  // UPDATED BUILD QUEUE — uses profile overrides
+  // ============================================================
+
+  var _origSetupBuildQueue = _setupBuildActivationQueue;
+
+  // ============================================================
+  // COMPOSER STATE — ADD PROFILE OVERRIDE SLOTS
+  // ============================================================
+
+  // (Slots added to _composer object inline at declaration time)
+  _composer._profileBuildTiming = null;
+  _composer._profilePeakLimits = null;
+  _composer._profileResolveTiming = null;
+  _composer._profilePhaseDurations = null;
+  _composer._profileActiveKey = null;
+
   // Debug: console dump
   global.printWaveComposerState = function() {
     if (typeof console === 'undefined') return;
@@ -778,6 +878,7 @@
     console.log('  relief:      ' + st.reliefEnterCount);
     console.log('  densitySpikes: ' + st.densitySpikeFrames);
     console.log('  buildQueue:  ' + JSON.stringify(st.buildActivationQueue));
+    console.log('  profile:     ' + (_composer._profileActiveKey || 'none'));
     console.log('=======================');
   };
 

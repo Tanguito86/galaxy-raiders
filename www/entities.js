@@ -1057,20 +1057,27 @@ function initEnemies() {
     pushScreenShake('light', 3);
     sfxBossWarning();
   } else {
-    const formation = getFormation(level);
-    const waveType = getWaveType(level);
-    enemies = createFormation(formation);
-    assignInitialShmupRoutes(enemies, level);
-    trimFormationForExternalShmupWave(enemies, level);
-    addInitialExternalShmupWave(enemies, level);
-    if (waveType === 'normal') {
-      applyEncounterFormationPacing(enemies, formation, waveType);
-      var _geomPersonality = (typeof window.getCurrentWavePersonality === 'function')
-        ? window.getCurrentWavePersonality()
-        : 'balanced';
-      applyFormationGeometry(enemies, _geomPersonality);
-    } else if (typeof window.resetWavePersonality === 'function') {
-      window.resetWavePersonality();
+    // HC-WC-04: use profile-driven composition for normal waves
+    var _usedProfile = false;
+    if (typeof global.initEnemiesFromProfile === 'function') {
+      _usedProfile = global.initEnemiesFromProfile();
+    }
+    if (!_usedProfile) {
+      const formation = getFormation(level);
+      const waveType = getWaveType(level);
+      enemies = createFormation(formation);
+      assignInitialShmupRoutes(enemies, level);
+      trimFormationForExternalShmupWave(enemies, level);
+      addInitialExternalShmupWave(enemies, level);
+      if (waveType === 'normal') {
+        applyEncounterFormationPacing(enemies, formation, waveType);
+        var _geomPersonality = (typeof window.getCurrentWavePersonality === 'function')
+          ? window.getCurrentWavePersonality()
+          : 'balanced';
+        applyFormationGeometry(enemies, _geomPersonality);
+      } else if (typeof window.resetWavePersonality === 'function') {
+        window.resetWavePersonality();
+      }
     }
     setPieceBannerText = '';
     setPieceBannerTimer = 0;
