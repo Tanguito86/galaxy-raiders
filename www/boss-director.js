@@ -1,7 +1,8 @@
 // ==============================================
 // GALAXY RAIDERS - boss-director.js
 // HC-BD-01: Boss Director System Foundation
-// TAXONOMY + CONSTANTS + HELPERS + VALIDATION
+// HC-BD-02: Boss Profile Mapping & Identity Matrix
+// TAXONOMY + PROFILES + CONSTANTS + HELPERS + VALIDATION
 // NO runtime complejo. NO rompe nada existente.
 // ==============================================
 
@@ -719,7 +720,493 @@
   }
 
   // ============================================================
-  // SECTION 11: EXPORT TO WINDOW
+  // SECTION 11: BOSS DIRECTOR PROFILES (HC-BD-02)
+  // ============================================================
+  // Perfiles runtime por boss. Conectan nombre/pattern real
+  // con identidad hardcore oficial. Solo lectura.
+  // ============================================================
+
+  var BOSS_DIRECTOR_PROFILES = {
+    crabtron: {
+      bossId: 1,
+      displayName: "CRABTRON",
+      pattern: "crossfire",
+      level: 5,
+
+      archetype: "DUELIST",
+
+      pressureStyle: "burst",
+      mobilityStyle: "lateral_strafe",
+      pacingStyle: "punctuated",
+      rageStyle: "faster_bursts",
+      telegraphStyle: "directional_arrow",
+
+      primarySignature: "pincerFire",
+      secondarySignature: "aimedBurst",
+
+      recoveryBias: "long_after_burst",
+      fairnessBias: "high",
+
+      weaknessReadability: "Phase 1 generic aimed-spread — lacks identity",
+      transitionStyle: "dash_telegraph_directional_arrow",
+
+      phasePlan: [
+        "introduction",
+        "pressure",
+        "recovery",
+        "crossfire",
+        "transition",
+        "desperation",
+        "finale"
+      ],
+
+      signaturePlan: {
+        intro: "aimedBurst",
+        main: "pincerFire",
+        rage: "pincerFire"
+      }
+    },
+
+    serpentrix: {
+      bossId: 2,
+      displayName: "SERPENTRIX",
+      pattern: "zigzag",
+      level: 10,
+
+      archetype: "SWEEPER",
+
+      pressureStyle: "wave_sweep",
+      mobilityStyle: "sinusoidal_patrol",
+      pacingStyle: "rhythmic",
+      rageStyle: "faster_sweep_amplitude",
+      telegraphStyle: "lane_indicator",
+
+      primarySignature: "rotatingFan",
+      secondarySignature: "delayedTrap",
+
+      recoveryBias: "wave_trough",
+      fairnessBias: "medium",
+
+      weaknessReadability: "Mines lack pre-landing telegraph — player tracks drift",
+      transitionStyle: "wave_crescendo_expanding_fan",
+
+      phasePlan: [
+        "introduction",
+        "pressure",
+        "recovery",
+        "area_denial",
+        "transition",
+        "desperation",
+        "finale"
+      ],
+
+      signaturePlan: {
+        intro: "rotatingFan",
+        main: "delayedTrap",
+        rage: "rotatingFan"
+      }
+    },
+
+    orbital: {
+      bossId: 3,
+      displayName: "ORBITAL",
+      pattern: "rotate",
+      level: 15,
+
+      archetype: "ORBITAL",
+
+      pressureStyle: "surround_constrict",
+      mobilityStyle: "elliptical_orbit",
+      pacingStyle: "cyclic",
+      rageStyle: "tighter_orbit_faster_pulse",
+      telegraphStyle: "radial_ring",
+
+      primarySignature: "orbitalPressure",
+      secondarySignature: "laserSweep",
+
+      recoveryBias: "orbit_apex",
+      fairnessBias: "medium",
+
+      weaknessReadability: "Tractor beam vertical column narrow — relies on ground telegraph",
+      transitionStyle: "pulse_expansion_ring_flash",
+
+      phasePlan: [
+        "introduction",
+        "pressure",
+        "recovery",
+        "crossfire",
+        "transition",
+        "rage",
+        "finale"
+      ],
+
+      signaturePlan: {
+        intro: "orbitalPressure",
+        main: "laserSweep",
+        rage: "phaseBurst"
+      }
+    },
+
+    teniente: {
+      bossId: 4,
+      displayName: "TENIENTE",
+      pattern: "divebomb",
+      level: 19,
+
+      archetype: "HUNTER",
+
+      pressureStyle: "chase_burst",
+      mobilityStyle: "charge_retreat_cycle",
+      pacingStyle: "dramatic_loop",
+      rageStyle: "multi_charge_chains",
+      telegraphStyle: "charge_indicator",
+
+      primarySignature: "pincerFire",
+      secondarySignature: "escapeBait",
+
+      recoveryBias: "post_charge_retreat",
+      fairnessBias: "medium",
+
+      weaknessReadability: "All 3 phases use same downward-spread shape — lacks variation",
+      transitionStyle: "charge_impact_warning_rings",
+
+      phasePlan: [
+        "introduction",
+        "pressure",
+        "chase",
+        "recovery",
+        "crossfire",
+        "transition",
+        "rage",
+        "finale"
+      ],
+
+      signaturePlan: {
+        intro: "aimedBurst",
+        main: "pincerFire",
+        rage: "escapeBait"
+      }
+    },
+
+    emperador: {
+      bossId: 5,
+      displayName: "EMPERADOR",
+      pattern: "supreme",
+      level: 20,
+
+      archetype: "EXECUTIONER",
+
+      pressureStyle: "multidirectional_dominant",
+      mobilityStyle: "phased_evolution",
+      pacingStyle: "dramatic_arc",
+      rageStyle: "ultimate_desperation_mode",
+      telegraphStyle: "imperial_glow",
+
+      primarySignature: "arenaSplit",
+      secondarySignature: "orbitalPressure",
+
+      recoveryBias: "phase_transition_only",
+      fairnessBias: "low",
+
+      weaknessReadability: "Teleport shockwave un-telegraphed — 0-frame reaction needed",
+      transitionStyle: "teleport_destination_glow_purple",
+
+      phasePlan: [
+        "introduction",
+        "pressure",
+        "crossfire",
+        "transition",
+        "area_denial",
+        "transition",
+        "rage",
+        "finale"
+      ],
+
+      signaturePlan: {
+        intro: "orbitalPressure",
+        main: "arenaSplit",
+        rage: "phaseBurst"
+      }
+    }
+  };
+
+  // Indice de lookup rapido por pattern y por bossId
+  var BOSS_PROFILE_BY_PATTERN = {};
+  var BOSS_PROFILE_BY_ID = {};
+  (function () {
+    var keys = Object.keys(BOSS_DIRECTOR_PROFILES);
+    for (var i = 0; i < keys.length; i++) {
+      var p = BOSS_DIRECTOR_PROFILES[keys[i]];
+      if (p && p.pattern) {
+        BOSS_PROFILE_BY_PATTERN[p.pattern] = p;
+      }
+      if (p && typeof p.bossId === "number") {
+        BOSS_PROFILE_BY_ID[p.bossId] = p;
+      }
+    }
+  })();
+
+  // ============================================================
+  // SECTION 12: DEFAULT / FALLBACK PROFILE
+  // ============================================================
+
+  var DEFAULT_BOSS_DIRECTOR_PROFILE = {
+    bossId: -1,
+    displayName: "UNKNOWN BOSS",
+    pattern: "unknown",
+    level: 0,
+
+    archetype: "DUELIST",
+
+    pressureStyle: "burst",
+    mobilityStyle: "lateral_strafe",
+    pacingStyle: "punctuated",
+    rageStyle: "faster_bursts",
+    telegraphStyle: "directional_arrow",
+
+    primarySignature: "aimedBurst",
+    secondarySignature: "aimedBurst",
+
+    recoveryBias: "long_after_burst",
+    fairnessBias: "high",
+
+    weaknessReadability: "Unknown boss — no identity data",
+    transitionStyle: "default",
+
+    phasePlan: [
+      "pressure",
+      "desperation",
+      "finale"
+    ],
+
+    signaturePlan: {
+      intro: "aimedBurst",
+      main: "aimedBurst",
+      rage: "aimedBurst"
+    }
+  };
+
+  // ============================================================
+  // SECTION 13: PROFILE HELPERS
+  // ============================================================
+
+  function getBossDirectorProfile(bossNameOrType) {
+    if (!bossNameOrType) {
+      return DEFAULT_BOSS_DIRECTOR_PROFILE;
+    }
+
+    var key = (typeof bossNameOrType === "string") ? bossNameOrType.toLowerCase() : "";
+
+    // Try direct name match (e.g. "crabtron", "CRABTRON", "Crabtron")
+    if (BOSS_DIRECTOR_PROFILES.hasOwnProperty(key)) {
+      return BOSS_DIRECTOR_PROFILES[key];
+    }
+
+    // Try pattern match (e.g. "crossfire", "supreme")
+    if (BOSS_PROFILE_BY_PATTERN.hasOwnProperty(key)) {
+      return BOSS_PROFILE_BY_PATTERN[key];
+    }
+
+    // If a boss object was passed, resolve from its pattern/name
+    if (typeof bossNameOrType === "object" && bossNameOrType !== null) {
+      var b = bossNameOrType;
+
+      // Try pattern first (most reliable)
+      if (b.pattern && BOSS_PROFILE_BY_PATTERN.hasOwnProperty(b.pattern)) {
+        return BOSS_PROFILE_BY_PATTERN[b.pattern];
+      }
+
+      // Try name
+      if (b.name) {
+        var nameKey = (typeof b.name === "string") ? b.name.toLowerCase() : "";
+        if (BOSS_DIRECTOR_PROFILES.hasOwnProperty(nameKey)) {
+          return BOSS_DIRECTOR_PROFILES[nameKey];
+        }
+      }
+
+      // Try bossId from HARDCORE_BOSS_REGISTRY
+      if (typeof window.getHardcoreBossId === "function") {
+        var id = window.getHardcoreBossId(b);
+        if (id > 0 && BOSS_PROFILE_BY_ID.hasOwnProperty(id)) {
+          return BOSS_PROFILE_BY_ID[id];
+        }
+      }
+    }
+
+    // Try numeric bossId
+    if (typeof bossNameOrType === "number") {
+      if (BOSS_PROFILE_BY_ID.hasOwnProperty(bossNameOrType)) {
+        return BOSS_PROFILE_BY_ID[bossNameOrType];
+      }
+    }
+
+    // Ultimate fallback
+    return DEFAULT_BOSS_DIRECTOR_PROFILE;
+  }
+
+  function getBossArchetype(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    var archetypeKey = (profile && profile.archetype) ? profile.archetype : "DUELIST";
+    return BOSS_ARCHETYPES[archetypeKey] || BOSS_ARCHETYPES.DUELIST;
+  }
+
+  function getBossPrimarySignature(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    var sigKey = (profile && profile.primarySignature) ? profile.primarySignature : "aimedBurst";
+    return BOSS_SIGNATURE_TYPES[sigKey] || BOSS_SIGNATURE_TYPES.aimedBurst;
+  }
+
+  function getBossSecondarySignature(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    var sigKey = (profile && profile.secondarySignature) ? profile.secondarySignature : "aimedBurst";
+    return BOSS_SIGNATURE_TYPES[sigKey] || BOSS_SIGNATURE_TYPES.aimedBurst;
+  }
+
+  function getBossPhasePlan(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    return (profile && Array.isArray(profile.phasePlan)) ? profile.phasePlan.slice() : DEFAULT_BOSS_DIRECTOR_PROFILE.phasePlan.slice();
+  }
+
+  function getBossSignaturePlan(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    if (profile && profile.signaturePlan && typeof profile.signaturePlan === "object") {
+      return {
+        intro: profile.signaturePlan.intro || "aimedBurst",
+        main: profile.signaturePlan.main || "aimedBurst",
+        rage: profile.signaturePlan.rage || "aimedBurst"
+      };
+    }
+    return {
+      intro: DEFAULT_BOSS_DIRECTOR_PROFILE.signaturePlan.intro,
+      main: DEFAULT_BOSS_DIRECTOR_PROFILE.signaturePlan.main,
+      rage: DEFAULT_BOSS_DIRECTOR_PROFILE.signaturePlan.rage
+    };
+  }
+
+  function getBossRageStyle(targetBoss) {
+    var archetype = getBossArchetype(targetBoss);
+    return (archetype && archetype.rageStyle) ? archetype.rageStyle : "faster_bursts";
+  }
+
+  function getBossPacingStyle(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    return (profile && profile.pacingStyle) ? profile.pacingStyle : "punctuated";
+  }
+
+  function getBossMobilityStyle(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    return (profile && profile.mobilityStyle) ? profile.mobilityStyle : "lateral_strafe";
+  }
+
+  function getBossRecoveryBias(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    return (profile && profile.recoveryBias) ? profile.recoveryBias : "long_after_burst";
+  }
+
+  function getBossFairnessBias(targetBoss) {
+    var profile = getBossDirectorProfile(targetBoss);
+    return (profile && profile.fairnessBias) ? profile.fairnessBias : "medium";
+  }
+
+  function getAllBossDirectorProfiles() {
+    var arr = [];
+    var keys = Object.keys(BOSS_DIRECTOR_PROFILES);
+    for (var i = 0; i < keys.length; i++) {
+      arr.push(BOSS_DIRECTOR_PROFILES[keys[i]]);
+    }
+    return arr;
+  }
+
+  // ============================================================
+  // SECTION 14: PROFILE VALIDATION
+  // ============================================================
+
+  function validateBossDirectorProfile(profile) {
+    var errors = [];
+
+    if (!profile || typeof profile !== "object") {
+      return { valid: false, errors: ["Profile is null or not an object"] };
+    }
+
+    // Required string fields
+    var requiredStrings = [
+      "displayName", "pattern", "archetype",
+      "pressureStyle", "mobilityStyle", "pacingStyle", "rageStyle", "telegraphStyle",
+      "primarySignature", "secondarySignature",
+      "recoveryBias", "fairnessBias",
+      "weaknessReadability", "transitionStyle"
+    ];
+
+    for (var i = 0; i < requiredStrings.length; i++) {
+      var field = requiredStrings[i];
+      if (!profile[field] || typeof profile[field] !== "string" || profile[field].trim() === "") {
+        errors.push("Missing or invalid string field: " + field);
+      }
+    }
+
+    // bossId must be numeric
+    if (typeof profile.bossId !== "number") {
+      errors.push("bossId must be a number");
+    }
+
+    // Validate archetype exists in taxonomy
+    if (profile.archetype) {
+      var validArchetype = validateBossArchetype(profile.archetype);
+      if (!validArchetype) {
+        errors.push("Unknown archetype: " + profile.archetype);
+      }
+    }
+
+    // Validate phasePlan
+    if (!Array.isArray(profile.phasePlan) || profile.phasePlan.length === 0) {
+      errors.push("phasePlan must be a non-empty array");
+    } else {
+      for (var j = 0; j < profile.phasePlan.length; j++) {
+        var phaseType = profile.phasePlan[j];
+        var validPhase = validateBossPhaseType(phaseType);
+        if (!validPhase) {
+          errors.push("Unknown phase type in phasePlan: " + phaseType);
+        }
+      }
+    }
+
+    // Validate signaturePlan
+    if (!profile.signaturePlan || typeof profile.signaturePlan !== "object") {
+      errors.push("signaturePlan must be an object with intro/main/rage");
+    } else {
+      var sigKeys = ["intro", "main", "rage"];
+      for (var k = 0; k < sigKeys.length; k++) {
+        var sk = sigKeys[k];
+        if (!profile.signaturePlan[sk] || typeof profile.signaturePlan[sk] !== "string") {
+          errors.push("signaturePlan." + sk + " must be a non-empty string");
+        } else {
+          var validSig = validateBossSignatureType(profile.signaturePlan[sk]);
+          if (!validSig) {
+            errors.push("Unknown signature type in signaturePlan." + sk + ": " + profile.signaturePlan[sk]);
+          }
+        }
+      }
+    }
+
+    // Validate fairness/recovery biases
+    var validFairnessBiases = ["high", "medium", "low"];
+    if (profile.fairnessBias && validFairnessBiases.indexOf(profile.fairnessBias) === -1) {
+      errors.push("fairnessBias must be high/medium/low, got: " + profile.fairnessBias);
+    }
+
+    var validRecoveryBiases = ["long_after_burst", "wave_trough", "post_deploy_silence", "orbit_apex", "post_charge_retreat", "phase_transition_only", "rare_brief_pauses", "stagger_on_hit", "adaptive_breathing", "merge_phase"];
+    if (profile.recoveryBias && validRecoveryBiases.indexOf(profile.recoveryBias) === -1) {
+      errors.push("Unknown recoveryBias: " + profile.recoveryBias);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors
+    };
+  }
+
+  // ============================================================
+  // SECTION 15: EXPORT TO WINDOW
   // ============================================================
 
   // Taxonomy exports
@@ -728,10 +1215,15 @@
   window.BOSS_SIGNATURE_TYPES = BOSS_SIGNATURE_TYPES;
   window.BOSS_ORCHESTRATION_RULES = BOSS_ORCHESTRATION_RULES;
 
+  // Profile exports (HC-BD-02)
+  window.BOSS_DIRECTOR_PROFILES = BOSS_DIRECTOR_PROFILES;
+  window.DEFAULT_BOSS_DIRECTOR_PROFILE = DEFAULT_BOSS_DIRECTOR_PROFILE;
+
   // Validator exports
   window.validateBossArchetype = validateBossArchetype;
   window.validateBossPhaseType = validateBossPhaseType;
   window.validateBossSignatureType = validateBossSignatureType;
+  window.validateBossDirectorProfile = validateBossDirectorProfile;
 
   // Phase helper exports
   window.isRecoveryPhase = isRecoveryPhase;
@@ -746,7 +1238,7 @@
   window.isBossDirectorEnabled = isBossDirectorEnabled;
   window.isBossTelemetryEnabled = isBossTelemetryEnabled;
 
-  // Getter exports
+  // Getter exports (taxonomy-level)
   window.getBossArchetypeByKey = getBossArchetypeByKey;
   window.getBossPhaseTypeByKey = getBossPhaseTypeByKey;
   window.getBossSignatureTypeByKey = getBossSignatureTypeByKey;
@@ -755,6 +1247,20 @@
   window.getAllBossSignatureTypes = getAllBossSignatureTypes;
   window.getBossOrchestrationRules = getBossOrchestrationRules;
   window.getOrchestrationRule = getOrchestrationRule;
+
+  // Profile-level getters (HC-BD-02)
+  window.getBossDirectorProfile = getBossDirectorProfile;
+  window.getBossArchetype = getBossArchetype;
+  window.getBossPrimarySignature = getBossPrimarySignature;
+  window.getBossSecondarySignature = getBossSecondarySignature;
+  window.getBossPhasePlan = getBossPhasePlan;
+  window.getBossSignaturePlan = getBossSignaturePlan;
+  window.getBossRageStyle = getBossRageStyle;
+  window.getBossPacingStyle = getBossPacingStyle;
+  window.getBossMobilityStyle = getBossMobilityStyle;
+  window.getBossRecoveryBias = getBossRecoveryBias;
+  window.getBossFairnessBias = getBossFairnessBias;
+  window.getAllBossDirectorProfiles = getAllBossDirectorProfiles;
 
   // Resolver exports
   window.resolveCurrentBossArchetype = resolveCurrentBossArchetype;
