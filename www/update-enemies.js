@@ -61,6 +61,9 @@ function updateEnemiesAndProjectiles(step, dt) {
     if (typeof window.updateChoreography === 'function') {
       window.updateChoreography(dt);
     }
+    if (typeof window.updateEnforcement === 'function') {
+      window.updateEnforcement();
+    }
     syncEncounterDirectorEnemyState(dt);
 
     // UFO spawn/move
@@ -944,6 +947,8 @@ if (!boss.active && activeEnemies.length > 0) {
 
       if (typeof window.shouldGateWaveComposerPattern === 'function' && window.shouldGateWaveComposerPattern(shooter)) {
         // gated by wave composer phase — skip this shot but don't advance timer
+      } else if (typeof window.checkEnforcementBeforePattern === 'function' && !window.checkEnforcementBeforePattern(shooter)) {
+        // blocked by enforcement — budget exceeded or role cap hit
       } else {
         pushEnemyBullet(
           shooter.x + shooter.w / 2,

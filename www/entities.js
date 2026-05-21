@@ -1105,6 +1105,9 @@ function initEnemies() {
   if (typeof window.initChoreography === 'function') {
     window.initChoreography();
   }
+  if (typeof window.resetEnforcement === 'function') {
+    window.resetEnforcement();
+  }
 }
 
 function initBoss() {
