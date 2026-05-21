@@ -3,7 +3,8 @@
 // HC-BD-01: Boss Director System Foundation
 // HC-BD-02: Boss Profile Mapping & Identity Matrix
 // HC-BD-03: Boss Phase Orchestration Runtime Foundation
-// TAXONOMY + PROFILES + STATE MACHINE + LIFECYCLE
+// HC-BD-04: Boss Transition Choreography Foundation
+// TAXONOMY + PROFILES + STATE MACHINE + TRANSITIONS
 // NO runtime complejo. NO rompe nada existente.
 // ==============================================
 
@@ -395,7 +396,77 @@
   };
 
   // ============================================================
-  // SECTION 4: BOSS ORCHESTRATION RULES (documentadas)
+  // SECTION 4: BOSS TRANSITION TAXONOMY (HC-BD-04)
+  // ============================================================
+  // Tipos de transicion entre fases. Define duracion,
+  // intencion visual, audio y gameplay. Solo datos.
+  // ============================================================
+
+  var BOSS_TRANSITION_TYPES = {
+    phase_shift: {
+      key: "phase_shift",
+      label: "Phase Shift",
+      description: "Standard phase change. Brief spectacle. Boss pauses, FX plays, new patterns begin.",
+      durationMs: 400,
+      visualIntent: "Transition ring flash + phase text + brief screen shake",
+      audioIntent: "Boss warning SFX + music duck",
+      gameplayIntent: "Signal new phase. Boss pauses briefly. Existing bullets resolve naturally.",
+      readabilityGoal: "Player must see and feel the phase change clearly."
+    },
+    armor_break: {
+      key: "armor_break",
+      label: "Armor Break",
+      description: "Boss armor/shell breaks. More dramatic than phase_shift. Longer spectacle.",
+      durationMs: 700,
+      visualIntent: "Shatter particles + expanding ring + color shift",
+      audioIntent: "Heavy impact SFX + deeper music duck",
+      gameplayIntent: "Signal increased threat. Boss may change movement or gain new attacks.",
+      readabilityGoal: "Player must understand the boss just got more dangerous."
+    },
+    rage_wake: {
+      key: "rage_wake",
+      label: "Rage Wake",
+      description: "Boss enters rage/desperation mode. Maximum drama. Signature transformation.",
+      durationMs: 900,
+      visualIntent: "Red/purple aura + screen border flash + boss glow intensification",
+      audioIntent: "Rage SFX + music intensifies + low-pass filter",
+      gameplayIntent: "Signal maximum threat. All patterns accelerate. New signature attack available.",
+      readabilityGoal: "Player must feel the stakes just escalated to maximum."
+    },
+    arena_refocus: {
+      key: "arena_refocus",
+      label: "Arena Refocus",
+      description: "Boss changes arena layout or threat zones. Brief reposition + zone indicators.",
+      durationMs: 500,
+      visualIntent: "Zone indicators pulse + boss smoothly drifts to new position",
+      audioIntent: "Low hum + brief silence",
+      gameplayIntent: "Signal arena reconfiguration. Existing hazards may shift or expire.",
+      readabilityGoal: "Player must see the new safe/danger zones clearly."
+    },
+    signature_prep: {
+      key: "signature_prep",
+      label: "Signature Prep",
+      description: "Boss telegraphs a signature attack. Builds anticipation before big move.",
+      durationMs: 600,
+      visualIntent: "Signature-specific telegraph + charging effect + directional indicators",
+      audioIntent: "Charge SFX + tension build",
+      gameplayIntent: "Warn player of incoming signature attack. Reward anticipation with dodge window.",
+      readabilityGoal: "Player must identify the signature attack before it fires."
+    },
+    finale_lock: {
+      key: "finale_lock",
+      label: "Finale Lock",
+      description: "Boss enters death sequence. Overwhelming spectacle. Invulnerability window.",
+      durationMs: 1200,
+      visualIntent: "Full-screen ring expansion + white flash + boss disintegration FX",
+      audioIntent: "Victory fanfare + music resolve + explosion SFX",
+      gameplayIntent: "Signal boss death. No new threats. Reward delivery begins.",
+      readabilityGoal: "Player must feel triumphant. No gameplay confusion during finale."
+    }
+  };
+
+  // ============================================================
+  // SECTION 5: BOSS ORCHESTRATION RULES (documentadas)
   // ============================================================
   // Reglas hardcore que TODO boss debe seguir.
   // No son runtime enforcement todavia. Son contrato de diseno.
@@ -751,6 +822,17 @@
       weaknessReadability: "Phase 1 generic aimed-spread — lacks identity",
       transitionStyle: "dash_telegraph_directional_arrow",
 
+      transitionProfile: {
+        defaultType: "phase_shift",
+        rageType: "rage_wake",
+        finaleType: "finale_lock",
+        durationMs: 400,
+        visualLanguage: "directional_arrow_chevron_orange",
+        audioCue: "boss_warning_short",
+        movementIntent: "dash_freeze_on_transition",
+        readabilityGoal: "Arrow telegraph + brief freeze reinforces duelist identity"
+      },
+
       phasePlan: [
         "introduction",
         "pressure",
@@ -790,6 +872,17 @@
 
       weaknessReadability: "Mines lack pre-landing telegraph — player tracks drift",
       transitionStyle: "wave_crescendo_expanding_fan",
+
+      transitionProfile: {
+        defaultType: "phase_shift",
+        rageType: "rage_wake",
+        finaleType: "finale_lock",
+        durationMs: 500,
+        visualLanguage: "wave_crescendo_green_fan",
+        audioCue: "boss_warning_sweep",
+        movementIntent: "amplitude_increase_on_transition",
+        readabilityGoal: "Expanding sweep fan signals wider threat area"
+      },
 
       phasePlan: [
         "introduction",
@@ -831,6 +924,17 @@
       weaknessReadability: "Tractor beam vertical column narrow — relies on ground telegraph",
       transitionStyle: "pulse_expansion_ring_flash",
 
+      transitionProfile: {
+        defaultType: "arena_refocus",
+        rageType: "rage_wake",
+        finaleType: "finale_lock",
+        durationMs: 550,
+        visualLanguage: "pulse_expansion_ring_blue",
+        audioCue: "boss_warning_pulse",
+        movementIntent: "orbit_tighten_on_transition",
+        readabilityGoal: "Expanding pulse ring signals surround pressure increase"
+      },
+
       phasePlan: [
         "introduction",
         "pressure",
@@ -870,6 +974,17 @@
 
       weaknessReadability: "All 3 phases use same downward-spread shape — lacks variation",
       transitionStyle: "charge_impact_warning_rings",
+
+      transitionProfile: {
+        defaultType: "signature_prep",
+        rageType: "rage_wake",
+        finaleType: "finale_lock",
+        durationMs: 650,
+        visualLanguage: "charge_impact_dual_rings_orange",
+        audioCue: "boss_warning_charge",
+        movementIntent: "charge_freeze_on_transition",
+        readabilityGoal: "Charge telegraph builds tension before signature attack"
+      },
 
       phasePlan: [
         "introduction",
@@ -911,6 +1026,17 @@
 
       weaknessReadability: "Teleport shockwave un-telegraphed — 0-frame reaction needed",
       transitionStyle: "teleport_destination_glow_purple",
+
+      transitionProfile: {
+        defaultType: "arena_refocus",
+        rageType: "rage_wake",
+        finaleType: "finale_lock",
+        durationMs: 800,
+        visualLanguage: "teleport_glow_purple_imperial",
+        audioCue: "boss_warning_teleport",
+        movementIntent: "teleport_reposition_on_transition",
+        readabilityGoal: "Teleport glow signals displacement + new threat angle"
+      },
 
       phasePlan: [
         "introduction",
@@ -973,6 +1099,17 @@
 
     weaknessReadability: "Unknown boss — no identity data",
     transitionStyle: "default",
+
+    transitionProfile: {
+      defaultType: "phase_shift",
+      rageType: "rage_wake",
+      finaleType: "finale_lock",
+      durationMs: 400,
+      visualLanguage: "default",
+      audioCue: "boss_warning_default",
+      movementIntent: "none",
+      readabilityGoal: "Generic transition — safe fallback"
+    },
 
     phasePlan: [
       "pressure",
@@ -1207,7 +1344,7 @@
   }
 
   // ============================================================
-  // SECTION 15: BOSS DIRECTOR STATE MACHINE (HC-BD-03)
+  // SECTION 15: BOSS DIRECTOR STATE MACHINE (HC-BD-03/04)
   // ============================================================
   // Estado runtime del Boss Director. Pasivo, solo lectura.
   // No altera gameplay. No modifica bosses.
@@ -1227,6 +1364,15 @@
 
     transitionActive: false,
     transitionTimer: 0,
+
+    // HC-BD-04: transition choreography detail
+    transitionType: null,
+    transitionDurationMs: 0,
+    transitionProgress: 0,
+    transitionProgress01: 0,
+    transitionReason: null,
+    transitionFrom: null,
+    transitionTo: null,
 
     rageActive: false,
     finaleActive: false,
@@ -1251,6 +1397,13 @@
     bossDirectorState.totalTimer = 0;
     bossDirectorState.transitionActive = false;
     bossDirectorState.transitionTimer = 0;
+    bossDirectorState.transitionType = null;
+    bossDirectorState.transitionDurationMs = 0;
+    bossDirectorState.transitionProgress = 0;
+    bossDirectorState.transitionProgress01 = 0;
+    bossDirectorState.transitionReason = null;
+    bossDirectorState.transitionFrom = null;
+    bossDirectorState.transitionTo = null;
     bossDirectorState.rageActive = false;
     bossDirectorState.finaleActive = false;
     bossDirectorState.lastHPPercent = 1;
@@ -1295,8 +1448,6 @@
       : DEFAULT_BOSS_DIRECTOR_PROFILE.phasePlan;
     var len = plan.length;
 
-    // Threshold map that scales across the available phase plan length
-    // More phases = finer granularity
     if (len <= 3) {
       if (hpPercent > 0.50) return plan[0];
       if (hpPercent > 0.15) return plan[Math.min(1, len - 1)];
@@ -1311,15 +1462,14 @@
       return plan[len - 1];
     }
 
-    // Full scale (6+ phases): user-specified thresholds
     var thresholds = [
-      { hp: 0.85, idx: 0 },    // introduction
-      { hp: 0.65, idx: 1 },    // pressure
-      { hp: 0.50, idx: 2 },    // recovery / crossfire
-      { hp: 0.35, idx: 3 },    // transition / area_denial
-      { hp: 0.20, idx: 4 },    // desperation
-      { hp: 0.08, idx: 5 },    // rage
-      { hp: 0.00, idx: 6 }     // finale (defaults to last)
+      { hp: 0.85, idx: 0 },
+      { hp: 0.65, idx: 1 },
+      { hp: 0.50, idx: 2 },
+      { hp: 0.35, idx: 3 },
+      { hp: 0.20, idx: 4 },
+      { hp: 0.08, idx: 5 },
+      { hp: 0.00, idx: 6 }
     ];
 
     for (var i = 0; i < thresholds.length; i++) {
@@ -1385,7 +1535,6 @@
 
     var profile = getBossDirectorProfile(targetBoss);
     if (!profile || profile === DEFAULT_BOSS_DIRECTOR_PROFILE) {
-      // Unknown boss — still safe, use fallback with telemetry note
       if (targetBoss && targetBoss.pattern) {
         var bKey = targetBoss.pattern || "unknown";
         bossDirectorState.bossKey = bKey;
@@ -1408,6 +1557,13 @@
     bossDirectorState.totalTimer = 0;
     bossDirectorState.transitionActive = false;
     bossDirectorState.transitionTimer = 0;
+    bossDirectorState.transitionType = null;
+    bossDirectorState.transitionDurationMs = 0;
+    bossDirectorState.transitionProgress = 0;
+    bossDirectorState.transitionProgress01 = 0;
+    bossDirectorState.transitionReason = null;
+    bossDirectorState.transitionFrom = null;
+    bossDirectorState.transitionTo = null;
     bossDirectorState.rageActive = false;
     bossDirectorState.finaleActive = false;
     bossDirectorState.lastHPPercent = 1;
@@ -1472,23 +1628,40 @@
       bossDirectorState.phaseIndex = nextPhaseIndex;
       bossDirectorState.phaseTimer += dt;
     } else {
-      // During transition, advance timer and complete after threshold
+      // During transition, advance timer and track progress
       bossDirectorState.transitionTimer += dt;
 
-      // Transition completes after MIN_TRANSITION_DURATION_MS
-      var transitionCompleteAt = 400;
-      if (bossDirectorState.transitionTimer >= transitionCompleteAt) {
+      // HC-BD-04: update transition progress 0→1
+      if (bossDirectorState.transitionDurationMs > 0) {
+        bossDirectorState.transitionProgress = bossDirectorState.transitionTimer;
+        bossDirectorState.transitionProgress01 = Math.min(1, Math.max(0,
+          bossDirectorState.transitionTimer / bossDirectorState.transitionDurationMs
+        ));
+      }
+
+      // Transition completes after duration
+      var effectiveDuration = bossDirectorState.transitionDurationMs || 400;
+      if (bossDirectorState.transitionTimer >= effectiveDuration) {
         bossDirectorState.phaseType = nextPhaseType;
         bossDirectorState.phaseIndex = nextPhaseIndex;
         bossDirectorState.transitionActive = false;
         bossDirectorState.transitionTimer = 0;
+        bossDirectorState.transitionProgress = 0;
+        bossDirectorState.transitionProgress01 = 1;
         bossDirectorState.phaseTimer = 0;
+
+        // Clear transition detail fields
+        bossDirectorState.transitionType = null;
+        bossDirectorState.transitionDurationMs = 0;
+        bossDirectorState.transitionReason = null;
+        bossDirectorState.transitionFrom = null;
+        bossDirectorState.transitionTo = null;
 
         if (cfg.enableBossTelemetry) {
           recordBossDirectorEvent("phase_transition_completed", {
             from: bossDirectorState.previousPhaseType,
             to: bossDirectorState.phaseType,
-            transitionDurationMs: Math.round(bossDirectorState.transitionTimer)
+            transitionDurationMs: Math.round(effectiveDuration)
           });
         }
       }
@@ -1519,6 +1692,8 @@
         phaseTimer: bossDirectorState.phaseTimer,
         totalTimer: bossDirectorState.totalTimer,
         transitionActive: bossDirectorState.transitionActive,
+        transitionType: bossDirectorState.transitionType,
+        transitionProgress01: bossDirectorState.transitionProgress01,
         rageActive: bossDirectorState.rageActive,
         finaleActive: bossDirectorState.finaleActive,
         recoveryWindowActive: bossDirectorState.recoveryWindowActive
@@ -1545,22 +1720,79 @@
   // SECTION 19: TRANSITION / RECOVERY / RAGE / FINALE DETECTION
   // ============================================================
 
+  function resolveBossTransitionType(profile, fromPhase, toPhase) {
+    if (!profile || typeof profile !== "object") return "phase_shift";
+
+    var tp = profile.transitionProfile;
+    if (!tp || typeof tp !== "object") return "phase_shift";
+
+    // Determine type based on phase context
+    if (toPhase === "rage" || toPhase === "desperation") {
+      var rageType = tp.rageType || "rage_wake";
+      return BOSS_TRANSITION_TYPES.hasOwnProperty(rageType) ? rageType : "rage_wake";
+    }
+
+    if (toPhase === "finale") {
+      var finaleType = tp.finaleType || "finale_lock";
+      return BOSS_TRANSITION_TYPES.hasOwnProperty(finaleType) ? finaleType : "finale_lock";
+    }
+
+    if (fromPhase === "recovery") {
+      return "signature_prep";
+    }
+
+    if (toPhase === "transition" || toPhase === "recovery") {
+      return "arena_refocus";
+    }
+
+    var defaultType = tp.defaultType || "phase_shift";
+    return BOSS_TRANSITION_TYPES.hasOwnProperty(defaultType) ? defaultType : "phase_shift";
+  }
+
+  function getTransitionDuration(profile, transitionType) {
+    if (BOSS_TRANSITION_TYPES.hasOwnProperty(transitionType)) {
+      return BOSS_TRANSITION_TYPES[transitionType].durationMs || 400;
+    }
+    if (profile && profile.transitionProfile && typeof profile.transitionProfile.durationMs === "number") {
+      return profile.transitionProfile.durationMs;
+    }
+    return 400;
+  }
+
   function detectBossPhaseTransition(nextPhaseType) {
     if (bossDirectorState.transitionActive) return false;
     if (!nextPhaseType || nextPhaseType === bossDirectorState.phaseType) return false;
 
-    // Check if transitions are enabled in config
     var cfg = getBossDirectorConfig();
     if (!cfg.enableBossTransitions) return false;
 
-    bossDirectorState.previousPhaseType = bossDirectorState.phaseType;
+    var profile = bossDirectorState.profile;
+    var fromPhase = bossDirectorState.phaseType;
+    var toPhase = nextPhaseType;
+
+    // HC-BD-04: resolve transition type and duration
+    var resolvedType = resolveBossTransitionType(profile, fromPhase, toPhase);
+    var duration = getTransitionDuration(profile, resolvedType);
+
+    bossDirectorState.previousPhaseType = fromPhase;
     bossDirectorState.transitionActive = true;
     bossDirectorState.transitionTimer = 0;
 
+    // HC-BD-04: configure transition choreography details
+    bossDirectorState.transitionType = resolvedType;
+    bossDirectorState.transitionDurationMs = duration;
+    bossDirectorState.transitionProgress = 0;
+    bossDirectorState.transitionProgress01 = 0;
+    bossDirectorState.transitionReason = "hp_threshold";
+    bossDirectorState.transitionFrom = fromPhase;
+    bossDirectorState.transitionTo = toPhase;
+
     if (cfg.enableBossTelemetry) {
       recordBossDirectorEvent("phase_transition_detected", {
-        from: bossDirectorState.previousPhaseType,
-        to: nextPhaseType,
+        from: fromPhase,
+        to: toPhase,
+        type: resolvedType,
+        durationMs: duration,
         hpPercent: bossDirectorState.currentHPPercent
       });
     }
@@ -1569,16 +1801,13 @@
   }
 
   function isPhaseRecoveryEligible(phaseType, profile) {
-    // Base check: is the phase type inherently recovery/transition?
     if (isRecoveryPhase(phaseType)) return true;
 
-    // Check recovery rules config
     var cfg = getBossDirectorConfig();
     if (!cfg.enableBossRecoveryRules) return false;
 
-    // High recovery bias profiles get extra windows
-    if (profile && profile.recoveryBias === "long_after_burst") return false; // manual windows, not automatic
-    if (profile && profile.recoveryBias === "post_charge_retreat") return false; // retreat-based
+    if (profile && profile.recoveryBias === "long_after_burst") return false;
+    if (profile && profile.recoveryBias === "post_charge_retreat") return false;
 
     return false;
   }
@@ -1599,12 +1828,35 @@
     return bossDirectorState.active && bossDirectorState.transitionActive === true;
   }
 
+  // HC-BD-04: transition info helpers
+  function getBossTransitionInfo() {
+    if (!bossDirectorState.active || !bossDirectorState.transitionActive) return null;
+    return {
+      type: bossDirectorState.transitionType,
+      durationMs: bossDirectorState.transitionDurationMs,
+      progress: bossDirectorState.transitionProgress,
+      progress01: bossDirectorState.transitionProgress01,
+      from: bossDirectorState.transitionFrom,
+      to: bossDirectorState.transitionTo,
+      reason: bossDirectorState.transitionReason
+    };
+  }
+
+  function isBossTransitionType(type) {
+    if (!type || typeof type !== "string") return false;
+    return BOSS_TRANSITION_TYPES.hasOwnProperty(type);
+  }
+
+  function getBossTransitionProgress01() {
+    if (!bossDirectorState.active || !bossDirectorState.transitionActive) return 0;
+    return bossDirectorState.transitionProgress01;
+  }
+
   // ============================================================
   // SECTION 20: TELEMETRY RUNTIME
   // ============================================================
 
   function getBossDirectorState() {
-    // Return safe copy of internal state
     return {
       active: bossDirectorState.active,
       bossKey: bossDirectorState.bossKey,
@@ -1616,6 +1868,13 @@
       totalTimer: bossDirectorState.totalTimer,
       transitionActive: bossDirectorState.transitionActive,
       transitionTimer: bossDirectorState.transitionTimer,
+      transitionType: bossDirectorState.transitionType,
+      transitionDurationMs: bossDirectorState.transitionDurationMs,
+      transitionProgress: bossDirectorState.transitionProgress,
+      transitionProgress01: bossDirectorState.transitionProgress01,
+      transitionReason: bossDirectorState.transitionReason,
+      transitionFrom: bossDirectorState.transitionFrom,
+      transitionTo: bossDirectorState.transitionTo,
       rageActive: bossDirectorState.rageActive,
       finaleActive: bossDirectorState.finaleActive,
       lastHPPercent: bossDirectorState.lastHPPercent,
@@ -1641,6 +1900,8 @@
         phaseTimer: bossDirectorState.phaseTimer,
         totalTimer: bossDirectorState.totalTimer,
         transitionActive: bossDirectorState.transitionActive,
+        transitionType: bossDirectorState.transitionType,
+        transitionProgress01: bossDirectorState.transitionProgress01,
         rageActive: bossDirectorState.rageActive,
         finaleActive: bossDirectorState.finaleActive,
         recoveryWindowActive: bossDirectorState.recoveryWindowActive
@@ -1656,13 +1917,14 @@
   window.BOSS_ARCHETYPES = BOSS_ARCHETYPES;
   window.BOSS_PHASE_TYPES = BOSS_PHASE_TYPES;
   window.BOSS_SIGNATURE_TYPES = BOSS_SIGNATURE_TYPES;
+  window.BOSS_TRANSITION_TYPES = BOSS_TRANSITION_TYPES;
   window.BOSS_ORCHESTRATION_RULES = BOSS_ORCHESTRATION_RULES;
 
   // Profile exports (HC-BD-02)
   window.BOSS_DIRECTOR_PROFILES = BOSS_DIRECTOR_PROFILES;
   window.DEFAULT_BOSS_DIRECTOR_PROFILE = DEFAULT_BOSS_DIRECTOR_PROFILE;
 
-  // Runtime state export (HC-BD-03)
+  // Runtime state export (HC-BD-03/04)
   window.getBossDirectorState = getBossDirectorState;
   window.getBossDirectorTelemetry = getBossDirectorTelemetry;
 
@@ -1679,12 +1941,18 @@
   window.resolveBossPhaseFromHP = resolveBossPhaseFromHP;
   window.resolveBossPhaseIndexFromHP = resolveBossPhaseIndexFromHP;
 
-  // Detection exports (HC-BD-03)
+  // Detection exports (HC-BD-03/04)
   window.detectBossPhaseTransition = detectBossPhaseTransition;
   window.isBossRecoveryWindowActive = isBossRecoveryWindowActive;
   window.isBossRageActive = isBossRageActive;
   window.isBossFinaleActive = isBossFinaleActive;
   window.isBossTransitionActive = isBossTransitionActive;
+
+  // Transition choreography exports (HC-BD-04)
+  window.resolveBossTransitionType = resolveBossTransitionType;
+  window.getBossTransitionInfo = getBossTransitionInfo;
+  window.isBossTransitionType = isBossTransitionType;
+  window.getBossTransitionProgress01 = getBossTransitionProgress01;
 
   // Validator exports
   window.validateBossArchetype = validateBossArchetype;
