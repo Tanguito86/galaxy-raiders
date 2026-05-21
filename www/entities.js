@@ -1100,6 +1100,9 @@ function initEnemies() {
   if (typeof window.initWaveComposer === 'function') {
     window.initWaveComposer();
   }
+  if (typeof window.initChoreography === 'function') {
+    window.initChoreography();
+  }
 }
 
 function initBoss() {

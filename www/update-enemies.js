@@ -58,6 +58,9 @@ function updateEnemiesAndProjectiles(step, dt) {
     if (typeof window.updateWaveComposer === 'function') {
       window.updateWaveComposer(dt);
     }
+    if (typeof window.updateChoreography === 'function') {
+      window.updateChoreography(dt);
+    }
     syncEncounterDirectorEnemyState(dt);
 
     // UFO spawn/move

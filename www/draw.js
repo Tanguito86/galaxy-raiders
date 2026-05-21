@@ -4434,6 +4434,10 @@ if (shouldShow) {
     // ================================================================
     // HC-RD-01: PRIORITY_ENEMY — enemies (sprites, telegraphs, hit flashes)
     // ================================================================
+    // HC-WC-05: draw formation silhouette lines during INTRO
+    if (typeof window.drawFormationSilhouette === 'function') {
+      window.drawFormationSilhouette(ctx);
+    }
     enemies.forEach(e => {
       if (e.alive) {
         var spawnT = 0;
