@@ -1108,6 +1108,9 @@ function initEnemies() {
   if (typeof window.resetEnforcement === 'function') {
     window.resetEnforcement();
   }
+  if (typeof window.initSetpiece === 'function') {
+    window.initSetpiece();
+  }
 }
 
 function initBoss() {

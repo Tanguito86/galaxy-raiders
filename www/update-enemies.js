@@ -64,6 +64,9 @@ function updateEnemiesAndProjectiles(step, dt) {
     if (typeof window.updateEnforcement === 'function') {
       window.updateEnforcement();
     }
+    if (typeof window.updateSetpiece === 'function') {
+      window.updateSetpiece(dt);
+    }
     syncEncounterDirectorEnemyState(dt);
 
     // UFO spawn/move

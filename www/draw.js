@@ -2971,6 +2971,11 @@ function draw() {
 
 
 
+  // HC-WC-07: setpiece tension overlay (pulses, screen flash, transition)
+  if (typeof window.drawSetpieceOverlay === 'function') {
+    window.drawSetpieceOverlay(ctx);
+  }
+
   if (state === 'menu') {
     const menuPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
     const panelAccent = 'rgba(100,245,255,0.58)';
