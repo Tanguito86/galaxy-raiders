@@ -1059,8 +1059,8 @@ function initEnemies() {
   } else {
     // HC-WC-04: use profile-driven composition for normal waves
     var _usedProfile = false;
-    if (typeof global.initEnemiesFromProfile === 'function') {
-      _usedProfile = global.initEnemiesFromProfile();
+    if (typeof globalThis.initEnemiesFromProfile === 'function') {
+      _usedProfile = globalThis.initEnemiesFromProfile();
     }
     if (!_usedProfile) {
       const formation = getFormation(level);
