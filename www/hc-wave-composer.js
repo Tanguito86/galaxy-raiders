@@ -383,7 +383,7 @@
 
     // Build activation sequence based on profile-resolved config timings
     var sequence = [];
-    var timingRoles = ['sweeper','baiter','suppressor','flanker','sniper','anchor','diver','chaser'];
+    var timingRoles = ['sweeper','baiter','suppressor','flanker','sniper','blocker','anchor','diver','chaser'];
     for (var t = 0; t < timingRoles.length; t++) {
       if (roles[timingRoles[t]]) {
         var delay = _resolveBuildTiming(timingRoles[t]);

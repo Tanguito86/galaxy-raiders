@@ -40,7 +40,7 @@
       formationSpacing: 64,
       bannerText: 'FIRST CONTACT',
       escapeLanes: 3,
-      threatBudget: 3
+      threatBudget: 18
     },
 
     FND_staggered_entry: {
@@ -65,7 +65,7 @@
       formationSpacing: 56,
       bannerText: 'STAGGERED ENTRY',
       escapeLanes: 2,
-      threatBudget: 4
+      threatBudget: 24
     },
 
     FND_recovery_breather: {
@@ -90,7 +90,7 @@
       formationSpacing: 80,
       bannerText: 'REGROUP',
       escapeLanes: 5,
-      threatBudget: 2,
+      threatBudget: 12,
       guaranteedPowerup: true
     },
 
@@ -116,7 +116,7 @@
       formationSpacing: 50,
       bannerText: 'VANGUARD LINE',
       escapeLanes: 2,
-      threatBudget: 4
+      threatBudget: 24
     },
 
     FND_dual_role: {
@@ -141,7 +141,7 @@
       formationSpacing: 52,
       bannerText: 'DUAL THREAT',
       escapeLanes: 2,
-      threatBudget: 5
+      threatBudget: 30
     },
 
     // ---- TACTICAL TIER ----
@@ -168,7 +168,7 @@
       formationSpacing: 48,
       bannerText: 'DIVISION BREACH',
       escapeLanes: 2,
-      threatBudget: 5
+      threatBudget: 30
     },
 
     TAC_rotating_pressure: {
@@ -193,7 +193,7 @@
       formationSpacing: 64,
       bannerText: 'ROTATING PRESSURE',
       escapeLanes: 2,
-      threatBudget: 5
+      threatBudget: 30
     },
 
     TAC_pincer: {
@@ -210,7 +210,7 @@
       peakLimits: { maxSimultaneousPatterns: 3, maxBullets: 26, interPatternGapMs: 200, diveWaveGapMs: 2500 },
       resolveTiming: { diverSuspend: true, sniperSuspend: true, suppressorSuspend: true, chaserSuspend: true },
       reliefPolicy: 'center_lane_always',
-      entryStyle: 'slide_in',
+      entryStyle: 'pincer_entry',
       entrySide: 'edges',
       formationKey: 'pincer',
       formationRows: 4,
@@ -218,7 +218,7 @@
       formationSpacing: 0,
       bannerText: 'PINCER ASSAULT',
       escapeLanes: 1,
-      threatBudget: 7
+      threatBudget: 42
     },
 
     TAC_crossfire_trap: {
@@ -243,7 +243,7 @@
       formationSpacing: 56,
       bannerText: 'CROSSFIRE TRAP',
       escapeLanes: 1,
-      threatBudget: 6
+      threatBudget: 36
     },
 
     TAC_hunter_dive: {
@@ -268,7 +268,7 @@
       formationSpacing: 52,
       bannerText: 'HUNTER DIVE',
       escapeLanes: 2,
-      threatBudget: 6
+      threatBudget: 36
     },
 
     TAC_bait_punish: {
@@ -293,7 +293,7 @@
       formationSpacing: 0,
       bannerText: 'HUNTING PACK',
       escapeLanes: 3,
-      threatBudget: 6
+      threatBudget: 36
     },
 
     TAC_sniper_denial: {
@@ -306,7 +306,7 @@
       allowedSupport: [],
       composition: { sniper: 4, blocker: 2 },
       phaseDurations: { INTRO: 1400, BUILD: 3500 },
-      buildTiming: { sniperDelay: 2000, anchorDelay: 3000 },
+      buildTiming: { sniperDelay: 2000, blockerDelay: 3000 },
       peakLimits: { maxSimultaneousPatterns: 2, maxBullets: 16, interPatternGapMs: 300 },
       resolveTiming: { diverSuspend: true, sniperSuspend: true, suppressorSuspend: true, chaserSuspend: true },
       reliefPolicy: 'between_volleys',
@@ -318,7 +318,7 @@
       formationSpacing: 80,
       bannerText: 'SNIPER LINE',
       escapeLanes: 3,
-      threatBudget: 5
+      threatBudget: 30
     },
 
     TAC_swarm_anchor: {
@@ -343,7 +343,7 @@
       formationSpacing: 48,
       bannerText: 'SWARM FORMATION',
       escapeLanes: 2,
-      threatBudget: 6
+      threatBudget: 36
     },
 
     TAC_flanking_pursuit: {
@@ -368,7 +368,7 @@
       formationSpacing: 0,
       bannerText: 'FLANKING PURSUIT',
       escapeLanes: 2,
-      threatBudget: 6
+      threatBudget: 36
     },
 
     // ---- ADVANCED TIER ----
@@ -395,7 +395,7 @@
       formationSpacing: 0,
       bannerText: '...',
       escapeLanes: 2,
-      threatBudget: 7,
+      threatBudget: 42,
       ambushTelegraph: true
     },
 
@@ -421,7 +421,7 @@
       formationSpacing: 48,
       bannerText: 'LAYERED PRESSURE',
       escapeLanes: 1,
-      threatBudget: 8
+      threatBudget: 48
     },
 
     ADV_collapsing_lane: {
@@ -446,7 +446,7 @@
       formationSpacing: 40,
       bannerText: 'LAST LINE',
       escapeLanes: 1,
-      threatBudget: 7,
+      threatBudget: 42,
       collapsingLane: true
     },
 
@@ -472,7 +472,7 @@
       formationSpacing: 48,
       bannerText: 'ROTATING CROSSFIRE',
       escapeLanes: 1,
-      threatBudget: 7,
+      threatBudget: 42,
       rotationWarning: true
     },
 
@@ -498,7 +498,7 @@
       formationSpacing: 36,
       bannerText: 'SURVIVAL CORRIDOR',
       escapeLanes: 1,
-      threatBudget: 8
+      threatBudget: 48
     },
 
     ADV_counter_pressure: {
@@ -523,7 +523,7 @@
       formationSpacing: 48,
       bannerText: 'ESCALATION',
       escapeLanes: 2,
-      threatBudget: 7,
+      threatBudget: 42,
       counterPressure: true
     },
 
@@ -549,7 +549,7 @@
       formationSpacing: 48,
       bannerText: 'ROLE REVERSAL',
       escapeLanes: 2,
-      threatBudget: 7
+      threatBudget: 42
     },
 
     ADV_gauntlet: {
@@ -574,7 +574,7 @@
       formationSpacing: 42,
       bannerText: 'GAUNTLET',
       escapeLanes: 1,
-      threatBudget: 9
+      threatBudget: 54
     },
 
     // ---- SETPIECE TIER ----
@@ -601,7 +601,7 @@
       formationSpacing: 56,
       bannerText: 'APPROACHING',
       escapeLanes: 3,
-      threatBudget: 3,
+      threatBudget: 18,
       preludeToBoss: true
     },
 
@@ -627,7 +627,7 @@
       formationSpacing: 0,
       bannerText: 'FORTRESS LINE',
       escapeLanes: 2,
-      threatBudget: 7,
+      threatBudget: 42,
       setpiece: 'fortress'
     },
 
@@ -653,7 +653,7 @@
       formationSpacing: 0,
       bannerText: 'KAMIKAZE RUSH',
       escapeLanes: 1,
-      threatBudget: 8,
+      threatBudget: 48,
       setpiece: 'kamikaze_rush'
     },
 
@@ -679,7 +679,7 @@
       formationSpacing: 48,
       bannerText: 'SPLITTER STORM',
       escapeLanes: 2,
-      threatBudget: 7,
+      threatBudget: 42,
       setpiece: 'split_storm'
     },
 
@@ -705,7 +705,7 @@
       formationSpacing: 0,
       bannerText: 'IMPERIAL GUARD',
       escapeLanes: 1,
-      threatBudget: 9,
+      threatBudget: 54,
       setpiece: 'imperial_guard'
     }
   };
