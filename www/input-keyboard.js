@@ -219,7 +219,6 @@ document.addEventListener('visibilitychange', () => {
     }
   } else {
     if (state === 'paused' && wasPlayingBeforeHide) {
-      requestFull();
       resumeGameplay();
       wasPlayingBeforeHide = false;
     }

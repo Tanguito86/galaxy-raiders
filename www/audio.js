@@ -3,10 +3,11 @@
 // =====================
 
 // === AUDIO SFX 80s (sin archivos) ===
-let AC = null;
-let masterGain = null;
-let sfxEnabled = true;
-let sfxVol = 0.35;
+var AC = null;
+var masterGain = null;
+var sfxEnabled = true;
+var sfxVol = 0.35;
+var audioUnlocked = false;
 
 function initAudio() {
   if (AC) return;
@@ -15,14 +16,20 @@ function initAudio() {
     masterGain = AC.createGain();
     masterGain.gain.value = sfxVol;
     masterGain.connect(AC.destination);
-  } catch (e) {
-    console.error('AudioContext error:', e);
-  }
+  } catch (e) {}
 }
 
 function ensureAudioUnlocked() {
+  if (audioUnlocked) return;
   if (!AC) initAudio();
-  if (AC && AC.state === 'suspended') AC.resume();
+  if (!AC) return;
+  if (AC.state === 'suspended') {
+    AC.resume().then(function () {
+      audioUnlocked = true;
+    }).catch(function () {});
+  } else if (AC.state === 'running') {
+    audioUnlocked = true;
+  }
 }
 
 function duck(ms = 120, level = 0.35) {
@@ -39,8 +46,7 @@ function envGain(g, t0, a, d) {
 }
 
 function tone({ type='square', f=440, f2=null, dur=0.08, vol=0.6, attack=0.003, decay=0.06 }) {
-  if (!sfxEnabled || isMuted) return;
-  ensureAudioUnlocked();
+  if (!sfxEnabled || isMuted || !audioUnlocked) return;
   const t0 = AC.currentTime;
 
   const o = AC.createOscillator();
@@ -60,8 +66,7 @@ function tone({ type='square', f=440, f2=null, dur=0.08, vol=0.6, attack=0.003, 
 }
 
 function noise({ dur=0.12, vol=0.5, attack=0.002, decay=0.10, hp=800, lp=8000 }) {
-  if (!sfxEnabled || isMuted) return;
-  ensureAudioUnlocked();
+  if (!sfxEnabled || isMuted || !audioUnlocked) return;
   const t0 = AC.currentTime;
 
   const bufferSize = Math.max(1, Math.floor(AC.sampleRate * dur));
@@ -291,5 +296,19 @@ function sfxFeverActivated() {
   });
 }
 
-// Desbloquear audio con primer toque
-document.addEventListener('pointerdown', ensureAudioUnlocked, { once: true });
+// Unlock audio only from trusted user gestures
+function _audioGestureUnlock() {
+  if (audioUnlocked) return;
+  ensureAudioUnlocked();
+  if (audioUnlocked) {
+    document.removeEventListener('pointerdown', _audioGestureUnlock);
+    document.removeEventListener('touchstart', _audioGestureUnlock);
+    document.removeEventListener('keydown', _audioGestureUnlock);
+    document.removeEventListener('click', _audioGestureUnlock);
+  }
+}
+
+document.addEventListener('pointerdown', _audioGestureUnlock);
+document.addEventListener('touchstart', _audioGestureUnlock);
+document.addEventListener('keydown', _audioGestureUnlock);
+document.addEventListener('click', _audioGestureUnlock);
