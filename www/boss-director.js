@@ -2,7 +2,8 @@
 // GALAXY RAIDERS - boss-director.js
 // HC-BD-01: Boss Director System Foundation
 // HC-BD-02: Boss Profile Mapping & Identity Matrix
-// TAXONOMY + PROFILES + CONSTANTS + HELPERS + VALIDATION
+// HC-BD-03: Boss Phase Orchestration Runtime Foundation
+// TAXONOMY + PROFILES + STATE MACHINE + LIFECYCLE
 // NO runtime complejo. NO rompe nada existente.
 // ==============================================
 
@@ -1206,7 +1207,449 @@
   }
 
   // ============================================================
-  // SECTION 15: EXPORT TO WINDOW
+  // SECTION 15: BOSS DIRECTOR STATE MACHINE (HC-BD-03)
+  // ============================================================
+  // Estado runtime del Boss Director. Pasivo, solo lectura.
+  // No altera gameplay. No modifica bosses.
+  // ============================================================
+
+  var bossDirectorState = {
+    active: false,
+    bossKey: null,
+    profile: null,
+
+    phaseIndex: 0,
+    phaseType: "introduction",
+    previousPhaseType: null,
+
+    phaseTimer: 0,
+    totalTimer: 0,
+
+    transitionActive: false,
+    transitionTimer: 0,
+
+    rageActive: false,
+    finaleActive: false,
+
+    lastHPPercent: 1,
+    currentHPPercent: 1,
+
+    recoveryWindowActive: false,
+    recoveryTimer: 0,
+
+    telemetry: {}
+  };
+
+  function resetBossDirectorState() {
+    bossDirectorState.active = false;
+    bossDirectorState.bossKey = null;
+    bossDirectorState.profile = null;
+    bossDirectorState.phaseIndex = 0;
+    bossDirectorState.phaseType = "introduction";
+    bossDirectorState.previousPhaseType = null;
+    bossDirectorState.phaseTimer = 0;
+    bossDirectorState.totalTimer = 0;
+    bossDirectorState.transitionActive = false;
+    bossDirectorState.transitionTimer = 0;
+    bossDirectorState.rageActive = false;
+    bossDirectorState.finaleActive = false;
+    bossDirectorState.lastHPPercent = 1;
+    bossDirectorState.currentHPPercent = 1;
+    bossDirectorState.recoveryWindowActive = false;
+    bossDirectorState.recoveryTimer = 0;
+    bossDirectorState.telemetry = {};
+  }
+
+  // ============================================================
+  // SECTION 16: HP PERCENT CALCULATOR
+  // ============================================================
+
+  function getBossHPPercent(targetBoss) {
+    if (!targetBoss || typeof targetBoss !== "object") return 1;
+
+    var hp = targetBoss.hp;
+    if (typeof hp !== "number") hp = targetBoss.health;
+    if (typeof hp !== "number") hp = targetBoss.currentHP;
+    if (typeof hp !== "number") return 1;
+
+    var maxHp = targetBoss.maxHp;
+    if (typeof maxHp !== "number") maxHp = targetBoss.maxHealth;
+    if (typeof maxHp !== "number") maxHp = targetBoss.maxHP;
+    if (typeof maxHp !== "number") maxHp = targetBoss.baseHp;
+
+    // Never divide by zero
+    if (typeof maxHp !== "number" || maxHp <= 0) return 1;
+    if (hp <= 0) return 0;
+
+    return Math.max(0, Math.min(1, hp / maxHp));
+  }
+
+  // ============================================================
+  // SECTION 17: PHASE RESOLUTION FROM HP + PHASEPLAN
+  // ============================================================
+
+  function resolveBossPhaseFromHP(profile, hpPercent) {
+    if (!profile || typeof profile !== "object") return "pressure";
+    var plan = (Array.isArray(profile.phasePlan) && profile.phasePlan.length > 0)
+      ? profile.phasePlan
+      : DEFAULT_BOSS_DIRECTOR_PROFILE.phasePlan;
+    var len = plan.length;
+
+    // Threshold map that scales across the available phase plan length
+    // More phases = finer granularity
+    if (len <= 3) {
+      if (hpPercent > 0.50) return plan[0];
+      if (hpPercent > 0.15) return plan[Math.min(1, len - 1)];
+      return plan[len - 1];
+    }
+
+    if (len <= 5) {
+      if (hpPercent > 0.70) return plan[0];
+      if (hpPercent > 0.45) return plan[Math.min(1, len - 1)];
+      if (hpPercent > 0.22) return plan[Math.min(2, len - 1)];
+      if (hpPercent > 0.05) return plan[Math.min(3, len - 1)];
+      return plan[len - 1];
+    }
+
+    // Full scale (6+ phases): user-specified thresholds
+    var thresholds = [
+      { hp: 0.85, idx: 0 },    // introduction
+      { hp: 0.65, idx: 1 },    // pressure
+      { hp: 0.50, idx: 2 },    // recovery / crossfire
+      { hp: 0.35, idx: 3 },    // transition / area_denial
+      { hp: 0.20, idx: 4 },    // desperation
+      { hp: 0.08, idx: 5 },    // rage
+      { hp: 0.00, idx: 6 }     // finale (defaults to last)
+    ];
+
+    for (var i = 0; i < thresholds.length; i++) {
+      if (hpPercent > thresholds[i].hp) {
+        var targetIdx = Math.min(thresholds[i].idx, len - 1);
+        return plan[targetIdx];
+      }
+    }
+
+    return plan[len - 1];
+  }
+
+  function resolveBossPhaseIndexFromHP(profile, hpPercent) {
+    if (!profile || typeof profile !== "object") return 0;
+    var plan = (Array.isArray(profile.phasePlan) && profile.phasePlan.length > 0)
+      ? profile.phasePlan
+      : DEFAULT_BOSS_DIRECTOR_PROFILE.phasePlan;
+    var len = plan.length;
+
+    if (len <= 3) {
+      if (hpPercent > 0.50) return 0;
+      if (hpPercent > 0.15) return Math.min(1, len - 1);
+      return len - 1;
+    }
+
+    if (len <= 5) {
+      if (hpPercent > 0.70) return 0;
+      if (hpPercent > 0.45) return Math.min(1, len - 1);
+      if (hpPercent > 0.22) return Math.min(2, len - 1);
+      if (hpPercent > 0.05) return Math.min(3, len - 1);
+      return len - 1;
+    }
+
+    var thresholds = [
+      { hp: 0.85, idx: 0 },
+      { hp: 0.65, idx: 1 },
+      { hp: 0.50, idx: 2 },
+      { hp: 0.35, idx: 3 },
+      { hp: 0.20, idx: 4 },
+      { hp: 0.08, idx: 5 },
+      { hp: 0.00, idx: 6 }
+    ];
+
+    for (var j = 0; j < thresholds.length; j++) {
+      if (hpPercent > thresholds[j].hp) {
+        return Math.min(thresholds[j].idx, len - 1);
+      }
+    }
+
+    return len - 1;
+  }
+
+  // ============================================================
+  // SECTION 18: LIFECYCLE HELPERS
+  // ============================================================
+
+  function startBossDirectorForBoss(targetBoss) {
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossDirector) {
+      resetBossDirectorState();
+      return false;
+    }
+
+    var profile = getBossDirectorProfile(targetBoss);
+    if (!profile || profile === DEFAULT_BOSS_DIRECTOR_PROFILE) {
+      // Unknown boss — still safe, use fallback with telemetry note
+      if (targetBoss && targetBoss.pattern) {
+        var bKey = targetBoss.pattern || "unknown";
+        bossDirectorState.bossKey = bKey;
+        bossDirectorState.profile = profile;
+        bossDirectorState.active = cfg.enableBossDirector;
+      } else {
+        resetBossDirectorState();
+        return false;
+      }
+    } else {
+      bossDirectorState.bossKey = profile.pattern || profile.displayName.toLowerCase();
+      bossDirectorState.profile = profile;
+      bossDirectorState.active = cfg.enableBossDirector;
+    }
+
+    bossDirectorState.phaseIndex = 0;
+    bossDirectorState.phaseType = "introduction";
+    bossDirectorState.previousPhaseType = null;
+    bossDirectorState.phaseTimer = 0;
+    bossDirectorState.totalTimer = 0;
+    bossDirectorState.transitionActive = false;
+    bossDirectorState.transitionTimer = 0;
+    bossDirectorState.rageActive = false;
+    bossDirectorState.finaleActive = false;
+    bossDirectorState.lastHPPercent = 1;
+    bossDirectorState.currentHPPercent = 1;
+    bossDirectorState.recoveryWindowActive = false;
+    bossDirectorState.recoveryTimer = 0;
+    bossDirectorState.telemetry = {};
+
+    if (cfg.enableBossTelemetry) {
+      recordBossDirectorEvent("director_started", {
+        bossKey: bossDirectorState.bossKey,
+        archetype: profile.archetype,
+        phasePlan: profile.phasePlan
+      });
+    }
+
+    return true;
+  }
+
+  function updateBossDirectorState(targetBoss) {
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossDirector) {
+      if (bossDirectorState.active) resetBossDirectorState();
+      return false;
+    }
+
+    // Validate boss existence
+    if (!targetBoss || targetBoss.active !== true) {
+      if (bossDirectorState.active) {
+        endBossDirector();
+      }
+      return false;
+    }
+
+    // Lazy init if not active but boss is valid
+    if (!bossDirectorState.active) {
+      var started = startBossDirectorForBoss(targetBoss);
+      if (!started) return false;
+    }
+
+    var dt = (typeof globalTime === "number") ? 16.667 : 16.667;
+    bossDirectorState.totalTimer += dt;
+
+    // Calculate HP percent
+    var hpPct = getBossHPPercent(targetBoss);
+    bossDirectorState.lastHPPercent = bossDirectorState.currentHPPercent;
+    bossDirectorState.currentHPPercent = hpPct;
+
+    // Resolve phase type from HP + phasePlan
+    var profile = bossDirectorState.profile;
+    var nextPhaseType = resolveBossPhaseFromHP(profile, hpPct);
+    var nextPhaseIndex = resolveBossPhaseIndexFromHP(profile, hpPct);
+
+    // Detect transition
+    if (nextPhaseType !== bossDirectorState.phaseType && !bossDirectorState.transitionActive) {
+      detectBossPhaseTransition(nextPhaseType);
+    }
+
+    // Update phase tracking
+    if (!bossDirectorState.transitionActive) {
+      bossDirectorState.phaseType = nextPhaseType;
+      bossDirectorState.phaseIndex = nextPhaseIndex;
+      bossDirectorState.phaseTimer += dt;
+    } else {
+      // During transition, advance timer and complete after threshold
+      bossDirectorState.transitionTimer += dt;
+
+      // Transition completes after MIN_TRANSITION_DURATION_MS
+      var transitionCompleteAt = 400;
+      if (bossDirectorState.transitionTimer >= transitionCompleteAt) {
+        bossDirectorState.phaseType = nextPhaseType;
+        bossDirectorState.phaseIndex = nextPhaseIndex;
+        bossDirectorState.transitionActive = false;
+        bossDirectorState.transitionTimer = 0;
+        bossDirectorState.phaseTimer = 0;
+
+        if (cfg.enableBossTelemetry) {
+          recordBossDirectorEvent("phase_transition_completed", {
+            from: bossDirectorState.previousPhaseType,
+            to: bossDirectorState.phaseType,
+            transitionDurationMs: Math.round(bossDirectorState.transitionTimer)
+          });
+        }
+      }
+    }
+
+    // Recovery window detection
+    bossDirectorState.recoveryWindowActive = isPhaseRecoveryEligible(bossDirectorState.phaseType, profile);
+    if (bossDirectorState.recoveryWindowActive) {
+      bossDirectorState.recoveryTimer += dt;
+    } else {
+      bossDirectorState.recoveryTimer = 0;
+    }
+
+    // Rage detection
+    bossDirectorState.rageActive = isRagePhase(bossDirectorState.phaseType);
+
+    // Finale detection
+    bossDirectorState.finaleActive = (bossDirectorState.phaseType === "finale");
+
+    // Telemetry snapshot
+    if (cfg.enableBossTelemetry) {
+      bossDirectorState.telemetry = {
+        bossKey: bossDirectorState.bossKey,
+        archetype: profile ? profile.archetype : "unknown",
+        phaseType: bossDirectorState.phaseType,
+        phaseIndex: bossDirectorState.phaseIndex,
+        hpPercent: hpPct,
+        phaseTimer: bossDirectorState.phaseTimer,
+        totalTimer: bossDirectorState.totalTimer,
+        transitionActive: bossDirectorState.transitionActive,
+        rageActive: bossDirectorState.rageActive,
+        finaleActive: bossDirectorState.finaleActive,
+        recoveryWindowActive: bossDirectorState.recoveryWindowActive
+      };
+    }
+
+    return true;
+  }
+
+  function endBossDirector() {
+    var cfg = getBossDirectorConfig();
+    if (cfg.enableBossTelemetry && bossDirectorState.active) {
+      recordBossDirectorEvent("director_ended", {
+        bossKey: bossDirectorState.bossKey,
+        totalTimer: bossDirectorState.totalTimer,
+        finalPhase: bossDirectorState.phaseType,
+        archetype: bossDirectorState.profile ? bossDirectorState.profile.archetype : "unknown"
+      });
+    }
+    resetBossDirectorState();
+  }
+
+  // ============================================================
+  // SECTION 19: TRANSITION / RECOVERY / RAGE / FINALE DETECTION
+  // ============================================================
+
+  function detectBossPhaseTransition(nextPhaseType) {
+    if (bossDirectorState.transitionActive) return false;
+    if (!nextPhaseType || nextPhaseType === bossDirectorState.phaseType) return false;
+
+    // Check if transitions are enabled in config
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossTransitions) return false;
+
+    bossDirectorState.previousPhaseType = bossDirectorState.phaseType;
+    bossDirectorState.transitionActive = true;
+    bossDirectorState.transitionTimer = 0;
+
+    if (cfg.enableBossTelemetry) {
+      recordBossDirectorEvent("phase_transition_detected", {
+        from: bossDirectorState.previousPhaseType,
+        to: nextPhaseType,
+        hpPercent: bossDirectorState.currentHPPercent
+      });
+    }
+
+    return true;
+  }
+
+  function isPhaseRecoveryEligible(phaseType, profile) {
+    // Base check: is the phase type inherently recovery/transition?
+    if (isRecoveryPhase(phaseType)) return true;
+
+    // Check recovery rules config
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossRecoveryRules) return false;
+
+    // High recovery bias profiles get extra windows
+    if (profile && profile.recoveryBias === "long_after_burst") return false; // manual windows, not automatic
+    if (profile && profile.recoveryBias === "post_charge_retreat") return false; // retreat-based
+
+    return false;
+  }
+
+  function isBossRecoveryWindowActive() {
+    return bossDirectorState.active && bossDirectorState.recoveryWindowActive === true;
+  }
+
+  function isBossRageActive() {
+    return bossDirectorState.active && bossDirectorState.rageActive === true;
+  }
+
+  function isBossFinaleActive() {
+    return bossDirectorState.active && bossDirectorState.finaleActive === true;
+  }
+
+  function isBossTransitionActive() {
+    return bossDirectorState.active && bossDirectorState.transitionActive === true;
+  }
+
+  // ============================================================
+  // SECTION 20: TELEMETRY RUNTIME
+  // ============================================================
+
+  function getBossDirectorState() {
+    // Return safe copy of internal state
+    return {
+      active: bossDirectorState.active,
+      bossKey: bossDirectorState.bossKey,
+      profile: bossDirectorState.profile,
+      phaseIndex: bossDirectorState.phaseIndex,
+      phaseType: bossDirectorState.phaseType,
+      previousPhaseType: bossDirectorState.previousPhaseType,
+      phaseTimer: bossDirectorState.phaseTimer,
+      totalTimer: bossDirectorState.totalTimer,
+      transitionActive: bossDirectorState.transitionActive,
+      transitionTimer: bossDirectorState.transitionTimer,
+      rageActive: bossDirectorState.rageActive,
+      finaleActive: bossDirectorState.finaleActive,
+      lastHPPercent: bossDirectorState.lastHPPercent,
+      currentHPPercent: bossDirectorState.currentHPPercent,
+      recoveryWindowActive: bossDirectorState.recoveryWindowActive,
+      recoveryTimer: bossDirectorState.recoveryTimer,
+      telemetry: bossDirectorState.telemetry
+    };
+  }
+
+  function getBossDirectorTelemetry() {
+    if (!isBossTelemetryEnabled()) return null;
+    var snapshot = getBossTelemetrySnapshot();
+    return {
+      telemetryEvents: snapshot.events,
+      telemetryCount: snapshot.count,
+      state: {
+        bossKey: bossDirectorState.bossKey,
+        archetype: bossDirectorState.profile ? bossDirectorState.profile.archetype : "unknown",
+        phaseType: bossDirectorState.phaseType,
+        phaseIndex: bossDirectorState.phaseIndex,
+        hpPercent: bossDirectorState.currentHPPercent,
+        phaseTimer: bossDirectorState.phaseTimer,
+        totalTimer: bossDirectorState.totalTimer,
+        transitionActive: bossDirectorState.transitionActive,
+        rageActive: bossDirectorState.rageActive,
+        finaleActive: bossDirectorState.finaleActive,
+        recoveryWindowActive: bossDirectorState.recoveryWindowActive
+      }
+    };
+  }
+
+  // ============================================================
+  // SECTION 21: EXPORT TO WINDOW
   // ============================================================
 
   // Taxonomy exports
@@ -1218,6 +1661,30 @@
   // Profile exports (HC-BD-02)
   window.BOSS_DIRECTOR_PROFILES = BOSS_DIRECTOR_PROFILES;
   window.DEFAULT_BOSS_DIRECTOR_PROFILE = DEFAULT_BOSS_DIRECTOR_PROFILE;
+
+  // Runtime state export (HC-BD-03)
+  window.getBossDirectorState = getBossDirectorState;
+  window.getBossDirectorTelemetry = getBossDirectorTelemetry;
+
+  // Lifecycle exports (HC-BD-03)
+  window.resetBossDirectorState = resetBossDirectorState;
+  window.startBossDirectorForBoss = startBossDirectorForBoss;
+  window.updateBossDirectorState = updateBossDirectorState;
+  window.endBossDirector = endBossDirector;
+
+  // HP percent export (HC-BD-03)
+  window.getBossHPPercent = getBossHPPercent;
+
+  // Phase resolution exports (HC-BD-03)
+  window.resolveBossPhaseFromHP = resolveBossPhaseFromHP;
+  window.resolveBossPhaseIndexFromHP = resolveBossPhaseIndexFromHP;
+
+  // Detection exports (HC-BD-03)
+  window.detectBossPhaseTransition = detectBossPhaseTransition;
+  window.isBossRecoveryWindowActive = isBossRecoveryWindowActive;
+  window.isBossRageActive = isBossRageActive;
+  window.isBossFinaleActive = isBossFinaleActive;
+  window.isBossTransitionActive = isBossTransitionActive;
 
   // Validator exports
   window.validateBossArchetype = validateBossArchetype;

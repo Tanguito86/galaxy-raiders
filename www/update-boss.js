@@ -289,6 +289,11 @@ function fireBossDivebombPattern(step, phase) {
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
+  // HC-BD-03: Boss Director phase orchestration hook (passive, read-only)
+  if (typeof window.updateBossDirectorState === 'function') {
+    window.updateBossDirectorState(boss);
+  }
+
   updateBossPhase();
 
   // HC-17: mark boss pattern metadata ready
