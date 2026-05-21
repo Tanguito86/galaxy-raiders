@@ -117,6 +117,19 @@ window.GALAXY_CONFIG = {
     decisionIntervalMs: 500
   },
 
+  // ============ BOSS DIRECTOR (HC-BD-01) ============
+  // Sistema de direccion de bosses: taxonomy, orchestration rules,
+  // validation, recovery windows, rage phases, transitions.
+  // OFF por defecto — se activa cuando HC-BD este listo.
+  bossDirector: {
+    enableBossDirector: false,
+    enableBossTelemetry: false,
+    enableBossRecoveryRules: false,
+    enableBossFairnessValidation: false,
+    enableBossTransitions: false,
+    enableBossRageRules: false
+  },
+
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============
   encounterDirector: {
     // enabled: true,                    // master kill switch (default: true)

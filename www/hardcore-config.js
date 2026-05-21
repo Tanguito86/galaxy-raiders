@@ -17,6 +17,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
   bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
   enemyAI:   { enabled: true, maxOffsetX: 18, maxOffsetY: 10, decisionIntervalMs: 500 },
+  bossDirector: { enableBossDirector: false, enableBossTelemetry: false, enableBossRecoveryRules: false, enableBossFairnessValidation: false, enableBossTransitions: false, enableBossRageRules: false },
   readability: {
     enabled: true,
     visualPriority: { enabled: true, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 },
@@ -157,6 +158,22 @@ function getEnemyAIConfig() {
     ? Math.min(2000, ai.decisionIntervalMs)
     : 500;
   return { enabled: en, maxOffsetX: maxX, maxOffsetY: maxY, decisionIntervalMs: interval };
+}
+
+function getBossDirectorConfig() {
+  var cfg = getGalaxyConfig();
+  var d = (cfg.bossDirector && typeof cfg.bossDirector === 'object') ? cfg.bossDirector : _GALAXY_CONFIG_DEFAULTS.bossDirector;
+  var en   = (typeof d.enableBossDirector === 'boolean') ? d.enableBossDirector : false;
+  var et   = (typeof d.enableBossTelemetry === 'boolean') ? d.enableBossTelemetry : false;
+  var er   = (typeof d.enableBossRecoveryRules === 'boolean') ? d.enableBossRecoveryRules : false;
+  var ef   = (typeof d.enableBossFairnessValidation === 'boolean') ? d.enableBossFairnessValidation : false;
+  var ebt  = (typeof d.enableBossTransitions === 'boolean') ? d.enableBossTransitions : false;
+  var ebr  = (typeof d.enableBossRageRules === 'boolean') ? d.enableBossRageRules : false;
+  return { enableBossDirector: en, enableBossTelemetry: et, enableBossRecoveryRules: er, enableBossFairnessValidation: ef, enableBossTransitions: ebt, enableBossRageRules: ebr };
+}
+
+function isBossDirectorEnabled() {
+  return !!(getBossDirectorConfig().enableBossDirector);
 }
 
 // ============================================================
