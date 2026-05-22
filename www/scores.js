@@ -846,3 +846,177 @@ window.resetBossEfficiencyTelemetry = function() {
   _hcBossEfficiency.antiMilkTriggered = false;
   _hcBossEfficiency.bossMul = 1.0;
 };
+
+// ============================================================
+// HC-SC-09: RECOVERY & SURVIVAL MASTERY
+// Recompensa consistency, recovery, no-hit waves.
+// Anti-camping previene survival farming.
+// ============================================================
+
+var _hcSurvivalState = {
+  lastHitFrame: 0,
+  currentHitlessSeconds: 0,
+  recoveryActive: false,
+  recoveryStartedAt: 0,
+  recoveryCompleted: false,
+  waveNoHit: true,
+  stageNoHit: true,
+  survivalChainLevel: 0,
+  survivalChainAwarded: [false, false, false],
+  idleFrames: 0,
+  campingSuppressed: false,
+  totalFrames: 0,
+  noHitWaves: 0,
+  noHitStages: 0,
+  recoverySuccesses: 0,
+  survivalChainTriggers: 0
+};
+
+function _hcSurvReadConfig() {
+  var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+  var sc = cfg.scoreSystem || {};
+  var ag = sc.aggression || {};
+  var ss = ag.survivalScoring || {};
+  var rec = ss.recovery || {};
+  var nh = ss.noHit || {};
+  var sch = ss.survivalChain || {};
+  var ac = ss.antiCamping || {};
+  return {
+    recoveryWindow: rec.windowFrames || 900,
+    recoveryMultRestore: rec.multiplierRestore || 0.10,
+    recoveryScore: rec.scoreBonus || 1500,
+    noHitWave: nh.waveBonus || 750,
+    noHitStage: nh.stageBonus || 5000,
+    chainLevels: sch.levels || [30, 60, 120],
+    chainGains: sch.multiplierGain || [0.03, 0.06, 0.10],
+    idleFrames: ac.idleFrames || 600,
+    disableWhileIdle: ac.disableWhileIdle !== false
+  };
+}
+
+// Called each frame
+window.updateSurvivalScoring = function() {
+  _hcSurvivalState.totalFrames++;
+
+  // Get hitless time from HC-RK performance system if available
+  var hitlessMs = (typeof window.getHardcoreRankPerformanceState === 'function')
+    ? window.getHardcoreRankPerformanceState().hitlessDurationMs || 0
+    : 0;
+  _hcSurvivalState.currentHitlessSeconds = Math.floor(hitlessMs / 1000);
+
+  var cfg = _hcSurvReadConfig();
+  var perfLabel = (typeof window.getHardcoreRankPerformanceLabel === 'function')
+    ? window.getHardcoreRankPerformanceLabel()
+    : 'SURVIVING';
+
+  // Recovery detection: transition from RECOVERING to SURVIVING/DOMINATING
+  if (_hcSurvivalState.recoveryActive && perfLabel !== 'RECOVERING') {
+    // Recovery complete! Award bonus
+    _hcSurvivalState.recoveryActive = false;
+    _hcSurvivalState.recoveryCompleted = true;
+    _hcSurvivalState.recoverySuccesses++;
+
+    if (typeof awardScore === 'function') {
+      awardScore({ points: cfg.recoveryScore, source: 'misc' });
+    }
+    // Restore some multiplier as recovery reward
+    if (_hcScoreMultiplier) {
+      _hcScoreMultiplier.target = Math.min(_hcScoreMultiplier.max || 3.0,
+        _hcScoreMultiplier.target + cfg.recoveryMultRestore);
+    }
+  }
+
+  // Anti-camping: track idle frames
+  var gainFrames = 0;
+  if (_hcScoreMultiplier) {
+    gainFrames = _hcScoreMultiplier.totalFrames - _hcScoreMultiplier.lastGainFrame;
+  }
+  _hcSurvivalState.idleFrames = Math.max(0, gainFrames);
+  _hcSurvivalState.campingSuppressed = cfg.disableWhileIdle && gainFrames > cfg.idleFrames;
+
+  // Survival chain bonus
+  if (!_hcSurvivalState.campingSuppressed) {
+    var chainLevels = cfg.chainLevels;
+    var chainGains = cfg.chainGains;
+    for (var i = 0; i < chainLevels.length; i++) {
+      if (!_hcSurvivalState.survivalChainAwarded[i] &&
+          _hcSurvivalState.currentHitlessSeconds >= chainLevels[i]) {
+        _hcSurvivalState.survivalChainAwarded[i] = true;
+        _hcSurvivalState.survivalChainLevel = i + 1;
+        _hcSurvivalState.survivalChainTriggers++;
+        // Small multiplier gain for survival milestone
+        if (_hcScoreMultiplier && chainGains[i]) {
+          _hcScoreMultiplier.target = Math.min(_hcScoreMultiplier.max || 3.0,
+            _hcScoreMultiplier.target + chainGains[i]);
+        }
+      }
+    }
+  }
+};
+
+// Called on player hit — mark recovery start
+window.onSurvivalHit = function() {
+  _hcSurvivalState.recoveryActive = true;
+  _hcSurvivalState.recoveryStartedAt = _hcSurvivalState.totalFrames;
+  _hcSurvivalState.recoveryCompleted = false;
+  _hcSurvivalState.waveNoHit = false;
+  _hcSurvivalState.stageNoHit = false;
+};
+
+// Called on wave clear — check no-hit wave
+window.onSurvivalWaveClear = function() {
+  if (_hcSurvivalState.waveNoHit) {
+    _hcSurvivalState.noHitWaves++;
+    var cfg = _hcSurvReadConfig();
+    if (typeof awardScore === 'function') {
+      awardScore({ points: cfg.noHitWave, source: 'perfectWave' });
+    }
+  }
+  _hcSurvivalState.waveNoHit = true; // reset for next wave
+};
+
+// Called on stage/level milestone
+window.onSurvivalStageClear = function() {
+  if (_hcSurvivalState.stageNoHit) {
+    _hcSurvivalState.noHitStages++;
+    var cfg = _hcSurvReadConfig();
+    if (typeof awardScore === 'function') {
+      awardScore({ points: cfg.noHitStage, source: 'stageMilestone' });
+    }
+  }
+  _hcSurvivalState.stageNoHit = true;
+};
+
+// Telemetry
+window.getSurvivalScoringTelemetry = function() {
+  return {
+    currentHitlessSeconds: _hcSurvivalState.currentHitlessSeconds,
+    recoveryActive: _hcSurvivalState.recoveryActive,
+    recoverySuccesses: _hcSurvivalState.recoverySuccesses,
+    noHitWaves: _hcSurvivalState.noHitWaves,
+    noHitStages: _hcSurvivalState.noHitStages,
+    survivalChainLevel: _hcSurvivalState.survivalChainLevel,
+    survivalChainTriggers: _hcSurvivalState.survivalChainTriggers,
+    campingSuppressed: _hcSurvivalState.campingSuppressed,
+    waveNoHit: _hcSurvivalState.waveNoHit
+  };
+};
+
+window.resetSurvivalScoring = function() {
+  _hcSurvivalState.lastHitFrame = 0;
+  _hcSurvivalState.currentHitlessSeconds = 0;
+  _hcSurvivalState.recoveryActive = false;
+  _hcSurvivalState.recoveryStartedAt = 0;
+  _hcSurvivalState.recoveryCompleted = false;
+  _hcSurvivalState.waveNoHit = true;
+  _hcSurvivalState.stageNoHit = true;
+  _hcSurvivalState.survivalChainLevel = 0;
+  _hcSurvivalState.survivalChainAwarded = [false, false, false];
+  _hcSurvivalState.idleFrames = 0;
+  _hcSurvivalState.campingSuppressed = false;
+  _hcSurvivalState.totalFrames = 0;
+  _hcSurvivalState.noHitWaves = 0;
+  _hcSurvivalState.noHitStages = 0;
+  _hcSurvivalState.recoverySuccesses = 0;
+  _hcSurvivalState.survivalChainTriggers = 0;
+};

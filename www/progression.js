@@ -341,6 +341,8 @@ function grantWaveCompletionBonus(completedLevel) {
   var rewardText = '+' + bonusScore + ' WAVE BONUS';
 
   if (completedLevel % 5 === 0 && completedLevel > lastMilestoneRewardLevel) {
+    // HC-SC-09: no-hit stage check
+    if (typeof window.onSurvivalStageClear === 'function') window.onSurvivalStageClear();
     if (lives < MAX_LIVES) {
       awardExtraLife();
       lastMilestoneRewardLevel = completedLevel;

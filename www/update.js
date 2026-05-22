@@ -51,6 +51,8 @@ function beginWaveTransition(completedLevel, nextLevel) {
   }
   // HC-SC-07: reset medal wave tracking
   if (typeof window.resetMedalWaveTracking === 'function') window.resetMedalWaveTracking();
+  // HC-SC-09: check no-hit wave
+  if (typeof window.onSurvivalWaveClear === 'function') window.onSurvivalWaveClear();
 }
 
 // --- UPDATE ---
@@ -167,4 +169,5 @@ function update(dt) {
   if (typeof window.updateScoreMultiplierDecay === 'function') window.updateScoreMultiplierDecay();
   if (typeof window.updateScoreDangerWindow === 'function') window.updateScoreDangerWindow();
   if (typeof window.updateMedalFrameCounter === 'function') window.updateMedalFrameCounter();
+  if (typeof window.updateSurvivalScoring === 'function') window.updateSurvivalScoring();
 }

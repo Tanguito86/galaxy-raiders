@@ -247,6 +247,28 @@ window.GALAXY_CONFIG = {
         multiplier: {
           phaseClearGain: 0.050
         }
+      },
+
+      // HC-SC-09: recovery & survival mastery
+      survivalScoring: {
+        recovery: {
+          enabled: true,
+          windowFrames: 900,
+          multiplierRestore: 0.10,
+          scoreBonus: 1500
+        },
+        noHit: {
+          waveBonus: 750,
+          stageBonus: 5000
+        },
+        survivalChain: {
+          levels: [30, 60, 120],
+          multiplierGain: [0.03, 0.06, 0.10]
+        },
+        antiCamping: {
+          idleFrames: 600,
+          disableWhileIdle: true
+        }
       }
     }
   },
