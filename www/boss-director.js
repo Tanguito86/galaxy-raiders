@@ -663,7 +663,8 @@
     enableBossTransitions: false,
     enableBossRageRules: false,
     enableBossSignatureIntents: false,
-    enableCrabtronSignatureHook: false
+    enableCrabtronSignatureHook: false,
+    enableSerpentrixSignatureHook: false
   };
 
   // ============================================================
@@ -728,7 +729,8 @@
       enableBossTransitions: !!(typeof bd.enableBossTransitions === "boolean" ? bd.enableBossTransitions : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossTransitions),
       enableBossRageRules: !!(typeof bd.enableBossRageRules === "boolean" ? bd.enableBossRageRules : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossRageRules),
       enableBossSignatureIntents: !!(typeof bd.enableBossSignatureIntents === "boolean" ? bd.enableBossSignatureIntents : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossSignatureIntents),
-      enableCrabtronSignatureHook: !!(typeof bd.enableCrabtronSignatureHook === "boolean" ? bd.enableCrabtronSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableCrabtronSignatureHook)
+      enableCrabtronSignatureHook: !!(typeof bd.enableCrabtronSignatureHook === "boolean" ? bd.enableCrabtronSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableCrabtronSignatureHook),
+      enableSerpentrixSignatureHook: !!(typeof bd.enableSerpentrixSignatureHook === "boolean" ? bd.enableSerpentrixSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableSerpentrixSignatureHook)
     };
   }
 
@@ -973,8 +975,8 @@
       rageStyle: "faster_sweep_amplitude",
       telegraphStyle: "lane_indicator",
 
-      primarySignature: "rotatingFan",
-      secondarySignature: "delayedTrap",
+      primarySignature: "delayedTrap",
+      secondarySignature: "rotatingFan",
 
       recoveryBias: "wave_trough",
       fairnessBias: "medium",
@@ -1018,7 +1020,7 @@
       signaturePlan: {
         intro: "rotatingFan",
         main: "delayedTrap",
-        rage: "rotatingFan"
+        rage: "delayedTrap"
       }
     },
 
@@ -2369,10 +2371,17 @@
       return result;
     }
 
-    // Boss-specific hook must be enabled
-    if (expectedBossKey === "crossfire" && !cfg.enableCrabtronSignatureHook) {
-      result.reason = "boss_hook_disabled";
-      return result;
+    // Boss-specific hook must be enabled (generic mapping)
+    var hookFlagsByBoss = {
+      crossfire: cfg.enableCrabtronSignatureHook,
+      zigzag: cfg.enableSerpentrixSignatureHook
+    };
+
+    if (expectedBossKey && hookFlagsByBoss.hasOwnProperty(expectedBossKey)) {
+      if (!hookFlagsByBoss[expectedBossKey]) {
+        result.reason = "boss_hook_disabled";
+        return result;
+      }
     }
 
     // Block during transition

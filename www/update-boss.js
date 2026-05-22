@@ -330,12 +330,137 @@ function tryCrabtronSignatureHook(bossRef) {
   return true;
 }
 
+// HC-BD-09: SERPENTRIX Delayed Trap Signature Hook
+var serpentrixSignatureTrap = null;
+
+function trySerpentrixSignatureHook(bossRef) {
+  if (!bossRef || !bossRef.active) return false;
+  if (bossRef.pattern !== 'zigzag') return false;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) return false;
+  if (serpentrixSignatureTrap && serpentrixSignatureTrap.active) return false; // one trap at a time
+
+  // Check intent
+  if (typeof window.shouldApplyBossSignatureIntent !== 'function') return false;
+  var check = window.shouldApplyBossSignatureIntent(bossRef, 'zigzag', 'delayedTrap');
+  if (!check.apply) return false;
+
+  var cx = bossRef.x + (bossRef.w || 90) / 2;
+  var cy = bossRef.y + (bossRef.h || 45);
+  var offset = 38;
+
+  // Place 2 trap markers, one left, one right, below the boss
+  var leftX = cx - offset;
+  var rightX = cx + offset;
+  var spawnY = cy + 12;
+
+  // Angles: left shoots down-right, right shoots down-left
+  serpentrixSignatureTrap = {
+    active: true,
+    timer: 0,
+    delayMs: 380,
+    bossKey: 'zigzag',
+    points: [
+      { x: leftX,  y: spawnY, angle: Math.PI / 2 + 0.28 },
+      { x: rightX, y: spawnY, angle: Math.PI / 2 - 0.28 }
+    ]
+  };
+
+  // Consume intent
+  if (typeof window.consumeBossSignatureIntent === 'function') {
+    window.consumeBossSignatureIntent('applied');
+  }
+
+  if (typeof sfxBossWarning === 'function') sfxBossWarning();
+  if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(120, 0.58);
+
+  return true;
+}
+
+function updateSerpentrixSignatureTrap(dt) {
+  if (!serpentrixSignatureTrap || !serpentrixSignatureTrap.active) return;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) {
+    serpentrixSignatureTrap = null;
+    return;
+  }
+
+  serpentrixSignatureTrap.timer += (dt || 16.667);
+
+  if (serpentrixSignatureTrap.timer >= serpentrixSignatureTrap.delayMs) {
+    // Fire bullets from trap points
+    var speed = 2.6;
+    var points = serpentrixSignatureTrap.points;
+    for (var i = 0; i < points.length; i++) {
+      var p = points[i];
+      enemyBullets.push({
+        x: p.x - 3,
+        y: p.y,
+        w: 6, h: 10,
+        vx: Math.cos(p.angle) * speed,
+        vy: Math.sin(p.angle) * speed
+      });
+    }
+
+    // Play sound
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+
+    // Clean up
+    serpentrixSignatureTrap = null;
+  }
+}
+
+function drawSerpentrixSignatureTrapTelegraph(ctx) {
+  if (!ctx) return;
+  if (!serpentrixSignatureTrap || !serpentrixSignatureTrap.active) return;
+
+  var progress = Math.min(1, serpentrixSignatureTrap.timer / Math.max(1, serpentrixSignatureTrap.delayMs));
+  var alpha = 0.18 + progress * 0.32; // brightens as it approaches
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  var points = serpentrixSignatureTrap.points;
+  for (var i = 0; i < points.length; i++) {
+    var p = points[i];
+    var pulse = 5 + Math.sin(progress * Math.PI * 4) * 2;
+
+    // Outer warning ring
+    ctx.strokeStyle = '#44dd44';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pulse + 8, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner core
+    ctx.fillStyle = '#33cc33';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Direction indicator (small line pointing the bullet direction)
+    var tipX = p.x + Math.cos(p.angle) * (pulse + 12);
+    var tipY = p.y + Math.sin(p.angle) * (pulse + 12);
+    ctx.strokeStyle = '#22aa22';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p.x + Math.cos(p.angle) * pulse, p.y + Math.sin(p.angle) * pulse);
+    ctx.lineTo(tipX, tipY);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
   // HC-BD-03: Boss Director phase orchestration hook (passive, read-only)
   if (typeof window.updateBossDirectorState === 'function') {
     window.updateBossDirectorState(boss);
+  }
+
+  // HC-BD-09: update SERPENTRIX delayed trap timer
+  if (typeof updateSerpentrixSignatureTrap === 'function') {
+    updateSerpentrixSignatureTrap(dt);
   }
 
   updateBossPhase();
@@ -857,6 +982,13 @@ if (boss.shootTimer > shootRate) {
   // HC-BD-08: CRABTRON signature hook trial (before switch)
   if (boss.pattern === 'crossfire' && typeof tryCrabtronSignatureHook === 'function') {
     if (tryCrabtronSignatureHook(boss)) {
+      return; // signature consumed this fire cycle
+    }
+  }
+
+  // HC-BD-09: SERPENTRIX signature hook (before switch)
+  if (boss.pattern === 'zigzag' && typeof trySerpentrixSignatureHook === 'function') {
+    if (trySerpentrixSignatureHook(boss)) {
       return; // signature consumed this fire cycle
     }
   }

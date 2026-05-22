@@ -3985,6 +3985,9 @@ if (shouldShow) {
       // HC-19: hardcore boss telegraph (all patterns)
       if (typeof drawBossHardcoreTelegraph === 'function') drawBossHardcoreTelegraph(ctx, boss);
 
+      // HC-BD-09: SERPENTRIX delayed trap telegraph
+      if (typeof drawSerpentrixSignatureTrapTelegraph === 'function') drawSerpentrixSignatureTrapTelegraph(ctx);
+
       // HC-20: phase transition FX (all patterns)
       if (typeof drawBossPhaseTransitionFX === 'function') drawBossPhaseTransitionFX(ctx, boss);
 
