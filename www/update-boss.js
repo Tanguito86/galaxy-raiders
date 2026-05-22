@@ -382,6 +382,11 @@ function updateSerpentrixSignatureTrap(dt) {
     serpentrixSignatureTrap = null;
     return;
   }
+  // HC-BD-13: safety — clear if boss changed or died
+  if (typeof boss === 'undefined' || !boss || !boss.active || boss.pattern !== serpentrixSignatureTrap.bossKey) {
+    serpentrixSignatureTrap = null;
+    return;
+  }
 
   serpentrixSignatureTrap.timer += (dt || 16.667);
 
@@ -492,6 +497,11 @@ function tryOrbitalSignatureHook(bossRef) {
 function updateOrbitalSignatureRing(dt) {
   if (!orbitalSignatureRing || !orbitalSignatureRing.active) return;
   if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) {
+    orbitalSignatureRing = null;
+    return;
+  }
+  // HC-BD-13: safety — clear if boss changed or died
+  if (typeof boss === 'undefined' || !boss || !boss.active || boss.pattern !== orbitalSignatureRing.bossKey) {
     orbitalSignatureRing = null;
     return;
   }
@@ -617,6 +627,11 @@ function updateTenienteSignatureSweep(dt) {
     tenienteSignatureSweep = null;
     return;
   }
+  // HC-BD-13: safety — clear if boss changed or died
+  if (typeof boss === 'undefined' || !boss || !boss.active || boss.pattern !== tenienteSignatureSweep.bossKey) {
+    tenienteSignatureSweep = null;
+    return;
+  }
 
   tenienteSignatureSweep.timer += (dt || 16.667);
 
@@ -733,6 +748,11 @@ function tryEmperadorSignatureHook(bossRef) {
 function updateEmperadorSignatureBurst(dt) {
   if (!emperadorSignatureBurst || !emperadorSignatureBurst.active) return;
   if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) {
+    emperadorSignatureBurst = null;
+    return;
+  }
+  // HC-BD-13: safety — clear if boss changed or died
+  if (typeof boss === 'undefined' || !boss || !boss.active || boss.pattern !== emperadorSignatureBurst.bossKey) {
     emperadorSignatureBurst = null;
     return;
   }
