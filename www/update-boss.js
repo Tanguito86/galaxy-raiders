@@ -567,6 +567,122 @@ function drawOrbitalSignatureRingTelegraph(ctx) {
   ctx.restore();
 }
 
+// HC-BD-11: TENIENTE Laser Sweep Signature Hook
+var tenienteSignatureSweep = null;
+
+function tryTenienteSignatureHook(bossRef) {
+  if (!bossRef || !bossRef.active) return false;
+  if (bossRef.pattern !== 'divebomb') return false;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) return false;
+  if (tenienteSignatureSweep && tenienteSignatureSweep.active) return false;
+
+  if (typeof window.shouldApplyBossSignatureIntent !== 'function') return false;
+  var check = window.shouldApplyBossSignatureIntent(bossRef, 'divebomb', 'laserSweep');
+  if (!check.apply) return false;
+
+  var cx = bossRef.x + (bossRef.w || 90) / 2;
+  var cy = bossRef.y + (bossRef.h || 45);
+  var originX = cx;
+  var originY = cy;
+
+  // Sweep diagonal toward lower-right quadrant
+  var sweepAngle = Math.PI / 2 - 0.35; // ~70° — diagonal down-right
+
+  tenienteSignatureSweep = {
+    active: true,
+    timer: 0,
+    delayMs: 480,
+    bossKey: 'divebomb',
+    originX: originX,
+    originY: originY,
+    angle: sweepAngle,
+    laneWidth: 16,
+    bulletCount: 3,
+    bulletSpacing: 18
+  };
+
+  if (typeof window.consumeBossSignatureIntent === 'function') {
+    window.consumeBossSignatureIntent('applied');
+  }
+
+  if (typeof sfxBossWarning === 'function') sfxBossWarning();
+  if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(120, 0.55);
+
+  return true;
+}
+
+function updateTenienteSignatureSweep(dt) {
+  if (!tenienteSignatureSweep || !tenienteSignatureSweep.active) return;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) {
+    tenienteSignatureSweep = null;
+    return;
+  }
+
+  tenienteSignatureSweep.timer += (dt || 16.667);
+
+  if (tenienteSignatureSweep.timer >= tenienteSignatureSweep.delayMs) {
+    var s = tenienteSignatureSweep;
+    var speed = 2.9;
+
+    for (var i = 0; i < s.bulletCount; i++) {
+      var offset = (i - (s.bulletCount - 1) / 2) * s.bulletSpacing;
+      var bx = s.originX + Math.cos(s.angle) * (20 + i * s.bulletSpacing);
+      var by = s.originY + Math.sin(s.angle) * (20 + i * s.bulletSpacing);
+      enemyBullets.push({
+        x: bx - 3,
+        y: by,
+        w: 5, h: 12,
+        vx: Math.cos(s.angle) * speed + (Math.random() - 0.5) * 0.4,
+        vy: Math.sin(s.angle) * speed + (Math.random() - 0.5) * 0.4
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    tenienteSignatureSweep = null;
+  }
+}
+
+function drawTenienteSignatureSweepTelegraph(ctx) {
+  if (!ctx) return;
+  if (!tenienteSignatureSweep || !tenienteSignatureSweep.active) return;
+
+  var s = tenienteSignatureSweep;
+  var progress = Math.min(1, s.timer / Math.max(1, s.delayMs));
+  var alpha = 0.14 + progress * 0.28;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Sweep line from origin in sweep direction
+  var lineLen = 70;
+  var endX = s.originX + Math.cos(s.angle) * lineLen;
+  var endY = s.originY + Math.sin(s.angle) * lineLen;
+
+  ctx.strokeStyle = '#ff6633';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 3]);
+  ctx.beginPath();
+  ctx.moveTo(s.originX, s.originY);
+  ctx.lineTo(endX, endY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 3 bullet-position markers along the line
+  ctx.fillStyle = '#ff8844';
+  for (var i = 0; i < s.bulletCount; i++) {
+    var frac = (i + 1) / (s.bulletCount + 1);
+    var mx = s.originX + Math.cos(s.angle) * (frac * lineLen);
+    var my = s.originY + Math.sin(s.angle) * (frac * lineLen);
+    var dotSize = 3 + Math.sin(progress * Math.PI * 3 + i) * 1.5;
+
+    ctx.beginPath();
+    ctx.arc(mx, my, dotSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
@@ -583,6 +699,11 @@ function updateBossStep(step, dt) {
   // HC-BD-10: update ORBITAL pressure ring timer
   if (typeof updateOrbitalSignatureRing === 'function') {
     updateOrbitalSignatureRing(dt);
+  }
+
+  // HC-BD-11: update TENIENTE laser sweep timer
+  if (typeof updateTenienteSignatureSweep === 'function') {
+    updateTenienteSignatureSweep(dt);
   }
 
   updateBossPhase();
@@ -1118,6 +1239,13 @@ if (boss.shootTimer > shootRate) {
   // HC-BD-10: ORBITAL signature hook (before switch)
   if (boss.pattern === 'rotate' && typeof tryOrbitalSignatureHook === 'function') {
     if (tryOrbitalSignatureHook(boss)) {
+      return; // signature consumed this fire cycle
+    }
+  }
+
+  // HC-BD-11: TENIENTE signature hook (before switch)
+  if (boss.pattern === 'divebomb' && typeof tryTenienteSignatureHook === 'function') {
+    if (tryTenienteSignatureHook(boss)) {
       return; // signature consumed this fire cycle
     }
   }

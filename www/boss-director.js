@@ -665,7 +665,8 @@
     enableBossSignatureIntents: false,
     enableCrabtronSignatureHook: false,
     enableSerpentrixSignatureHook: false,
-    enableOrbitalSignatureHook: false
+    enableOrbitalSignatureHook: false,
+    enableTenienteSignatureHook: false
   };
 
   // ============================================================
@@ -732,7 +733,8 @@
       enableBossSignatureIntents: !!(typeof bd.enableBossSignatureIntents === "boolean" ? bd.enableBossSignatureIntents : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossSignatureIntents),
       enableCrabtronSignatureHook: !!(typeof bd.enableCrabtronSignatureHook === "boolean" ? bd.enableCrabtronSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableCrabtronSignatureHook),
       enableSerpentrixSignatureHook: !!(typeof bd.enableSerpentrixSignatureHook === "boolean" ? bd.enableSerpentrixSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableSerpentrixSignatureHook),
-      enableOrbitalSignatureHook: !!(typeof bd.enableOrbitalSignatureHook === "boolean" ? bd.enableOrbitalSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableOrbitalSignatureHook)
+      enableOrbitalSignatureHook: !!(typeof bd.enableOrbitalSignatureHook === "boolean" ? bd.enableOrbitalSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableOrbitalSignatureHook),
+      enableTenienteSignatureHook: !!(typeof bd.enableTenienteSignatureHook === "boolean" ? bd.enableTenienteSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableTenienteSignatureHook)
     };
   }
 
@@ -1103,7 +1105,7 @@
       rageStyle: "multi_charge_chains",
       telegraphStyle: "charge_indicator",
 
-      primarySignature: "pincerFire",
+      primarySignature: "laserSweep",
       secondarySignature: "escapeBait",
 
       recoveryBias: "post_charge_retreat",
@@ -1148,8 +1150,8 @@
 
       signaturePlan: {
         intro: "aimedBurst",
-        main: "pincerFire",
-        rage: "escapeBait"
+        main: "laserSweep",
+        rage: "laserSweep"
       }
     },
 
@@ -2377,7 +2379,8 @@
     var hookFlagsByBoss = {
       crossfire: cfg.enableCrabtronSignatureHook,
       zigzag: cfg.enableSerpentrixSignatureHook,
-      rotate: cfg.enableOrbitalSignatureHook
+      rotate: cfg.enableOrbitalSignatureHook,
+      divebomb: cfg.enableTenienteSignatureHook
     };
 
     if (expectedBossKey && hookFlagsByBoss.hasOwnProperty(expectedBossKey)) {
