@@ -306,7 +306,7 @@ function grantWaveCompletionBonus(completedLevel) {
   if (completedLevel <= 0) return null;
 
   const bonusScore = 500 + completedLevel * 200;
-  addScore(bonusScore);
+  awardScore({ points: bonusScore, source: 'waveBonus' });
 
   var rewardText = '+' + bonusScore + ' WAVE BONUS';
 
@@ -317,7 +317,7 @@ function grantWaveCompletionBonus(completedLevel) {
       rewardText += '  +1 LIFE';
     } else {
       var extraScore = completedLevel * 500;
-      addScore(extraScore);
+      awardScore({ points: extraScore, source: 'stageMilestone' });
       rewardText += '  +' + extraScore;
     }
     lastMilestoneRewardLevel = completedLevel;

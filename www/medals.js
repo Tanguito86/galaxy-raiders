@@ -90,7 +90,7 @@ function tryAwardPerfectWaveBonus() {
   if (waveDamageTaken || waveKills <= 0 || medalChain <= 0) return false;
 
   const bonus = medalChain * getCurrentMedalValue();
-  addScore(bonus);
+  awardScore({ points: bonus, source: 'perfectWave' });
   spawnPopup(W / 2, H / 2 - 30, 'PERFECT WAVE', '#ffee55');
   spawnPopup(W / 2, H / 2 - 8, '+' + bonus, '#ffee88');
 
@@ -230,7 +230,7 @@ function updateMedals(playerRef, step = 1) {
     if (rectOverlap(m, p)) {
       const base = getCurrentMedalValue();
       const gained = feverActive ? base * 2 : base;
-      addScore(gained);
+      awardScore({ points: gained, source: 'medal' });
       medalChain += 1;
 
       const prevTier = Math.min(Math.floor((medalChain - 1) / 5), MEDAL_VALUES.length - 1);

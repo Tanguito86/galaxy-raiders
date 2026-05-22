@@ -138,7 +138,7 @@ function update(dt) {
     if (levelClearTimer <= 0) {
       pendingNextLevel = false;
       level++;
-      addScore(1000);
+      awardScore({ points: 1000, source: 'levelClear' });
       startLevel();
       waveTransitionActive = false;
 

@@ -106,7 +106,7 @@ for (let i = bullets.length - 1; i >= 0; i--) {
     hit = true;
     recordShotHit();
     requestHitstop(28);
-    addScore(200);
+    awardScore({ points: 200, source: 'ufoKill' });
     createExplosion(ufo.x + ufo.w / 2, ufo.y + ufo.h / 2, currentPalette[3], 30);
     sfxEnemyKill();
     spawnUfoRewardDrop(ufo.x + ufo.w / 2 - 8, ufo.y + ufo.h);
@@ -128,7 +128,7 @@ if (
   const dmg = (b.type === 'laser' ? 3 : 1);
   boss.hp -= dmg;
 
-  addScore((b.type === 'laser') ? 2 : 5);
+  awardScore({ points: (b.type === 'laser') ? 2 : 5, source: 'bulletHit' });
 
   hit = true;
   recordShotHit();
@@ -141,7 +141,7 @@ if (
     recordEnemyKilled();
     var bRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function') ? window.getHardcoreRankScoreMultiplier() : 1.00;
     var bComboMult = (typeof window.getHardcoreComboMultiplier === 'function') ? window.getHardcoreComboMultiplier() : 1.00;
-    addScore(Math.round(800 * bRankMult * bComboMult));
+    awardScore({ points: Math.round(800 * bRankMult * bComboMult), source: 'bossHit' });
   }
   
   // âœ… EFECTO DE GOLPE AL BOSS
@@ -167,7 +167,7 @@ if (
         mines.splice(m, 1);
         recordShotHit();
         requestHitstop(30);
-        addScore(25);
+        awardScore({ points: 25, source: 'mineDestroy' });
         hit = true;
         break;
       }
@@ -215,7 +215,7 @@ if (
           const comboMult = (typeof window.getHardcoreComboMultiplier === 'function')
             ? window.getHardcoreComboMultiplier()
             : 1.00;
-          addScore(Math.round(killScore * rankMult * comboMult));
+          awardScore({ points: Math.round(killScore * rankMult * comboMult), source: 'enemyKill' });
           spawnMedal(
             e.x + e.w / 2,
             e.y + e.h / 2,
@@ -287,7 +287,7 @@ if (bossDefeated) {
   flashScreen = 30;
   var bossRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function') ? window.getHardcoreRankScoreMultiplier() : 1.00;
   var bossComboMult = (typeof window.getHardcoreComboMultiplier === 'function') ? window.getHardcoreComboMultiplier() : 1.00;
-  addScore(Math.round(5000 * bossRankMult * bossComboMult));
+  awardScore({ points: Math.round(5000 * bossRankMult * bossComboMult), source: 'bossKill' });
   spawnBossMedalRain(boss, level === 20 ? 12 : 8);
 
   // âœ… VICTORIA Ã‰PICA si completaste nivel 20
@@ -372,7 +372,7 @@ if (bossDefeated) {
         recordPowerupCollected();
         activateWeapon(p.type);
         powerUps.splice(i, 1);
-        addScore(10);
+        awardScore({ points: 10, source: 'misc' });
       } else if (p.y > H) {
         powerUps.splice(i, 1);
       }
@@ -396,7 +396,7 @@ for (let i = ufoRewards.length - 1; i >= 0; i--) {
       awardExtraLife();
     }
     else if (rw.kind === 'score') {
-      addScore(rw.amount);
+      awardScore({ points: rw.amount, source: 'ufoKill' });
       if (rw.rare) {
         flashScreen = 20;
         pushScreenShake('medium', 20);

@@ -635,7 +635,7 @@ function registerGraze(bulletRef) {
     var grComboMult = (typeof window.getHardcoreComboMultiplier === 'function')
       ? window.getHardcoreComboMultiplier() : 1.00;
     finalScore = Math.round(g.score * grRankMult * grComboMult);
-    addScore(finalScore);
+    awardScore({ points: finalScore, source: 'graze' });
   }
 
   var gx = bulletRef ? bulletRef.x + (bulletRef.w || 0) / 2 : player.x + player.width / 2;
