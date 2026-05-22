@@ -290,6 +290,21 @@ window.GALAXY_CONFIG = {
     }
   },
 
+  // ============ STAGE DIRECTOR (HC-ST-02) ============
+  stageDirector: {
+    enabled: true,
+    maxConsecutivePressure: 3,
+    recoveryMinMs: 10000,
+    recoveryMaxIntensity: 0.30,
+    bossPreludeMinMs: 8000,
+    ambushMinSectionGap: 2,
+    setpieceMinLevelGap: 3,
+    survivalCorridorMinLevel: 14,
+    miniSetpieceCooldownSections: 3,
+    climaxIntensityMultiplier: 1.15,
+    telemetry: false
+  },
+
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============
   encounterDirector: {
     // enabled: true,                    // master kill switch (default: true)
