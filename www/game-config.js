@@ -160,6 +160,14 @@ window.GALAXY_CONFIG = {
     enableEmperadorSignatureHook: false
   },
 
+  // ============ SCORE SYSTEM (HC-SC-02) ============
+  scoreSystem: {
+    enabled: true,
+    telemetry: { enabled: true, trackSources: true },
+    sourceColors: true,
+    debug: { overlay: false }
+  },
+
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============
   encounterDirector: {
     // enabled: true,                    // master kill switch (default: true)

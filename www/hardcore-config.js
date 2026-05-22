@@ -18,6 +18,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
   enemyAI:   { enabled: true, maxOffsetX: 18, maxOffsetY: 10, decisionIntervalMs: 500 },
   bossDirector: { enableBossDirector: false, enableBossTelemetry: false, enableBossRecoveryRules: false, enableBossFairnessValidation: false, enableBossTransitions: false, enableBossRageRules: false, enableBossSignatureIntents: false, enableCrabtronSignatureHook: false, enableSerpentrixSignatureHook: false, enableOrbitalSignatureHook: false, enableTenienteSignatureHook: false, enableEmperadorSignatureHook: false },
+  scoreSystem: { enabled: true, telemetry: { enabled: true, trackSources: true }, sourceColors: true, debug: { overlay: false } },
   readability: {
     enabled: true,
     visualPriority: { enabled: true, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 },
