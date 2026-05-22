@@ -170,4 +170,5 @@ function update(dt) {
   if (typeof window.updateScoreDangerWindow === 'function') window.updateScoreDangerWindow();
   if (typeof window.updateMedalFrameCounter === 'function') window.updateMedalFrameCounter();
   if (typeof window.updateSurvivalScoring === 'function') window.updateSurvivalScoring();
+  if (typeof window.updateStageDirector === 'function') window.updateStageDirector(dt);
 }
