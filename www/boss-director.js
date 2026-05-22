@@ -4,7 +4,8 @@
 // HC-BD-02: Boss Profile Mapping & Identity Matrix
 // HC-BD-03: Boss Phase Orchestration Runtime Foundation
 // HC-BD-04: Boss Transition Choreography Foundation
-// TAXONOMY + PROFILES + STATE MACHINE + TRANSITIONS
+// HC-BD-05: Boss Recovery Window & Fairness Rhythm
+// TAXONOMY + PROFILES + STATE + TRANSITIONS + RECOVERY
 // NO runtime complejo. NO rompe nada existente.
 // ==============================================
 
@@ -466,7 +467,77 @@
   };
 
   // ============================================================
-  // SECTION 5: BOSS ORCHESTRATION RULES (documentadas)
+  // SECTION 5: BOSS RECOVERY TAXONOMY (HC-BD-05)
+  // ============================================================
+  // Tipos de ventana de recuperacion. Definen cuanto respira
+  // el boss entre ataques fuertes. NO bajan dificultad.
+  // ============================================================
+
+  var BOSS_RECOVERY_TYPES = {
+    micro_pause: {
+      key: "micro_pause",
+      label: "Micro Pause",
+      description: "Brief breathing room after a strong attack. Boss pauses, no new bullets.",
+      durationMs: 300,
+      intent: "Give player 300ms to reposition after a heavy pattern",
+      readabilityGoal: "Boss visually 'resets' — brief stillness or idle animation",
+      fairnessGoal: "Prevents back-to-back heavy attacks without recovery",
+      allowedPressure: 0.15
+    },
+    reposition: {
+      key: "reposition",
+      label: "Reposition",
+      description: "Boss moves to a new position. Safe window during travel.",
+      durationMs: 600,
+      intent: "Signal arena layout change while giving player space",
+      readabilityGoal: "Boss smoothly drifts; player can reposition freely",
+      fairnessGoal: "Arena change should never trap player mid-dodge",
+      allowedPressure: 0.25
+    },
+    weakpoint_expose: {
+      key: "weakpoint_expose",
+      label: "Weakpoint Expose",
+      description: "Boss reveals a vulnerability. Low threat. Reward window for aggression.",
+      durationMs: 800,
+      intent: "Reward player for surviving the previous phase with free damage window",
+      readabilityGoal: "Weakpoint glows; boss attacks are sparse or telegraphed",
+      fairnessGoal: "Player agency — choose between damage and reposition",
+      allowedPressure: 0.30
+    },
+    pressure_drop: {
+      key: "pressure_drop",
+      label: "Pressure Drop",
+      description: "Intentional pressure reduction. Boss throttles down after sustained intensity.",
+      durationMs: 500,
+      intent: "Prevent fatigue. Let player's nervous system reset.",
+      readabilityGoal: "Bullet count visibly drops; boss slows movement",
+      fairnessGoal: "Sustained max pressure is exhausting, not hard — break it up",
+      allowedPressure: 0.10
+    },
+    signature_aftercare: {
+      key: "signature_aftercare",
+      label: "Signature Aftercare",
+      description: "Recovery after a signature attack. Longer window. Player just survived the big move.",
+      durationMs: 700,
+      intent: "Player survived the signature — reward them with breathing room",
+      readabilityGoal: "Boss appears winded/recovering; clear 'I survived that' moment",
+      fairnessGoal: "Signature attacks are high threat — must have proportional recovery",
+      allowedPressure: 0.20
+    },
+    transition_breath: {
+      key: "transition_breath",
+      label: "Transition Breath",
+      description: "Recovery during/after a phase transition. Extra safety during spectacle.",
+      durationMs: 500,
+      intent: "Phase transitions are spectacle, not traps — guarantee safety",
+      readabilityGoal: "Transition FX provide clear 'safe now' signal",
+      fairnessGoal: "Phase changes must never kill the player unfairly",
+      allowedPressure: 0.05
+    }
+  };
+
+  // ============================================================
+  // SECTION 6: BOSS ORCHESTRATION RULES (documentadas)
   // ============================================================
   // Reglas hardcore que TODO boss debe seguir.
   // No son runtime enforcement todavia. Son contrato de diseno.
@@ -833,6 +904,18 @@
         readabilityGoal: "Arrow telegraph + brief freeze reinforces duelist identity"
       },
 
+      recoveryProfile: {
+        defaultType: "micro_pause",
+        transitionType: "transition_breath",
+        signatureAftercareType: "signature_aftercare",
+        minDurationMs: 250,
+        maxDurationMs: 500,
+        frequencyBias: 0.35,
+        pressureDropRatio: 0.30,
+        weakpointIntent: "Dash cooldown exposes pincers — brief safe window after evasion",
+        readabilityGoal: "After every dash, CRABTRON pauses noticeably before next attack"
+      },
+
       phasePlan: [
         "introduction",
         "pressure",
@@ -882,6 +965,18 @@
         audioCue: "boss_warning_sweep",
         movementIntent: "amplitude_increase_on_transition",
         readabilityGoal: "Expanding sweep fan signals wider threat area"
+      },
+
+      recoveryProfile: {
+        defaultType: "pressure_drop",
+        transitionType: "transition_breath",
+        signatureAftercareType: "signature_aftercare",
+        minDurationMs: 300,
+        maxDurationMs: 600,
+        frequencyBias: 0.30,
+        pressureDropRatio: 0.35,
+        weakpointIntent: "Wave troughs between sweeps create natural breathing room",
+        readabilityGoal: "Sweep rhythm should include visible lulls — not constant pressure"
       },
 
       phasePlan: [
@@ -935,6 +1030,18 @@
         readabilityGoal: "Expanding pulse ring signals surround pressure increase"
       },
 
+      recoveryProfile: {
+        defaultType: "reposition",
+        transitionType: "transition_breath",
+        signatureAftercareType: "signature_aftercare",
+        minDurationMs: 350,
+        maxDurationMs: 700,
+        frequencyBias: 0.25,
+        pressureDropRatio: 0.40,
+        weakpointIntent: "Orbital apex is natural recovery — boss at farthest point from player",
+        readabilityGoal: "Orbit apex phase should be a visible 'safe zone' in the cycle"
+      },
+
       phasePlan: [
         "introduction",
         "pressure",
@@ -984,6 +1091,18 @@
         audioCue: "boss_warning_charge",
         movementIntent: "charge_freeze_on_transition",
         readabilityGoal: "Charge telegraph builds tension before signature attack"
+      },
+
+      recoveryProfile: {
+        defaultType: "signature_aftercare",
+        transitionType: "transition_breath",
+        signatureAftercareType: "signature_aftercare",
+        minDurationMs: 400,
+        maxDurationMs: 900,
+        frequencyBias: 0.35,
+        pressureDropRatio: 0.45,
+        weakpointIntent: "Post-charge retreat IS the recovery window — dramatic and earned",
+        readabilityGoal: "Retreat phase must visually read as 'boss is recovering, not attacking'"
       },
 
       phasePlan: [
@@ -1036,6 +1155,18 @@
         audioCue: "boss_warning_teleport",
         movementIntent: "teleport_reposition_on_transition",
         readabilityGoal: "Teleport glow signals displacement + new threat angle"
+      },
+
+      recoveryProfile: {
+        defaultType: "weakpoint_expose",
+        transitionType: "transition_breath",
+        signatureAftercareType: "signature_aftercare",
+        minDurationMs: 300,
+        maxDurationMs: 600,
+        frequencyBias: 0.15,
+        pressureDropRatio: 0.25,
+        weakpointIntent: "Phase transition is the only recovery — final boss privilege, earned between phases",
+        readabilityGoal: "Phase change FX must clearly signal 'safe window' before next imperial assault"
       },
 
       phasePlan: [
@@ -1109,6 +1240,18 @@
       audioCue: "boss_warning_default",
       movementIntent: "none",
       readabilityGoal: "Generic transition — safe fallback"
+    },
+
+    recoveryProfile: {
+      defaultType: "micro_pause",
+      transitionType: "transition_breath",
+      signatureAftercareType: "signature_aftercare",
+      minDurationMs: 250,
+      maxDurationMs: 500,
+      frequencyBias: 0.25,
+      pressureDropRatio: 0.30,
+      weakpointIntent: "Generic recovery — safe fallback for unknown bosses",
+      readabilityGoal: "Brief pause after patterns — universal fairness baseline"
     },
 
     phasePlan: [
@@ -1383,6 +1526,16 @@
     recoveryWindowActive: false,
     recoveryTimer: 0,
 
+    // HC-BD-05: recovery detail fields
+    recoveryType: null,
+    recoveryDurationMs: 0,
+    recoveryProgress: 0,
+    recoveryProgress01: 0,
+    recoveryReason: null,
+    recoveryPressureDropRatio: 0,
+    lastRecoveryAt: 0,
+    recoveryCount: 0,
+
     telemetry: {}
   };
 
@@ -1410,6 +1563,14 @@
     bossDirectorState.currentHPPercent = 1;
     bossDirectorState.recoveryWindowActive = false;
     bossDirectorState.recoveryTimer = 0;
+    bossDirectorState.recoveryType = null;
+    bossDirectorState.recoveryDurationMs = 0;
+    bossDirectorState.recoveryProgress = 0;
+    bossDirectorState.recoveryProgress01 = 0;
+    bossDirectorState.recoveryReason = null;
+    bossDirectorState.recoveryPressureDropRatio = 0;
+    bossDirectorState.lastRecoveryAt = 0;
+    bossDirectorState.recoveryCount = 0;
     bossDirectorState.telemetry = {};
   }
 
@@ -1570,6 +1731,14 @@
     bossDirectorState.currentHPPercent = 1;
     bossDirectorState.recoveryWindowActive = false;
     bossDirectorState.recoveryTimer = 0;
+    bossDirectorState.recoveryType = null;
+    bossDirectorState.recoveryDurationMs = 0;
+    bossDirectorState.recoveryProgress = 0;
+    bossDirectorState.recoveryProgress01 = 0;
+    bossDirectorState.recoveryReason = null;
+    bossDirectorState.recoveryPressureDropRatio = 0;
+    bossDirectorState.lastRecoveryAt = 0;
+    bossDirectorState.recoveryCount = 0;
     bossDirectorState.telemetry = {};
 
     if (cfg.enableBossTelemetry) {
@@ -1667,12 +1836,39 @@
       }
     }
 
+    // HC-BD-05: auto-recovery tagging from phase state (before eligibility assignment)
+    if (cfg.enableBossRecoveryRules) {
+      var autoRecoveryReason = null;
+      var phaseIsRecovery = (bossDirectorState.phaseType === "recovery" || bossDirectorState.phaseType === "transition");
+      var justExitedRage = (bossDirectorState.previousPhaseType === "rage" || bossDirectorState.previousPhaseType === "desperation");
+      if (phaseIsRecovery) {
+        autoRecoveryReason = "transition_breath";
+      } else if (justExitedRage && !bossDirectorState.recoveryWindowActive) {
+        autoRecoveryReason = "pressure_drop";
+      }
+      if (autoRecoveryReason && !bossDirectorState.recoveryWindowActive) {
+        startBossRecoveryWindow(autoRecoveryReason, targetBoss);
+      }
+    }
+
     // Recovery window detection
-    bossDirectorState.recoveryWindowActive = isPhaseRecoveryEligible(bossDirectorState.phaseType, profile);
+    if (!bossDirectorState.recoveryWindowActive) {
+      bossDirectorState.recoveryWindowActive = isPhaseRecoveryEligible(bossDirectorState.phaseType, profile);
+    }
     if (bossDirectorState.recoveryWindowActive) {
       bossDirectorState.recoveryTimer += dt;
+
+      // HC-BD-05: track recovery progress when active
+      if (bossDirectorState.recoveryDurationMs > 0) {
+        bossDirectorState.recoveryProgress = bossDirectorState.recoveryTimer;
+        bossDirectorState.recoveryProgress01 = Math.min(1, Math.max(0,
+          bossDirectorState.recoveryTimer / bossDirectorState.recoveryDurationMs
+        ));
+      }
     } else {
       bossDirectorState.recoveryTimer = 0;
+      bossDirectorState.recoveryProgress = 0;
+      bossDirectorState.recoveryProgress01 = 0;
     }
 
     // Rage detection
@@ -1696,7 +1892,10 @@
         transitionProgress01: bossDirectorState.transitionProgress01,
         rageActive: bossDirectorState.rageActive,
         finaleActive: bossDirectorState.finaleActive,
-        recoveryWindowActive: bossDirectorState.recoveryWindowActive
+        recoveryWindowActive: bossDirectorState.recoveryWindowActive,
+        recoveryType: bossDirectorState.recoveryType,
+        recoveryProgress01: bossDirectorState.recoveryProgress01,
+        recoveryCount: bossDirectorState.recoveryCount
       };
     }
 
@@ -1852,6 +2051,190 @@
     return bossDirectorState.transitionProgress01;
   }
 
+  // HC-BD-05: recovery window helpers
+  function resolveBossRecoveryType(profile, reason) {
+    if (!profile || typeof profile !== "object") return "micro_pause";
+
+    var rp = profile.recoveryProfile;
+    if (!rp || typeof rp !== "object") return "micro_pause";
+
+    // Determine type based on reason
+    if (reason === "transition_breath" || reason === "transition") {
+      var transType = rp.transitionType || "transition_breath";
+      return BOSS_RECOVERY_TYPES.hasOwnProperty(transType) ? transType : "transition_breath";
+    }
+
+    if (reason === "signature_aftercare" || reason === "signature") {
+      var sigType = rp.signatureAftercareType || "signature_aftercare";
+      return BOSS_RECOVERY_TYPES.hasOwnProperty(sigType) ? sigType : "signature_aftercare";
+    }
+
+    if (reason === "weakpoint_expose" || reason === "weakpoint") {
+      return "weakpoint_expose";
+    }
+
+    if (reason === "pressure_drop" || reason === "pressure") {
+      return "pressure_drop";
+    }
+
+    var defaultType = rp.defaultType || "micro_pause";
+    return BOSS_RECOVERY_TYPES.hasOwnProperty(defaultType) ? defaultType : "micro_pause";
+  }
+
+  function getRecoveryDuration(profile, recoveryType) {
+    if (BOSS_RECOVERY_TYPES.hasOwnProperty(recoveryType)) {
+      return BOSS_RECOVERY_TYPES[recoveryType].durationMs || 300;
+    }
+    if (profile && profile.recoveryProfile) {
+      var rp = profile.recoveryProfile;
+      if (typeof rp.minDurationMs === "number") return rp.minDurationMs;
+    }
+    return 300;
+  }
+
+  function startBossRecoveryWindow(reason, targetBoss) {
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossRecoveryRules) return false;
+    if (!bossDirectorState.active) return false;
+    if (bossDirectorState.recoveryWindowActive) return false;
+
+    var profile = bossDirectorState.profile;
+    if (!profile) return false;
+
+    var resolvedType = resolveBossRecoveryType(profile, reason);
+    var duration = getRecoveryDuration(profile, resolvedType);
+
+    bossDirectorState.recoveryWindowActive = true;
+    bossDirectorState.recoveryTimer = 0;
+    bossDirectorState.recoveryType = resolvedType;
+    bossDirectorState.recoveryDurationMs = duration;
+    bossDirectorState.recoveryProgress = 0;
+    bossDirectorState.recoveryProgress01 = 0;
+    bossDirectorState.recoveryReason = reason;
+    bossDirectorState.recoveryPressureDropRatio = profile.recoveryProfile
+      ? (profile.recoveryProfile.pressureDropRatio || 0.30)
+      : 0.30;
+    bossDirectorState.lastRecoveryAt = bossDirectorState.totalTimer;
+    bossDirectorState.recoveryCount++;
+
+    if (cfg.enableBossTelemetry) {
+      recordBossDirectorEvent("recovery_started", {
+        reason: reason,
+        type: resolvedType,
+        durationMs: duration,
+        recoveryCount: bossDirectorState.recoveryCount,
+        pressureDropRatio: bossDirectorState.recoveryPressureDropRatio
+      });
+    }
+
+    return true;
+  }
+
+  function getBossRecoveryInfo() {
+    if (!bossDirectorState.active || !bossDirectorState.recoveryWindowActive) return null;
+    return {
+      type: bossDirectorState.recoveryType,
+      durationMs: bossDirectorState.recoveryDurationMs,
+      progress: bossDirectorState.recoveryProgress,
+      progress01: bossDirectorState.recoveryProgress01,
+      reason: bossDirectorState.recoveryReason,
+      pressureDropRatio: bossDirectorState.recoveryPressureDropRatio,
+      recoveryCount: bossDirectorState.recoveryCount
+    };
+  }
+
+  function getBossRecoveryProgress01() {
+    if (!bossDirectorState.active || !bossDirectorState.recoveryWindowActive) return 0;
+    return bossDirectorState.recoveryProgress01;
+  }
+
+  function isBossRecoveryType(type) {
+    if (!type || typeof type !== "string") return false;
+    return BOSS_RECOVERY_TYPES.hasOwnProperty(type);
+  }
+
+  function shouldBossDirectorPreferRecovery() {
+    if (!bossDirectorState.active) return false;
+
+    // Already in recovery — let it finish
+    if (bossDirectorState.recoveryWindowActive) return false;
+
+    // During transition — transition IS recovery
+    if (bossDirectorState.transitionActive) return false;
+
+    // Rage/finale — no recovery during climax
+    if (bossDirectorState.rageActive || bossDirectorState.finaleActive) return false;
+
+    // Phase type is inherently recovery — already handled
+    if (isRecoveryPhase(bossDirectorState.phaseType)) return false;
+
+    var profile = bossDirectorState.profile;
+
+    // Recovery bias check
+    if (profile && typeof profile.recoveryBias === "string") {
+      // High-frequency recovery biases
+      if (profile.recoveryBias === "long_after_burst" && bossDirectorState.phaseTimer > 3000) return true;
+      if (profile.recoveryBias === "wave_trough" && bossDirectorState.phaseTimer > 4000) return true;
+      if (profile.recoveryBias === "post_charge_retreat" && bossDirectorState.phaseTimer > 2500) return true;
+      // Low-frequency biases
+      if (profile.recoveryBias === "phase_transition_only") return false;
+      if (profile.recoveryBias === "rare_brief_pauses") return bossDirectorState.phaseTimer > 6000;
+    }
+
+    // Fairness bias: high fairness bosses get more recovery preference
+    var fairness = profile ? (profile.fairnessBias || "medium") : "medium";
+    var fairnessThreshold = fairness === "high" ? 3500 : (fairness === "medium" ? 5000 : 7000);
+
+    if (bossDirectorState.phaseTimer > fairnessThreshold) return true;
+
+    // Low HP band increases recovery preference
+    if (bossDirectorState.currentHPPercent < 0.25 && bossDirectorState.phaseTimer > 2500) return true;
+
+    return false;
+  }
+
+  function getBossFairnessRhythmScore() {
+    if (!bossDirectorState.active) return 1;
+
+    var score = 1.0;
+
+    // Recovery recently? (+fairness)
+    var timeSinceRecovery = bossDirectorState.totalTimer - bossDirectorState.lastRecoveryAt;
+    if (bossDirectorState.lastRecoveryAt > 0) {
+      if (timeSinceRecovery < 2000) score += 0.15;
+      else if (timeSinceRecovery < 5000) score += 0.05;
+      else if (timeSinceRecovery > 15000) score -= 0.10;
+    }
+
+    // Phase timer too long? (−fairness)
+    if (bossDirectorState.phaseTimer > 12000) score -= 0.15;
+    else if (bossDirectorState.phaseTimer > 8000) score -= 0.08;
+
+    // Transition active? (+fairness — safety window)
+    if (bossDirectorState.transitionActive) score += 0.10;
+
+    // Rage active? (−fairness — expected to be hard)
+    if (bossDirectorState.rageActive) score -= 0.20;
+
+    // Recovery active? (+fairness)
+    if (bossDirectorState.recoveryWindowActive) score += 0.20;
+
+    // Recovery count too low? (−fairness)
+    if (bossDirectorState.totalTimer > 10000 && bossDirectorState.recoveryCount === 0) score -= 0.15;
+    if (bossDirectorState.totalTimer > 20000 && bossDirectorState.recoveryCount < 2) score -= 0.10;
+
+    // Fairness bias from profile
+    var profile = bossDirectorState.profile;
+    var fairnessBias = profile ? (profile.fairnessBias || "medium") : "medium";
+    if (fairnessBias === "high") score += 0.05;
+    else if (fairnessBias === "low") score -= 0.10;
+
+    // HP band
+    if (bossDirectorState.currentHPPercent < 0.15) score -= 0.05;
+
+    return Math.max(0, Math.min(1, score));
+  }
+
   // ============================================================
   // SECTION 20: TELEMETRY RUNTIME
   // ============================================================
@@ -1881,6 +2264,14 @@
       currentHPPercent: bossDirectorState.currentHPPercent,
       recoveryWindowActive: bossDirectorState.recoveryWindowActive,
       recoveryTimer: bossDirectorState.recoveryTimer,
+      recoveryType: bossDirectorState.recoveryType,
+      recoveryDurationMs: bossDirectorState.recoveryDurationMs,
+      recoveryProgress: bossDirectorState.recoveryProgress,
+      recoveryProgress01: bossDirectorState.recoveryProgress01,
+      recoveryReason: bossDirectorState.recoveryReason,
+      recoveryPressureDropRatio: bossDirectorState.recoveryPressureDropRatio,
+      lastRecoveryAt: bossDirectorState.lastRecoveryAt,
+      recoveryCount: bossDirectorState.recoveryCount,
       telemetry: bossDirectorState.telemetry
     };
   }
@@ -1904,7 +2295,11 @@
         transitionProgress01: bossDirectorState.transitionProgress01,
         rageActive: bossDirectorState.rageActive,
         finaleActive: bossDirectorState.finaleActive,
-        recoveryWindowActive: bossDirectorState.recoveryWindowActive
+        recoveryWindowActive: bossDirectorState.recoveryWindowActive,
+        recoveryType: bossDirectorState.recoveryType,
+        recoveryProgress01: bossDirectorState.recoveryProgress01,
+        recoveryCount: bossDirectorState.recoveryCount,
+        fairnessRhythmScore: getBossFairnessRhythmScore()
       }
     };
   }
@@ -1918,6 +2313,7 @@
   window.BOSS_PHASE_TYPES = BOSS_PHASE_TYPES;
   window.BOSS_SIGNATURE_TYPES = BOSS_SIGNATURE_TYPES;
   window.BOSS_TRANSITION_TYPES = BOSS_TRANSITION_TYPES;
+  window.BOSS_RECOVERY_TYPES = BOSS_RECOVERY_TYPES;
   window.BOSS_ORCHESTRATION_RULES = BOSS_ORCHESTRATION_RULES;
 
   // Profile exports (HC-BD-02)
@@ -1953,6 +2349,15 @@
   window.getBossTransitionInfo = getBossTransitionInfo;
   window.isBossTransitionType = isBossTransitionType;
   window.getBossTransitionProgress01 = getBossTransitionProgress01;
+
+  // Recovery window exports (HC-BD-05)
+  window.resolveBossRecoveryType = resolveBossRecoveryType;
+  window.startBossRecoveryWindow = startBossRecoveryWindow;
+  window.getBossRecoveryInfo = getBossRecoveryInfo;
+  window.getBossRecoveryProgress01 = getBossRecoveryProgress01;
+  window.isBossRecoveryType = isBossRecoveryType;
+  window.shouldBossDirectorPreferRecovery = shouldBossDirectorPreferRecovery;
+  window.getBossFairnessRhythmScore = getBossFairnessRhythmScore;
 
   // Validator exports
   window.validateBossArchetype = validateBossArchetype;
