@@ -5,8 +5,9 @@
 
 function pushEnemyBullet(x, y, vx, vy, w = 4, h = 10, meta = {}) {
   // HC-RK-04: apply rank bullet speed through safety governor
+  var baseSpeed = Math.sqrt(vx * vx + vy * vy);
   var rankSpeedResult = (typeof window.getHardcoreRankGameplayBulletSpeed === 'function')
-    ? window.getHardcoreRankGameplayBulletSpeed(1)
+    ? window.getHardcoreRankGameplayBulletSpeed(baseSpeed)
     : { multiplier: 1.00, capped: false, governorApproved: false };
   var speedMult = rankSpeedResult.multiplier;
 
