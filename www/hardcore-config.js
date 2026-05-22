@@ -17,7 +17,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   atmosphere:{ enabled: true, dustEnabled: true, speedLinesEnabled: true, ambientFlashEnabled: true },
   bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
   enemyAI:   { enabled: true, maxOffsetX: 18, maxOffsetY: 10, decisionIntervalMs: 500 },
-  bossDirector: { enableBossDirector: false, enableBossTelemetry: false, enableBossRecoveryRules: false, enableBossFairnessValidation: false, enableBossTransitions: false, enableBossRageRules: false },
+  bossDirector: { enableBossDirector: false, enableBossTelemetry: false, enableBossRecoveryRules: false, enableBossFairnessValidation: false, enableBossTransitions: false, enableBossRageRules: false, enableBossSignatureIntents: false },
   readability: {
     enabled: true,
     visualPriority: { enabled: true, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 },
@@ -169,7 +169,8 @@ function getBossDirectorConfig() {
   var ef   = (typeof d.enableBossFairnessValidation === 'boolean') ? d.enableBossFairnessValidation : false;
   var ebt  = (typeof d.enableBossTransitions === 'boolean') ? d.enableBossTransitions : false;
   var ebr  = (typeof d.enableBossRageRules === 'boolean') ? d.enableBossRageRules : false;
-  return { enableBossDirector: en, enableBossTelemetry: et, enableBossRecoveryRules: er, enableBossFairnessValidation: ef, enableBossTransitions: ebt, enableBossRageRules: ebr };
+  var esi  = (typeof d.enableBossSignatureIntents === 'boolean') ? d.enableBossSignatureIntents : false;
+  return { enableBossDirector: en, enableBossTelemetry: et, enableBossRecoveryRules: er, enableBossFairnessValidation: ef, enableBossTransitions: ebt, enableBossRageRules: ebr, enableBossSignatureIntents: esi };
 }
 
 function isBossDirectorEnabled() {

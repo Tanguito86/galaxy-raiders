@@ -127,7 +127,8 @@ window.GALAXY_CONFIG = {
     enableBossRecoveryRules: false,
     enableBossFairnessValidation: false,
     enableBossTransitions: false,
-    enableBossRageRules: false
+    enableBossRageRules: false,
+    enableBossSignatureIntents: false
   },
 
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============

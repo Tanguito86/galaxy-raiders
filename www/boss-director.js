@@ -5,7 +5,9 @@
 // HC-BD-03: Boss Phase Orchestration Runtime Foundation
 // HC-BD-04: Boss Transition Choreography Foundation
 // HC-BD-05: Boss Recovery Window & Fairness Rhythm
-// TAXONOMY + PROFILES + STATE + TRANSITIONS + RECOVERY
+// HC-BD-06: Signature Attack Readiness Layer
+// HC-BD-07: Signature Intent Hook Layer
+// TAXONOMY + PROFILES + STATE + TRANSITIONS + RECOVERY + SIGNATURES
 // NO runtime complejo. NO rompe nada existente.
 // ==============================================
 
@@ -537,7 +539,27 @@
   };
 
   // ============================================================
-  // SECTION 6: BOSS ORCHESTRATION RULES (documentadas)
+  // SECTION 6: SIGNATURE SLOT TAXONOMY (HC-BD-06)
+  // ============================================================
+  // Slots de signature segun contexto de fase.
+  // Define cuando un boss usa cada tipo de signature.
+  // ============================================================
+
+  var BOSS_SIGNATURE_SLOTS = {
+    INTRO: "intro",
+    MAIN: "main",
+    RAGE: "rage",
+    FINALE: "finale",
+    RECOVERY_EXIT: "recovery_exit"
+  };
+
+  // HC-BD-07: Signature intent lifetime policy
+  var BOSS_SIGNATURE_INTENT_LIFETIME_MS = 900;
+  var BOSS_SIGNATURE_INTENT_MIN_REISSUE_MS = 1200;
+  var BOSS_SIGNATURE_INTENT_EXPIRED_COOLDOWN_MS = 500;
+
+  // ============================================================
+  // SECTION 7: BOSS ORCHESTRATION RULES (documentadas)
   // ============================================================
   // Reglas hardcore que TODO boss debe seguir.
   // No son runtime enforcement todavia. Son contrato de diseno.
@@ -639,7 +661,8 @@
     enableBossRecoveryRules: false,
     enableBossFairnessValidation: false,
     enableBossTransitions: false,
-    enableBossRageRules: false
+    enableBossRageRules: false,
+    enableBossSignatureIntents: false
   };
 
   // ============================================================
@@ -702,7 +725,8 @@
       enableBossRecoveryRules: !!(typeof bd.enableBossRecoveryRules === "boolean" ? bd.enableBossRecoveryRules : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossRecoveryRules),
       enableBossFairnessValidation: !!(typeof bd.enableBossFairnessValidation === "boolean" ? bd.enableBossFairnessValidation : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossFairnessValidation),
       enableBossTransitions: !!(typeof bd.enableBossTransitions === "boolean" ? bd.enableBossTransitions : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossTransitions),
-      enableBossRageRules: !!(typeof bd.enableBossRageRules === "boolean" ? bd.enableBossRageRules : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossRageRules)
+      enableBossRageRules: !!(typeof bd.enableBossRageRules === "boolean" ? bd.enableBossRageRules : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossRageRules),
+      enableBossSignatureIntents: !!(typeof bd.enableBossSignatureIntents === "boolean" ? bd.enableBossSignatureIntents : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossSignatureIntents)
     };
   }
 
@@ -1536,6 +1560,29 @@
     lastRecoveryAt: 0,
     recoveryCount: 0,
 
+    // HC-BD-06: signature readiness fields
+    signatureCandidate: null,
+    signatureSlot: null,
+    signatureReady: false,
+    signatureBlocked: false,
+    signatureBlockReason: null,
+    signatureCooldownMs: 0,
+    signatureCooldownRemainingMs: 0,
+    lastSignatureAt: 0,
+    signatureCount: 0,
+
+    // HC-BD-07: signature intent fields
+    signatureIntentActive: false,
+    signatureIntentId: null,
+    signatureIntentCandidate: null,
+    signatureIntentSlot: null,
+    signatureIntentBossKey: null,
+    signatureIntentCreatedAt: 0,
+    signatureIntentExpiresAt: 0,
+    signatureIntentConsumed: false,
+    signatureIntentConsumeReason: null,
+    signatureIntentLastIssueAt: 0,
+
     telemetry: {}
   };
 
@@ -1571,6 +1618,25 @@
     bossDirectorState.recoveryPressureDropRatio = 0;
     bossDirectorState.lastRecoveryAt = 0;
     bossDirectorState.recoveryCount = 0;
+    bossDirectorState.signatureCandidate = null;
+    bossDirectorState.signatureSlot = null;
+    bossDirectorState.signatureReady = false;
+    bossDirectorState.signatureBlocked = false;
+    bossDirectorState.signatureBlockReason = null;
+    bossDirectorState.signatureCooldownMs = 0;
+    bossDirectorState.signatureCooldownRemainingMs = 0;
+    bossDirectorState.lastSignatureAt = 0;
+    bossDirectorState.signatureCount = 0;
+    bossDirectorState.signatureIntentActive = false;
+    bossDirectorState.signatureIntentId = null;
+    bossDirectorState.signatureIntentCandidate = null;
+    bossDirectorState.signatureIntentSlot = null;
+    bossDirectorState.signatureIntentBossKey = null;
+    bossDirectorState.signatureIntentCreatedAt = 0;
+    bossDirectorState.signatureIntentExpiresAt = 0;
+    bossDirectorState.signatureIntentConsumed = false;
+    bossDirectorState.signatureIntentConsumeReason = null;
+    bossDirectorState.signatureIntentLastIssueAt = 0;
     bossDirectorState.telemetry = {};
   }
 
@@ -1739,6 +1805,25 @@
     bossDirectorState.recoveryPressureDropRatio = 0;
     bossDirectorState.lastRecoveryAt = 0;
     bossDirectorState.recoveryCount = 0;
+    bossDirectorState.signatureCandidate = null;
+    bossDirectorState.signatureSlot = null;
+    bossDirectorState.signatureReady = false;
+    bossDirectorState.signatureBlocked = false;
+    bossDirectorState.signatureBlockReason = null;
+    bossDirectorState.signatureCooldownMs = 0;
+    bossDirectorState.signatureCooldownRemainingMs = 0;
+    bossDirectorState.lastSignatureAt = 0;
+    bossDirectorState.signatureCount = 0;
+    bossDirectorState.signatureIntentActive = false;
+    bossDirectorState.signatureIntentId = null;
+    bossDirectorState.signatureIntentCandidate = null;
+    bossDirectorState.signatureIntentSlot = null;
+    bossDirectorState.signatureIntentBossKey = null;
+    bossDirectorState.signatureIntentCreatedAt = 0;
+    bossDirectorState.signatureIntentExpiresAt = 0;
+    bossDirectorState.signatureIntentConsumed = false;
+    bossDirectorState.signatureIntentConsumeReason = null;
+    bossDirectorState.signatureIntentLastIssueAt = 0;
     bossDirectorState.telemetry = {};
 
     if (cfg.enableBossTelemetry) {
@@ -1877,6 +1962,41 @@
     // Finale detection
     bossDirectorState.finaleActive = (bossDirectorState.phaseType === "finale");
 
+    // HC-BD-06: signature readiness update
+    // Update cooldown
+    if (bossDirectorState.signatureCooldownRemainingMs > 0) {
+      bossDirectorState.signatureCooldownRemainingMs = Math.max(0,
+        bossDirectorState.signatureCooldownRemainingMs - dt
+      );
+    }
+
+    // Resolve candidate and slot
+    var sigCandidate = resolveBossSignatureCandidate(profile, bossDirectorState.phaseType);
+    var sigSlot = resolveBossSignatureSlot(bossDirectorState.phaseType);
+    bossDirectorState.signatureCandidate = sigCandidate;
+    bossDirectorState.signatureSlot = sigSlot;
+
+    // Evaluate readiness
+    var readiness = evaluateBossSignatureReadiness(targetBoss);
+    bossDirectorState.signatureReady = readiness.ready;
+    bossDirectorState.signatureBlocked = readiness.blocked;
+    bossDirectorState.signatureBlockReason = readiness.reason;
+    if (!readiness.ready && readiness.cooldownRemainingMs > 0) {
+      bossDirectorState.signatureCooldownRemainingMs = readiness.cooldownRemainingMs;
+    }
+
+    // HC-BD-07: auto-intent creation
+    if (cfg.enableBossSignatureIntents && bossDirectorState.signatureReady && !bossDirectorState.signatureIntentActive) {
+      createBossSignatureIntent(targetBoss);
+    }
+
+    // HC-BD-07: auto-expiration of intent
+    if (bossDirectorState.signatureIntentActive && !bossDirectorState.signatureIntentConsumed) {
+      if (bossDirectorState.totalTimer >= bossDirectorState.signatureIntentExpiresAt) {
+        consumeBossSignatureIntent("expired");
+      }
+    }
+
     // Telemetry snapshot
     if (cfg.enableBossTelemetry) {
       bossDirectorState.telemetry = {
@@ -1895,7 +2015,10 @@
         recoveryWindowActive: bossDirectorState.recoveryWindowActive,
         recoveryType: bossDirectorState.recoveryType,
         recoveryProgress01: bossDirectorState.recoveryProgress01,
-        recoveryCount: bossDirectorState.recoveryCount
+        recoveryCount: bossDirectorState.recoveryCount,
+        signatureReady: bossDirectorState.signatureReady,
+        signatureCandidate: bossDirectorState.signatureCandidate,
+        signatureBlockReason: bossDirectorState.signatureBlockReason
       };
     }
 
@@ -1916,7 +2039,290 @@
   }
 
   // ============================================================
-  // SECTION 19: TRANSITION / RECOVERY / RAGE / FINALE DETECTION
+  // SECTION 19: SIGNATURE READINESS (HC-BD-06)
+  // ============================================================
+  // Logica de preparacion de signature attacks.
+  // Resuelve candidato, slot, cooldown y readiness.
+  // NO dispara bullets. NO modifica patrones.
+  // ============================================================
+
+  function resolveBossSignatureSlot(phaseType) {
+    if (!phaseType) return BOSS_SIGNATURE_SLOTS.MAIN;
+
+    switch (phaseType) {
+      case "introduction": return BOSS_SIGNATURE_SLOTS.INTRO;
+      case "pressure":
+      case "crossfire":
+      case "area_denial":
+      case "chase": return BOSS_SIGNATURE_SLOTS.MAIN;
+      case "rage":
+      case "desperation": return BOSS_SIGNATURE_SLOTS.RAGE;
+      case "finale": return BOSS_SIGNATURE_SLOTS.FINALE;
+      case "recovery":
+      case "transition": return BOSS_SIGNATURE_SLOTS.RECOVERY_EXIT;
+      default: return BOSS_SIGNATURE_SLOTS.MAIN;
+    }
+  }
+
+  function resolveBossSignatureCandidate(profile, phaseType) {
+    if (!profile || typeof profile !== "object") return "aimedBurst";
+    var plan = profile.signaturePlan;
+    if (!plan || typeof plan !== "object") return "aimedBurst";
+
+    var slot = resolveBossSignatureSlot(phaseType);
+
+    switch (slot) {
+      case BOSS_SIGNATURE_SLOTS.INTRO:
+        return plan.intro || "aimedBurst";
+      case BOSS_SIGNATURE_SLOTS.MAIN:
+        return plan.main || "aimedBurst";
+      case BOSS_SIGNATURE_SLOTS.RAGE:
+        return plan.rage || "aimedBurst";
+      case BOSS_SIGNATURE_SLOTS.FINALE:
+        return plan.rage || "phaseBurst"; // finale uses rage signature
+      case BOSS_SIGNATURE_SLOTS.RECOVERY_EXIT:
+        return plan.main || "aimedBurst"; // exit recovery with main signature
+      default:
+        return "aimedBurst";
+    }
+  }
+
+  function getBossSignatureCooldownMs(profile, slot) {
+    if (!slot) slot = BOSS_SIGNATURE_SLOTS.MAIN;
+
+    var baseCooldowns = {
+      intro: 2500,
+      main: 4500,
+      rage: 3200,
+      finale: 2200,
+      recovery_exit: 3000
+    };
+
+    var cooldown = baseCooldowns[slot] || 4500;
+
+    // Adjust by pacing style if profile exists
+    if (profile && profile.pacingStyle) {
+      switch (profile.pacingStyle) {
+        case "measured":
+        case "cinematic":
+          cooldown = Math.round(cooldown * 1.15);
+          break;
+        case "aggressive":
+        case "dramatic_loop":
+          cooldown = Math.round(cooldown * 0.90);
+          break;
+        case "erratic":
+        case "player_driven":
+          cooldown = Math.round(cooldown * 0.95);
+          break;
+        default:
+          break;
+      }
+    }
+
+    return Math.max(1500, cooldown);
+  }
+
+  function evaluateBossSignatureReadiness(targetBoss) {
+    var result = {
+      ready: false,
+      candidate: null,
+      slot: null,
+      blocked: true,
+      reason: "unknown",
+      cooldownRemainingMs: 0,
+      fairnessRhythmScore: 0,
+      phaseType: null,
+      hpPercent: 1
+    };
+
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossDirector) {
+      result.reason = "disabled";
+      return result;
+    }
+
+    if (!bossDirectorState.active) {
+      result.reason = "inactive";
+      return result;
+    }
+
+    var profile = bossDirectorState.profile;
+    var phaseType = bossDirectorState.phaseType;
+
+    result.phaseType = phaseType;
+    result.hpPercent = bossDirectorState.currentHPPercent;
+    result.fairnessRhythmScore = getBossFairnessRhythmScore();
+
+    // Resolve candidate and slot
+    var candidate = resolveBossSignatureCandidate(profile, phaseType);
+    var slot = resolveBossSignatureSlot(phaseType);
+
+    result.candidate = candidate;
+    result.slot = slot;
+
+    // Validate candidate
+    if (!candidate || !validateBossSignatureType(candidate)) {
+      result.reason = "invalid_candidate";
+      return result;
+    }
+
+    // Block during transition
+    if (bossDirectorState.transitionActive) {
+      result.reason = "transition_active";
+      return result;
+    }
+
+    // Block during recovery
+    if (bossDirectorState.recoveryWindowActive) {
+      result.reason = "recovery_active";
+      return result;
+    }
+
+    // Cooldown check
+    if (bossDirectorState.signatureCooldownRemainingMs > 0) {
+      result.cooldownRemainingMs = bossDirectorState.signatureCooldownRemainingMs;
+      result.reason = "cooldown";
+      return result;
+    }
+
+    // Fairness rhythm check
+    if (result.fairnessRhythmScore < 0.35) {
+      result.reason = "fairness_low";
+      return result;
+    }
+
+    // Phase too new
+    if (bossDirectorState.phaseTimer < 500) {
+      result.reason = "phase_too_new";
+      return result;
+    }
+
+    // Ready!
+    result.ready = true;
+    result.blocked = false;
+    result.reason = null;
+    return result;
+  }
+
+  // ============================================================
+  // SECTION 20: SIGNATURE INTENT HOOKS (HC-BD-07)
+  // ============================================================
+  // Capa intermedia readiness -> intent.
+  // NO dispara ataques. Solo emite recomendacion.
+  // ============================================================
+
+  var _signatureIntentIdCounter = 0;
+
+  function createBossSignatureIntent(targetBoss) {
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossSignatureIntents) return false;
+    if (!bossDirectorState.active) return false;
+    if (bossDirectorState.signatureIntentActive) return false; // one intent at a time
+    if (!bossDirectorState.signatureReady) return false;
+
+    // Anti-spam: respect minimum reissue interval
+    var now = bossDirectorState.totalTimer;
+    var timeSinceLastIssue = now - bossDirectorState.signatureIntentLastIssueAt;
+    if (bossDirectorState.signatureIntentLastIssueAt > 0 && timeSinceLastIssue < BOSS_SIGNATURE_INTENT_MIN_REISSUE_MS) {
+      return false;
+    }
+
+    _signatureIntentIdCounter++;
+    var intentId = "sig_intent_" + _signatureIntentIdCounter + "_" + (bossDirectorState.bossKey || "unknown");
+
+    bossDirectorState.signatureIntentActive = true;
+    bossDirectorState.signatureIntentId = intentId;
+    bossDirectorState.signatureIntentCandidate = bossDirectorState.signatureCandidate;
+    bossDirectorState.signatureIntentSlot = bossDirectorState.signatureSlot;
+    bossDirectorState.signatureIntentBossKey = bossDirectorState.bossKey;
+    bossDirectorState.signatureIntentCreatedAt = now;
+    bossDirectorState.signatureIntentExpiresAt = now + BOSS_SIGNATURE_INTENT_LIFETIME_MS;
+    bossDirectorState.signatureIntentConsumed = false;
+    bossDirectorState.signatureIntentConsumeReason = null;
+    bossDirectorState.signatureIntentLastIssueAt = now;
+
+    if (cfg.enableBossTelemetry) {
+      recordBossDirectorEvent("signature_intent_created", {
+        intentId: intentId,
+        candidate: bossDirectorState.signatureCandidate,
+        slot: bossDirectorState.signatureSlot,
+        lifetimeMs: BOSS_SIGNATURE_INTENT_LIFETIME_MS,
+        expiresAt: bossDirectorState.signatureIntentExpiresAt
+      });
+    }
+
+    return true;
+  }
+
+  function consumeBossSignatureIntent(reason) {
+    if (!bossDirectorState.active) return false;
+    if (!bossDirectorState.signatureIntentActive) return false;
+
+    var safeReason = reason || "manual";
+
+    bossDirectorState.signatureIntentConsumed = true;
+    bossDirectorState.signatureIntentConsumeReason = safeReason;
+
+    // Only apply full cooldown + increment count when actually applied
+    if (safeReason === "applied") {
+      var profile = bossDirectorState.profile;
+      var slot = bossDirectorState.signatureSlot || BOSS_SIGNATURE_SLOTS.MAIN;
+      var cooldown = getBossSignatureCooldownMs(profile, slot);
+      bossDirectorState.signatureCooldownMs = cooldown;
+      bossDirectorState.signatureCooldownRemainingMs = cooldown;
+      bossDirectorState.lastSignatureAt = bossDirectorState.totalTimer;
+      bossDirectorState.signatureCount++;
+
+      if (getBossDirectorConfig().enableBossTelemetry) {
+        recordBossDirectorEvent("signature_intent_applied", {
+          intentId: bossDirectorState.signatureIntentId,
+          candidate: bossDirectorState.signatureIntentCandidate,
+          cooldownMs: cooldown,
+          signatureCount: bossDirectorState.signatureCount
+        });
+      }
+    } else if (safeReason === "expired") {
+      // Mini cooldown to prevent spam, don't count as real signature
+      bossDirectorState.signatureCooldownRemainingMs = BOSS_SIGNATURE_INTENT_EXPIRED_COOLDOWN_MS;
+
+      if (getBossDirectorConfig().enableBossTelemetry) {
+        recordBossDirectorEvent("signature_intent_expired", {
+          intentId: bossDirectorState.signatureIntentId,
+          miniCooldownMs: BOSS_SIGNATURE_INTENT_EXPIRED_COOLDOWN_MS
+        });
+      }
+    }
+    // "declined", "blocked", "manual" — no cooldown, no count
+
+    // Deactivate intent
+    bossDirectorState.signatureIntentActive = false;
+    bossDirectorState.signatureReady = false;
+
+    return true;
+  }
+
+  function getBossSignatureIntent() {
+    if (!bossDirectorState.active || !bossDirectorState.signatureIntentActive) return null;
+    return {
+      active: bossDirectorState.signatureIntentActive,
+      id: bossDirectorState.signatureIntentId,
+      candidate: bossDirectorState.signatureIntentCandidate,
+      slot: bossDirectorState.signatureIntentSlot,
+      bossKey: bossDirectorState.signatureIntentBossKey,
+      createdAt: bossDirectorState.signatureIntentCreatedAt,
+      expiresAt: bossDirectorState.signatureIntentExpiresAt,
+      consumed: bossDirectorState.signatureIntentConsumed,
+      consumeReason: bossDirectorState.signatureIntentConsumeReason
+    };
+  }
+
+  function hasBossSignatureIntent() {
+    return bossDirectorState.active && bossDirectorState.signatureIntentActive === true;
+  }
+
+  // ============================================================
+  // SECTION 21: TRANSITION / RECOVERY / RAGE / FINALE DETECTION
   // ============================================================
 
   function resolveBossTransitionType(profile, fromPhase, toPhase) {
@@ -2049,6 +2455,33 @@
   function getBossTransitionProgress01() {
     if (!bossDirectorState.active || !bossDirectorState.transitionActive) return 0;
     return bossDirectorState.transitionProgress01;
+  }
+
+  // HC-BD-06: signature readiness helpers
+  function getBossSignatureInfo() {
+    return {
+      candidate: bossDirectorState.signatureCandidate,
+      slot: bossDirectorState.signatureSlot,
+      ready: bossDirectorState.signatureReady,
+      blocked: bossDirectorState.signatureBlocked,
+      blockReason: bossDirectorState.signatureBlockReason,
+      cooldownMs: bossDirectorState.signatureCooldownMs,
+      cooldownRemainingMs: bossDirectorState.signatureCooldownRemainingMs,
+      lastSignatureAt: bossDirectorState.lastSignatureAt,
+      signatureCount: bossDirectorState.signatureCount
+    };
+  }
+
+  function isBossSignatureReady() {
+    return bossDirectorState.active && bossDirectorState.signatureReady === true;
+  }
+
+  function getBossSignatureCandidate() {
+    return bossDirectorState.active ? bossDirectorState.signatureCandidate : null;
+  }
+
+  function getBossSignatureBlockReason() {
+    return bossDirectorState.active ? (bossDirectorState.signatureBlockReason || null) : "inactive";
   }
 
   // HC-BD-05: recovery window helpers
@@ -2272,6 +2705,23 @@
       recoveryPressureDropRatio: bossDirectorState.recoveryPressureDropRatio,
       lastRecoveryAt: bossDirectorState.lastRecoveryAt,
       recoveryCount: bossDirectorState.recoveryCount,
+      signatureCandidate: bossDirectorState.signatureCandidate,
+      signatureSlot: bossDirectorState.signatureSlot,
+      signatureReady: bossDirectorState.signatureReady,
+      signatureBlocked: bossDirectorState.signatureBlocked,
+      signatureBlockReason: bossDirectorState.signatureBlockReason,
+      signatureCooldownMs: bossDirectorState.signatureCooldownMs,
+      signatureCooldownRemainingMs: bossDirectorState.signatureCooldownRemainingMs,
+      lastSignatureAt: bossDirectorState.lastSignatureAt,
+      signatureCount: bossDirectorState.signatureCount,
+      signatureIntentActive: bossDirectorState.signatureIntentActive,
+      signatureIntentId: bossDirectorState.signatureIntentId,
+      signatureIntentCandidate: bossDirectorState.signatureIntentCandidate,
+      signatureIntentSlot: bossDirectorState.signatureIntentSlot,
+      signatureIntentCreatedAt: bossDirectorState.signatureIntentCreatedAt,
+      signatureIntentExpiresAt: bossDirectorState.signatureIntentExpiresAt,
+      signatureIntentConsumed: bossDirectorState.signatureIntentConsumed,
+      signatureIntentLastIssueAt: bossDirectorState.signatureIntentLastIssueAt,
       telemetry: bossDirectorState.telemetry
     };
   }
@@ -2349,6 +2799,25 @@
   window.getBossTransitionInfo = getBossTransitionInfo;
   window.isBossTransitionType = isBossTransitionType;
   window.getBossTransitionProgress01 = getBossTransitionProgress01;
+
+  // Signature readiness exports (HC-BD-06)
+  window.BOSS_SIGNATURE_SLOTS = BOSS_SIGNATURE_SLOTS;
+  window.resolveBossSignatureSlot = resolveBossSignatureSlot;
+  window.resolveBossSignatureCandidate = resolveBossSignatureCandidate;
+  window.getBossSignatureCooldownMs = getBossSignatureCooldownMs;
+  window.evaluateBossSignatureReadiness = evaluateBossSignatureReadiness;
+  window.getBossSignatureInfo = getBossSignatureInfo;
+  window.isBossSignatureReady = isBossSignatureReady;
+  window.getBossSignatureCandidate = getBossSignatureCandidate;
+  window.getBossSignatureBlockReason = getBossSignatureBlockReason;
+
+  // Signature intent exports (HC-BD-07)
+  window.BOSS_SIGNATURE_INTENT_LIFETIME_MS = BOSS_SIGNATURE_INTENT_LIFETIME_MS;
+  window.BOSS_SIGNATURE_INTENT_MIN_REISSUE_MS = BOSS_SIGNATURE_INTENT_MIN_REISSUE_MS;
+  window.createBossSignatureIntent = createBossSignatureIntent;
+  window.consumeBossSignatureIntent = consumeBossSignatureIntent;
+  window.getBossSignatureIntent = getBossSignatureIntent;
+  window.hasBossSignatureIntent = hasBossSignatureIntent;
 
   // Recovery window exports (HC-BD-05)
   window.resolveBossRecoveryType = resolveBossRecoveryType;
