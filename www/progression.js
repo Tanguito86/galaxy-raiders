@@ -188,15 +188,39 @@ function calculateEnemyKillScore(enemy, enemyData, bulletType = 'normal') {
   // Set-pieces valen un poco mas por complejidad tactica
   if (currentSetPiece) mult += 0.14;
 
-  // Bonus por cercania al player (juego agresivo)
+  // HC-SC-06: enhanced close-range tiers (clean replacement for legacy distances)
   if (enemy && player) {
-    const ex = enemy.x + (enemy.w || 0) * 0.5;
-    const ey = enemy.y + (enemy.h || 0) * 0.5;
-    const px = player.x + player.width * 0.5;
-    const py = player.y + player.height * 0.5;
-    const dist = Math.hypot(px - ex, py - ey);
-    if (dist < 150) mult += 0.16;
-    if (dist < 95) mult += 0.12;
+    var ex = enemy.x + (enemy.w || 0) * 0.5;
+    var ey = enemy.y + (enemy.h || 0) * 0.5;
+    var px = player.x + (player.width || 0) * 0.5;
+    var py = player.y + (player.height || 0) * 0.5;
+    var dist = Math.hypot(px - ex, py - ey);
+
+    var aggCfg = (function() {
+      var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+      var sc = cfg.scoreSystem || {};
+      var ag = sc.aggression || {};
+      var cr = ag.closeRange || {};
+      return {
+        near: cr.near || 60,
+        mid: cr.mid || 120,
+        nearBonus: (cr.bonus && cr.bonus.near) ? cr.bonus.near : 1.75,
+        midBonus: (cr.bonus && cr.bonus.mid) ? cr.bonus.mid : 1.30,
+        dangerEnabled: ag.dangerWindow ? ag.dangerWindow.enabled !== false : true,
+        dangerFrames: (ag.dangerWindow && ag.dangerWindow.frames) ? ag.dangerWindow.frames : 90,
+        dangerBonus: (ag.dangerWindow && ag.dangerWindow.bonus) ? ag.dangerWindow.bonus : 1.10
+      };
+    })();
+
+    if (dist <= aggCfg.near) {
+      mult *= aggCfg.nearBonus;
+      // Signal close-range kill for multiplier gain
+      if (typeof window.addScoreMultiplierGain === 'function') {
+        window.addScoreMultiplierGain('closeRange');
+      }
+    } else if (dist <= aggCfg.mid) {
+      mult *= aggCfg.midBonus;
+    }
   }
 
   // Lategame mantiene la economia de score interesante

@@ -595,3 +595,65 @@ function _hcScoreApplyMultiplier(source, points) {
   // Apply multiplier to score value
   return Math.round(points * _hcScoreMultiplier.current);
 }
+
+// ============================================================
+// HC-SC-06: DANGER WINDOW TRACKING
+// Rewards kills after being near danger (bullets/enemies).
+// ============================================================
+
+var _hcScoreDangerWindow = {
+  lastNearBulletFrame: -999,    // last frame player was near a bullet
+  lastNearEnemyFrame: -999,     // last frame player was near an enemy
+  dangerKills: 0,
+  totalFrames: 0
+};
+
+// Called from enemy bullet loop — player was near a bullet
+window.recordScoreDangerFrame = function() {
+  _hcScoreDangerWindow.lastNearBulletFrame = _hcScoreDangerWindow.totalFrames;
+};
+
+// Called from enemy kill scoring — check if danger window active
+window.isScoreDangerWindowActive = function() {
+  if (_hcScoreDangerWindow.totalFrames <= 0) return false;
+
+  var cfg = (function() {
+    var c = getGalaxyConfig ? getGalaxyConfig() : {};
+    var sc = c.scoreSystem || {};
+    var ag = sc.aggression || {};
+    var dw = ag.dangerWindow || {};
+    return {
+      enabled: dw.enabled !== false,
+      frames: dw.frames || 90
+    };
+  })();
+
+  if (!cfg.enabled) return false;
+
+  var framesSinceBullet = _hcScoreDangerWindow.totalFrames - _hcScoreDangerWindow.lastNearBulletFrame;
+  return framesSinceBullet >= 0 && framesSinceBullet <= cfg.frames;
+};
+
+// Called on aggressive kill during danger window
+window.recordScoreDangerKill = function() {
+  _hcScoreDangerWindow.dangerKills++;
+};
+
+// Called each frame to advance frame counter
+window.updateScoreDangerWindow = function() {
+  _hcScoreDangerWindow.totalFrames++;
+};
+
+window.getScoreDangerWindowTelemetry = function() {
+  return {
+    dangerKills: _hcScoreDangerWindow.dangerKills,
+    windowActive: window.isScoreDangerWindowActive()
+  };
+};
+
+window.resetScoreDangerWindow = function() {
+  _hcScoreDangerWindow.lastNearBulletFrame = -999;
+  _hcScoreDangerWindow.lastNearEnemyFrame = -999;
+  _hcScoreDangerWindow.dangerKills = 0;
+  _hcScoreDangerWindow.totalFrames = 0;
+};

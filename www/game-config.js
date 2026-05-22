@@ -192,6 +192,24 @@ window.GALAXY_CONFIG = {
         deathLossPercent: 0.30,
         hitLossPercent: 0.10
       }
+    },
+
+    // HC-SC-06: aggression & close-range scoring
+    aggression: {
+      enabled: true,
+      closeRange: {
+        near: 60,
+        mid: 120,
+        bonus: {
+          near: 1.75,
+          mid: 1.30
+        }
+      },
+      dangerWindow: {
+        enabled: true,
+        frames: 90,
+        bonus: 1.10
+      }
     }
   },
 

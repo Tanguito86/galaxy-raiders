@@ -332,6 +332,17 @@ if (bossDefeated) {
         registerGraze(b);
       }
 
+      // HC-SC-06: danger window — player near bullet
+      if (!isInvincible && typeof window.recordScoreDangerFrame === 'function') {
+        var dbx = b.x + (b.w || 4) / 2;
+        var dby = b.y + (b.h || 10) / 2;
+        var dpx = player.x + (player.width || 0) / 2;
+        var dpy = player.y + (player.height || 0) / 2;
+        var ddx = dpx - dbx;
+        var ddy = dpy - dby;
+        if (ddx * ddx + ddy * ddy < 3600) window.recordScoreDangerFrame();
+      }
+
       // ColisiÃ³n con el jugador
       if (
         !isInvincible &&

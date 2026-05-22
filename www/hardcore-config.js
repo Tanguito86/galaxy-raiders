@@ -18,7 +18,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   bossAI:    { enabled: true, maxOffsetX: 70, maxOffsetY: 35 },
   enemyAI:   { enabled: true, maxOffsetX: 18, maxOffsetY: 10, decisionIntervalMs: 500 },
   bossDirector: { enableBossDirector: false, enableBossTelemetry: false, enableBossRecoveryRules: false, enableBossFairnessValidation: false, enableBossTransitions: false, enableBossRageRules: false, enableBossSignatureIntents: false, enableCrabtronSignatureHook: false, enableSerpentrixSignatureHook: false, enableOrbitalSignatureHook: false, enableTenienteSignatureHook: false, enableEmperadorSignatureHook: false },
-  scoreSystem: { enabled: true, telemetry: { enabled: true, trackSources: true }, sourceColors: true, debug: { overlay: false }, multiplier: { enabled: true, base: 1.0, max: 3.0, gain: { enemyKill: 0.015, closeRange: 0.020, graze: 0.010, bossHit: 0.008 }, decay: { idleDelayFrames: 180, ratePerFrame: 0.0008 }, penalties: { deathLossPercent: 0.30, hitLossPercent: 0.10 } } },
+  scoreSystem: { enabled: true, telemetry: { enabled: true, trackSources: true }, sourceColors: true, debug: { overlay: false }, multiplier: { enabled: true, base: 1.0, max: 3.0, gain: { enemyKill: 0.015, closeRange: 0.020, graze: 0.010, bossHit: 0.008 }, decay: { idleDelayFrames: 180, ratePerFrame: 0.0008 }, penalties: { deathLossPercent: 0.30, hitLossPercent: 0.10 } }, aggression: { enabled: true, closeRange: { near: 60, mid: 120, bonus: { near: 1.75, mid: 1.30 } }, dangerWindow: { enabled: true, frames: 90, bonus: 1.10 } } },
   readability: {
     enabled: true,
     visualPriority: { enabled: true, fatalAlphaFloor: 0.85, telegraphAlphaFloor: 0.60, enemyAlphaFloor: 0.70, feedbackAlphaMax: 0.70, ambientAlphaMax: 0.55 },

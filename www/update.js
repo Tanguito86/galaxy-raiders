@@ -163,4 +163,5 @@ function update(dt) {
   if (typeof window.updateHardcoreRankPerformance === 'function') window.updateHardcoreRankPerformance(dt);
   if (typeof window.updateHardcoreRankPeakTracking === 'function') window.updateHardcoreRankPeakTracking();
   if (typeof window.updateScoreMultiplierDecay === 'function') window.updateScoreMultiplierDecay();
+  if (typeof window.updateScoreDangerWindow === 'function') window.updateScoreDangerWindow();
 }
