@@ -878,6 +878,8 @@ function updateBossStep(step, dt) {
   if (boss.phaseChanged && (boss.phase === 2 || boss.phase === 3)) {
     if (typeof triggerBossPhaseTransitionFX === 'function') triggerBossPhaseTransitionFX(boss, boss.phase);
     if (typeof window.addHardcoreRank === 'function') window.addHardcoreRank(2.5, 'boss_phase');
+    // HC-SC-08: record boss phase clear for efficiency
+    if (typeof window.onBossEfficiencyPhaseClear === 'function') window.onBossEfficiencyPhaseClear();
   }
   if (typeof updateBossPhaseTransitionFX === 'function') updateBossPhaseTransitionFX(boss, dt);
 

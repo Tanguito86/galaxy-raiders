@@ -269,6 +269,8 @@ function recordPlayerDeath(cause = 'unknown', lostLives = 1) {
   if (typeof window.applyScoreMultiplierPenalty === 'function') {
     window.applyScoreMultiplierPenalty('death');
   }
+  // HC-SC-08: record hit for boss efficiency no-hit tracking
+  if (typeof window.onBossEfficiencyHit === 'function') window.onBossEfficiencyHit();
   if (typeof window.reduceHardcoreRank === 'function') {
     window.reduceHardcoreRank(8, 'player_hit');
   }

@@ -225,6 +225,28 @@ window.GALAXY_CONFIG = {
         antiExploit: {
           maxDropsPerWave: 12
         }
+      },
+
+      // HC-SC-08: boss efficiency & no-hit rewards
+      bossScoring: {
+        efficiency: {
+          targetPhaseMs: 15000,
+          eliteBonus: 2.0,
+          eliteThreshold: 0.75,
+          goodBonus: 1.4,
+          goodThreshold: 1.0
+        },
+        noHit: {
+          phaseBonus: 2500,
+          fullBossBonus: 10000
+        },
+        antiMilk: {
+          softCapMs: 30000,
+          scoreDecayAfter: 0.50
+        },
+        multiplier: {
+          phaseClearGain: 0.050
+        }
       }
     }
   },

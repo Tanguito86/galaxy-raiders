@@ -657,3 +657,192 @@ window.resetScoreDangerWindow = function() {
   _hcScoreDangerWindow.dangerKills = 0;
   _hcScoreDangerWindow.totalFrames = 0;
 };
+
+// ============================================================
+// HC-SC-08: BOSS EFFICIENCY & NO-HIT REWARDS
+// Recompensa phase pressure, clean execution y anti-milking.
+// ============================================================
+
+var _hcBossEfficiency = {
+  bossActive: false,
+  bossPattern: '',
+  phaseStartedAt: 0,
+  phaseTimes: [],
+  bossStartedAt: 0,
+  noHitPhases: 0,
+  hitTakenThisBoss: false,
+  efficiencyLabels: [],
+  totalPhases: 0,
+  phasesNoHit: 0,
+  fullBossNoHit: false,
+  antiMilkTriggered: false
+};
+
+function _hcBossEffReadConfig() {
+  var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+  var sc = cfg.scoreSystem || {};
+  var ag = sc.aggression || {};
+  var bs = ag.bossScoring || {};
+  var ef = bs.efficiency || {};
+  var nh = bs.noHit || {};
+  var am = bs.antiMilk || {};
+  var mp = bs.multiplier || {};
+  return {
+    targetPhaseMs: ef.targetPhaseMs || 15000,
+    eliteBonus: ef.eliteBonus || 2.0,
+    eliteThreshold: ef.eliteThreshold || 0.75,
+    goodBonus: ef.goodBonus || 1.4,
+    goodThreshold: ef.goodThreshold || 1.0,
+    phaseBonus: nh.phaseBonus || 2500,
+    fullBossBonus: nh.fullBossBonus || 10000,
+    softCapMs: am.softCapMs || 30000,
+    scoreDecayAfter: am.scoreDecayAfter || 0.50,
+    phaseClearGain: mp.phaseClearGain || 0.050
+  };
+}
+
+// Called when boss spawns / level starts with boss
+window.onBossEfficiencyStart = function(pattern) {
+  _hcBossEfficiency.bossActive = true;
+  _hcBossEfficiency.bossPattern = pattern || '';
+  _hcBossEfficiency.bossStartedAt = typeof globalTime === 'number' ? globalTime : Date.now();
+  _hcBossEfficiency.phaseStartedAt = _hcBossEfficiency.bossStartedAt;
+  _hcBossEfficiency.phaseTimes = [];
+  _hcBossEfficiency.hitTakenThisBoss = false;
+  _hcBossEfficiency.noHitPhases = 0;
+  _hcBossEfficiency.totalPhases = 0;
+  _hcBossEfficiency.fullBossNoHit = false;
+  _hcBossEfficiency.antiMilkTriggered = false;
+};
+
+// Called when player takes damage during boss fight
+window.onBossEfficiencyHit = function() {
+  if (!_hcBossEfficiency.bossActive) return;
+  _hcBossEfficiency.hitTakenThisBoss = true;
+};
+
+// Called on boss phase change
+window.onBossEfficiencyPhaseClear = function() {
+  if (!_hcBossEfficiency.bossActive) return;
+  var now = typeof globalTime === 'number' ? globalTime : Date.now();
+  var phaseMs = now - _hcBossEfficiency.phaseStartedAt;
+  _hcBossEfficiency.phaseTimes.push(phaseMs);
+  _hcBossEfficiency.totalPhases++;
+
+  var cfg = _hcBossEffReadConfig();
+
+  // No-hit check for this phase
+  if (!_hcBossEfficiency.hitTakenThisBoss) {
+    _hcBossEfficiency.noHitPhases++;
+    // Award no-hit phase bonus
+    if (typeof awardScore === 'function') {
+      awardScore({ points: cfg.phaseBonus, source: 'bossHit' });
+    }
+    // Multiplier gain for clean phase
+    if (typeof window.addScoreMultiplierGain === 'function') {
+      window.addScoreMultiplierGain('bossHit');
+    }
+  }
+
+  // Efficiency label
+  var ratio = phaseMs / cfg.targetPhaseMs;
+  var label;
+  if (ratio <= cfg.eliteThreshold) label = 'ELITE';
+  else if (ratio <= cfg.goodThreshold) label = 'GOOD';
+  else label = 'SLOW';
+  _hcBossEfficiency.efficiencyLabels.push(label);
+
+  // Multiplier gain for phase clear
+  if (typeof window.addScoreMultiplierGain === 'function') {
+    // Append larger gain via direct multiplier bump
+    _hcScoreMultiplier.target = Math.min(_hcScoreMultiplier.max || 3.0,
+      _hcScoreMultiplier.target + cfg.phaseClearGain);
+  }
+
+  // Reset phase timer and hit flag for next phase
+  _hcBossEfficiency.phaseStartedAt = now;
+};
+
+// Called when boss dies — calculate final efficiency bonus
+window.onBossEfficiencyClear = function() {
+  if (!_hcBossEfficiency.bossActive) return;
+  var now = typeof globalTime === 'number' ? globalTime : Date.now();
+  var cfg = _hcBossEffReadConfig();
+
+  // Record final phase
+  var lastPhaseMs = now - _hcBossEfficiency.phaseStartedAt;
+  _hcBossEfficiency.phaseTimes.push(lastPhaseMs);
+  _hcBossEfficiency.totalPhases++;
+  if (!_hcBossEfficiency.hitTakenThisBoss) _hcBossEfficiency.noHitPhases++;
+
+  // Full boss time
+  var totalBossMs = now - _hcBossEfficiency.bossStartedAt;
+
+  // Anti-milk: if boss took too long, halve score
+  var bossScoreMult = 1.0;
+  if (totalBossMs > cfg.softCapMs) {
+    bossScoreMult = cfg.scoreDecayAfter;
+    _hcBossEfficiency.antiMilkTriggered = true;
+  }
+
+  // Full boss no-hit
+  var noHitBoss = _hcBossEfficiency.noHitPhases >= _hcBossEfficiency.totalPhases &&
+                   _hcBossEfficiency.totalPhases > 0;
+  _hcBossEfficiency.fullBossNoHit = noHitBoss;
+  if (noHitBoss) {
+    if (typeof awardScore === 'function') {
+      awardScore({ points: Math.round(cfg.fullBossBonus * bossScoreMult), source: 'bossKill' });
+    }
+  }
+
+  // Efficiency bonus applied to boss kill score
+  _hcBossEfficiency.bossMul = bossScoreMult;
+  _hcBossEfficiency.bossActive = false;
+};
+
+// Get efficiency multiplier for boss kill score
+window.getBossEfficiencyMultiplier = function() {
+  return _hcBossEfficiency.bossMul || 1.0;
+};
+
+// Anti-milk check — blocks score accumulation if boss is being stalled
+window.isBossBeingMilked = function() {
+  if (!_hcBossEfficiency.bossActive) return false;
+  var now = typeof globalTime === 'number' ? globalTime : Date.now();
+  var totalMs = now - _hcBossEfficiency.bossStartedAt;
+  var cfg = _hcBossEffReadConfig();
+  return totalMs > cfg.softCapMs;
+};
+
+// Telemetry
+window.getBossEfficiencyTelemetry = function() {
+  var cfg = _hcBossEffReadConfig();
+  var now = typeof globalTime === 'number' ? globalTime : Date.now();
+  return {
+    bossActive: _hcBossEfficiency.bossActive,
+    bossPattern: _hcBossEfficiency.bossPattern,
+    phaseTimes: _hcBossEfficiency.phaseTimes.slice(),
+    efficiencyLabels: _hcBossEfficiency.efficiencyLabels.slice(),
+    totalPhases: _hcBossEfficiency.totalPhases,
+    noHitPhases: _hcBossEfficiency.noHitPhases,
+    fullBossNoHit: _hcBossEfficiency.fullBossNoHit,
+    hitTaken: _hcBossEfficiency.hitTakenThisBoss,
+    antiMilkTriggered: _hcBossEfficiency.antiMilkTriggered,
+    currentTime: now - _hcBossEfficiency.bossStartedAt
+  };
+};
+
+window.resetBossEfficiencyTelemetry = function() {
+  _hcBossEfficiency.bossActive = false;
+  _hcBossEfficiency.bossPattern = '';
+  _hcBossEfficiency.phaseStartedAt = 0;
+  _hcBossEfficiency.phaseTimes = [];
+  _hcBossEfficiency.bossStartedAt = 0;
+  _hcBossEfficiency.noHitPhases = 0;
+  _hcBossEfficiency.hitTakenThisBoss = false;
+  _hcBossEfficiency.efficiencyLabels = [];
+  _hcBossEfficiency.totalPhases = 0;
+  _hcBossEfficiency.fullBossNoHit = false;
+  _hcBossEfficiency.antiMilkTriggered = false;
+  _hcBossEfficiency.bossMul = 1.0;
+};

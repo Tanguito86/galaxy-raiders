@@ -1134,6 +1134,8 @@ function initBoss() {
   boss.active = true;
   boss.name = bossData.name;
   boss.pattern = bossData.pattern;
+  // HC-SC-08: track boss start for efficiency
+  if (typeof window.onBossEfficiencyStart === 'function') window.onBossEfficiencyStart(boss.pattern);
   
  // âœ… Ajustar tamaÃ±o segÃºn el boss
   if (boss.pattern === 'zigzag') {

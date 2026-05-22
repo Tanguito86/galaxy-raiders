@@ -287,7 +287,10 @@ if (bossDefeated) {
   flashScreen = 30;
   var bossRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function') ? window.getHardcoreRankScoreMultiplier() : 1.00;
   var bossComboMult = (typeof window.getHardcoreComboMultiplier === 'function') ? window.getHardcoreComboMultiplier() : 1.00;
-  awardScore({ points: Math.round(5000 * bossRankMult * bossComboMult), source: 'bossKill' });
+  var effMult = (typeof window.getBossEfficiencyMultiplier === 'function') ? window.getBossEfficiencyMultiplier() : 1.0;
+  awardScore({ points: Math.round(5000 * bossRankMult * bossComboMult * effMult), source: 'bossKill' });
+  // HC-SC-08: record boss clear for efficiency
+  if (typeof window.onBossEfficiencyClear === 'function') window.onBossEfficiencyClear();
   spawnBossMedalRain(boss, level === 20 ? 12 : 8);
 
   // âœ… VICTORIA Ã‰PICA si completaste nivel 20
