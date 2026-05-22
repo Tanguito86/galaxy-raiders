@@ -662,7 +662,8 @@
     enableBossFairnessValidation: false,
     enableBossTransitions: false,
     enableBossRageRules: false,
-    enableBossSignatureIntents: false
+    enableBossSignatureIntents: false,
+    enableCrabtronSignatureHook: false
   };
 
   // ============================================================
@@ -726,7 +727,8 @@
       enableBossFairnessValidation: !!(typeof bd.enableBossFairnessValidation === "boolean" ? bd.enableBossFairnessValidation : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossFairnessValidation),
       enableBossTransitions: !!(typeof bd.enableBossTransitions === "boolean" ? bd.enableBossTransitions : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossTransitions),
       enableBossRageRules: !!(typeof bd.enableBossRageRules === "boolean" ? bd.enableBossRageRules : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossRageRules),
-      enableBossSignatureIntents: !!(typeof bd.enableBossSignatureIntents === "boolean" ? bd.enableBossSignatureIntents : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossSignatureIntents)
+      enableBossSignatureIntents: !!(typeof bd.enableBossSignatureIntents === "boolean" ? bd.enableBossSignatureIntents : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossSignatureIntents),
+      enableCrabtronSignatureHook: !!(typeof bd.enableCrabtronSignatureHook === "boolean" ? bd.enableCrabtronSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableCrabtronSignatureHook)
     };
   }
 
@@ -951,7 +953,7 @@
       ],
 
       signaturePlan: {
-        intro: "aimedBurst",
+        intro: "pincerFire",
         main: "pincerFire",
         rage: "pincerFire"
       }
@@ -2321,6 +2323,83 @@
     return bossDirectorState.active && bossDirectorState.signatureIntentActive === true;
   }
 
+  // HC-BD-08: safe intent application checker
+  function shouldApplyBossSignatureIntent(targetBoss, expectedBossKey, expectedCandidate) {
+    var result = {
+      apply: false,
+      reason: "unknown",
+      intent: null
+    };
+
+    var cfg = getBossDirectorConfig();
+    if (!cfg.enableBossDirector) {
+      result.reason = "director_disabled";
+      return result;
+    }
+
+    if (!cfg.enableBossSignatureIntents) {
+      result.reason = "intents_disabled";
+      return result;
+    }
+
+    if (!bossDirectorState.active) {
+      result.reason = "director_inactive";
+      return result;
+    }
+
+    if (!bossDirectorState.signatureIntentActive) {
+      result.reason = "no_intent_active";
+      return result;
+    }
+
+    if (bossDirectorState.signatureIntentConsumed) {
+      result.reason = "intent_already_consumed";
+      return result;
+    }
+
+    // Boss key match
+    if (expectedBossKey && bossDirectorState.signatureIntentBossKey !== expectedBossKey) {
+      result.reason = "boss_key_mismatch";
+      return result;
+    }
+
+    // Candidate match
+    if (expectedCandidate && bossDirectorState.signatureIntentCandidate !== expectedCandidate) {
+      result.reason = "candidate_mismatch";
+      return result;
+    }
+
+    // Boss-specific hook must be enabled
+    if (expectedBossKey === "crossfire" && !cfg.enableCrabtronSignatureHook) {
+      result.reason = "boss_hook_disabled";
+      return result;
+    }
+
+    // Block during transition
+    if (bossDirectorState.transitionActive) {
+      result.reason = "transition_active";
+      return result;
+    }
+
+    // Block during recovery
+    if (bossDirectorState.recoveryWindowActive) {
+      result.reason = "recovery_active";
+      return result;
+    }
+
+    // Fairness rhythm check
+    if (getBossFairnessRhythmScore() < 0.35) {
+      result.reason = "fairness_low";
+      return result;
+    }
+
+    // All checks passed
+    result.apply = true;
+    result.reason = "ready";
+    result.intent = getBossSignatureIntent();
+    return result;
+  }
+
   // ============================================================
   // SECTION 21: TRANSITION / RECOVERY / RAGE / FINALE DETECTION
   // ============================================================
@@ -2818,6 +2897,7 @@
   window.consumeBossSignatureIntent = consumeBossSignatureIntent;
   window.getBossSignatureIntent = getBossSignatureIntent;
   window.hasBossSignatureIntent = hasBossSignatureIntent;
+  window.shouldApplyBossSignatureIntent = shouldApplyBossSignatureIntent;
 
   // Recovery window exports (HC-BD-05)
   window.resolveBossRecoveryType = resolveBossRecoveryType;

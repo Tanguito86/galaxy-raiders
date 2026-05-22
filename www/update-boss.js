@@ -286,6 +286,50 @@ function fireBossDivebombPattern(step, phase) {
   }
 }
 
+// HC-BD-08: CRABTRON Signature Hook Trial
+// Minimal pincer fire — 2 bullets from each claw, moderate speed, no hard aim
+function tryCrabtronSignatureHook(bossRef) {
+  if (!bossRef || !bossRef.active) return false;
+  if (bossRef.pattern !== 'crossfire') return false;
+  if (bossRef.dashMode) return false;
+
+  // Check intent
+  if (typeof window.shouldApplyBossSignatureIntent !== 'function') return false;
+  var check = window.shouldApplyBossSignatureIntent(bossRef, 'crossfire', 'pincerFire');
+  if (!check.apply) return false;
+
+  // Safety: verify bullet array exists
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) return false;
+
+  var cx = bossRef.x + (bossRef.w || 90) / 2;
+  var cy = bossRef.y + (bossRef.h || 45);
+  var leftX = bossRef.x + 6;
+  var rightX = bossRef.x + (bossRef.w || 90) - 6;
+
+  // Pincer fire: left claw fires down-right, right claw fires down-left
+  var speed = 3.0;
+  var leftAngle = Math.PI / 2 + 0.35;   // ~110° — down-right from left claw
+  var rightAngle = Math.PI / 2 - 0.35;  // ~70°  — down-left from right claw
+
+  enemyBullets.push(
+    { x: leftX,  y: cy, w: 6, h: 10, vx: Math.cos(leftAngle)  * speed, vy: Math.sin(leftAngle)  * speed },
+    { x: leftX,  y: cy, w: 6, h: 10, vx: Math.cos(leftAngle - 0.12) * speed, vy: Math.sin(leftAngle - 0.12) * speed },
+    { x: rightX, y: cy, w: 6, h: 10, vx: Math.cos(rightAngle) * speed, vy: Math.sin(rightAngle) * speed },
+    { x: rightX, y: cy, w: 6, h: 10, vx: Math.cos(rightAngle + 0.12) * speed, vy: Math.sin(rightAngle + 0.12) * speed }
+  );
+
+  // Consume intent
+  if (typeof window.consumeBossSignatureIntent === 'function') {
+    window.consumeBossSignatureIntent('applied');
+  }
+
+  // Audio: use existing boss fire SFX
+  if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+  if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(100, 0.55);
+
+  return true;
+}
+
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
@@ -808,6 +852,13 @@ if (boss.shootTimer > shootRate) {
   if (Math.random() < 0.08) {
     spawnRandomPowerUp(boss.x + boss.w / 2 - 6, boss.y + boss.h);
     sfxPowerUp();
+  }
+
+  // HC-BD-08: CRABTRON signature hook trial (before switch)
+  if (boss.pattern === 'crossfire' && typeof tryCrabtronSignatureHook === 'function') {
+    if (tryCrabtronSignatureHook(boss)) {
+      return; // signature consumed this fire cycle
+    }
   }
 
   // ✅ PATRONES DE DISPARO ÚNICOS (con variación)
