@@ -269,6 +269,23 @@ window.GALAXY_CONFIG = {
           idleFrames: 600,
           disableWhileIdle: true
         }
+      },
+
+      // HC-SC-10: rank-score synergy & calibration
+      rankScoreSynergy: {
+        enabled: true,
+        multiplierGainBoost: {
+          rank1: 1.00,
+          rank3: 1.08,
+          rank5: 1.15
+        },
+        grazeOpportunityBonus: {
+          rank1: 1.00,
+          rank5: 1.20
+        },
+        calibration: {
+          debugOverlay: false
+        }
       }
     }
   },

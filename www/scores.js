@@ -1020,3 +1020,102 @@ window.resetSurvivalScoring = function() {
   _hcSurvivalState.recoverySuccesses = 0;
   _hcSurvivalState.survivalChainTriggers = 0;
 };
+
+// ============================================================
+// HC-SC-10: RANK SYNERGY & CALIBRATION
+// Rank boosts multiplier gains (risk → opportunity).
+// Calibration overlay for score economy audit.
+// ============================================================
+
+// Rank-based multiplier gain modifier
+window.getRankScoreSynergyMultiplier = function() {
+  if (!_hardcoreRankIsEnabled || !_hardcoreRankIsEnabled()) return 1.00;
+  var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+  var sc = cfg.scoreSystem || {};
+  var ag = sc.aggression || {};
+  var rs = ag.rankScoreSynergy || {};
+  if (!rs.enabled) return 1.00;
+
+  var rankLevel = (typeof window.getHardcoreRankLevel === 'function')
+    ? window.getHardcoreRankLevel()
+    : 1;
+  var boost = rs.multiplierGainBoost || {};
+  if (rankLevel >= 5) return boost.rank5 || 1.15;
+  if (rankLevel >= 3) return boost.rank3 || 1.08;
+  return boost.rank1 || 1.00;
+};
+
+// Calibration debug overlay
+window.drawHCScoreCalibrationOverlay = function(ctx) {
+  if (!ctx) return;
+  if (typeof H === 'undefined' || typeof W === 'undefined') return;
+  var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+  var sc = cfg.scoreSystem || {};
+  var ag = sc.aggression || {};
+  var rs = ag.rankScoreSynergy || {};
+  var cal = rs.calibration || {};
+  if (!cal.debugOverlay) return;
+
+  var telem = (typeof window.getHCScoreTelemetry === 'function') ? window.getHCScoreTelemetry() : { sourceBreakdown: {}, totalScoreAwarded: 0 };
+  var multTel = (typeof window.getScoreMultiplierTelemetry === 'function') ? window.getScoreMultiplierTelemetry() : { current: 1.0, peak: 1.0, uptimePercent: 0 };
+  var rankLvl = (typeof window.getHardcoreRankLevel === 'function') ? window.getHardcoreRankLevel() : 1;
+  var rankSynergy = (typeof window.getRankScoreSynergyMultiplier === 'function') ? window.getRankScoreSynergyMultiplier() : 1.0;
+
+  var panelX = W - 198;
+  var panelY = 44;
+  var panelW = 192;
+  var lineH = 8;
+  var y = panelY + 8;
+
+  ctx.save();
+  ctx.globalAlpha = 0.65;
+  ctx.fillStyle = '#080812';
+  ctx.fillRect(panelX, panelY, panelW, lineH * 18 + 12);
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = '#5ff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(panelX, panelY, panelW, lineH * 18 + 12);
+  ctx.globalAlpha = 1;
+  ctx.font = '5px "Press Start 2P"';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  function _fmt(v, d) { return (typeof v === 'number' && isFinite(v)) ? v.toFixed(d||1) : '--'; }
+
+  ctx.fillStyle = '#5ff';
+  ctx.fillText('HC-SC CALIBRATION', panelX + 6, y); y += lineH + 4;
+
+  ctx.fillStyle = '#ff0';
+  ctx.fillText('RANK: L' + rankLvl + '  SYNERGY: x' + _fmt(rankSynergy, 2), panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#fff';
+  ctx.fillText('MULT: x' + _fmt(multTel.current, 2) + '  PEAK: x' + _fmt(multTel.peak, 2) + '  UP:' + (multTel.uptimePercent||0) + '%', panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#ccc';
+  ctx.fillText('TOTAL: ' + telem.totalScoreAwarded, panelX + 6, y); y += lineH + 4;
+
+  var sources = [
+    { key: 'enemyKill', label: 'KILL' },
+    { key: 'bossKill', label: 'BOSS' },
+    { key: 'medal', label: 'MEDAL' },
+    { key: 'graze', label: 'GRAZE' },
+    { key: 'waveBonus', label: 'WAVE' },
+    { key: 'levelClear', label: 'LEVEL' },
+    { key: 'bossHit', label: 'BOSS HIT' },
+    { key: 'perfectWave', label: 'PERFECT' },
+    { key: 'stageMilestone', label: 'STAGE' },
+    { key: 'misc', label: 'OTHER' }
+  ];
+
+  ctx.fillStyle = '#aaa';
+  ctx.fillText('SOURCES:', panelX + 6, y); y += lineH;
+  for (var i = 0; i < sources.length; i++) {
+    var s = sources[i];
+    var sd = (telem.sourceBreakdown && telem.sourceBreakdown[s.key]) ? telem.sourceBreakdown[s.key] : { percent: 0, total: 0 };
+    var sourceDef = (typeof HC_SCORE_SOURCES !== 'undefined' && HC_SCORE_SOURCES[s.key]) ? HC_SCORE_SOURCES[s.key] : { color: '#888' };
+    ctx.fillStyle = sourceDef.color;
+    ctx.fillText(s.label, panelX + 6, y);
+    ctx.fillStyle = '#ccc';
+    ctx.fillText(sd.percent + '%  ' + sd.total, panelX + 40, y);
+    y += lineH;
+  }
+  ctx.restore();
+};
