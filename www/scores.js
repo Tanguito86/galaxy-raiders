@@ -738,6 +738,10 @@ window.onBossEfficiencyPhaseClear = function() {
     if (typeof awardScore === 'function') {
       awardScore({ points: cfg.phaseBonus, source: 'bossHit' });
     }
+    // HC-CAL-04: no-hit celebration
+    if (typeof window.showNoHitPhaseCelebration === 'function') {
+      window.showNoHitPhaseCelebration();
+    }
     // Multiplier gain for clean phase
     if (typeof window.addScoreMultiplierGain === 'function') {
       window.addScoreMultiplierGain('bossHit');
@@ -1117,5 +1121,91 @@ window.drawHCScoreCalibrationOverlay = function(ctx) {
     ctx.fillText(sd.percent + '%  ' + sd.total, panelX + 40, y);
     y += lineH;
   }
+  ctx.restore();
+};
+
+// ============================================================
+// HC-CAL-04: CELEBRATION FEEDBACK
+// Makes ELITE/GOOD/NO-HIT/RECOVERING visible to player.
+// ============================================================
+
+// Boss efficiency label on phase clear (called from onBossEfficiencyPhaseClear)
+window.showBossEfficiencyCelebration = function(label) {
+  if (typeof spawnPopup !== 'function') return;
+  if (typeof boss === 'undefined' || !boss || !boss.active) return;
+  var bx = boss.x + (boss.w || 90) / 2;
+  var by = boss.y + 10;
+
+  switch (label) {
+    case 'ELITE':
+      spawnPopup(bx, by, 'ELITE PHASE!', '#ffdd44');
+      break;
+    case 'GOOD':
+      spawnPopup(bx, by, 'GOOD PHASE', '#88ccff');
+      break;
+    // SLOW — no popup, silence is the feedback
+  }
+};
+
+// No-hit phase celebration
+window.showNoHitPhaseCelebration = function() {
+  if (typeof spawnPopup !== 'function') return;
+  if (typeof boss === 'undefined' || !boss || !boss.active) return;
+  var bx = boss.x + (boss.w || 90) / 2;
+  var by = boss.y - 5;
+  spawnPopup(bx, by, 'NO HIT!', '#ffdd88');
+};
+
+// RECOVERING state indicator
+window.drawRecoveryIndicator = function(ctx) {
+  if (!ctx) return;
+  if (typeof H === 'undefined') return;
+
+  var perfLabel = (typeof window.getHardcoreRankPerformanceLabel === 'function')
+    ? window.getHardcoreRankPerformanceLabel()
+    : '';
+  if (perfLabel !== 'RECOVERING') return;
+
+  var cfg = (function() {
+    var c = getGalaxyConfig ? getGalaxyConfig() : {};
+    var r = c.rank || {};
+    return { recoveringMs: r.recoveringMs || 4000 };
+  })();
+
+  var timeSinceHit = 0;
+  if (typeof window.getHardcoreRankPerformanceState === 'function') {
+    timeSinceHit = window.getHardcoreRankPerformanceState().hitlessDurationMs || 0;
+  }
+  var remaining = Math.max(0, cfg.recoveringMs - timeSinceHit);
+  var alpha = 0.4 + 0.25 * Math.sin((typeof globalTime === 'number' ? globalTime : 0) * 0.008);
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.globalAlpha = alpha;
+  ctx.font = '6px "Press Start 2P"';
+  ctx.fillStyle = '#ff6644';
+  ctx.fillText('RECOVERING', 200, H - 8);
+  ctx.globalAlpha = 1;
+  ctx.restore();
+};
+
+// Danger window indicator — show when danger bonus is active
+window.drawDangerWindowIndicator = function(ctx) {
+  if (!ctx) return;
+  if (typeof H === 'undefined' || typeof W === 'undefined') return;
+  if (typeof window.isScoreDangerWindowActive !== 'function') return;
+  if (!window.isScoreDangerWindowActive()) return;
+
+  var alpha = 0.18 + 0.12 * Math.sin((typeof globalTime === 'number' ? globalTime : 0) * 0.012);
+
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.globalAlpha = alpha;
+  ctx.font = '5px "Press Start 2P"';
+  ctx.fillStyle = '#ff8844';
+  ctx.fillText('DANGER', W - 6, 120);
+  ctx.globalAlpha = 1;
   ctx.restore();
 };

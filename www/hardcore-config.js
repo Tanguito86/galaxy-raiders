@@ -645,7 +645,7 @@ function registerGraze(bulletRef) {
   }
 
   // HC-SC-05: enhanced graze scoring (base 12, scaled by bullet repeat count)
-  var baseScore = (typeof g.scoreBase === 'number') ? g.scoreBase : 12;
+  var baseScore = (typeof g.scoreBaseCalibrated === 'number') ? g.scoreBaseCalibrated : ((typeof g.scoreBase === 'number') ? g.scoreBase : 12);
   var repeatPenalty = (typeof g.repeatPenalty === 'number') ? g.repeatPenalty : 0.35;
   var grazeCount = (bulletRef && typeof bulletRef._grazeCount === 'number') ? bulletRef._grazeCount : 1;
   var repeatMult = 1.0 - (grazeCount - 1) * repeatPenalty;

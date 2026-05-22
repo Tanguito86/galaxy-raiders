@@ -26,7 +26,9 @@ window.GALAXY_CONFIG = {
     scoreBase: 12,
     maxPerBullet: 4,
     sameBulletCooldownFrames: 20,
-    repeatPenalty: 0.35
+    repeatPenalty: 0.35,
+    // HC-CAL-04: increased graze base score
+    scoreBaseCalibrated: 20
   },
 
   // ============ RANK (dificultad dinamica) ============

@@ -241,8 +241,8 @@ STAGE_PLANS[17] = {
   tensionCurve: 'overload',
   sections: [
     { type: 'warmup', durationMs: 6000, intensity: 0.50 },
-    { type: 'survival_corridor', durationMs: 35000, intensity: 0.90 },
-    { type: 'relief', durationMs: 12000, intensity: 0.25 },
+    { type: 'survival_corridor', durationMs: 25000, intensity: 0.90 },
+    { type: 'relief', durationMs: 15000, intensity: 0.25 },
     { type: 'crossfire', durationMs: 22000, intensity: 0.80 },
     { type: 'relief', durationMs: 12000, intensity: 0.25 }
   ]
@@ -255,7 +255,7 @@ STAGE_PLANS[18] = {
     { type: 'warmup', durationMs: 8000, intensity: 0.50 },
     { type: 'pressure_ramp', durationMs: 20000, intensity: 0.75 },
     { type: 'mini_setpiece', durationMs: 35000, intensity: 0.90 },  // IMPERIAL GUARD
-    { type: 'relief', durationMs: 12000, intensity: 0.30 },
+    { type: 'relief', durationMs: 18000, intensity: 0.25 },
     { type: 'boss_prelude', durationMs: 15000, intensity: 0.20 }  // → TENIENTE
   ]
 };
@@ -278,7 +278,7 @@ STAGE_PLANS[20] = {
   isBoss: true,
   bossPattern: 'supreme',
   sections: [
-    { type: 'boss_prelude', durationMs: 18000, intensity: 0.15 },
+    { type: 'boss_prelude', durationMs: 22000, intensity: 0.12 },
     { type: 'climax', durationMs: 999999, intensity: 1.0 }
   ]
 };
