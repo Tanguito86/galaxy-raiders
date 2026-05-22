@@ -353,6 +353,132 @@ window.drawStageDirectorDebugOverlay = function(ctx) {
   ctx.fillText(' PRELUDE:' + (sd.preludeActive ? 'active' : ''), panelX + 68, y); y += lineH;
   ctx.fillText('LEVEL: ' + sd.currentLevel + '  SECTIONS:' + sd.sectionsCompleted, panelX + 6, y); y += lineH;
   ctx.fillText('DURATION: ' + (sd.sectionDurationMs / 1000).toFixed(1) + 's', panelX + 6, y);
+  y += lineH;
+  // HC-ST-04: plan metadata
+  if (_stageDirectorPlan.currentPlan) {
+    ctx.fillStyle = '#bb88ff';
+    ctx.fillText('PLAN: ' + (_stageDirectorPlan.currentPlan.identity || '?') + ' (' + (_stageDirectorPlan.sectionIndex + 1) + '/' + _stageDirectorPlan.sectionsInPlan + ')', panelX + 6, y); y += lineH;
+    ctx.fillStyle = '#aad';
+    ctx.fillText('CURVE: ' + (_stageDirectorPlan.currentPlan.tensionCurve || '?'), panelX + 6, y); y += lineH;
+    var nextSection = getStagePlanCurrentSection(_stageDirectorPlan.currentPlan, _stageDirectorPlan.sectionIndex + 1);
+    if (nextSection) {
+      ctx.fillStyle = '#ccc';
+      ctx.fillText('NEXT: ' + nextSection.type + ' (' + (nextSection.durationMs / 1000).toFixed(0) + 's)', panelX + 6, y);
+    }
+  }
 
   ctx.restore();
+};
+
+// ============================================================
+// HC-ST-04: SECTION FRAMEWORK & STAGE PLAN INTEGRATION
+// ============================================================
+
+var _stageDirectorPlan = {
+  currentPlan: null,
+  sectionIndex: 0,
+  sectionsInPlan: 0,
+  planCompleted: false,
+  sectionCounters: {}
+};
+
+// Load stage plan for current level
+window.loadStagePlan = function(levelNum) {
+  if (typeof getStagePlan !== 'function') return;
+  var plan = getStagePlan(levelNum);
+  if (!plan) return;
+
+  _stageDirectorPlan.currentPlan = plan;
+  _stageDirectorPlan.sectionIndex = 0;
+  _stageDirectorPlan.sectionsInPlan = getStagePlanSectionCount(plan);
+  _stageDirectorPlan.planCompleted = false;
+  window.onStageDirectorLevelChange(levelNum);
+
+  // Start first section
+  var firstSection = getStagePlanCurrentSection(plan, 0);
+  if (firstSection) {
+    window.startStageSection(firstSection.type, {
+      plan: plan,
+      intensity: firstSection.intensity,
+      durationMs: firstSection.durationMs
+    });
+  }
+};
+
+// Advance to next section in plan
+window.advanceStageSection = function() {
+  var plan = _stageDirectorPlan.currentPlan;
+  if (!plan) return;
+
+  var nextIdx = _stageDirectorPlan.sectionIndex + 1;
+  var nextSection = getStagePlanCurrentSection(plan, nextIdx);
+  if (!nextSection) {
+    _stageDirectorPlan.planCompleted = true;
+    window.endStageSection();
+    return;
+  }
+
+  _stageDirectorPlan.sectionIndex = nextIdx;
+  // Track section type counter
+  var st = nextSection.type;
+  _stageDirectorPlan.sectionCounters[st] = (_stageDirectorPlan.sectionCounters[st] || 0) + 1;
+
+  window.transitionStageSection(st, {
+    plan: plan,
+    intensity: nextSection.intensity,
+    durationMs: nextSection.durationMs,
+    sectionIndex: nextIdx
+  });
+};
+
+// Check if current section should end based on plan duration
+window.checkStageSectionTimer = function() {
+  var plan = _stageDirectorPlan.currentPlan;
+  if (!plan) return;
+  var currentSection = getStagePlanCurrentSection(plan, _stageDirectorPlan.sectionIndex);
+  if (!currentSection) return;
+
+  // Climax sections don't auto-advance (boss HP controls that)
+  if (currentSection.type === 'climax') return;
+
+  if (_stageDirector.sectionDurationMs >= currentSection.durationMs) {
+    window.advanceStageSection();
+  }
+};
+
+// Get current section metadata
+window.getCurrentStageSection = function() {
+  var plan = _stageDirectorPlan.currentPlan;
+  if (!plan) return null;
+  return getStagePlanCurrentSection(plan, _stageDirectorPlan.sectionIndex);
+};
+
+// Get plan metadata
+window.getStagePlanMetadata = function() {
+  var plan = _stageDirectorPlan.currentPlan;
+  if (!plan) return null;
+  return {
+    identity: plan.identity || 'unknown',
+    tensionCurve: plan.tensionCurve || 'sawtooth',
+    isBoss: plan.isBoss || false,
+    bossPattern: plan.bossPattern || '',
+    sectionIndex: _stageDirectorPlan.sectionIndex,
+    sectionsInPlan: _stageDirectorPlan.sectionsInPlan,
+    planCompleted: _stageDirectorPlan.planCompleted,
+    sectionCounters: _stageDirectorPlan.sectionCounters
+  };
+};
+
+// Called each frame from updateStageDirector
+var _stageDirUpdateOrig = window.updateStageDirector;
+window.updateStageDirector = function(dt) {
+  if (_stageDirUpdateOrig) _stageDirUpdateOrig(dt);
+  window.checkStageSectionTimer();
+};
+
+// Override onStageDirectorLevelChange to load plan
+var _stageDirLvlChangeOrig = window.onStageDirectorLevelChange;
+window.onStageDirectorLevelChange = function(newLevel) {
+  if (_stageDirLvlChangeOrig) _stageDirLvlChangeOrig(newLevel);
+  window.loadStagePlan(newLevel);
 };
