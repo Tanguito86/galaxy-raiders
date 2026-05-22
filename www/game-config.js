@@ -130,7 +130,8 @@ window.GALAXY_CONFIG = {
     enableBossRageRules: false,
     enableBossSignatureIntents: false,
     enableCrabtronSignatureHook: false,
-    enableSerpentrixSignatureHook: false
+    enableSerpentrixSignatureHook: false,
+    enableOrbitalSignatureHook: false
   },
 
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============

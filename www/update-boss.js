@@ -450,6 +450,123 @@ function drawSerpentrixSignatureTrapTelegraph(ctx) {
   ctx.restore();
 }
 
+// HC-BD-10: ORBITAL Pressure Ring Signature Hook
+var orbitalSignatureRing = null;
+
+function tryOrbitalSignatureHook(bossRef) {
+  if (!bossRef || !bossRef.active) return false;
+  if (bossRef.pattern !== 'rotate') return false;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) return false;
+  if (orbitalSignatureRing && orbitalSignatureRing.active) return false;
+
+  if (typeof window.shouldApplyBossSignatureIntent !== 'function') return false;
+  var check = window.shouldApplyBossSignatureIntent(bossRef, 'rotate', 'orbitalPressure');
+  if (!check.apply) return false;
+
+  var cx = bossRef.x + (bossRef.w || 90) / 2;
+  var cy = bossRef.y + (bossRef.h || 45) / 2;
+  var radius = 34;
+
+  orbitalSignatureRing = {
+    active: true,
+    timer: 0,
+    delayMs: 420,
+    bossKey: 'rotate',
+    cx: cx,
+    cy: cy,
+    radius: radius,
+    rotation: 0,
+    bulletCount: 4
+  };
+
+  if (typeof window.consumeBossSignatureIntent === 'function') {
+    window.consumeBossSignatureIntent('applied');
+  }
+
+  if (typeof sfxBossWarning === 'function') sfxBossWarning();
+  if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(120, 0.55);
+
+  return true;
+}
+
+function updateOrbitalSignatureRing(dt) {
+  if (!orbitalSignatureRing || !orbitalSignatureRing.active) return;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) {
+    orbitalSignatureRing = null;
+    return;
+  }
+
+  orbitalSignatureRing.timer += (dt || 16.667);
+
+  // Rotate during delay
+  orbitalSignatureRing.rotation += 0.028;
+
+  if (orbitalSignatureRing.timer >= orbitalSignatureRing.delayMs) {
+    var ring = orbitalSignatureRing;
+    var speed = 2.6;
+
+    for (var i = 0; i < ring.bulletCount; i++) {
+      var angle = ring.rotation + (Math.PI * 2 * i / ring.bulletCount);
+      var bx = ring.cx + Math.cos(angle) * ring.radius;
+      var by = ring.cy + Math.sin(angle) * ring.radius;
+      enemyBullets.push({
+        x: bx - 3,
+        y: by,
+        w: 6, h: 10,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    orbitalSignatureRing = null;
+  }
+}
+
+function drawOrbitalSignatureRingTelegraph(ctx) {
+  if (!ctx) return;
+  if (!orbitalSignatureRing || !orbitalSignatureRing.active) return;
+
+  var ring = orbitalSignatureRing;
+  var progress = Math.min(1, ring.timer / Math.max(1, ring.delayMs));
+  var alpha = 0.15 + progress * 0.30;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Ring outline
+  ctx.strokeStyle = '#4488ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(ring.cx, ring.cy, ring.radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bullet points on the ring
+  ctx.fillStyle = '#6699ff';
+  for (var i = 0; i < ring.bulletCount; i++) {
+    var angle = ring.rotation + (Math.PI * 2 * i / ring.bulletCount);
+    var px = ring.cx + Math.cos(angle) * ring.radius;
+    var py = ring.cy + Math.sin(angle) * ring.radius;
+    var dotSize = 3 + Math.sin(progress * Math.PI * 3 + i) * 1.5;
+
+    ctx.beginPath();
+    ctx.arc(px, py, dotSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Direction line from point outward
+    var tipX = px + Math.cos(angle) * 8;
+    var tipY = py + Math.sin(angle) * 8;
+    ctx.strokeStyle = '#3366cc';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(tipX, tipY);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
@@ -461,6 +578,11 @@ function updateBossStep(step, dt) {
   // HC-BD-09: update SERPENTRIX delayed trap timer
   if (typeof updateSerpentrixSignatureTrap === 'function') {
     updateSerpentrixSignatureTrap(dt);
+  }
+
+  // HC-BD-10: update ORBITAL pressure ring timer
+  if (typeof updateOrbitalSignatureRing === 'function') {
+    updateOrbitalSignatureRing(dt);
   }
 
   updateBossPhase();
@@ -989,6 +1111,13 @@ if (boss.shootTimer > shootRate) {
   // HC-BD-09: SERPENTRIX signature hook (before switch)
   if (boss.pattern === 'zigzag' && typeof trySerpentrixSignatureHook === 'function') {
     if (trySerpentrixSignatureHook(boss)) {
+      return; // signature consumed this fire cycle
+    }
+  }
+
+  // HC-BD-10: ORBITAL signature hook (before switch)
+  if (boss.pattern === 'rotate' && typeof tryOrbitalSignatureHook === 'function') {
+    if (tryOrbitalSignatureHook(boss)) {
       return; // signature consumed this fire cycle
     }
   }

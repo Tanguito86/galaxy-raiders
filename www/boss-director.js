@@ -664,7 +664,8 @@
     enableBossRageRules: false,
     enableBossSignatureIntents: false,
     enableCrabtronSignatureHook: false,
-    enableSerpentrixSignatureHook: false
+    enableSerpentrixSignatureHook: false,
+    enableOrbitalSignatureHook: false
   };
 
   // ============================================================
@@ -730,7 +731,8 @@
       enableBossRageRules: !!(typeof bd.enableBossRageRules === "boolean" ? bd.enableBossRageRules : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossRageRules),
       enableBossSignatureIntents: !!(typeof bd.enableBossSignatureIntents === "boolean" ? bd.enableBossSignatureIntents : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableBossSignatureIntents),
       enableCrabtronSignatureHook: !!(typeof bd.enableCrabtronSignatureHook === "boolean" ? bd.enableCrabtronSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableCrabtronSignatureHook),
-      enableSerpentrixSignatureHook: !!(typeof bd.enableSerpentrixSignatureHook === "boolean" ? bd.enableSerpentrixSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableSerpentrixSignatureHook)
+      enableSerpentrixSignatureHook: !!(typeof bd.enableSerpentrixSignatureHook === "boolean" ? bd.enableSerpentrixSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableSerpentrixSignatureHook),
+      enableOrbitalSignatureHook: !!(typeof bd.enableOrbitalSignatureHook === "boolean" ? bd.enableOrbitalSignatureHook : BOSS_DIRECTOR_CONFIG_DEFAULTS.enableOrbitalSignatureHook)
     };
   }
 
@@ -1082,8 +1084,8 @@
 
       signaturePlan: {
         intro: "orbitalPressure",
-        main: "laserSweep",
-        rage: "phaseBurst"
+        main: "orbitalPressure",
+        rage: "orbitalPressure"
       }
     },
 
@@ -2374,7 +2376,8 @@
     // Boss-specific hook must be enabled (generic mapping)
     var hookFlagsByBoss = {
       crossfire: cfg.enableCrabtronSignatureHook,
-      zigzag: cfg.enableSerpentrixSignatureHook
+      zigzag: cfg.enableSerpentrixSignatureHook,
+      rotate: cfg.enableOrbitalSignatureHook
     };
 
     if (expectedBossKey && hookFlagsByBoss.hasOwnProperty(expectedBossKey)) {

@@ -3988,6 +3988,9 @@ if (shouldShow) {
       // HC-BD-09: SERPENTRIX delayed trap telegraph
       if (typeof drawSerpentrixSignatureTrapTelegraph === 'function') drawSerpentrixSignatureTrapTelegraph(ctx);
 
+      // HC-BD-10: ORBITAL pressure ring telegraph
+      if (typeof drawOrbitalSignatureRingTelegraph === 'function') drawOrbitalSignatureRingTelegraph(ctx);
+
       // HC-20: phase transition FX (all patterns)
       if (typeof drawBossPhaseTransitionFX === 'function') drawBossPhaseTransitionFX(ctx, boss);
 
