@@ -1169,8 +1169,8 @@
       rageStyle: "ultimate_desperation_mode",
       telegraphStyle: "imperial_glow",
 
-      primarySignature: "arenaSplit",
-      secondarySignature: "orbitalPressure",
+      primarySignature: "phaseBurst",
+      secondarySignature: "arenaSplit",
 
       recoveryBias: "phase_transition_only",
       fairnessBias: "low",
@@ -1213,9 +1213,10 @@
       ],
 
       signaturePlan: {
-        intro: "orbitalPressure",
-        main: "arenaSplit",
-        rage: "phaseBurst"
+        intro: "aimedBurst",
+        main: "phaseBurst",
+        rage: "phaseBurst",
+        finale: "phaseBurst"
       }
     }
   };
@@ -2380,7 +2381,8 @@
       crossfire: cfg.enableCrabtronSignatureHook,
       zigzag: cfg.enableSerpentrixSignatureHook,
       rotate: cfg.enableOrbitalSignatureHook,
-      divebomb: cfg.enableTenienteSignatureHook
+      divebomb: cfg.enableTenienteSignatureHook,
+      supreme: cfg.enableEmperadorSignatureHook
     };
 
     if (expectedBossKey && hookFlagsByBoss.hasOwnProperty(expectedBossKey)) {

@@ -683,6 +683,141 @@ function drawTenienteSignatureSweepTelegraph(ctx) {
   ctx.restore();
 }
 
+// HC-BD-12: EMPERADOR Phase Burst Signature Hook
+var emperadorSignatureBurst = null;
+
+function tryEmperadorSignatureHook(bossRef) {
+  if (!bossRef || !bossRef.active) return false;
+  if (bossRef.pattern !== 'supreme') return false;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) return false;
+  if (emperadorSignatureBurst && emperadorSignatureBurst.active) return false;
+
+  if (typeof window.shouldApplyBossSignatureIntent !== 'function') return false;
+  var check = window.shouldApplyBossSignatureIntent(bossRef, 'supreme', 'phaseBurst');
+  if (!check.apply) return false;
+
+  var cx = bossRef.x + (bossRef.w || 90) / 2;
+  var cy = bossRef.y + (bossRef.h || 45);
+
+  // Wide readable fan angles (60°, 80°, 90°, 100°, 120°)
+  var angles = [
+    Math.PI * 60 / 180,   // 60°
+    Math.PI * 80 / 180,   // 80°
+    Math.PI * 90 / 180,   // 90° (straight down)
+    Math.PI * 100 / 180,  // 100°
+    Math.PI * 120 / 180   // 120°
+  ];
+
+  emperadorSignatureBurst = {
+    active: true,
+    timer: 0,
+    delayMs: 500,
+    bossKey: 'supreme',
+    originX: cx,
+    originY: cy,
+    angles: angles.slice(),
+    bulletCount: 5
+  };
+
+  // Consume intent
+  if (typeof window.consumeBossSignatureIntent === 'function') {
+    window.consumeBossSignatureIntent('applied');
+  }
+
+  if (typeof sfxBossWarning === 'function') sfxBossWarning();
+  if (typeof requestBossMinorDuck === 'function') requestBossMinorDuck(120, 0.55);
+
+  return true;
+}
+
+function updateEmperadorSignatureBurst(dt) {
+  if (!emperadorSignatureBurst || !emperadorSignatureBurst.active) return;
+  if (typeof enemyBullets === 'undefined' || !Array.isArray(enemyBullets)) {
+    emperadorSignatureBurst = null;
+    return;
+  }
+
+  emperadorSignatureBurst.timer += (dt || 16.667);
+
+  if (emperadorSignatureBurst.timer >= emperadorSignatureBurst.delayMs) {
+    var burst = emperadorSignatureBurst;
+    var speedMin = 2.6;
+    var speedMax = 3.1;
+
+    for (var i = 0; i < burst.angles.length && i < 5; i++) {
+      var angle = burst.angles[i];
+      var speed = speedMin + (speedMax - speedMin) * (i / (burst.angles.length - 1));
+      enemyBullets.push({
+        x: burst.originX - 3,
+        y: burst.originY,
+        w: 6, h: 10,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed
+      });
+    }
+
+    if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
+    emperadorSignatureBurst = null;
+  }
+}
+
+function drawEmperadorSignatureBurstTelegraph(ctx) {
+  if (!ctx) return;
+  if (!emperadorSignatureBurst || !emperadorSignatureBurst.active) return;
+
+  var burst = emperadorSignatureBurst;
+  var progress = Math.min(1, burst.timer / Math.max(1, burst.delayMs));
+  var alpha = 0.15 + progress * 0.30;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Thin red/gold ring around origin
+  var ringRadius = 8 + progress * 6;
+  ctx.strokeStyle = '#ff3333';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.arc(burst.originX, burst.originY, ringRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Embellish with gold outer ring
+  ctx.strokeStyle = '#ffaa00';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(burst.originX, burst.originY, ringRadius + 3, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 5 directional markers at each angle
+  ctx.fillStyle = '#ff6633';
+  for (var i = 0; i < burst.angles.length && i < 5; i++) {
+    var angle = burst.angles[i];
+    var markerLen = 14 + progress * 10;
+    var mx = burst.originX + Math.cos(angle) * (ringRadius + 4);
+    var my = burst.originY + Math.sin(angle) * (ringRadius + 4);
+    var ex = burst.originX + Math.cos(angle) * (ringRadius + 4 + markerLen);
+    var ey = burst.originY + Math.sin(angle) * (ringRadius + 4 + markerLen);
+
+    // Direction line
+    ctx.strokeStyle = '#ff4444';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+
+    // Dot at tip
+    var dotSize = 2.5 + Math.sin(progress * Math.PI * 4 + i * 1.2) * 1.2;
+    ctx.fillStyle = '#ff8844';
+    ctx.beginPath();
+    ctx.arc(ex, ey, dotSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
@@ -704,6 +839,11 @@ function updateBossStep(step, dt) {
   // HC-BD-11: update TENIENTE laser sweep timer
   if (typeof updateTenienteSignatureSweep === 'function') {
     updateTenienteSignatureSweep(dt);
+  }
+
+  // HC-BD-12: update EMPERADOR phase burst timer
+  if (typeof updateEmperadorSignatureBurst === 'function') {
+    updateEmperadorSignatureBurst(dt);
   }
 
   updateBossPhase();
@@ -1246,6 +1386,13 @@ if (boss.shootTimer > shootRate) {
   // HC-BD-11: TENIENTE signature hook (before switch)
   if (boss.pattern === 'divebomb' && typeof tryTenienteSignatureHook === 'function') {
     if (tryTenienteSignatureHook(boss)) {
+      return; // signature consumed this fire cycle
+    }
+  }
+
+  // HC-BD-12: EMPERADOR signature hook (before switch)
+  if (boss.pattern === 'supreme' && typeof tryEmperadorSignatureHook === 'function') {
+    if (tryEmperadorSignatureHook(boss)) {
       return; // signature consumed this fire cycle
     }
   }

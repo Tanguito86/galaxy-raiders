@@ -3994,6 +3994,9 @@ if (shouldShow) {
       // HC-BD-11: TENIENTE laser sweep telegraph
       if (typeof drawTenienteSignatureSweepTelegraph === 'function') drawTenienteSignatureSweepTelegraph(ctx);
 
+      // HC-BD-12: EMPERADOR phase burst telegraph
+      if (typeof drawEmperadorSignatureBurstTelegraph === 'function') drawEmperadorSignatureBurstTelegraph(ctx);
+
       // HC-20: phase transition FX (all patterns)
       if (typeof drawBossPhaseTransitionFX === 'function') drawBossPhaseTransitionFX(ctx, boss);
 
