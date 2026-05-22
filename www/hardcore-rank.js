@@ -1373,3 +1373,151 @@ window.drawHardcoreRankFullDebug = function(ctx) {
 
   ctx.restore();
 };
+
+// ============================================================
+// HC-RK-07: LIVE ACTIVATION SAFEGUARDS
+// Runtime protections for rank effects in live gameplay.
+// ============================================================
+
+// ============================================================
+// ANTI-OSCILLATION SMOOTHING
+// ============================================================
+
+var _hardcoreRankSmooth = {
+  displayValue: 0,       // lerped value for smooth display
+  displayLevel: 1,       // lerped level
+  smoothFactor: 0.12,    // lerp speed (lower = smoother)
+  lastUpdateAt: 0
+};
+
+// Get smoothed display rank (for HUD/feedback, not gameplay)
+window.getHardcoreRankDisplayValue = function() {
+  if (!_hardcoreRankIsEnabled()) return _hardcoreRank.value;
+
+  var now = Date.now();
+  var dt = (_hardcoreRankSmooth.lastUpdateAt > 0) ? Math.min(1000, now - _hardcoreRankSmooth.lastUpdateAt) : 16;
+  _hardcoreRankSmooth.lastUpdateAt = now;
+
+  // Lerp toward actual value
+  _hardcoreRankSmooth.displayValue +=
+    (_hardcoreRank.value - _hardcoreRankSmooth.displayValue) * _hardcoreRankSmooth.smoothFactor * (dt / 16.667);
+
+  // Prevent tiny drift
+  if (Math.abs(_hardcoreRankSmooth.displayValue - _hardcoreRank.value) < 0.01) {
+    _hardcoreRankSmooth.displayValue = _hardcoreRank.value;
+  }
+
+  return _hardcoreRankSmooth.displayValue;
+};
+
+window.getHardcoreRankDisplayLevel = function() {
+  return _hardcoreRankCalcLevel(window.getHardcoreRankDisplayValue());
+};
+
+// ============================================================
+// PEAK VALUE TRACKING
+// ============================================================
+
+var _hardcoreRankPeaks = {
+  highestValue: 0,
+  highestLevel: 1,
+  highestMultiplier: 1.00,
+  highestBulletSpeed: 0,
+  lowestCooldown: 9999,
+  lowestWavePause: 9999,
+  highestCombinedPressure: 1.00,
+  totalGovernorBlocks: 0,
+  totalCaps: 0,
+  totalApplications: 0
+};
+
+// Record peak values each frame
+window.updateHardcoreRankPeakTracking = function() {
+  if (!_hardcoreRankIsEnabled()) return;
+
+  var p = _hardcoreRankPeaks;
+
+  // Rank peaks
+  if (_hardcoreRank.value > p.highestValue) p.highestValue = _hardcoreRank.value;
+  if (_hardcoreRank.level > p.highestLevel) p.highestLevel = _hardcoreRank.level;
+  if (_hardcoreRank.multiplier > p.highestMultiplier) p.highestMultiplier = _hardcoreRank.multiplier;
+
+  // Effect peaks (only if gameplay effects enabled)
+  if (typeof window.areHardcoreRankGameplayEffectsEnabled === 'function' &&
+      window.areHardcoreRankGameplayEffectsEnabled()) {
+    var combined = (typeof window.getHardcoreRankCombinedPressure === 'function')
+      ? window.getHardcoreRankCombinedPressure()
+      : { combined_raw: 1.00 };
+    if (combined.combined_raw > p.highestCombinedPressure) {
+      p.highestCombinedPressure = combined.combined_raw;
+    }
+  }
+
+  // Aggregate telemetry
+  var gtel = (typeof window.getHardcoreRankGameplayTelemetry === 'function')
+    ? window.getHardcoreRankGameplayTelemetry()
+    : {};
+  p.totalGovernorBlocks = (gtel.governorBlocks || 0) +
+    (gtel.bulletSpeedCaps || 0) + (gtel.cooldownCaps || 0) + (gtel.wavePauseCaps || 0);
+};
+
+window.getHardcoreRankPeakTelemetry = function() {
+  var gtel = (typeof window.getHardcoreRankGameplayTelemetry === 'function')
+    ? window.getHardcoreRankGameplayTelemetry()
+    : {};
+  return {
+    highestValue: _hardcoreRankPeaks.highestValue,
+    highestLevel: _hardcoreRankPeaks.highestLevel,
+    highestMultiplier: _hardcoreRankPeaks.highestMultiplier,
+    highestCombinedPressure: _hardcoreRankPeaks.highestCombinedPressure,
+    totalApplications: (gtel.bulletSpeedApplications || 0) + (gtel.cooldownApplications || 0) + (gtel.wavePauseApplications || 0),
+    totalCaps: (gtel.bulletSpeedCaps || 0) + (gtel.cooldownCaps || 0) + (gtel.wavePauseCaps || 0),
+    totalBlocks: (gtel.governorBlocks || 0)
+  };
+};
+
+window.resetHardcoreRankPeaks = function() {
+  _hardcoreRankPeaks.highestValue = 0;
+  _hardcoreRankPeaks.highestLevel = 1;
+  _hardcoreRankPeaks.highestMultiplier = 1.00;
+  _hardcoreRankPeaks.highestBulletSpeed = 0;
+  _hardcoreRankPeaks.lowestCooldown = 9999;
+  _hardcoreRankPeaks.lowestWavePause = 9999;
+  _hardcoreRankPeaks.highestCombinedPressure = 1.00;
+  _hardcoreRankPeaks.totalGovernorBlocks = 0;
+  _hardcoreRankPeaks.totalCaps = 0;
+  _hardcoreRankPeaks.totalApplications = 0;
+};
+
+// ============================================================
+// LIVE ACTIVATION STATUS
+// ============================================================
+
+window.getHardcoreRankLiveStatus = function() {
+  var effectsOn = (typeof window.areHardcoreRankGameplayEffectsEnabled === 'function')
+    ? window.areHardcoreRankGameplayEffectsEnabled()
+    : false;
+
+  var governor = (typeof window.getHardcoreRankSafetyGovernor === 'function')
+    ? window.getHardcoreRankSafetyGovernor()
+    : { apply: false, reason: 'unknown' };
+
+  var perfState = (typeof window.getHardcoreRankPerformanceState === 'function')
+    ? window.getHardcoreRankPerformanceState()
+    : { performanceState: 'UNKNOWN', hitlessDurationMs: 0 };
+
+  var avgBulletSpeedMult = effectsOn ? _hardcoreRankPeaks.highestMultiplier : 1.00;
+
+  return {
+    gameplayEffectsEnabled: effectsOn,
+    governorApproved: governor.apply,
+    governorReason: governor.reason,
+    rankLevel: _hardcoreRank.level,
+    rankValue: _hardcoreRank.value,
+    displayValue: window.getHardcoreRankDisplayValue(),
+    performanceState: perfState.performanceState,
+    peakValue: _hardcoreRankPeaks.highestValue,
+    peakLevel: _hardcoreRankPeaks.highestLevel,
+    peakCombinedPressure: _hardcoreRankPeaks.highestCombinedPressure
+  };
+};

@@ -34,18 +34,18 @@ window.GALAXY_CONFIG = {
     cooldownMin: 0.88,
     multiplierMax: 1.5,
     decayDelayMs: 6000,
-    decayAmount: 0.15,
+    decayAmount: 0.2,
     decayIntervalMs: 1000,
 
     // HC-RK-02: performance tracking
     survivalRankIntervalMs: 5000,
-    survivalRankAmount: 0.4,
+    survivalRankAmount: 0.5,
     accuracyCheckIntervalMs: 4000,
-    accuracyBonusThreshold: 65,
+    accuracyBonusThreshold: 70,
     accuracyBonusAmount: 0.3,
     waveSpeedBonusAmount: 0.5,
     dominatingHitlessMs: 15000,
-    recoveringMs: 5000,
+    recoveringMs: 4000,
 
     // HC-RK-03: fairness caps & safety governor
     safetyBulletSpeedMax: 1.08,
@@ -59,7 +59,7 @@ window.GALAXY_CONFIG = {
     safetySpikeCooldownMs: 2000,
 
     // HC-RK-04: master switch for rank effects on gameplay
-    gameplayEffectsEnabled: false
+    gameplayEffectsEnabled: true
   },
 
   // ============ BULLETS (efectos visuales) ============
