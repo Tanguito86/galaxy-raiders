@@ -237,6 +237,10 @@ function recordRunLevel(levelNum) {
 }
 
 function recordPlayerDeath(cause = 'unknown', lostLives = 1) {
+  // HC-RK-02: record hit for performance tracking
+  if (typeof window.recordHardcoreRankHit === 'function') {
+    window.recordHardcoreRankHit(typeof globalTime === 'number' ? globalTime : 0);
+  }
   if (typeof window.reduceHardcoreRank === 'function') {
     window.reduceHardcoreRank(8, 'player_hit');
   }
@@ -254,11 +258,19 @@ function recordPlayerDeath(cause = 'unknown', lostLives = 1) {
 function recordShotsFired(amount = 1) {
   ensureRunStatsShape();
   gameStats.shotsFired += Math.max(0, Math.floor(amount));
+  // HC-RK-02: track accuracy for rank
+  if (typeof window.recordHardcoreRankShotFired === 'function') {
+    window.recordHardcoreRankShotFired(Math.max(0, Math.floor(amount)));
+  }
 }
 
 function recordShotHit(amount = 1) {
   ensureRunStatsShape();
   gameStats.shotsHit += Math.max(0, Math.floor(amount));
+  // HC-RK-02: track accuracy for rank
+  if (typeof window.recordHardcoreRankShotHit === 'function') {
+    window.recordHardcoreRankShotHit(Math.max(0, Math.floor(amount)));
+  }
 }
 
 function recordEnemyKilled(amount = 1) {

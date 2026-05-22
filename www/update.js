@@ -37,6 +37,11 @@ function beginWaveTransition(completedLevel, nextLevel) {
 
   tryAwardPerfectWaveBonus();
   resetWavePerfectTracking();
+
+  // HC-RK-02: track wave clear for rank
+  if (typeof window.recordHardcoreRankWaveClear === 'function') {
+    window.recordHardcoreRankWaveClear(typeof globalTime === 'number' ? globalTime : 0);
+  }
 }
 
 // --- UPDATE ---
@@ -129,6 +134,11 @@ function update(dt) {
       addScore(1000);
       startLevel();
       waveTransitionActive = false;
+
+      // HC-RK-02: track wave start for rank
+      if (typeof window.recordHardcoreRankWaveStart === 'function') {
+        window.recordHardcoreRankWaveStart(typeof globalTime === 'number' ? globalTime : 0);
+      }
     }
   }
 
@@ -143,4 +153,5 @@ function update(dt) {
   }
 
   if (typeof window.updateHardcoreRankDecay === 'function') window.updateHardcoreRankDecay();
+  if (typeof window.updateHardcoreRankPerformance === 'function') window.updateHardcoreRankPerformance(dt);
 }

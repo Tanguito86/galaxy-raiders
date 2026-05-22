@@ -17,6 +17,49 @@ var _hardcoreRank = {
   levelChangeDirection: ''
 };
 
+// ============================================================
+// HC-RK-02: PLAYER PERFORMANCE TRACKING
+// Mide skill real sin aplicar dificultad.
+// ============================================================
+
+var _hardcoreRankPerformance = {
+  // Survival (hitless) tracking
+  lastHitAt: 0,              // globalTime of last hit/death
+  hitlessDurationMs: 0,      // ms of continuous hitless play
+  longestHitlessMs: 0,       // best streak this run
+
+  // Performance state machine
+  performanceState: 'RECOVERING',  // DOMINATING | SURVIVING | RECOVERING
+  performanceStateEnteredAt: 0,    // globalTime when entered current state
+  lastStateChangeAt: 0,
+
+  // Accuracy tracking (rolling window)
+  accuracyWindowShots: 0,
+  accuracyWindowHits: 0,
+  accuracyPercent: 0,
+  accuracyLastCheckedAt: 0,
+
+  // Wave clear speed
+  waveStartedAt: 0,
+  waveClearedCount: 0,
+  fastestWaveMs: 0,
+  lastWaveMs: 0,
+
+  // Survival rank accumulation
+  lastSurvivalAwardAt: 0,    // last globalTime survival rank was awarded
+
+  // Source breakdown telemetry
+  rankFromKills: 0,
+  rankFromSurvival: 0,
+  rankFromAccuracy: 0,
+  rankFromBossPhases: 0,
+  rankFromBossClears: 0,
+  rankFromGraze: 0,
+  rankFromWaveSpeed: 0,
+  rankLostFromDeaths: 0,
+  rankLostFromDecay: 0
+};
+
 // Lectura segura de la config de rank desde GALAXY_CONFIG
 function _hardcoreRankReadConfig() {
   return getRankConfig();
@@ -123,6 +166,260 @@ window.resetHardcoreRank = function() {
   _hardcoreRank.lastLevel = 1;
   _hardcoreRank.levelChangedAt = 0;
   _hardcoreRank.levelChangeDirection = '';
+
+  // HC-RK-02: reset performance tracking
+  _hardcoreRankPerformance.lastHitAt = 0;
+  _hardcoreRankPerformance.hitlessDurationMs = 0;
+  _hardcoreRankPerformance.longestHitlessMs = 0;
+  _hardcoreRankPerformance.performanceState = 'RECOVERING';
+  _hardcoreRankPerformance.performanceStateEnteredAt = 0;
+  _hardcoreRankPerformance.lastStateChangeAt = 0;
+  _hardcoreRankPerformance.accuracyWindowShots = 0;
+  _hardcoreRankPerformance.accuracyWindowHits = 0;
+  _hardcoreRankPerformance.accuracyPercent = 0;
+  _hardcoreRankPerformance.accuracyLastCheckedAt = 0;
+  _hardcoreRankPerformance.waveStartedAt = 0;
+  _hardcoreRankPerformance.waveClearedCount = 0;
+  _hardcoreRankPerformance.fastestWaveMs = 0;
+  _hardcoreRankPerformance.lastWaveMs = 0;
+  _hardcoreRankPerformance.lastSurvivalAwardAt = 0;
+  _hardcoreRankPerformance.rankFromKills = 0;
+  _hardcoreRankPerformance.rankFromSurvival = 0;
+  _hardcoreRankPerformance.rankFromAccuracy = 0;
+  _hardcoreRankPerformance.rankFromBossPhases = 0;
+  _hardcoreRankPerformance.rankFromBossClears = 0;
+  _hardcoreRankPerformance.rankFromGraze = 0;
+  _hardcoreRankPerformance.rankFromWaveSpeed = 0;
+  _hardcoreRankPerformance.rankLostFromDeaths = 0;
+  _hardcoreRankPerformance.rankLostFromDecay = 0;
+};
+
+
+
+// ============================================================
+// HC-RK-02: PERFORMANCE TRACKING — CONFIG
+// ============================================================
+
+function _hardcoreRankPerfReadConfig() {
+  var cfg = getGalaxyConfig();
+  var r = (cfg.rank && typeof cfg.rank === 'object') ? cfg.rank : {};
+  return {
+    survivalRankIntervalMs: (typeof r.survivalRankIntervalMs === 'number') ? r.survivalRankIntervalMs : 5000,
+    survivalRankAmount: (typeof r.survivalRankAmount === 'number') ? r.survivalRankAmount : 0.4,
+    accuracyCheckIntervalMs: (typeof r.accuracyCheckIntervalMs === 'number') ? r.accuracyCheckIntervalMs : 4000,
+    accuracyBonusThreshold: (typeof r.accuracyBonusThreshold === 'number') ? r.accuracyBonusThreshold : 65,
+    accuracyBonusAmount: (typeof r.accuracyBonusAmount === 'number') ? r.accuracyBonusAmount : 0.3,
+    waveSpeedBonusAmount: (typeof r.waveSpeedBonusAmount === 'number') ? r.waveSpeedBonusAmount : 0.5,
+    dominatingHitlessMs: (typeof r.dominatingHitlessMs === 'number') ? r.dominatingHitlessMs : 15000,
+    recoveringMs: (typeof r.recoveringMs === 'number') ? r.recoveringMs : 5000
+  };
+}
+
+// ============================================================
+// HC-RK-02: PERFORMANCE STATE MACHINE
+// ============================================================
+
+// DOMINATING : hitless > 15s, no recent damage
+// SURVIVING  : past recovery window, taking occasional hits
+// RECOVERING : just got hit (< 5s ago)
+
+function _hardcoreRankUpdatePerformanceState(now) {
+  var perf = _hardcoreRankPerformance;
+  var cfg = _hardcoreRankPerfReadConfig();
+  var timeSinceHit = (perf.lastHitAt > 0) ? Math.max(0, now - perf.lastHitAt) : 0;
+
+  var newState = perf.performanceState;
+
+  if (typeof now !== 'number' || now <= 0) {
+    newState = 'RECOVERING';
+  } else if (timeSinceHit < cfg.recoveringMs) {
+    newState = 'RECOVERING';
+  } else if (timeSinceHit >= cfg.dominatingHitlessMs) {
+    newState = 'DOMINATING';
+  } else {
+    newState = 'SURVIVING';
+  }
+
+  if (newState !== perf.performanceState) {
+    perf.performanceState = newState;
+    perf.performanceStateEnteredAt = now;
+    perf.lastStateChangeAt = Date.now();
+  }
+}
+
+// ============================================================
+// HC-RK-02: EVENT HOOKS — called from game systems
+// ============================================================
+
+// Called when player takes a hit / loses a life
+window.recordHardcoreRankHit = function(now) {
+  if (!_hardcoreRankIsEnabled()) return;
+  var t = (typeof now === 'number' && now > 0) ? now : (typeof globalTime === 'number' ? globalTime : Date.now());
+  _hardcoreRankPerformance.lastHitAt = t;
+  _hardcoreRankPerformance.hitlessDurationMs = 0;
+  _hardcoreRankPerformance.lastSurvivalAwardAt = 0;
+  _hardcoreRankPerformance.rankLostFromDeaths += _hardcoreRankPerformance.rankLostFromDeaths ? 0 : 0;
+};
+
+// Called when player fires a shot
+window.recordHardcoreRankShotFired = function(count) {
+  if (!_hardcoreRankIsEnabled()) return;
+  var n = (typeof count === 'number' && count > 0) ? count : 1;
+  _hardcoreRankPerformance.accuracyWindowShots += n;
+};
+
+// Called when a shot hits an enemy/boss
+window.recordHardcoreRankShotHit = function(count) {
+  if (!_hardcoreRankIsEnabled()) return;
+  var n = (typeof count === 'number' && count > 0) ? count : 1;
+  _hardcoreRankPerformance.accuracyWindowHits += n;
+};
+
+// Called when a wave starts (new enemies spawning)
+window.recordHardcoreRankWaveStart = function(now) {
+  if (!_hardcoreRankIsEnabled()) return;
+  var t = (typeof now === 'number' && now > 0) ? now : (typeof globalTime === 'number' ? globalTime : Date.now());
+  _hardcoreRankPerformance.waveStartedAt = t;
+};
+
+// Called when a wave is cleared (all enemies dead)
+window.recordHardcoreRankWaveClear = function(now) {
+  if (!_hardcoreRankIsEnabled()) return;
+  var t = (typeof now === 'number' && now > 0) ? now : (typeof globalTime === 'number' ? globalTime : Date.now());
+  _hardcoreRankPerformance.waveClearedCount++;
+
+  if (_hardcoreRankPerformance.waveStartedAt > 0 && t > _hardcoreRankPerformance.waveStartedAt) {
+    var waveMs = t - _hardcoreRankPerformance.waveStartedAt;
+    _hardcoreRankPerformance.lastWaveMs = waveMs;
+
+    if (_hardcoreRankPerformance.fastestWaveMs <= 0 || waveMs < _hardcoreRankPerformance.fastestWaveMs) {
+      _hardcoreRankPerformance.fastestWaveMs = waveMs;
+    }
+
+    // Wave speed bonus: award rank for clearing waves fast
+    var cfg = _hardcoreRankPerfReadConfig();
+    if (waveMs < 30000 && _hardcoreRankPerformance.performanceState !== 'RECOVERING') {
+      var bonus = cfg.waveSpeedBonusAmount;
+      if (waveMs < 15000) bonus *= 1.5;
+      _hardcoreRankPerformance.rankFromWaveSpeed += bonus;
+      if (typeof window.addHardcoreRank === 'function') {
+        window.addHardcoreRank(bonus, 'wave_speed');
+      }
+    }
+  }
+};
+
+// ============================================================
+// HC-RK-02: PERFORMANCE UPDATE — called each frame
+// ============================================================
+
+window.updateHardcoreRankPerformance = function(dt, now) {
+  if (!_hardcoreRankIsEnabled()) return;
+  if (typeof state === 'undefined' || state !== 'playing') return;
+  if (!player || typeof player.hp !== 'number' || player.hp <= 0) return;
+  if (typeof invincibleTimer !== 'undefined' && invincibleTimer > 0) return;
+
+  var t = (typeof now === 'number' && now > 0) ? now : (typeof globalTime === 'number' ? globalTime : Date.now());
+  var cfg = _hardcoreRankPerfReadConfig();
+
+  // Initialize if first frame
+  if (_hardcoreRankPerformance.lastHitAt <= 0) {
+    _hardcoreRankPerformance.lastHitAt = t;
+  }
+
+  // 1. Update hitless duration
+  _hardcoreRankPerformance.hitlessDurationMs = Math.max(0, t - _hardcoreRankPerformance.lastHitAt);
+  if (_hardcoreRankPerformance.hitlessDurationMs > _hardcoreRankPerformance.longestHitlessMs) {
+    _hardcoreRankPerformance.longestHitlessMs = _hardcoreRankPerformance.hitlessDurationMs;
+  }
+
+  // 2. Update performance state
+  _hardcoreRankUpdatePerformanceState(t);
+
+  // 3. Survival rank bonus — periodic award while DOMINATING
+  if (_hardcoreRankPerformance.performanceState === 'DOMINATING') {
+    if (_hardcoreRankPerformance.lastSurvivalAwardAt <= 0 ||
+        (t - _hardcoreRankPerformance.lastSurvivalAwardAt) >= cfg.survivalRankIntervalMs) {
+      _hardcoreRankPerformance.lastSurvivalAwardAt = t;
+      _hardcoreRankPerformance.rankFromSurvival += cfg.survivalRankAmount;
+      if (typeof window.addHardcoreRank === 'function') {
+        window.addHardcoreRank(cfg.survivalRankAmount, 'survival');
+      }
+    }
+  }
+
+  // 4. Accuracy bonus — periodic check
+  if (_hardcoreRankPerformance.accuracyLastCheckedAt <= 0 ||
+      (t - _hardcoreRankPerformance.accuracyLastCheckedAt) >= cfg.accuracyCheckIntervalMs) {
+    _hardcoreRankPerformance.accuracyLastCheckedAt = t;
+
+    var totalShots = _hardcoreRankPerformance.accuracyWindowShots;
+    if (totalShots > 0) {
+      _hardcoreRankPerformance.accuracyPercent =
+        (_hardcoreRankPerformance.accuracyWindowHits / totalShots) * 100;
+
+      if (_hardcoreRankPerformance.accuracyPercent >= cfg.accuracyBonusThreshold) {
+        _hardcoreRankPerformance.rankFromAccuracy += cfg.accuracyBonusAmount;
+        if (typeof window.addHardcoreRank === 'function') {
+          window.addHardcoreRank(cfg.accuracyBonusAmount, 'accuracy');
+        }
+      }
+    }
+
+    // Reset rolling window
+    _hardcoreRankPerformance.accuracyWindowShots = 0;
+    _hardcoreRankPerformance.accuracyWindowHits = 0;
+  }
+};
+
+// ============================================================
+// HC-RK-02: PERFORMANCE STATE — exposure
+// ============================================================
+
+window.getHardcoreRankPerformanceState = function() {
+  _hardcoreRankUpdatePerformanceState(
+    typeof globalTime === 'number' ? globalTime : Date.now()
+  );
+  return {
+    performanceState: _hardcoreRankPerformance.performanceState,
+    hitlessDurationMs: _hardcoreRankPerformance.hitlessDurationMs,
+    longestHitlessMs: _hardcoreRankPerformance.longestHitlessMs,
+    accuracyPercent: _hardcoreRankPerformance.accuracyPercent,
+    waveClearedCount: _hardcoreRankPerformance.waveClearedCount,
+    fastestWaveMs: _hardcoreRankPerformance.fastestWaveMs,
+    lastWaveMs: _hardcoreRankPerformance.lastWaveMs,
+    rankFromKills: _hardcoreRankPerformance.rankFromKills,
+    rankFromSurvival: _hardcoreRankPerformance.rankFromSurvival,
+    rankFromAccuracy: _hardcoreRankPerformance.rankFromAccuracy,
+    rankFromBossPhases: _hardcoreRankPerformance.rankFromBossPhases,
+    rankFromBossClears: _hardcoreRankPerformance.rankFromBossClears,
+    rankFromGraze: _hardcoreRankPerformance.rankFromGraze,
+    rankFromWaveSpeed: _hardcoreRankPerformance.rankFromWaveSpeed,
+    rankLostFromDeaths: _hardcoreRankPerformance.rankLostFromDeaths,
+    rankLostFromDecay: _hardcoreRankPerformance.rankLostFromDecay
+  };
+};
+
+window.getHardcoreRankPerformanceLabel = function() {
+  return _hardcoreRankPerformance.performanceState;
+};
+
+// ============================================================
+// HC-RK-02: TELEMETRY SNAPSHOT
+// ============================================================
+
+window.getHardcoreRankTelemetrySnapshot = function() {
+  return {
+    rank: {
+      value: _hardcoreRank.value,
+      level: _hardcoreRank.level,
+      multiplier: _hardcoreRank.multiplier,
+      lastReason: _hardcoreRank.lastReason,
+      lastChangeAt: _hardcoreRank.lastChangeAt
+    },
+    performance: window.getHardcoreRankPerformanceState(),
+    timestamp: Date.now()
+  };
 };
 
 // ============================================================

@@ -35,7 +35,17 @@ window.GALAXY_CONFIG = {
     multiplierMax: 1.5,
     decayDelayMs: 6000,
     decayAmount: 0.15,
-    decayIntervalMs: 1000
+    decayIntervalMs: 1000,
+
+    // HC-RK-02: performance tracking
+    survivalRankIntervalMs: 5000,
+    survivalRankAmount: 0.4,
+    accuracyCheckIntervalMs: 4000,
+    accuracyBonusThreshold: 65,
+    accuracyBonusAmount: 0.3,
+    waveSpeedBonusAmount: 0.5,
+    dominatingHitlessMs: 15000,
+    recoveringMs: 5000
   },
 
   // ============ BULLETS (efectos visuales) ============
