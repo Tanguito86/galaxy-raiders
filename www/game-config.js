@@ -56,7 +56,10 @@ window.GALAXY_CONFIG = {
     safetyBossRankCeilings: { crossfire: 5, zigzag: 5, rotate: 5, divebomb: 5, supreme: 4 },
     safetyWaveIntensityCeiling: 0.85,
     safetyAntiSpikeMaxStep: 8,
-    safetySpikeCooldownMs: 2000
+    safetySpikeCooldownMs: 2000,
+
+    // HC-RK-04: master switch for rank effects on gameplay
+    gameplayEffectsEnabled: false
   },
 
   // ============ BULLETS (efectos visuales) ============

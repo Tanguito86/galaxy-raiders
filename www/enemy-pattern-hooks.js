@@ -251,7 +251,16 @@ function updateHardcoreDiverPattern(enemy, dt, step) {
       enemy._hcDiverState = 'idle';
       enemy._hcDiverTimer = 0;
       enemy._hcDiverTrail = [];
-      enemy._hcDiverCooldown = (HC_DIVER_COOLDOWN_MIN + Math.random() * (HC_DIVER_COOLDOWN_MAX - HC_DIVER_COOLDOWN_MIN)) * ((typeof window.getHardcoreRankCooldownMultiplier === 'function') ? window.getHardcoreRankCooldownMultiplier() : 1) * ((typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1);
+      var baseCd = HC_DIVER_COOLDOWN_MIN + Math.random() * (HC_DIVER_COOLDOWN_MAX - HC_DIVER_COOLDOWN_MIN);
+      // HC-RK-04: apply rank cooldown through safety governor
+      var rankCdResult = (typeof window.getHardcoreRankGameplayCooldown === 'function')
+        ? window.getHardcoreRankGameplayCooldown(baseCd)
+        : { multiplier: 1.00, capped: false, governorApproved: false };
+      if (typeof window.recordHardcoreRankGameplayApply === 'function' && rankCdResult.governorApproved) {
+        window.recordHardcoreRankGameplayApply('cooldown', rankCdResult.capped);
+      }
+      var pressureMult = (typeof window.getHardcorePressureCooldownScale === 'function') ? window.getHardcorePressureCooldownScale() : 1;
+      enemy._hcDiverCooldown = baseCd * rankCdResult.multiplier * pressureMult;
       var diverSeed = (enemy.x * 7919 + enemy.y * 65537) | 0;
       var diverOffset = (typeof window.getHardcorePressureTimingOffset === 'function') ? window.getHardcorePressureTimingOffset(diverSeed, 50) : 0;
       enemy._hcDiverCooldown += diverOffset;

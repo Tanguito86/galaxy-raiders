@@ -8,7 +8,14 @@ function beginWaveTransition(completedLevel, nextLevel) {
   if (waveTransitionActive) return;
   waveTransitionActive = true;
   pendingNextLevel = true;
-  levelClearTimer = (typeof window.getHardcoreRhythmWavePause === 'function') ? window.getHardcoreRhythmWavePause(900) : 900;
+  // HC-RK-04: apply rank wave pause through safety governor
+  var rankPauseResult = (typeof window.getHardcoreRankGameplayWavePause === 'function')
+    ? window.getHardcoreRankGameplayWavePause(900)
+    : { pauseMs: 900, capped: false, governorApproved: false };
+  if (typeof window.recordHardcoreRankGameplayApply === 'function' && rankPauseResult.governorApproved) {
+    window.recordHardcoreRankGameplayApply('wavePause', rankPauseResult.capped);
+  }
+  levelClearTimer = rankPauseResult.pauseMs;
   pushScreenShake('medium', 10);
   sfxConfirm();
 

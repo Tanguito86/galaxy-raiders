@@ -975,3 +975,241 @@ window.resetHardcoreRankSpikeTracking = function() {
   _hardcoreRankSafetySpike.lastSpikeAt = 0;
   _hardcoreRankSafetySpike.lastSpikeValue = 0;
 };
+
+// ============================================================
+// HC-RK-04: SAFE GAMEPLAY WIRING
+// Conecta rank al gameplay usando solo helpers seguros.
+// Todo debe pasar por el safety governor.
+// ============================================================
+
+// ============================================================
+// MASTER ENABLE
+// ============================================================
+
+// Check if rank gameplay effects are globally enabled
+window.areHardcoreRankGameplayEffectsEnabled = function() {
+  var cfg = getGalaxyConfig();
+  var r = (cfg.rank && typeof cfg.rank === 'object') ? cfg.rank : {};
+  return !!(r.gameplayEffectsEnabled);
+};
+
+// ============================================================
+// GAMEPLAY-READY WRAPPERS — apply caps only when safe
+// ============================================================
+
+// Get effective bullet speed multiplier for actual use in pushEnemyBullet
+// Returns { multiplier, requested, capped, reason, governorApproved }
+window.getHardcoreRankGameplayBulletSpeed = function(baseSpeed) {
+  var result = {
+    multiplier: 1.00,
+    requested: 1.00,
+    capped: false,
+    reason: 'disabled',
+    governorApproved: false
+  };
+
+  if (!_hardcoreRankIsEnabled()) return result;
+  if (!window.areHardcoreRankGameplayEffectsEnabled()) {
+    result.reason = 'gameplay_effects_disabled';
+    return result;
+  }
+
+  var rawMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
+    ? window.getHardcoreRankBulletSpeedMultiplier()
+    : 1.00;
+  result.requested = rawMult;
+
+  var governor = (typeof window.getHardcoreRankSafetyGovernor === 'function')
+    ? window.getHardcoreRankSafetyGovernor()
+    : { apply: false, reason: 'governor_missing' };
+  result.governorApproved = governor.apply;
+
+  if (!governor.apply) {
+    result.reason = governor.reason;
+    return result;
+  }
+
+  var safeSpeed = (typeof window.getHardcoreRankSafeBulletSpeed === 'function')
+    ? window.getHardcoreRankSafeBulletSpeed(baseSpeed)
+    : baseSpeed * rawMult;
+
+  var base = (typeof baseSpeed === 'number' && baseSpeed > 0) ? baseSpeed : 1;
+  result.multiplier = safeSpeed / base;
+  result.capped = (safeSpeed < baseSpeed * rawMult);
+  result.reason = result.capped ? 'capped' : 'applied';
+
+  // Log cap if speed was reduced
+  if (result.capped) {
+    if (typeof window.logHardcoreRankSafetyCap === 'function') {
+      window.logHardcoreRankSafetyCap('bulletSpeed', baseSpeed * rawMult, safeSpeed);
+    }
+  }
+
+  return result;
+};
+
+// Get effective cooldown multiplier for actual use in enemy cooldowns
+// Returns { multiplier, requested, capped, reason, governorApproved }
+window.getHardcoreRankGameplayCooldown = function(baseCooldown) {
+  var result = {
+    multiplier: 1.00,
+    requested: 1.00,
+    capped: false,
+    reason: 'disabled',
+    governorApproved: false
+  };
+
+  if (!_hardcoreRankIsEnabled()) return result;
+  if (!window.areHardcoreRankGameplayEffectsEnabled()) {
+    result.reason = 'gameplay_effects_disabled';
+    return result;
+  }
+
+  var rawMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function')
+    ? window.getHardcoreRankCooldownMultiplier()
+    : 1.00;
+  result.requested = rawMult;
+
+  var governor = (typeof window.getHardcoreRankSafetyGovernor === 'function')
+    ? window.getHardcoreRankSafetyGovernor()
+    : { apply: false, reason: 'governor_missing' };
+  result.governorApproved = governor.apply;
+
+  if (!governor.apply) {
+    result.reason = governor.reason;
+    return result;
+  }
+
+  var safeCooldown = (typeof window.getHardcoreRankSafeCooldown === 'function')
+    ? window.getHardcoreRankSafeCooldown(baseCooldown)
+    : baseCooldown;
+
+  var base = (typeof baseCooldown === 'number' && baseCooldown > 0) ? baseCooldown : 1000;
+  result.multiplier = safeCooldown / base;
+  result.capped = (safeCooldown > baseCooldown * rawMult);
+  result.reason = result.capped ? 'capped' : 'applied';
+
+  if (result.capped) {
+    if (typeof window.logHardcoreRankSafetyCap === 'function') {
+      window.logHardcoreRankSafetyCap('cooldown', baseCooldown * rawMult, safeCooldown);
+    }
+  }
+
+  return result;
+};
+
+// Get effective wave pause for wave transitions
+// Returns { pauseMs, requested, capped, reason, governorApproved }
+window.getHardcoreRankGameplayWavePause = function(baseMs) {
+  var result = {
+    pauseMs: (typeof baseMs === 'number' && baseMs > 0) ? baseMs : 900,
+    requested: (typeof baseMs === 'number' && baseMs > 0) ? baseMs : 900,
+    capped: false,
+    reason: 'disabled',
+    governorApproved: false
+  };
+
+  if (!_hardcoreRankIsEnabled()) return result;
+  if (!window.areHardcoreRankGameplayEffectsEnabled()) {
+    result.reason = 'gameplay_effects_disabled';
+    return result;
+  }
+
+  // Get rhythm-scaled pause
+  var rhythmPause = (typeof window.getHardcoreRhythmWavePause === 'function')
+    ? window.getHardcoreRhythmWavePause(baseMs)
+    : baseMs;
+  result.requested = rhythmPause;
+
+  var governor = (typeof window.getHardcoreRankSafetyGovernor === 'function')
+    ? window.getHardcoreRankSafetyGovernor()
+    : { apply: false, reason: 'governor_missing' };
+  result.governorApproved = governor.apply;
+
+  if (!governor.apply) {
+    result.pauseMs = baseMs;
+    result.reason = governor.reason;
+    return result;
+  }
+
+  var safePause = (typeof window.getHardcoreRankSafeWavePause === 'function')
+    ? window.getHardcoreRankSafeWavePause(baseMs)
+    : baseMs;
+  result.pauseMs = safePause;
+  result.capped = (safePause > rhythmPause);
+  result.reason = result.capped ? 'capped' : 'applied';
+
+  if (result.capped) {
+    if (typeof window.logHardcoreRankSafetyCap === 'function') {
+      window.logHardcoreRankSafetyCap('wavePause', rhythmPause, safePause);
+    }
+  }
+
+  return result;
+};
+
+// ============================================================
+// GAMEPLAY APPLICATION TELEMETRY
+// ============================================================
+
+var _hardcoreRankGameplayTelemetry = {
+  bulletSpeedApplications: 0,
+  bulletSpeedCaps: 0,
+  cooldownApplications: 0,
+  cooldownCaps: 0,
+  wavePauseApplications: 0,
+  wavePauseCaps: 0,
+  governorBlocks: 0,
+  lastAppliedAt: 0
+};
+
+window.recordHardcoreRankGameplayApply = function(type, capped) {
+  var g = _hardcoreRankGameplayTelemetry;
+  g.lastAppliedAt = Date.now();
+
+  switch (type) {
+    case 'bulletSpeed':
+      g.bulletSpeedApplications++;
+      if (capped) g.bulletSpeedCaps++;
+      break;
+    case 'cooldown':
+      g.cooldownApplications++;
+      if (capped) g.cooldownCaps++;
+      break;
+    case 'wavePause':
+      g.wavePauseApplications++;
+      if (capped) g.wavePauseCaps++;
+      break;
+  }
+};
+
+window.recordHardcoreRankGovernorBlock = function(reason) {
+  _hardcoreRankGameplayTelemetry.governorBlocks++;
+  if (typeof window.logHardcoreRankSafetyBlock === 'function') {
+    window.logHardcoreRankSafetyBlock(reason);
+  }
+};
+
+window.getHardcoreRankGameplayTelemetry = function() {
+  return {
+    bulletSpeedApplications: _hardcoreRankGameplayTelemetry.bulletSpeedApplications,
+    bulletSpeedCaps: _hardcoreRankGameplayTelemetry.bulletSpeedCaps,
+    cooldownApplications: _hardcoreRankGameplayTelemetry.cooldownApplications,
+    cooldownCaps: _hardcoreRankGameplayTelemetry.cooldownCaps,
+    wavePauseApplications: _hardcoreRankGameplayTelemetry.wavePauseApplications,
+    wavePauseCaps: _hardcoreRankGameplayTelemetry.wavePauseCaps,
+    governorBlocks: _hardcoreRankGameplayTelemetry.governorBlocks,
+    lastAppliedAt: _hardcoreRankGameplayTelemetry.lastAppliedAt
+  };
+};
+
+window.resetHardcoreRankGameplayTelemetry = function() {
+  _hardcoreRankGameplayTelemetry.bulletSpeedApplications = 0;
+  _hardcoreRankGameplayTelemetry.bulletSpeedCaps = 0;
+  _hardcoreRankGameplayTelemetry.cooldownApplications = 0;
+  _hardcoreRankGameplayTelemetry.cooldownCaps = 0;
+  _hardcoreRankGameplayTelemetry.wavePauseApplications = 0;
+  _hardcoreRankGameplayTelemetry.wavePauseCaps = 0;
+  _hardcoreRankGameplayTelemetry.governorBlocks = 0;
+  _hardcoreRankGameplayTelemetry.lastAppliedAt = 0;
+};

@@ -4,9 +4,17 @@
 // =====================
 
 function pushEnemyBullet(x, y, vx, vy, w = 4, h = 10, meta = {}) {
-  var speedMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
-    ? window.getHardcoreRankBulletSpeedMultiplier()
-    : 1.00;
+  // HC-RK-04: apply rank bullet speed through safety governor
+  var rankSpeedResult = (typeof window.getHardcoreRankGameplayBulletSpeed === 'function')
+    ? window.getHardcoreRankGameplayBulletSpeed(1)
+    : { multiplier: 1.00, capped: false, governorApproved: false };
+  var speedMult = rankSpeedResult.multiplier;
+
+  // Log application
+  if (typeof window.recordHardcoreRankGameplayApply === 'function' && rankSpeedResult.governorApproved) {
+    window.recordHardcoreRankGameplayApply('bulletSpeed', rankSpeedResult.capped);
+  }
+
   var bullet = { x, y, w, h, vx: vx * speedMult, vy: vy * speedMult, ...meta };
   // HC-HB-04: validate bullet fairness (skip if spawned inside player hurtbox)
   if (typeof validateBulletFairness === 'function' && !validateBulletFairness(bullet)) {
