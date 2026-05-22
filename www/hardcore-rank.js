@@ -571,3 +571,407 @@ function drawHardcoreRankLevelFeedback(ctx) {
   ctx.globalAlpha = 1;
   ctx.restore();
 }
+
+// ============================================================
+// HC-RK-03: FAIRNESS CAPS & SAFETY GOVERNOR
+// Capa de seguridad — previene escalados injustos.
+// NO aplica dificultad. Solo valida y limita.
+// ============================================================
+
+// ============================================================
+// CONFIG READER
+// ============================================================
+
+function _hardcoreRankSafetyReadConfig() {
+  var cfg = getGalaxyConfig();
+  var r = (cfg.rank && typeof cfg.rank === 'object') ? cfg.rank : {};
+  return {
+    bulletSpeedMax: (typeof r.safetyBulletSpeedMax === 'number') ? r.safetyBulletSpeedMax : 1.08,
+    cooldownFloorMs: (typeof r.safetyCooldownFloorMs === 'number') ? r.safetyCooldownFloorMs : 450,
+    wavePauseFloorMs: (typeof r.safetyWavePauseFloorMs === 'number') ? r.safetyWavePauseFloorMs : 600,
+    combinedCeiling: (typeof r.safetyCombinedCeiling === 'number') ? r.safetyCombinedCeiling : 5.20,
+    recoveryLimit: (typeof r.safetyRecoveryLimit === 'number') ? r.safetyRecoveryLimit : 2,
+    bossRankCeilings: (r.safetyBossRankCeilings && typeof r.safetyBossRankCeilings === 'object')
+      ? r.safetyBossRankCeilings
+      : { crossfire: 5, zigzag: 5, rotate: 5, divebomb: 5, supreme: 4 },
+    waveIntensityCeiling: (typeof r.safetyWaveIntensityCeiling === 'number') ? r.safetyWaveIntensityCeiling : 0.85,
+    antiSpikeMaxStep: (typeof r.safetyAntiSpikeMaxStep === 'number') ? r.safetyAntiSpikeMaxStep : 8,
+    spikeCooldownMs: (typeof r.safetySpikeCooldownMs === 'number') ? r.safetySpikeCooldownMs : 2000
+  };
+}
+
+// ============================================================
+// PARAMETER CAPS — limits on individual difficulty axes
+// ============================================================
+
+// Cap bullet speed multiplier so fast bullets remain readable
+// baseSpeed: pre-rank bullet speed (from difficulty table)
+// Returns: safe speed value capped to config ceiling
+window.getHardcoreRankSafeBulletSpeed = function(baseSpeed) {
+  if (!_hardcoreRankIsEnabled()) {
+    return (typeof baseSpeed === 'number' && baseSpeed > 0) ? baseSpeed : 0;
+  }
+  var base = (typeof baseSpeed === 'number' && baseSpeed > 0) ? baseSpeed : 2.90;
+  var rankMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
+    ? window.getHardcoreRankBulletSpeedMultiplier()
+    : 1.00;
+
+  var cfg = _hardcoreRankSafetyReadConfig();
+  // Cap the rank multiplier itself
+  var safeMult = Math.min(cfg.bulletSpeedMax, rankMult);
+
+  // Combined ceiling for absolute speed
+  var rawSpeed = base * safeMult;
+  var cappedSpeed = Math.min(cfg.combinedCeiling, rawSpeed);
+
+  return cappedSpeed;
+};
+
+// Floor enemy cooldown so fire rate never becomes instant
+// baseCooldown: pre-rank cooldown in ms
+// Returns: safe cooldown ms floored to config minimum
+window.getHardcoreRankSafeCooldown = function(baseCooldown) {
+  if (!_hardcoreRankIsEnabled()) {
+    return (typeof baseCooldown === 'number' && baseCooldown > 0) ? baseCooldown : 1000;
+  }
+  var base = (typeof baseCooldown === 'number' && baseCooldown > 0) ? baseCooldown : 1000;
+  var rankMult = (typeof window.getHardcoreRankCooldownMultiplier === 'function')
+    ? window.getHardcoreRankCooldownMultiplier()
+    : 1.00;
+
+  var cfg = _hardcoreRankSafetyReadConfig();
+  var rawCooldown = base * rankMult;
+
+  // Never go below the absolute floor
+  return Math.max(cfg.cooldownFloorMs, rawCooldown);
+};
+
+// Floor wave pause timing so RELIEF phase always exists
+// baseMs: pre-rhythm pause duration
+// Returns: safe pause ms floored to config minimum
+window.getHardcoreRankSafeWavePause = function(baseMs) {
+  if (!_hardcoreRankIsEnabled()) {
+    return (typeof baseMs === 'number' && baseMs > 0) ? baseMs : 900;
+  }
+  var base = (typeof baseMs === 'number' && baseMs > 0) ? baseMs : 900;
+
+  // Use rhythm scale if available
+  if (typeof window.getHardcoreRhythmWavePause === 'function') {
+    var scaled = window.getHardcoreRhythmWavePause(base);
+    var cfg = _hardcoreRankSafetyReadConfig();
+    return Math.max(cfg.wavePauseFloorMs, scaled);
+  }
+
+  return base;
+};
+
+// ============================================================
+// COMBINED PRESSURE CEILING
+// ============================================================
+
+// Prevents multiplicative explosion when rank × pressure × rhythm stack
+// Returns { safe: boolean, multiplier: number, reason: string }
+window.getHardcoreRankCombinedPressure = function() {
+  if (!_hardcoreRankIsEnabled()) {
+    return { safe: true, multiplier: 1.00, reason: 'rank_disabled' };
+  }
+
+  var rankMult = (typeof window.getHardcoreRankBulletSpeedMultiplier === 'function')
+    ? window.getHardcoreRankBulletSpeedMultiplier()
+    : 1.00;
+  var pressureMult = (typeof window.getHardcorePressureMultiplier === 'function')
+    ? window.getHardcorePressureMultiplier()
+    : 1.00;
+
+  var combined = rankMult * pressureMult;
+  var cfg = _hardcoreRankSafetyReadConfig();
+  var ceiling = cfg.combinedCeiling;
+
+  var safe = combined <= ceiling;
+  var clamped = Math.min(ceiling, combined);
+
+  return {
+    safe: safe,
+    multiplier: Number(clamped.toFixed(3)),
+    rankOnly: Number(rankMult.toFixed(3)),
+    pressureOnly: Number(pressureMult.toFixed(3)),
+    combined_raw: Number(combined.toFixed(3)),
+    ceiling: ceiling,
+    reason: safe ? 'within_ceiling' : 'capped_by_governor'
+  };
+};
+
+// ============================================================
+// BOSS-SPECIFIC RANK LIMITS
+// ============================================================
+
+// Returns max safe rank level for a given boss
+window.getHardcoreRankSafeBossCeiling = function(bossPattern) {
+  if (!_hardcoreRankIsEnabled()) return 5;
+  if (typeof bossPattern !== 'string' || bossPattern.length === 0) return 5;
+
+  var cfg = _hardcoreRankSafetyReadConfig();
+  var ceilings = cfg.bossRankCeilings;
+
+  if (ceilings && typeof ceilings === 'object' && ceilings.hasOwnProperty(bossPattern)) {
+    return Math.max(1, Math.min(5, ceilings[bossPattern]));
+  }
+
+  return 5; // default: no restriction
+};
+
+// Check if current rank is safe for the active boss
+// Returns { safe: boolean, currentLevel: number, maxLevel: number, reason: string }
+window.isHardcoreRankSafeForBoss = function(bossRef) {
+  if (!_hardcoreRankIsEnabled()) return { safe: true, currentLevel: 1, maxLevel: 5, reason: 'rank_disabled' };
+
+  var boss = bossRef || (typeof window.boss !== 'undefined' ? window.boss : null);
+  if (!boss || !boss.active) return { safe: true, currentLevel: 1, maxLevel: 5, reason: 'no_boss' };
+
+  var pattern = (typeof boss.pattern === 'string') ? boss.pattern : '';
+
+  // Boss-specific ceiling
+  var maxLevel = window.getHardcoreRankSafeBossCeiling(pattern);
+  var currentLevel = _hardcoreRank.level;
+
+  // Recovery check: limit rank effects during RECOVERING state
+  if (_hardcoreRankPerformance.performanceState === 'RECOVERING') {
+    var cfg = _hardcoreRankSafetyReadConfig();
+    return {
+      safe: false,
+      currentLevel: currentLevel,
+      maxLevel: cfg.recoveryLimit,
+      reason: 'player_recovering'
+    };
+  }
+
+  if (currentLevel > maxLevel) {
+    return {
+      safe: false,
+      currentLevel: currentLevel,
+      maxLevel: maxLevel,
+      reason: 'boss_ceiling_exceeded'
+    };
+  }
+
+  return { safe: true, currentLevel: currentLevel, maxLevel: maxLevel, reason: 'within_limit' };
+};
+
+// ============================================================
+// WAVE INTENSITY SAFETY
+// ============================================================
+
+// Check if wave with current rank exceeds intensity ceiling
+// intensity: 0.0–1.0 wave intensity (from wave composer)
+window.isHardcoreRankSafeForWave = function(waveIntensity) {
+  if (!_hardcoreRankIsEnabled()) return true;
+
+  var cfg = _hardcoreRankSafetyReadConfig();
+  var intensity = (typeof waveIntensity === 'number') ? Math.max(0, Math.min(1, waveIntensity)) : 0.5;
+
+  // Combined threat = intensity × rank multiplier
+  var rankMult = (typeof window.getHardcoreRankMultiplier === 'function')
+    ? window.getHardcoreRankMultiplier()
+    : 1.00;
+  var combined = intensity * rankMult;
+
+  return combined <= cfg.waveIntensityCeiling;
+};
+
+// ============================================================
+// RECOVERY PROTECTION
+// ============================================================
+
+// Blocks rank from rising when player is in RECOVERING state
+window.shouldBlockRankForRecovery = function() {
+  if (!_hardcoreRankIsEnabled()) return false;
+
+  // Only block gains, not decay
+  return _hardcoreRankPerformance.performanceState === 'RECOVERING';
+};
+
+// Blocks rank effects from applying difficulty during recovery
+// Returns effective rank multiplier considering recovery state
+window.getEffectiveRankMultiplier = function() {
+  if (!_hardcoreRankIsEnabled()) return 1.00;
+
+  var cfg = _hardcoreRankSafetyReadConfig();
+
+  if (_hardcoreRankPerformance.performanceState === 'RECOVERING') {
+    // During recovery, cap rank effects to recoveryLimit
+    var recLimit = cfg.recoveryLimit;
+    var map = [0, 1.00, 1.12, 1.25, 1.37, 1.50];
+    var idx = Math.min(5, Math.max(1, recLimit));
+    return map[idx];
+  }
+
+  return _hardcoreRank.multiplier;
+};
+
+// ============================================================
+// ANTI-SPIKE GUARDS
+// ============================================================
+
+var _hardcoreRankSafetySpike = {
+  lastSpikeAt: 0,
+  lastSpikeValue: 0
+};
+
+// Validates that a rank change isn't too abrupt
+// current: current rank value
+// target: proposed new rank value after change
+// Returns { allowed: boolean, adjusted: number, reason: string }
+window.validateHardcoreRankSpike = function(currentValue, targetValue) {
+  if (!_hardcoreRankIsEnabled()) {
+    return { allowed: true, adjusted: targetValue, reason: 'rank_disabled' };
+  }
+
+  var cur = (typeof currentValue === 'number') ? currentValue : _hardcoreRank.value;
+  var tgt = (typeof targetValue === 'number') ? targetValue : cur;
+  var cfg = _hardcoreRankSafetyReadConfig();
+  var now = Date.now();
+
+  // Positive spike (rank up): limit step size
+  if (tgt > cur) {
+    var step = tgt - cur;
+    var maxStep = cfg.antiSpikeMaxStep;
+
+    if (step > maxStep) {
+      // Allow the spike, but only after cooldown from last spike
+      if (_hardcoreRankSafetySpike.lastSpikeAt > 0 &&
+          (now - _hardcoreRankSafetySpike.lastSpikeAt) < cfg.spikeCooldownMs) {
+        return {
+          allowed: false,
+          adjusted: Math.min(cur + maxStep, tgt),
+          reason: 'spike_cooldown_active'
+        };
+      }
+
+      _hardcoreRankSafetySpike.lastSpikeAt = now;
+      _hardcoreRankSafetySpike.lastSpikeValue = tgt;
+
+      return {
+        allowed: true,
+        adjusted: tgt,
+        reason: 'spike_allowed'
+      };
+    }
+  }
+
+  return { allowed: true, adjusted: tgt, reason: 'normal_step' };
+};
+
+// ============================================================
+// SAFETY GOVERNOR CENTRAL CHECK
+// ============================================================
+
+// Master safety check — should rank effects apply right now?
+// Returns { apply: boolean, reason: string, details: object }
+window.getHardcoreRankSafetyGovernor = function() {
+  if (!_hardcoreRankIsEnabled()) {
+    return { apply: false, reason: 'rank_disabled', details: {} };
+  }
+  if (typeof state === 'undefined' || state !== 'playing') {
+    return { apply: false, reason: 'not_playing', details: {} };
+  }
+  if (!player || typeof player.hp !== 'number' || player.hp <= 0) {
+    return { apply: false, reason: 'player_dead', details: {} };
+  }
+
+  var details = {
+    rankLevel: _hardcoreRank.level,
+    rankMultiplier: _hardcoreRank.multiplier,
+    performanceState: _hardcoreRankPerformance.performanceState,
+    combinedPressure: (typeof window.getHardcoreRankCombinedPressure === 'function')
+      ? window.getHardcoreRankCombinedPressure()
+      : { safe: true, multiplier: 1.00 }
+  };
+
+  // 1. Recovery block
+  if (_hardcoreRankPerformance.performanceState === 'RECOVERING') {
+    return { apply: false, reason: 'player_recovering', details: details };
+  }
+
+  // 2. Combined pressure check
+  if (details.combinedPressure.multiplier !== undefined &&
+      !details.combinedPressure.safe) {
+    return { apply: false, reason: 'pressure_ceiling_exceeded', details: details };
+  }
+
+  // 3. Boss ceiling check if boss is active
+  if (typeof boss !== 'undefined' && boss && boss.active) {
+    var bossCheck = (typeof window.isHardcoreRankSafeForBoss === 'function')
+      ? window.isHardcoreRankSafeForBoss(boss)
+      : { safe: true };
+    details.bossCheck = bossCheck;
+    if (!bossCheck.safe) {
+      return { apply: false, reason: 'boss_ceiling_exceeded', details: details };
+    }
+  }
+
+  // All checks passed
+  return { apply: true, reason: 'governor_approved', details: details };
+};
+
+// ============================================================
+// SAFETY TELEMETRY — block/cap events
+// ============================================================
+
+var _hardcoreRankSafetyLog = {
+  blocks: [],
+  caps: [],
+  lastResetAt: 0
+};
+
+// Record a safety block event
+window.logHardcoreRankSafetyBlock = function(reason) {
+  var entry = {
+    reason: (typeof reason === 'string') ? reason : 'unknown',
+    at: Date.now(),
+    rankValue: _hardcoreRank.value,
+    rankLevel: _hardcoreRank.level,
+    performanceState: _hardcoreRankPerformance.performanceState
+  };
+  _hardcoreRankSafetyLog.blocks.push(entry);
+  // Keep only last 20
+  if (_hardcoreRankSafetyLog.blocks.length > 20) {
+    _hardcoreRankSafetyLog.blocks.shift();
+  }
+};
+
+// Record a parameter cap event
+window.logHardcoreRankSafetyCap = function(parameter, requested, capped) {
+  var entry = {
+    parameter: (typeof parameter === 'string') ? parameter : 'unknown',
+    requested: (typeof requested === 'number') ? requested : 0,
+    capped: (typeof capped === 'number') ? capped : 0,
+    at: Date.now()
+  };
+  _hardcoreRankSafetyLog.caps.push(entry);
+  if (_hardcoreRankSafetyLog.caps.length > 30) {
+    _hardcoreRankSafetyLog.caps.shift();
+  }
+};
+
+// Get full safety log
+window.getHardcoreRankSafetyLog = function() {
+  return {
+    blocks: _hardcoreRankSafetyLog.blocks.slice(),
+    caps: _hardcoreRankSafetyLog.caps.slice(),
+    blockCount: _hardcoreRankSafetyLog.blocks.length,
+    capCount: _hardcoreRankSafetyLog.caps.length
+  };
+};
+
+// Reset safety log (called on new run)
+window.resetHardcoreRankSafetyLog = function() {
+  _hardcoreRankSafetyLog.blocks = [];
+  _hardcoreRankSafetyLog.caps = [];
+  _hardcoreRankSafetyLog.lastResetAt = Date.now();
+};
+
+// Reset spike tracking
+window.resetHardcoreRankSpikeTracking = function() {
+  _hardcoreRankSafetySpike.lastSpikeAt = 0;
+  _hardcoreRankSafetySpike.lastSpikeValue = 0;
+};

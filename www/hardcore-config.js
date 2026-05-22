@@ -7,7 +7,7 @@ var _GALAXY_CONFIG_DEFAULTS = {
   hardcore:  { enabled: true },   // HC-12: hardcore only
   player:    { hardcoreHitRadius: 3, showHitbox: false },
   graze:     { enabled: true, radius: 24, score: 5 },   // HC-12
-  rank:      { enabled: true, baseLevel: 0, min: 0, max: 100, maxLevel: 5, bulletSpeedMax: 1.12, cooldownMin: 0.88, multiplierMax: 1.5, decayDelayMs: 6000, decayAmount: 0.15, decayIntervalMs: 1000, survivalRankIntervalMs: 5000, survivalRankAmount: 0.4, accuracyCheckIntervalMs: 4000, accuracyBonusThreshold: 65, accuracyBonusAmount: 0.3, waveSpeedBonusAmount: 0.5, dominatingHitlessMs: 15000, recoveringMs: 5000 },
+  rank:      { enabled: true, baseLevel: 0, min: 0, max: 100, maxLevel: 5, bulletSpeedMax: 1.12, cooldownMin: 0.88, multiplierMax: 1.5, decayDelayMs: 6000, decayAmount: 0.15, decayIntervalMs: 1000, survivalRankIntervalMs: 5000, survivalRankAmount: 0.4, accuracyCheckIntervalMs: 4000, accuracyBonusThreshold: 65, accuracyBonusAmount: 0.3, waveSpeedBonusAmount: 0.5, dominatingHitlessMs: 15000, recoveringMs: 5000, safetyBulletSpeedMax: 1.08, safetyCooldownFloorMs: 450, safetyWavePauseFloorMs: 600, safetyCombinedCeiling: 5.20, safetyRecoveryLimit: 2, safetyBossRankCeilings: { crossfire: 5, zigzag: 5, rotate: 5, divebomb: 5, supreme: 4 }, safetyWaveIntensityCeiling: 0.85, safetyAntiSpikeMaxStep: 8, safetySpikeCooldownMs: 2000 },
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
   combo:     { enabled: true, timeoutMs: 2500, maxMultiplier: 2.0, graceMs: 350, warningMs: 700 },
