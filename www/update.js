@@ -49,6 +49,8 @@ function beginWaveTransition(completedLevel, nextLevel) {
   if (typeof window.recordHardcoreRankWaveClear === 'function') {
     window.recordHardcoreRankWaveClear(typeof globalTime === 'number' ? globalTime : 0);
   }
+  // HC-SC-07: reset medal wave tracking
+  if (typeof window.resetMedalWaveTracking === 'function') window.resetMedalWaveTracking();
 }
 
 // --- UPDATE ---
@@ -164,4 +166,5 @@ function update(dt) {
   if (typeof window.updateHardcoreRankPeakTracking === 'function') window.updateHardcoreRankPeakTracking();
   if (typeof window.updateScoreMultiplierDecay === 'function') window.updateScoreMultiplierDecay();
   if (typeof window.updateScoreDangerWindow === 'function') window.updateScoreDangerWindow();
+  if (typeof window.updateMedalFrameCounter === 'function') window.updateMedalFrameCounter();
 }

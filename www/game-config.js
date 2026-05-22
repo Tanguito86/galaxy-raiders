@@ -209,6 +209,22 @@ window.GALAXY_CONFIG = {
         enabled: true,
         frames: 90,
         bonus: 1.10
+      },
+
+      // HC-SC-07: medal chain economy
+      medals: {
+        chain: {
+          decayEnabled: true,
+          missTierLoss: 2,
+          recoveryGraceFrames: 90
+        },
+        multiplier: {
+          gainPerMedal: 0.020,
+          lossPerMiss: 0.010
+        },
+        antiExploit: {
+          maxDropsPerWave: 12
+        }
       }
     }
   },

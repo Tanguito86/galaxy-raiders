@@ -138,6 +138,9 @@ function isEliteMedalTarget(enemy, enemyData) {
 }
 
 function spawnMedal(x, y, guaranteed = false, count = 1) {
+  // HC-SC-07: anti-exploit cap
+  if (typeof window.canDropMedal === 'function' && !window.canDropMedal()) return false;
+
   const safeCount = Math.max(1, Math.min(6, Math.floor(count || 1)));
   const baseChance = guaranteed ? 1 : MEDAL_DROP_CHANCE;
   const spawnChance = baseChance;
@@ -231,6 +234,8 @@ function updateMedals(playerRef, step = 1) {
       const base = getCurrentMedalValue();
       const gained = feverActive ? base * 2 : base;
       awardScore({ points: gained, source: 'medal' });
+      // HC-SC-07: multiplier gain + telemetry on pickup
+      if (typeof window.applyMedalPickupBonus === 'function') window.applyMedalPickupBonus();
       medalChain += 1;
 
       const prevTier = Math.min(Math.floor((medalChain - 1) / 5), MEDAL_VALUES.length - 1);
@@ -256,17 +261,166 @@ function updateMedals(playerRef, step = 1) {
     }
 
     if (m.y > H + MEDAL_OFFSCREEN_MARGIN) {
-      const prevTier = Math.min(
-        Math.floor(medalChain / 5),
-        MEDAL_VALUES.length - 1
-      );
+      var prevTier = Math.min(Math.floor(medalChain / 5), MEDAL_VALUES.length - 1);
       if (prevTier > 0) {
-        medalChain = Math.max(0, medalChain - 5);
-        medalValue = getCurrentMedalValue();
-        spawnPopup(m.x, H - 16, 'MEDAL DOWN', '#ff8866');
-        AudioEngine.playSfx('medalDown');
+        // HC-SC-07: recovery grace check before chain decay
+        if (typeof window.isMedalRecoveryGraceActive === 'function' && window.isMedalRecoveryGraceActive()) {
+          if (typeof window.recordMedalRecovery === 'function') window.recordMedalRecovery();
+        } else {
+          if (typeof window.applyMedalChainDecay === 'function') window.applyMedalChainDecay();
+          else medalChain = Math.max(0, medalChain - 5);
+          spawnPopup(m.x, H - 16, 'MEDAL DOWN', '#ff8866');
+          AudioEngine.playSfx('medalDown');
+        }
+        if (typeof window.recordMedalChainMiss === 'function') window.recordMedalChainMiss();
       }
       medals.splice(i, 1);
     }
   }
 }
+
+// ============================================================
+// HC-SC-07: ENHANCED MEDAL CHAIN
+// ============================================================
+
+var _hcMedalTelemetry = {
+  pickups: 0,
+  misses: 0,
+  recoveries: 0,
+  maxTier: 0,
+  dropsThisWave: 0
+};
+
+var _hcMedalRecovery = {
+  lastMissFrame: -999,
+  totalFrames: 0
+};
+
+function _hcMedalReadConfig() {
+  var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+  var sc = cfg.scoreSystem || {};
+  var ag = sc.aggression || {};
+  var md = ag.medals || {};
+  var ch = md.chain || {};
+  var mp = md.multiplier || {};
+  var ae = md.antiExploit || {};
+  return {
+    decayEnabled: ch.decayEnabled !== false,
+    missTierLoss: ch.missTierLoss || 2,
+    recoveryGraceFrames: ch.recoveryGraceFrames || 90,
+    gainPerMedal: mp.gainPerMedal || 0.020,
+    lossPerMiss: mp.lossPerMiss || 0.010,
+    maxDropsPerWave: ae.maxDropsPerWave || 12
+  };
+}
+
+// ============================================================
+// ENHANCED CHAIN DROP — partial decay, not full reset
+// ============================================================
+
+window.applyMedalChainDecay = function() {
+  var cfg = _hcMedalReadConfig();
+  if (!cfg.decayEnabled) {
+    medalChain = Math.max(0, medalChain - 5);
+    medalValue = getCurrentMedalValue();
+    return;
+  }
+
+  // HC-SC-07: partial decay — lose tier levels, not arbitrary steps
+  var currentTier = Math.min(Math.floor(medalChain / 5), MEDAL_VALUES.length - 1);
+  if (currentTier <= 0) return;
+
+  var tiersToLose = Math.min(cfg.missTierLoss, currentTier);
+  var newTier = Math.max(0, currentTier - tiersToLose);
+
+  // Convert tier back to minimum chain count for that tier
+  medalChain = newTier * 5;
+  medalValue = getCurrentMedalValue();
+  _hcMedalTelemetry.misses++;
+};
+
+// ============================================================
+// RECOVERY GRACE — brief window to save chain after miss
+// ============================================================
+
+window.recordMedalChainMiss = function() {
+  _hcMedalRecovery.lastMissFrame = _hcMedalRecovery.totalFrames;
+};
+
+window.isMedalRecoveryGraceActive = function() {
+  var cfg = _hcMedalReadConfig();
+  var framesSinceMiss = _hcMedalRecovery.totalFrames - _hcMedalRecovery.lastMissFrame;
+  return framesSinceMiss >= 0 && framesSinceMiss <= cfg.recoveryGraceFrames;
+};
+
+window.recordMedalRecovery = function() {
+  _hcMedalTelemetry.recoveries++;
+  _hcMedalRecovery.lastMissFrame = -999;
+};
+
+// Called each frame in update loop
+window.updateMedalFrameCounter = function() {
+  _hcMedalRecovery.totalFrames++;
+};
+
+// ============================================================
+// ENHANCED PICKUP — multiplier gain, telemetry
+// ============================================================
+
+window.applyMedalPickupBonus = function() {
+  var cfg = _hcMedalReadConfig();
+
+  // Multiplier gain
+  if (typeof window.addScoreMultiplierGain === 'function') {
+    window.addScoreMultiplierGain('graze'); // reuse graze gain (medals are bonus, not kills)
+  }
+
+  _hcMedalTelemetry.pickups++;
+  var currentTier = Math.min(Math.floor(medalChain / 5), MEDAL_VALUES.length - 1);
+  if (currentTier > _hcMedalTelemetry.maxTier) {
+    _hcMedalTelemetry.maxTier = currentTier;
+  }
+  _hcMedalTelemetry.dropsThisWave++;
+};
+
+// ============================================================
+// ANTI-EXPLOIT
+// ============================================================
+
+window.canDropMedal = function() {
+  var cfg = _hcMedalReadConfig();
+  return _hcMedalTelemetry.dropsThisWave < cfg.maxDropsPerWave;
+};
+
+window.resetMedalWaveTracking = function() {
+  _hcMedalTelemetry.dropsThisWave = 0;
+};
+
+// ============================================================
+// TELEMETRY
+// ============================================================
+
+window.getMedalChainTelemetry = function() {
+  return {
+    currentChain: medalChain,
+    currentTier: Math.min(Math.floor(medalChain / 5), MEDAL_VALUES.length - 1),
+    maxTier: _hcMedalTelemetry.maxTier,
+    pickups: _hcMedalTelemetry.pickups,
+    misses: _hcMedalTelemetry.misses,
+    recoveries: _hcMedalTelemetry.recoveries,
+    dropsThisWave: _hcMedalTelemetry.dropsThisWave,
+    feverActive: feverActive,
+    recoveryGraceActive: window.isMedalRecoveryGraceActive()
+  };
+};
+
+window.resetMedalTelemetry = function() {
+  _hcMedalTelemetry.pickups = 0;
+  _hcMedalTelemetry.misses = 0;
+  _hcMedalTelemetry.recoveries = 0;
+  _hcMedalTelemetry.maxTier = 0;
+  _hcMedalTelemetry.dropsThisWave = 0;
+  _hcMedalRecovery.lastMissFrame = -999;
+  _hcMedalRecovery.totalFrames = 0;
+};
+
