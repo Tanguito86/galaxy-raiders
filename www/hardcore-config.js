@@ -6,7 +6,7 @@
 var _GALAXY_CONFIG_DEFAULTS = {
   hardcore:  { enabled: true },   // HC-12: hardcore only
   player:    { hardcoreHitRadius: 3, showHitbox: false },
-  graze:     { enabled: true, radius: 24, score: 5 },   // HC-12
+  graze:     { enabled: true, radius: 24, score: 5, radiusHardcore: 18, scoreBase: 12, maxPerBullet: 4, sameBulletCooldownFrames: 20, repeatPenalty: 0.35 },   // HC-12 / HC-SC-05
   rank:      { enabled: true, baseLevel: 0, min: 0, max: 100, maxLevel: 5, bulletSpeedMax: 1.12, cooldownMin: 0.88, multiplierMax: 1.5, decayDelayMs: 6000, decayAmount: 0.2, decayIntervalMs: 1000, survivalRankIntervalMs: 5000, survivalRankAmount: 0.5, accuracyCheckIntervalMs: 4000, accuracyBonusThreshold: 70, accuracyBonusAmount: 0.3, waveSpeedBonusAmount: 0.5, dominatingHitlessMs: 15000, recoveringMs: 4000, safetyBulletSpeedMax: 1.08, safetyCooldownFloorMs: 450, safetyWavePauseFloorMs: 600, safetyCombinedCeiling: 5.20, safetyRecoveryLimit: 2, safetyBossRankCeilings: { crossfire: 5, zigzag: 5, rotate: 5, divebomb: 5, supreme: 4 }, safetyWaveIntensityCeiling: 0.85, safetyAntiSpikeMaxStep: 8, safetySpikeCooldownMs: 2000, gameplayEffectsEnabled: true },
   bullets:   { enemyGlow: false, bossGlow: false },
   score:     { comboEnabled: true },   // HC-12
@@ -596,12 +596,26 @@ function resetGrazeCount() {
 
 function checkBulletGraze(b) {
   if (!b) return false;
-  if (b.grazed) return false;
   if (!isGrazeActive()) return false;
   if (!__hardcoreSafePlayer()) return false;
 
   var g = getGrazeConfig();
   var center = getPlayerHitCenter();
+  var radius = (typeof g.radiusHardcore === 'number') ? g.radiusHardcore : g.radius;
+
+  // HC-SC-05: per-bullet anti-exploit
+  // Track graze count and last graze frame per bullet
+  if (typeof b._grazeCount === 'undefined') b._grazeCount = 0;
+  if (typeof b._grazeLastFrame === 'undefined') b._grazeLastFrame = 0;
+
+  var maxPerBullet = (typeof g.maxPerBullet === 'number') ? g.maxPerBullet : 4;
+  if (b._grazeCount >= maxPerBullet) return false;
+
+  // Cooldown between grazes on same bullet
+  var cooldownFrames = (typeof g.sameBulletCooldownFrames === 'number') ? g.sameBulletCooldownFrames : 20;
+  if (typeof b._grazeFrameCounter === 'undefined') b._grazeFrameCounter = 0;
+  b._grazeFrameCounter++;
+  if (b._grazeCount > 0 && b._grazeFrameCounter < cooldownFrames) return false;
 
   // Distancia minima entre rectangulo de bala y centro del jugador
   var closestX = b.x < center.x ? (b.x + b.w < center.x ? b.x + b.w : center.x) : (b.x > center.x ? b.x : center.x);
@@ -609,8 +623,9 @@ function checkBulletGraze(b) {
   var dx = center.x - closestX;
   var dy = center.y - closestY;
 
-  if ((dx * dx + dy * dy) < (g.radius * g.radius)) {
-    b.grazed = true;
+  if ((dx * dx + dy * dy) < (radius * radius)) {
+    b._grazeCount++;
+    b._grazeFrameCounter = 0;
     return true;
   }
   return false;
@@ -628,15 +643,20 @@ function registerGraze(bulletRef) {
     window.refreshHardcoreComboWindow();
   }
 
-  var finalScore = g.score;
-  if (typeof addScore === 'function') {
-    var grRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function')
-      ? window.getHardcoreRankScoreMultiplier() : 1.00;
-    var grComboMult = (typeof window.getHardcoreComboMultiplier === 'function')
-      ? window.getHardcoreComboMultiplier() : 1.00;
-    finalScore = Math.round(g.score * grRankMult * grComboMult);
-    awardScore({ points: finalScore, source: 'graze' });
-  }
+  // HC-SC-05: enhanced graze scoring (base 12, scaled by bullet repeat count)
+  var baseScore = (typeof g.scoreBase === 'number') ? g.scoreBase : 12;
+  var repeatPenalty = (typeof g.repeatPenalty === 'number') ? g.repeatPenalty : 0.35;
+  var grazeCount = (bulletRef && typeof bulletRef._grazeCount === 'number') ? bulletRef._grazeCount : 1;
+  var repeatMult = 1.0 - (grazeCount - 1) * repeatPenalty;
+  if (repeatMult < 0.1) repeatMult = 0.1;
+
+  var finalScore = Math.round(baseScore * repeatMult);
+  var grRankMult = (typeof window.getHardcoreRankScoreMultiplier === 'function')
+    ? window.getHardcoreRankScoreMultiplier() : 1.00;
+  var grComboMult = (typeof window.getHardcoreComboMultiplier === 'function')
+    ? window.getHardcoreComboMultiplier() : 1.00;
+  finalScore = Math.round(finalScore * grRankMult * grComboMult);
+  awardScore({ points: finalScore, source: 'graze' });
 
   var gx = bulletRef ? bulletRef.x + (bulletRef.w || 0) / 2 : player.x + player.width / 2;
   var gy = bulletRef ? bulletRef.y : player.y;

@@ -20,7 +20,13 @@ window.GALAXY_CONFIG = {
   graze: {
     enabled: true,   // HC-12: active by default
     radius: 24,
-    score: 5
+    score: 5,
+    // HC-SC-05: enhanced graze economy
+    radiusHardcore: 18,
+    scoreBase: 12,
+    maxPerBullet: 4,
+    sameBulletCooldownFrames: 20,
+    repeatPenalty: 0.35
   },
 
   // ============ RANK (dificultad dinamica) ============
