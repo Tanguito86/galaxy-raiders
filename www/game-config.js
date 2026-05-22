@@ -622,6 +622,7 @@ window.GALAXY_CONFIG = {
   debug: {
     showHardcoreInfo: false,
     showRank: false,
+    showRankDebug: false,
     showHardcoreSystems: false,
     showEnemyRoles: false,
     showBossPattern: false,

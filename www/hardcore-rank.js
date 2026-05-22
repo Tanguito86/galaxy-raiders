@@ -1213,3 +1213,163 @@ window.resetHardcoreRankGameplayTelemetry = function() {
   _hardcoreRankGameplayTelemetry.governorBlocks = 0;
   _hardcoreRankGameplayTelemetry.lastAppliedAt = 0;
 };
+
+// ============================================================
+// HC-RK-05: RANK FEEDBACK & DEBUG OVERLAY
+// Overlay visual para auditar el Rank sin contaminar HUD.
+// Flag-gated: debug.showRankDebug
+// ============================================================
+
+window.drawHardcoreRankFullDebug = function(ctx) {
+  if (!ctx) return;
+  if (typeof H === 'undefined' || typeof W === 'undefined') return;
+
+  // Check debug flag
+  var dbgCfg = (typeof getHardcoreDebugConfig === 'function')
+    ? getHardcoreDebugConfig()
+    : { showRankDebug: false };
+  if (!dbgCfg.showRankDebug) return;
+
+  var panelX = W - 228;
+  var panelY = 44;
+  var panelW = 222;
+  var lineH = 10;
+  var y = panelY + 8;
+
+  // Background panel
+  ctx.save();
+  ctx.globalAlpha = 0.65;
+  ctx.fillStyle = '#080812';
+  ctx.fillRect(panelX, panelY, panelW, lineH * 28 + 12);
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = '#f80';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(panelX, panelY, panelW, lineH * 28 + 12);
+  ctx.globalAlpha = 1;
+
+  ctx.font = '5px "Press Start 2P"';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+
+  function _fmt(v, d) {
+    if (typeof v !== 'number' || !isFinite(v)) return '--';
+    return v.toFixed(typeof d === 'number' ? d : 2);
+  }
+
+  function _col(state) {
+    if (state === 'DOMINATING') return '#5f5';
+    if (state === 'RECOVERING') return '#f55';
+    return '#ff6';
+  }
+
+  // ──── SECTION: RANK STATE ────
+  ctx.fillStyle = '#f80';
+  ctx.fillText('RANK  L' + _hardcoreRank.level + '  VAL ' + _fmt(_hardcoreRank.value, 1) + '  x' + _fmt(_hardcoreRank.multiplier, 2), panelX + 6, y); y += lineH + 2;
+
+  // ──── SECTION: PERFORMANCE ────
+  var perLabel = _hardcoreRankPerformance.performanceState;
+  var hitlessSec = (_hardcoreRankPerformance.hitlessDurationMs / 1000);
+  ctx.fillStyle = _col(perLabel);
+  ctx.fillText(perLabel, panelX + 6, y);
+  ctx.fillStyle = '#ccc';
+  ctx.fillText('HITLESS ' + _fmt(hitlessSec, 1) + 's  MAX ' + _fmt(_hardcoreRankPerformance.longestHitlessMs / 1000, 1) + 's', panelX + 6, y + lineH); y += lineH * 2 + 2;
+
+  // ──── SECTION: ACCURACY ────
+  var acc = _hardcoreRankPerformance.accuracyPercent;
+  ctx.fillStyle = acc >= 65 ? '#5f5' : '#cc8';
+  ctx.fillText('ACC ' + _fmt(acc, 1) + '%', panelX + 6, y); y += lineH + 2;
+
+  // ──── SECTION: SOURCE BREAKDOWN ────
+  ctx.fillStyle = '#888';
+  ctx.fillText('SOURCES', panelX + 6, y); y += lineH;
+  var p = _hardcoreRankPerformance;
+  ctx.fillStyle = '#8b8';
+  ctx.fillText('KILLS ' + _fmt(p.rankFromKills, 1), panelX + 6, y);
+  ctx.fillStyle = '#bb8';
+  ctx.fillText(' SURV ' + _fmt(p.rankFromSurvival, 1), panelX + 40, y); y += lineH;
+  ctx.fillStyle = '#8bb';
+  ctx.fillText('ACC   ' + _fmt(p.rankFromAccuracy, 1), panelX + 6, y);
+  ctx.fillStyle = '#b8d';
+  ctx.fillText(' BOSS ' + _fmt(p.rankFromBossPhases + p.rankFromBossClears, 1), panelX + 40, y); y += lineH;
+  ctx.fillStyle = '#8db';
+  ctx.fillText('GRAZE ' + _fmt(p.rankFromGraze, 1), panelX + 6, y);
+  ctx.fillStyle = '#88d';
+  ctx.fillText(' WAVESPD ' + _fmt(p.rankFromWaveSpeed, 1), panelX + 40, y); y += lineH + 2;
+
+  // ──── SECTION: LOSSES ────
+  ctx.fillStyle = '#f66';
+  ctx.fillText('LOSS: DEATH ' + _fmt(p.rankLostFromDeaths, 1) + '  DECAY ' + _fmt(p.rankLostFromDecay, 1), panelX + 6, y); y += lineH + 2;
+
+  // ──── SECTION: GAMEPLAY EFFECTS STATUS ────
+  var effectsOn = (typeof window.areHardcoreRankGameplayEffectsEnabled === 'function')
+    ? window.areHardcoreRankGameplayEffectsEnabled()
+    : false;
+  ctx.fillStyle = effectsOn ? '#5f5' : '#888';
+  ctx.fillText('GAMEPLAY ' + (effectsOn ? 'ON' : 'OFF'), panelX + 6, y); y += lineH;
+
+  // Governor status
+  if (effectsOn) {
+    var gov = (typeof window.getHardcoreRankSafetyGovernor === 'function')
+      ? window.getHardcoreRankSafetyGovernor()
+      : { apply: false, reason: '?' };
+    ctx.fillStyle = gov.apply ? '#5f5' : '#f55';
+    ctx.fillText(gov.apply ? 'GOVERNOR: APPROVED' : 'GOV: ' + gov.reason, panelX + 6, y); y += lineH;
+  }
+
+  // Recovery indicator
+  if (_hardcoreRankPerformance.performanceState === 'RECOVERING') {
+    ctx.fillStyle = '#f55';
+    var recSince = Math.max(0, (typeof globalTime === 'number' ? globalTime : Date.now()) - _hardcoreRankPerformance.lastHitAt);
+    var recLeft = Math.max(0, 5000 - recSince);
+    ctx.fillText('RECOVERY ' + _fmt(recLeft / 1000, 1) + 's left', panelX + 6, y);
+  }
+  y += lineH + 2;
+
+  // ──── SECTION: TELEMETRY ────
+  var gtel = (typeof window.getHardcoreRankGameplayTelemetry === 'function')
+    ? window.getHardcoreRankGameplayTelemetry()
+    : { bulletSpeedApplications: 0, bulletSpeedCaps: 0, cooldownApplications: 0, cooldownCaps: 0, wavePauseApplications: 0, wavePauseCaps: 0, governorBlocks: 0 };
+  ctx.fillStyle = '#888';
+  ctx.fillText('TELEMETRY', panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#cc8';
+  ctx.fillText('BULLET ' + gtel.bulletSpeedApplications + ' app  ' + gtel.bulletSpeedCaps + ' cap', panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#8cc';
+  ctx.fillText('CD     ' + gtel.cooldownApplications + ' app  ' + gtel.cooldownCaps + ' cap', panelX + 6, y); y += lineH;
+  ctx.fillStyle = '#c8c';
+  ctx.fillText('PAUSE  ' + gtel.wavePauseApplications + ' app  ' + gtel.wavePauseCaps + ' cap', panelX + 6, y); y += lineH;
+  ctx.fillStyle = gtel.governorBlocks > 0 ? '#f55' : '#888';
+  ctx.fillText('BLOCKS ' + gtel.governorBlocks, panelX + 6, y); y += lineH + 2;
+
+  // ──── SECTION: RECENT SAFETY LOG (last 5 blocks) ────
+  var safetyLog = (typeof window.getHardcoreRankSafetyLog === 'function')
+    ? window.getHardcoreRankSafetyLog()
+    : { blocks: [], caps: [] };
+  if (safetyLog.blocks && safetyLog.blocks.length > 0) {
+    ctx.fillStyle = '#f55';
+    ctx.fillText('RECENT BLOCKS', panelX + 6, y); y += lineH;
+    var recentBlocks = safetyLog.blocks.slice(-5);
+    for (var bi = 0; bi < recentBlocks.length; bi++) {
+      var b = recentBlocks[bi];
+      var secAgo = Math.round((Date.now() - b.at) / 1000);
+      ctx.fillStyle = '#f88';
+      ctx.fillText(b.reason + ' ' + secAgo + 's ago', panelX + 6, y); y += lineH;
+      if (y > panelY + panelW) break;
+    }
+    y += 2;
+  }
+
+  // ──── SECTION: RECENT CAPS (last 5 capping events) ────
+  if (safetyLog.caps && safetyLog.caps.length > 0) {
+    ctx.fillStyle = '#fa0';
+    ctx.fillText('RECENT CAPS', panelX + 6, y); y += lineH;
+    var recentCaps = safetyLog.caps.slice(-5);
+    for (var ci = 0; ci < recentCaps.length; ci++) {
+      var c = recentCaps[ci];
+      ctx.fillStyle = '#fb8';
+      ctx.fillText(c.parameter + ' ' + _fmt(c.requested, 1) + '→' + _fmt(c.capped, 1), panelX + 6, y); y += lineH;
+      if (y > panelY + panelW) break;
+    }
+  }
+
+  ctx.restore();
+};
