@@ -224,8 +224,10 @@ window.awardScore = function(opts) {
   var source = (typeof opts.source === 'string') ? opts.source : 'misc';
   var cfg = _hcScoreReadConfig();
 
+  // Apply mastery multiplier
+  var multipliedPoints = _hcScoreApplyMultiplier(source, points);
   // Award score via existing addScore
-  if (typeof addScore === 'function') addScore(points);
+  if (typeof addScore === 'function') addScore(multipliedPoints);
 
   // Telemetry
   if (cfg.telemetryEnabled && cfg.trackSources) {
@@ -359,3 +361,237 @@ window.drawHCScoreDebugOverlay = function(ctx) {
 
   ctx.restore();
 };
+
+// ============================================================
+// HC-SC-04: MASTERY MULTIPLIER
+// Multiplier que recompensa agresion, consistencia y riesgo.
+// Decay suave, penalties parciales, cap controlado.
+// ============================================================
+
+var _hcScoreMultiplier = {
+  current: 1.0,
+  target: 1.0,
+  max: 3.0,
+  lastGainFrame: 0,
+  totalGains: 0,
+  totalDecays: 0,
+  totalPenalties: 0,
+  uptimeFrames: 0,
+  totalFrames: 0,
+  peakReached: 1.0
+};
+
+function _hcScoreMultReadConfig() {
+  var cfg = getGalaxyConfig ? getGalaxyConfig() : {};
+  var sc = (cfg.scoreSystem && typeof cfg.scoreSystem === 'object') ? cfg.scoreSystem : {};
+  var m = (sc.multiplier && typeof sc.multiplier === 'object') ? sc.multiplier : {};
+  return {
+    enabled: m.enabled !== false,
+    base: (typeof m.base === 'number' && m.base >= 1.0) ? m.base : 1.0,
+    max: (typeof m.max === 'number' && m.max >= 1.5) ? m.max : 3.0,
+    gain: {
+      enemyKill: (m.gain && typeof m.gain.enemyKill === 'number') ? m.gain.enemyKill : 0.015,
+      closeRange: (m.gain && typeof m.gain.closeRange === 'number') ? m.gain.closeRange : 0.020,
+      graze: (m.gain && typeof m.gain.graze === 'number') ? m.gain.graze : 0.010,
+      bossHit: (m.gain && typeof m.gain.bossHit === 'number') ? m.gain.bossHit : 0.008
+    },
+    decay: {
+      idleDelayFrames: (m.decay && typeof m.decay.idleDelayFrames === 'number') ? m.decay.idleDelayFrames : 180,
+      ratePerFrame: (m.decay && typeof m.decay.ratePerFrame === 'number') ? m.decay.ratePerFrame : 0.0008
+    },
+    penalties: {
+      deathLossPercent: (m.penalties && typeof m.penalties.deathLossPercent === 'number') ? m.penalties.deathLossPercent : 0.30,
+      hitLossPercent: (m.penalties && typeof m.penalties.hitLossPercent === 'number') ? m.penalties.hitLossPercent : 0.10
+    }
+  };
+}
+
+// ============================================================
+// MULTIPLIER GAIN — called when player earns multiplier events
+// ============================================================
+
+window.addScoreMultiplierGain = function(source) {
+  var cfg = _hcScoreMultReadConfig();
+  if (!cfg.enabled) return;
+
+  var gain = 0;
+  switch (source) {
+    case 'enemyKill':  gain = cfg.gain.enemyKill; break;
+    case 'closeRange': gain = cfg.gain.closeRange; break;
+    case 'graze':      gain = cfg.gain.graze; break;
+    case 'bossHit':    gain = cfg.gain.bossHit; break;
+    default: return;
+  }
+
+  if (gain <= 0) return;
+
+  _hcScoreMultiplier.target = Math.min(cfg.max, _hcScoreMultiplier.target + gain);
+  _hcScoreMultiplier.lastGainFrame = _hcScoreMultiplier.totalFrames;
+  _hcScoreMultiplier.totalGains++;
+
+  // Lerp toward target (smooth rise)
+  _hcScoreMultiplier.current += (_hcScoreMultiplier.target - _hcScoreMultiplier.current) * 0.25;
+};
+
+// ============================================================
+// MULTIPLIER DECAY — called each frame
+// ============================================================
+
+window.updateScoreMultiplierDecay = function() {
+  var cfg = _hcScoreMultReadConfig();
+  if (!cfg.enabled) return;
+
+  _hcScoreMultiplier.totalFrames++;
+
+  var framesSinceGain = _hcScoreMultiplier.totalFrames - _hcScoreMultiplier.lastGainFrame;
+  if (framesSinceGain <= 0) framesSinceGain = 0;
+
+  // Track uptime (multiplier above base)
+  if (_hcScoreMultiplier.current > cfg.base) {
+    _hcScoreMultiplier.uptimeFrames++;
+  }
+
+  // Decay after idle delay
+  if (framesSinceGain > cfg.decay.idleDelayFrames) {
+    _hcScoreMultiplier.target = Math.max(cfg.base, _hcScoreMultiplier.target - cfg.decay.ratePerFrame);
+    _hcScoreMultiplier.totalDecays++;
+  }
+
+  // Lerp toward target
+  _hcScoreMultiplier.current += (_hcScoreMultiplier.target - _hcScoreMultiplier.current) * 0.10;
+
+  // Clamp and track peak
+  _hcScoreMultiplier.current = Math.max(cfg.base, Math.min(cfg.max, _hcScoreMultiplier.current));
+  _hcScoreMultiplier.target = Math.max(cfg.base, Math.min(cfg.max, _hcScoreMultiplier.target));
+
+  if (_hcScoreMultiplier.current > _hcScoreMultiplier.peakReached) {
+    _hcScoreMultiplier.peakReached = _hcScoreMultiplier.current;
+  }
+};
+
+// ============================================================
+// MULTIPLIER PENALTIES — called on player hit/death
+// ============================================================
+
+window.applyScoreMultiplierPenalty = function(type) {
+  var cfg = _hcScoreMultReadConfig();
+  if (!cfg.enabled) return;
+  if (_hcScoreMultiplier.current <= cfg.base) return;
+
+  var lossPercent = 0;
+  if (type === 'death') lossPercent = cfg.penalties.deathLossPercent;
+  else if (type === 'hit') lossPercent = cfg.penalties.hitLossPercent;
+  else return;
+
+  var loss = _hcScoreMultiplier.current * lossPercent;
+  _hcScoreMultiplier.target = Math.max(cfg.base, _hcScoreMultiplier.target - loss);
+  _hcScoreMultiplier.totalPenalties++;
+
+  // Instant drop on penalty (no lerp — penalties are felt)
+  _hcScoreMultiplier.current = Math.max(cfg.base, _hcScoreMultiplier.current - loss);
+};
+
+// ============================================================
+// MULTIPLIER GETTER
+// ============================================================
+
+window.getCurrentScoreMultiplier = function() {
+  var cfg = _hcScoreMultReadConfig();
+  if (!cfg.enabled) return 1.0;
+  return _hcScoreMultiplier.current;
+};
+
+// ============================================================
+// MULTIPLIER TELEMETRY
+// ============================================================
+
+window.getScoreMultiplierTelemetry = function() {
+  var m = _hcScoreMultiplier;
+  var cfg = _hcScoreMultReadConfig();
+  return {
+    current: m.current,
+    target: m.target,
+    peak: m.peakReached,
+    max: cfg.max,
+    uptimePercent: m.totalFrames > 0 ? Math.round((m.uptimeFrames / m.totalFrames) * 100) : 0,
+    totalGains: m.totalGains,
+    totalDecays: m.totalDecays,
+    totalPenalties: m.totalPenalties
+  };
+};
+
+window.resetScoreMultiplier = function() {
+  _hcScoreMultiplier.current = 1.0;
+  _hcScoreMultiplier.target = 1.0;
+  _hcScoreMultiplier.lastGainFrame = 0;
+  _hcScoreMultiplier.totalGains = 0;
+  _hcScoreMultiplier.totalDecays = 0;
+  _hcScoreMultiplier.totalPenalties = 0;
+  _hcScoreMultiplier.uptimeFrames = 0;
+  _hcScoreMultiplier.totalFrames = 0;
+  _hcScoreMultiplier.peakReached = 1.0;
+};
+
+// ============================================================
+// MULTIPLIER HUD
+// ============================================================
+
+window.drawScoreMultiplierHUD = function(ctx) {
+  if (!ctx) return;
+  var cfg = _hcScoreMultReadConfig();
+  if (!cfg.enabled) return;
+  if (typeof H === 'undefined') return;
+  if (typeof state === 'undefined' || state !== 'playing') return;
+
+  var mult = _hcScoreMultiplier.current;
+  if (mult <= 1.01) return; // Don't show if basically 1.0
+
+  var displayText = 'x' + mult.toFixed(2);
+  var x = 6;
+  var y = H - 14;
+
+  // Subtle pulse when recently gained
+  var framesSinceGain = _hcScoreMultiplier.totalFrames - _hcScoreMultiplier.lastGainFrame;
+  var pulse = framesSinceGain < 30 ? (1.0 + 0.15 * (1.0 - framesSinceGain / 30)) : 1.0;
+
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '6px "Press Start 2P"';
+
+  // Color shifts with multiplier level
+  var alpha = 0.55 + mult * 0.15;
+  var color;
+  if (mult >= 2.5) color = '#ffdd44';       // Gold at peak
+  else if (mult >= 2.0) color = '#ff8833';  // Orange at high
+  else if (mult >= 1.5) color = '#ffcc66';  // Amber at mid
+  else color = '#cccccc';                    // Grey at low
+
+  ctx.globalAlpha = alpha * pulse;
+  ctx.fillStyle = color;
+  ctx.fillText(displayText, x, y);
+  ctx.globalAlpha = 1;
+
+  ctx.restore();
+};
+
+// ============================================================
+// INTEGRATE MULTIPLIER INTO awardScore
+// (Modifies the awardScore function to apply multiplier)
+// ============================================================
+
+// Hook multiplier gain into awardScore calls by source
+// Called internally by awardScore after telemetry
+function _hcScoreApplyMultiplier(source, points) {
+  var cfg = _hcScoreMultReadConfig();
+  if (!cfg.enabled) return points;
+
+  // Gain multiplier from qualifying sources
+  if (source === 'enemyKill' || source === 'closeRange' ||
+      source === 'graze' || source === 'bossHit') {
+    window.addScoreMultiplierGain(source);
+  }
+
+  // Apply multiplier to score value
+  return Math.round(points * _hcScoreMultiplier.current);
+}

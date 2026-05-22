@@ -241,6 +241,10 @@ function recordPlayerDeath(cause = 'unknown', lostLives = 1) {
   if (typeof window.recordHardcoreRankHit === 'function') {
     window.recordHardcoreRankHit(typeof globalTime === 'number' ? globalTime : 0);
   }
+  // HC-SC-04: apply multiplier penalty on death
+  if (typeof window.applyScoreMultiplierPenalty === 'function') {
+    window.applyScoreMultiplierPenalty('death');
+  }
   if (typeof window.reduceHardcoreRank === 'function') {
     window.reduceHardcoreRank(8, 'player_hit');
   }

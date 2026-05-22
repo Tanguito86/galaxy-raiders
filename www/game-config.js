@@ -165,7 +165,28 @@ window.GALAXY_CONFIG = {
     enabled: true,
     telemetry: { enabled: true, trackSources: true },
     sourceColors: true,
-    debug: { overlay: false }
+    debug: { overlay: false },
+
+    // HC-SC-04: mastery multiplier
+    multiplier: {
+      enabled: true,
+      base: 1.0,
+      max: 3.0,
+      gain: {
+        enemyKill: 0.015,
+        closeRange: 0.020,
+        graze: 0.010,
+        bossHit: 0.008
+      },
+      decay: {
+        idleDelayFrames: 180,
+        ratePerFrame: 0.0008
+      },
+      penalties: {
+        deathLossPercent: 0.30,
+        hitLossPercent: 0.10
+      }
+    }
   },
 
   // ============ ENCOUNTER DIRECTOR (HC-125→129) ============

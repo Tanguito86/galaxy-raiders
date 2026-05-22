@@ -5319,6 +5319,7 @@ ufoRewards.forEach(d => {
     if (typeof drawHardcoreRankDebug === 'function') drawHardcoreRankDebug(ctx);
     if (typeof window.drawHardcoreRankFullDebug === 'function') window.drawHardcoreRankFullDebug(ctx);
     if (typeof window.drawHCScoreDebugOverlay === 'function') window.drawHCScoreDebugOverlay(ctx);
+    if (typeof window.drawScoreMultiplierHUD === 'function') window.drawScoreMultiplierHUD(ctx);
     if (typeof window.drawHardcoreComboHUD === 'function') window.drawHardcoreComboHUD(ctx);
     if (typeof window.drawHardcoreSystemsDebug === 'function') window.drawHardcoreSystemsDebug(ctx);
     if (typeof drawHC90BackgroundStats === 'function') drawHC90BackgroundStats(ctx, level);
