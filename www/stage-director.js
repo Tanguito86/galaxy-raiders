@@ -367,6 +367,24 @@ window.drawStageDirectorDebugOverlay = function(ctx) {
     }
   }
 
+  // HC-ST-05: influence + calibration
+  y += 6;
+  var inf = window.getStageInfluenceState();
+  var cal = window.getStageCalibrationTelemetry();
+  if (inf) {
+    ctx.fillStyle = '#99f';
+    ctx.fillText('INFLUENCE', panelX + 6, y); y += lineH;
+    ctx.fillStyle = '#aac';
+    ctx.fillText('I:' + inf.intensity + ' A:' + inf.aggression + ' D:' + inf.density, panelX + 6, y); y += lineH;
+    ctx.fillText('S:' + inf.spacing + ' R:' + inf.recovery + ' SP:' + inf.setpiece, panelX + 6, y); y += lineH;
+    ctx.fillText('READ:' + inf.readabilityPressure + ' MODE:' + inf.pacingMode, panelX + 6, y); y += lineH;
+    ctx.fillStyle = cal.desyncWarnings > 0 ? '#f66' : '#6f6';
+    ctx.fillText('MISMATCH:' + (cal.avgMismatch || 0).toFixed(2) + ' DESYNC:' + cal.desyncWarnings, panelX + 6, y); y += lineH;
+    var integrity = (typeof window.validateStageRecoveryIntegrity === 'function') ? window.validateStageRecoveryIntegrity() : { valid: true };
+    ctx.fillStyle = integrity.valid ? '#6f6' : '#f66';
+    ctx.fillText('INTEGRITY:' + (integrity.valid ? 'OK' : integrity.issues.join(',')), panelX + 6, y);
+  }
+
   ctx.restore();
 };
 
@@ -481,4 +499,311 @@ var _stageDirLvlChangeOrig = window.onStageDirectorLevelChange;
 window.onStageDirectorLevelChange = function(newLevel) {
   if (_stageDirLvlChangeOrig) _stageDirLvlChangeOrig(newLevel);
   window.loadStagePlan(newLevel);
+};
+
+// ============================================================
+// HC-ST-05: WAVE COMPOSER INTEGRATION & INFLUENCE LAYER
+// Stage Director expone influence state para HC-WC.
+// NO spawnea enemigos. NO controla patterns.
+// Solo produce metadata que WC puede leer opcionalmente.
+// ============================================================
+
+// ============================================================
+// TIME AUTHORITY — single source of truth
+// ============================================================
+// Timer authority chain for stage pacing:
+//   1. globalTime (scores.js) — absolute frame clock, runs always
+//   2. _stageDirector.sectionStartedAt — derived from globalTime
+//   3. _stageDirector.sectionDurationMs — computed diff, read-only
+//   4. Stage plan section.durationMs — authored target, NOT authoritative
+//   5. WC wave phase timers — independent, owned by HC-WC
+//   6. Boss director phaseTimer — independent, owned by HC-BD
+//
+// No parallel timers. All derived from globalTime.
+// Desync prevention: check section timer vs wc phase timer for drift.
+
+var _stageDirectorCalibration = {
+  actualVsTargetTension: [],
+  recoveryAboveThreshold: 0,
+  overloadFrames: 0,
+  desyncWarnings: 0,
+  lastCalibrationCheck: 0
+};
+
+// ============================================================
+// INFLUENCE STATE — metadata for Wave Composer
+// ============================================================
+
+window.getStageInfluenceState = function() {
+  var plan = _stageDirectorPlan.currentPlan;
+  var currentSection = window.getCurrentStageSection();
+  var identity = plan ? null : null; // resolved below
+  
+  if (plan) {
+    identity = (typeof getStageIdentity === 'function') 
+      ? getStageIdentity(_stageDirector.currentLevel) 
+      : { aggression: 0.5, spacing: 'medium', recovery: 'normal' };
+  }
+
+  var sectionType = _stageDirector.currentSection;
+  var cfg = _stageDirectorReadConfig();
+
+  // Derive influence biases from current section type
+  var intensityBias = 0;
+  var aggressionBias = 0;
+  var densityBias = 0;
+  var spacingBias = 0;
+  var recoveryBias = 0;
+  var setpieceBias = 0;
+  var readabilityPressure = 0;
+
+  switch (sectionType) {
+    case 'warmup':
+      intensityBias = 0.2; aggressionBias = 0.1; densityBias = 0.15;
+      spacingBias = 0.8; recoveryBias = 0.9; setpieceBias = 0;
+      readabilityPressure = 0.1;
+      break;
+    case 'formation_showcase':
+      intensityBias = 0.35; aggressionBias = 0.25; densityBias = 0.35;
+      spacingBias = 0.6; recoveryBias = 0.7; setpieceBias = 0.1;
+      readabilityPressure = 0.2;
+      break;
+    case 'pressure_ramp':
+      intensityBias = 0.6; aggressionBias = 0.55; densityBias = 0.6;
+      spacingBias = 0.4; recoveryBias = 0.3; setpieceBias = 0.2;
+      readabilityPressure = 0.5;
+      break;
+    case 'crossfire':
+      intensityBias = 0.75; aggressionBias = 0.7; densityBias = 0.7;
+      spacingBias = 0.3; recoveryBias = 0.2; setpieceBias = 0.3;
+      readabilityPressure = 0.65;
+      break;
+    case 'ambush':
+      intensityBias = 0.8; aggressionBias = 0.85; densityBias = 0.75;
+      spacingBias = 0.2; recoveryBias = 0.1; setpieceBias = 0.4;
+      readabilityPressure = 0.7;
+      break;
+    case 'relief':
+      intensityBias = 0.15; aggressionBias = 0.05; densityBias = 0.1;
+      spacingBias = 0.9; recoveryBias = 1.0; setpieceBias = 0;
+      readabilityPressure = 0.05;
+      break;
+    case 'survival_corridor':
+      intensityBias = 0.9; aggressionBias = 0.85; densityBias = 0.9;
+      spacingBias = 0.15; recoveryBias = 0.05; setpieceBias = 0.5;
+      readabilityPressure = 0.85;
+      break;
+    case 'mini_setpiece':
+      intensityBias = 0.75; aggressionBias = 0.6; densityBias = 0.8;
+      spacingBias = 0.25; recoveryBias = 0.15; setpieceBias = 1.0;
+      readabilityPressure = 0.6;
+      break;
+    case 'boss_prelude':
+      intensityBias = 0.15; aggressionBias = 0.05; densityBias = 0.08;
+      spacingBias = 0.95; recoveryBias = 0.95; setpieceBias = 0;
+      readabilityPressure = 0.02;
+      break;
+    case 'climax':
+      intensityBias = 1.0; aggressionBias = 1.0; densityBias = 1.0;
+      spacingBias = 0.1; recoveryBias = 0; setpieceBias = 0.8;
+      readabilityPressure = 1.0;
+      break;
+    default:
+      intensityBias = 0.5;
+      break;
+  }
+
+  // Apply stage identity modifiers if available
+  if (identity && typeof identity.aggression === 'number') {
+    aggressionBias = Math.min(1.0, aggressionBias * (0.7 + identity.aggression * 0.3));
+  }
+
+  // Apply tension curve modifier
+  if (plan && plan.tensionCurve === 'overload') {
+    intensityBias = Math.min(1.0, intensityBias * 1.15);
+    recoveryBias *= 0.5;
+  } else if (plan && plan.tensionCurve === 'collapse') {
+    intensityBias *= 0.8;
+    recoveryBias = Math.min(1.0, recoveryBias * 1.3);
+  }
+
+  return {
+    // Core influence values (0.0-1.0)
+    intensity: Number(intensityBias.toFixed(3)),
+    aggression: Number(aggressionBias.toFixed(3)),
+    density: Number(densityBias.toFixed(3)),
+    spacing: Number(spacingBias.toFixed(3)),
+    recovery: Number(recoveryBias.toFixed(3)),
+    setpiece: Number(setpieceBias.toFixed(3)),
+    readabilityPressure: Number(readabilityPressure.toFixed(3)),
+
+    // Metadata
+    sectionType: sectionType,
+    tensionCurve: plan ? plan.tensionCurve : 'unknown',
+    isBossSection: sectionType === 'climax' || sectionType === 'boss_prelude',
+    isHighPressure: sectionType === 'survival_corridor' || sectionType === 'ambush' || sectionType === 'crossfire',
+    isRecovery: sectionType === 'relief' || sectionType === 'warmup',
+
+    // Pacing mode derived from curve
+    pacingMode: plan ? plan.tensionCurve : 'sawtooth',
+
+    // WC integration flags — what WC is allowed to do
+    wcFlags: {
+      allowCrossfire: sectionType !== 'boss_prelude' && sectionType !== 'relief' && sectionType !== 'warmup',
+      allowDivers: sectionType !== 'relief' && sectionType !== 'warmup' && sectionType !== 'boss_prelude',
+      allowSuppressors: sectionType !== 'relief',
+      allowSurvivalDensity: sectionType === 'survival_corridor',
+      forceRelief: sectionType === 'relief',
+      preludeCleanup: sectionType === 'boss_prelude'
+    },
+
+    // Safety
+    _source: 'stage-director',
+    _timestamp: typeof globalTime === 'number' ? globalTime : Date.now()
+  };
+};
+
+// ============================================================
+// TENSION CALIBRATION — planned vs actual
+// ============================================================
+
+window.calibrateStageTension = function() {
+  // Planned tension from current section
+  var currentSection = window.getCurrentStageSection();
+  var plannedTension = currentSection ? (currentSection.intensity || 0.5) : 0.5;
+
+  // Actual tension from live game state
+  var actualTension = window.getStageDirectorTension();
+
+  var mismatch = Math.abs(plannedTension - actualTension);
+  _stageDirectorCalibration.actualVsTargetTension.push({
+    planned: plannedTension,
+    actual: actualTension,
+    mismatch: mismatch,
+    at: typeof globalTime === 'number' ? globalTime : Date.now()
+  });
+  if (_stageDirectorCalibration.actualVsTargetTension.length > 20) {
+    _stageDirectorCalibration.actualVsTargetTension.shift();
+  }
+
+  // Track calibration anomalies
+  if (mismatch > 0.4) {
+    _stageDirectorCalibration.desyncWarnings++;
+  }
+  if (_stageDirector.currentSection !== 'relief' && _stageDirector.tension < 0.15) {
+    _stageDirectorCalibration.recoveryAboveThreshold++;
+  }
+  if (_stageDirector.tension > 0.85) {
+    _stageDirectorCalibration.overloadFrames++;
+  }
+
+  return {
+    planned: plannedTension,
+    actual: actualTension,
+    mismatch: Number(mismatch.toFixed(3)),
+    desyncWarnings: _stageDirectorCalibration.desyncWarnings,
+    overloadFrames: _stageDirectorCalibration.overloadFrames
+  };
+};
+
+// Get calibration telemetry
+window.getStageCalibrationTelemetry = function() {
+  var recent = _stageDirectorCalibration.actualVsTargetTension;
+  var avgMismatch = 0;
+  if (recent.length > 0) {
+    for (var i = 0; i < recent.length; i++) avgMismatch += recent[i].mismatch;
+    avgMismatch /= recent.length;
+  }
+
+  return {
+    avgMismatch: Number(avgMismatch.toFixed(3)),
+    desyncWarnings: _stageDirectorCalibration.desyncWarnings,
+    recoveryAboveThreshold: _stageDirectorCalibration.recoveryAboveThreshold,
+    overloadFrames: _stageDirectorCalibration.overloadFrames,
+    recentMismatches: recent.slice(-5)
+  };
+};
+
+// ============================================================
+// RECOVERY INTEGRITY CHECK
+// ============================================================
+
+window.validateStageRecoveryIntegrity = function() {
+  var influence = window.getStageInfluenceState();
+  var issues = [];
+
+  // Relief must not be intense
+  if (influence.sectionType === 'relief' && _stageDirector.tension > 0.40) {
+    issues.push('relief_tension_high');
+  }
+
+  // Prelude must be clean
+  if (influence.sectionType === 'boss_prelude' && _stageDirector.tension > 0.35) {
+    issues.push('prelude_too_intense');
+  }
+
+  // Overload must have escape path
+  if (influence.tensionCurve === 'overload' && influence.sectionType !== 'relief' && influence.sectionType !== 'boss_prelude') {
+    if (_stageDirectorCalibration.overloadFrames > 1800) { // 30s
+      issues.push('overload_too_long');
+    }
+  }
+
+  // Recovery must exist periodically
+  if (_stageDirector.consecutivePressure >= 5) {
+    issues.push('pressure_chain_too_long');
+  }
+
+  return {
+    valid: issues.length === 0,
+    issues: issues,
+    sectionType: influence.sectionType,
+    tension: _stageDirector.tension,
+    consecutivePressure: _stageDirector.consecutivePressure
+  };
+};
+
+// ============================================================
+// SAFETY FALLBACKS
+// ============================================================
+
+window.getStageDirectorSafeDefaults = function() {
+  // Returns safe influence state when ST/WC desync is detected
+  return {
+    intensity: 0.5,
+    aggression: 0.5,
+    density: 0.5,
+    spacing: 0.5,
+    recovery: 0.5,
+    setpiece: 0.2,
+    readabilityPressure: 0.4,
+    sectionType: 'fallback',
+    tensionCurve: 'sawtooth',
+    isBossSection: false,
+    isHighPressure: false,
+    isRecovery: false,
+    pacingMode: 'sawtooth',
+    wcFlags: {
+      allowCrossfire: true,
+      allowDivers: true,
+      allowSuppressors: true,
+      allowSurvivalDensity: false,
+      forceRelief: false,
+      preludeCleanup: false
+    },
+    _source: 'stage-director-fallback',
+    _timestamp: typeof globalTime === 'number' ? globalTime : Date.now()
+  };
+};
+
+// Override updateStageDirector to include calibration
+var _stageDirOrigUpdate2 = window.updateStageDirector;
+window.updateStageDirector = function(dt) {
+  if (_stageDirOrigUpdate2) _stageDirOrigUpdate2(dt);
+  // Run calibration every 500ms
+  var now = typeof globalTime === 'number' ? globalTime : Date.now();
+  if (now - _stageDirectorCalibration.lastCalibrationCheck > 500) {
+    _stageDirectorCalibration.lastCalibrationCheck = now;
+    window.calibrateStageTension();
+  }
 };
