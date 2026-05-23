@@ -1,0 +1,112 @@
+{
+  "atlas": "fleet_first_wave",
+  "version": "1.0",
+  "faction": "THE FLEET",
+  "palette": "HC-FACTION-FLEET",
+  "date": "2026-05-23",
+  "totalSprites": 3,
+  "sprites": {
+    "fleet_scout": {
+      "class": "fodder",
+      "size": [
+        16,
+        16
+      ],
+      "animations": {
+        "idle": {
+          "frames": 3,
+          "duration": 150,
+          "loop": true
+        },
+        "death": {
+          "frames": 4,
+          "duration": 120,
+          "loop": false
+        }
+      },
+      "hitbox": [
+        7,
+        7,
+        2,
+        2
+      ],
+      "pivot": [
+        8,
+        8
+      ]
+    },
+    "fleet_interceptor": {
+      "class": "fast_attacker",
+      "size": [
+        24,
+        24
+      ],
+      "animations": {
+        "idle": {
+          "frames": 2,
+          "duration": 120,
+          "loop": true
+        },
+        "move": {
+          "frames": 2,
+          "duration": 100,
+          "loop": true
+        },
+        "attack": {
+          "frames": 1,
+          "duration": 80,
+          "loop": false
+        },
+        "death": {
+          "frames": 6,
+          "duration": 120,
+          "loop": false
+        }
+      },
+      "hitbox": [
+        10,
+        10,
+        4,
+        4
+      ],
+      "pivot": [
+        12,
+        12
+      ]
+    },
+    "fleet_suppressor": {
+      "class": "suppressor",
+      "size": [
+        28,
+        32
+      ],
+      "animations": {
+        "idle": {
+          "frames": 2,
+          "duration": 150,
+          "loop": true
+        },
+        "attack": {
+          "frames": 2,
+          "duration": 100,
+          "loop": false
+        },
+        "death": {
+          "frames": 8,
+          "duration": 120,
+          "loop": false
+        }
+      },
+      "hitbox": [
+        12,
+        14,
+        4,
+        4
+      ],
+      "pivot": [
+        14,
+        16
+      ]
+    }
+  }
+}

@@ -3773,6 +3773,43 @@ if (shouldShow) {
     return idleFrame;
   }
 
+  // ═══════════════════════════════════════════════════════
+  // HC-ART-02: S04 WEDGE animation frame mapping
+  // ═══════════════════════════════════════════════════════
+  function getWedgeAnimationFrame() {
+    var t = globalTime || Date.now();
+    // Hit: use invincibility flash state
+    if (isInvincible) {
+      if (Math.floor(t / 100) % 2 === 0) return 30; // white flash
+      return 0; // normal (alternating with white creates flash effect)
+    }
+    // Banking directions (8-dir)
+    if (player.movingLeft && player.movingUp) return 15 + Math.floor(t / 120) % 3;
+    if (player.movingRight && player.movingUp) return 18 + Math.floor(t / 120) % 3;
+    if (player.movingLeft && player.movingDown) return 21 + Math.floor(t / 120) % 3;
+    if (player.movingRight && player.movingDown) return 24 + Math.floor(t / 120) % 3;
+    if (player.movingLeft) return 3 + Math.floor(t / 120) % 3;
+    if (player.movingRight) return 6 + Math.floor(t / 120) % 3;
+    if (player.movingUp) return 9 + Math.floor(t / 120) % 3;
+    if (player.movingDown) return 12 + Math.floor(t / 120) % 3;
+    // Idle: engine flicker
+    return Math.floor(t / 180) % 3;
+  }
+
+  function drawWedgePlayer() {
+    var frame = getWedgeAnimationFrame();
+    // Draw centered: 36×44 sprite over 33×24 hitbox
+    var dx = player.x - 1.5;  // center 36px over 33px
+    var dy = player.y - 10;    // center 44px over 24px
+    window.drawSpriteFrame(ctx, 'player_wedge', dx, dy, {
+      frame: frame,
+      rotation: 0,
+      scale: 1,
+      anchorX: 0,
+      anchorY: 0
+    });
+  }
+
   function drawPlayerSprite(spriteId, frameIndex) {
     ctx.globalAlpha = 0.18 + corePulse * 0.06;
     window.drawSpriteFrame(ctx, spriteId, player.x - 1, player.y, {
@@ -3823,7 +3860,12 @@ if (shouldShow) {
     });
   }
 
-  if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_ship_3x3')) {
+  // ═══════════════════════════════════════════════════════
+  // HC-ART-02: S04 WEDGE priority (HIGHEST)
+  // ═══════════════════════════════════════════════════════
+  if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_wedge')) {
+    drawWedgePlayer();
+  } else if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_ship_3x3')) {
     drawPlayerSprite('player_ship_3x3', getAnimatedPlayerFrame());
   } else if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player')) {
     drawPlayerSprite('player', 0);

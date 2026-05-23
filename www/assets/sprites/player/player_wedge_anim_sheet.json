@@ -1,0 +1,266 @@
+{
+  "atlas": "player_wedge_anim_sheet",
+  "version": "1.0",
+  "size": {
+    "w": 1152,
+    "h": 44
+  },
+  "texture": "player_wedge_anim_sheet.png",
+  "palette": "HC-PLAYER-WEDGE-CRIMSON",
+  "ship": "S04 Aggressive Wedge",
+  "date": "2026-05-23",
+  "totalFrames": 32,
+  "totalAnimations": 11,
+  "sprites": {
+    "player_wedge_idle": {
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 180,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "idle",
+      "class": "player"
+    },
+    "player_wedge_bank_left": {
+      "rect": {
+        "x": 108,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "left"
+    },
+    "player_wedge_bank_right": {
+      "rect": {
+        "x": 216,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "right"
+    },
+    "player_wedge_bank_up": {
+      "rect": {
+        "x": 324,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "up"
+    },
+    "player_wedge_bank_down": {
+      "rect": {
+        "x": 432,
+        "y": 0,
+        "w": 44,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "down"
+    },
+    "player_wedge_bank_up_left": {
+      "rect": {
+        "x": 540,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "up_left"
+    },
+    "player_wedge_bank_up_right": {
+      "rect": {
+        "x": 648,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "up_right"
+    },
+    "player_wedge_bank_down_left": {
+      "rect": {
+        "x": 756,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "down_left"
+    },
+    "player_wedge_bank_down_right": {
+      "rect": {
+        "x": 864,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 120,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "move",
+      "class": "player",
+      "direction": "down_right"
+    },
+    "player_wedge_boost": {
+      "rect": {
+        "x": 972,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 3,
+      "frameDuration": 100,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "boost",
+      "class": "player"
+    },
+    "player_wedge_hit": {
+      "rect": {
+        "x": 1080,
+        "y": 0,
+        "w": 36,
+        "h": 44
+      },
+      "frames": 2,
+      "frameDuration": 50,
+      "pivot": {
+        "x": 18,
+        "y": 22
+      },
+      "hitbox": {
+        "x": 16,
+        "y": 20,
+        "w": 4,
+        "h": 4
+      },
+      "animation": "hit",
+      "class": "player"
+    }
+  }
+}
