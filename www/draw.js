@@ -593,8 +593,11 @@ function drawThemedBackground(ctx, levelNum, time) {
     ctx.globalAlpha = 1;
   } else if (isBossMood) {
     var hpRatio = boss.hp / boss.maxHp;
-    ctx.globalAlpha = 0.04 + (1 - hpRatio) * 0.08;
-    ctx.fillStyle = '#400';
+    ctx.globalAlpha = 0.10 + (1 - hpRatio) * 0.05;
+    ctx.fillStyle = '#02030a';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.025 + (1 - hpRatio) * 0.035;
+    ctx.fillStyle = boss.color || '#600';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
   }
@@ -644,11 +647,11 @@ function drawOverlayPanel(x, y, w, h, accentColor) {
   // HC-RD-06: config-driven overlay panel alpha
   var _ovCfg = (typeof getHUDReadabilityConfig === 'function') ? (getHUDReadabilityConfig().overlays || {}) : {};
   var _ovAlpha = (typeof _ovCfg.overlayPanelAlpha === 'number') ? _ovCfg.overlayPanelAlpha : 0.90;
-  ctx.fillStyle = 'rgba(2,6,16,' + Math.min(0.86, _ovAlpha) + ')';
+  ctx.fillStyle = 'rgba(2,6,16,' + Math.min(0.82, _ovAlpha) + ')';
   ctx.fillRect(x, y, w, h);
 
   // Accent glow bars (top / bottom)
-  ctx.globalAlpha = 0.22;
+  ctx.globalAlpha = 0.16;
   ctx.fillStyle = accentColor;
   ctx.fillRect(x + 8, y + 5, w - 16, 1);
   ctx.fillRect(x + 8, y + h - 6, w - 16, 1);
@@ -666,7 +669,7 @@ function drawOverlayPanel(x, y, w, h, accentColor) {
 
   // Corner brackets
   ctx.fillStyle = accentColor;
-  ctx.globalAlpha = 0.36;
+  ctx.globalAlpha = 0.26;
   ctx.fillRect(x, y + 8, 2, 10);
   ctx.fillRect(x + w - 2, y + 8, 2, 10);
   ctx.fillRect(x, y + h - 18, 2, 10);
@@ -1257,22 +1260,26 @@ function drawCrabtronShootTelegraph(ctx, boss, color, time) {
   ctx.save();
 
   var auraR = 5 + t * 16;
-  ctx.globalAlpha = t * 0.18 * ringPulse;
+  ctx.globalAlpha = t * 0.09 * ringPulse;
   ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(lwX, lwY, auraR, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(rwX, rwY, auraR, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(lwX - auraR * 0.55, lwY - 2, auraR * 1.1, 4);
+  ctx.fillRect(rwX - auraR * 0.55, rwY - 2, auraR * 1.1, 4);
 
-  ctx.globalAlpha = t * 0.32 * ringPulse;
+  ctx.globalAlpha = t * 0.24 * ringPulse;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(lwX, lwY, auraR * 0.65, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(rwX, rwY, auraR * 0.65, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeRect(lwX - auraR * 0.42, lwY - auraR * 0.25, auraR * 0.84, auraR * 0.50);
+  ctx.strokeRect(rwX - auraR * 0.42, rwY - auraR * 0.25, auraR * 0.84, auraR * 0.50);
 
-  ctx.globalAlpha = t * 0.45 * ringPulse;
+  ctx.globalAlpha = t * 0.36 * ringPulse;
   ctx.strokeStyle = '#ffe8d0';
   ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(lwX, lwY, auraR * 0.4, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(rwX, rwY, auraR * 0.4, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(lwX - auraR * 0.35, lwY);
+  ctx.lineTo(lwX + auraR * 0.35, lwY);
+  ctx.moveTo(rwX - auraR * 0.35, rwY);
+  ctx.lineTo(rwX + auraR * 0.35, rwY);
+  ctx.stroke();
 
   if (t > 0.5) {
     var coreT = (t - 0.5) / 0.5;
@@ -1284,7 +1291,7 @@ function drawCrabtronShootTelegraph(ctx, boss, color, time) {
 
   if (t > 0.6) {
     var lineT = (t - 0.6) / 0.4;
-    ctx.globalAlpha = lineT * 0.22;
+    ctx.globalAlpha = lineT * 0.14;
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -3955,14 +3962,18 @@ if (shouldShow) {
       var _rawBossGlow = 0.08 + 0.03 * Math.sin(globalTime * 0.018);
       const bossGlow = Math.min(_bossAmbientMax, _rawBossGlow);
 
-      // HC-121: ambient darkening overlay (behind boss, subtle tint)
+      // HC-VS-02D: staged boss backdrop, kept behind gameplay threats.
       ctx.save();
-      ctx.globalAlpha = 0.03 + 0.01 * Math.sin(globalTime * 0.009 + 1.2);
+      ctx.globalAlpha = 0.11;
+      ctx.fillStyle = '#02030a';
+      ctx.fillRect(-10, -10, W + 20, H + 20);
+      ctx.globalAlpha = 0.035 + 0.01 * Math.sin(globalTime * 0.009 + 1.2);
       ctx.fillStyle = bossColor;
       ctx.fillRect(-10, -10, W + 20, H + 20);
-      ctx.globalAlpha = 0.02;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(-10, -10, W + 20, H + 20);
+      ctx.globalAlpha = 0.18;
+      ctx.strokeStyle = bossColor;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(14.5, 54.5, W - 29, H - 112);
       ctx.restore();
 
       // HC-121: idle menace motion per boss
@@ -3991,12 +4002,12 @@ if (shouldShow) {
       ctx.translate(_menaceOX, _menaceOY);
 
       ctx.save();
-      ctx.globalAlpha = bossGlow;
+      ctx.globalAlpha = bossGlow * 0.55;
       drawSprite(ctx, bossSprite, boss.x - 4, boss.y, bossColor, 5);
       drawSprite(ctx, bossSprite, boss.x + 4, boss.y, bossColor, 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y - 4, bossColor, 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y + 4, bossColor, 5);
-      ctx.globalAlpha = 0.38;
+      ctx.globalAlpha = 0.24;
       drawSprite(ctx, bossSprite, boss.x - 2, boss.y, '#120008', 5);
       drawSprite(ctx, bossSprite, boss.x + 2, boss.y, '#120008', 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y - 2, '#120008', 5);
@@ -4101,7 +4112,7 @@ if (shouldShow) {
       if (boss.pattern === 'crossfire') {
         ctx.save();
         for (var _ai = 4; _ai >= 0; _ai--) {
-          var _aa = 0.016 * (5 - _ai);
+          var _aa = 0.010 * (5 - _ai);
           var _as = (_ai + 1) * 8;
           ctx.globalAlpha = _aa;
           ctx.fillStyle = bossColor;
@@ -4115,7 +4126,7 @@ if (shouldShow) {
       // HC-121: core pulse brightness
       var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
       ctx.save();
-      ctx.globalAlpha = 0.035 + _corePulse * 0.035;
+      ctx.globalAlpha = 0.020 + _corePulse * 0.026;
       drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
       ctx.restore();
 
@@ -4136,7 +4147,7 @@ if (shouldShow) {
       }
 
       ctx.save();
-      ctx.globalAlpha = 0.10;
+      ctx.globalAlpha = 0.055;
       drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
       ctx.restore();
 
@@ -5575,13 +5586,21 @@ ufoRewards.forEach(d => {
       if (setPieceIntroTimer > 0 && currentSetPiece) {
         const pulse = 0.45 + 0.55 * Math.sin(globalTime * 0.03);
         ctx.textAlign = 'center';
-        ctx.font = '18px "Press Start 2P"';
-        ctx.fillStyle = `rgba(255,70,70,${pulse})`;
-        ctx.fillText('WARNING', W / 2, 114);
+        ctx.globalAlpha = 0.42 + pulse * 0.20;
+        ctx.fillStyle = '#050308';
+        ctx.fillRect(W / 2 - 78, 102, 156, 26);
+        ctx.globalAlpha = 0.46 + pulse * 0.24;
+        ctx.strokeStyle = '#ff6048';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(W / 2 - 76.5, 103.5, 153, 23);
+        ctx.font = '14px "Press Start 2P"';
+        ctx.fillStyle = `rgba(255,86,72,${0.72 + pulse * 0.18})`;
+        ctx.fillText('WARNING', W / 2, 116);
 
         ctx.font = '8px "Press Start 2P"';
-        ctx.fillStyle = `rgba(255,230,140,${0.55 + 0.45 * Math.sin(globalTime * 0.026)})`;
-        ctx.fillText(setPieceBannerText || 'HOSTILE FORMATION', W / 2, 136);
+        ctx.fillStyle = `rgba(255,220,140,${0.54 + pulse * 0.18})`;
+        ctx.fillText(setPieceBannerText || 'HOSTILE FORMATION', W / 2, 137);
+        ctx.globalAlpha = 1;
       }
 
       if (setPieceTelegraphTimer > 0 && currentSetPiece === 'imperial_guard') {
@@ -5594,33 +5613,33 @@ ufoRewards.forEach(d => {
         const isDoubleCrossfire = setPieceBurstShotsRemaining > 0 || isAdvanced;
         const isSecondTelegraph = isAdvanced && setPieceBurstShotsRemaining === 1;
         const lineColor = isSecondTelegraph
-          ? `rgba(255,70,70,${0.42 + 0.46 * pulse})`
-          : `rgba(255,190,85,${0.35 + 0.45 * pulse})`;
+          ? `rgba(255,70,70,${0.34 + 0.36 * pulse})`
+          : `rgba(255,190,85,${0.30 + 0.32 * pulse})`;
         const flashColor = isSecondTelegraph
-          ? `rgba(255,60,60,${0.28 + 0.40 * pulse})`
-          : `rgba(255,190,70,${0.24 + 0.36 * pulse})`;
+          ? `rgba(255,60,60,${0.12 + 0.20 * pulse})`
+          : `rgba(255,190,70,${0.10 + 0.18 * pulse})`;
         var _spX = side < 0 ? 4 : W - 14;
 
         // HC-RD-03: dark outline behind vertical stripe
         ctx.globalAlpha = _tcs5.alpha;
         ctx.strokeStyle = _tcs5.color;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(_spX - 1, 90 - 1, 12, H - 210 + 2);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(_spX - 1, 90 - 1, 8, H - 210 + 2);
 
         ctx.fillStyle = flashColor;
-        ctx.fillRect(_spX, 90, 10, H - 210);
+        ctx.fillRect(_spX, 90, 6, H - 210);
 
         // HC-RD-03: dark outline behind vertical line
         ctx.globalAlpha = _tcs5.alpha;
         ctx.strokeStyle = _tcs5.color;
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(x, 94);
         ctx.lineTo(x, H - 120);
         ctx.stroke();
 
         ctx.strokeStyle = lineColor;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x, 94);
         ctx.lineTo(x, H - 120);
@@ -5650,7 +5669,7 @@ ufoRewards.forEach(d => {
         ctx.lineWidth = 2;
         ctx.strokeRect(7, y - 13, W - 14, 26);
 
-        ctx.fillStyle = `rgba(255,170,70,${0.14 + 0.22 * pulse})`;
+        ctx.fillStyle = `rgba(255,170,70,${0.08 + 0.14 * pulse})`;
         ctx.fillRect(8, y - 12, W - 16, 24);
 
         // HC-RD-03: dark outline behind horizontal line
@@ -5662,7 +5681,7 @@ ufoRewards.forEach(d => {
         ctx.lineTo(W - 8, y);
         ctx.stroke();
 
-        ctx.strokeStyle = `rgba(255,205,95,${0.35 + 0.45 * pulse})`;
+        ctx.strokeStyle = `rgba(255,205,95,${0.30 + 0.32 * pulse})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(8, y);
@@ -5671,7 +5690,7 @@ ufoRewards.forEach(d => {
 
         ctx.textAlign = 'center';
         ctx.font = '8px "Press Start 2P"';
-        ctx.fillStyle = `rgba(255,220,120,${0.45 + 0.45 * pulse})`;
+        ctx.fillStyle = `rgba(255,220,120,${0.44 + 0.30 * pulse})`;
         ctx.fillText(`ROW ${lane + 1} BARRAGE`, W / 2, 104);
       }
 
@@ -5685,23 +5704,23 @@ ufoRewards.forEach(d => {
         // HC-RD-03: dark outline behind vertical stripe
         ctx.globalAlpha = _tcs7.alpha;
         ctx.strokeStyle = _tcs7.color;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(_spX2 - 1, 100 - 1, 12, H - 220 + 2);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(_spX2 - 1, 100 - 1, 8, H - 220 + 2);
 
-        ctx.fillStyle = `rgba(120,255,200,${0.16 + 0.25 * pulse})`;
-        ctx.fillRect(_spX2, 100, 10, H - 220);
+        ctx.fillStyle = `rgba(120,255,200,${0.09 + 0.16 * pulse})`;
+        ctx.fillRect(_spX2, 100, 6, H - 220);
 
         // HC-RD-03: dark outline behind vertical line
         ctx.globalAlpha = _tcs7.alpha;
         ctx.strokeStyle = _tcs7.color;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(x, 104);
         ctx.lineTo(x, H - 120);
         ctx.stroke();
 
-        ctx.strokeStyle = `rgba(150,255,210,${0.40 + 0.44 * pulse})`;
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = `rgba(150,255,210,${0.34 + 0.34 * pulse})`;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x, 104);
         ctx.lineTo(x, H - 120);
@@ -5709,7 +5728,7 @@ ufoRewards.forEach(d => {
 
         ctx.textAlign = 'center';
         ctx.font = '8px "Press Start 2P"';
-        ctx.fillStyle = `rgba(170,255,220,${0.50 + 0.40 * pulse})`;
+        ctx.fillStyle = `rgba(170,255,220,${0.46 + 0.28 * pulse})`;
         ctx.fillText('FAN BURST', W / 2, 104);
       }
 
@@ -5717,7 +5736,7 @@ ufoRewards.forEach(d => {
 	      const pulse = 0.55 + 0.45 * Math.sin(globalTime * 0.02);
 	      ctx.textAlign = 'center';
 	      ctx.font = '9px "Press Start 2P"';
-	      ctx.fillStyle = `rgba(255,220,80,${pulse})`;
+	      ctx.fillStyle = `rgba(255,220,80,${0.58 + pulse * 0.24})`;
 	      ctx.fillText(setPieceBannerText, W / 2, 78);
 	    }
 
@@ -5961,7 +5980,7 @@ if (player.weaponType !== 'normal') {
     }
 
     // BOSS WARNING overlay (HC-96/HC-RD-06: subdued readability)
-    if (boss && boss.active) {
+    if (boss && boss.active && boss.hp >= boss.maxHp && (!enemyBullets || enemyBullets.length === 0)) {
       ctx.save();
 
       var _hwCfg = (_hudCfg && _hudCfg.bossWarning) || {};
@@ -5973,59 +5992,61 @@ if (player.weaponType !== 'normal') {
 
       var bwPulse = 0.7 + 0.3 * Math.sin(globalTime * 0.004);
       var bwPulseF = 0.55 + 0.45 * Math.sin(globalTime * 0.006 + 1.5);
-      var _bwY = 52;
-      var _bwH = 22;
+      var _bwY = 54;
+      var _bwH = 16;
+      var _bwW = Math.min(W - 44, 174);
+      var _bwX = W / 2 - _bwW / 2;
       var _bwColor = boss.color || '#f44';
 
       // HC-121: intro pressure — full-screen subtle dark flash
-      ctx.globalAlpha = 0.03 + 0.025 * bwPulseF;
+      ctx.globalAlpha = 0.018 + 0.014 * bwPulseF;
       ctx.fillStyle = '#000';
       ctx.fillRect(-10, -10, W + 20, H + 20);
-      ctx.globalAlpha = 0.015 * bwPulse;
+      ctx.globalAlpha = 0.008 * bwPulse;
       ctx.fillStyle = _bwColor;
       ctx.fillRect(-10, -10, W + 20, H + 20);
 
-      // Dark band
-      ctx.globalAlpha = _hwDarkBand;
+      // Compact warning chip, kept below HUD and away from the boss silhouette.
+      ctx.globalAlpha = _hwDarkBand * 0.82;
       ctx.fillStyle = '#000';
-      ctx.fillRect(0, _bwY, W, _bwH);
+      ctx.fillRect(_bwX, _bwY, _bwW, _bwH);
 
       // Subtle warning stripes
-      ctx.globalAlpha = _hwStripe + _hwStripe * bwPulseF;
+      ctx.globalAlpha = (_hwStripe + _hwStripe * bwPulseF) * 0.65;
       ctx.fillStyle = _bwColor;
-      for (var sd = -20; sd < W + 20; sd += 16) {
+      for (var sd = _bwX; sd < _bwX + _bwW; sd += 16) {
         ctx.fillRect(sd, _bwY, 8, _bwH);
       }
 
       // Top/bottom accent lines
-      ctx.globalAlpha = _hwAccent * bwPulse;
+      ctx.globalAlpha = _hwAccent * bwPulse * 0.70;
       ctx.fillStyle = _bwColor;
-      ctx.fillRect(0, _bwY, W, 2);
-      ctx.fillRect(0, _bwY + _bwH - 2, W, 2);
+      ctx.fillRect(_bwX, _bwY, _bwW, 1);
+      ctx.fillRect(_bwX, _bwY + _bwH - 1, _bwW, 1);
 
       // Side pillars
-      ctx.globalAlpha = Math.min(_hwPillarMax, 0.25 + 0.18 * bwPulseF);
-      ctx.fillRect(0, _bwY + 2, 3, _bwH - 4);
-      ctx.fillRect(W - 3, _bwY + 2, 3, _bwH - 4);
+      ctx.globalAlpha = Math.min(_hwPillarMax * 0.6, 0.12 + 0.10 * bwPulseF);
+      ctx.fillRect(_bwX, _bwY + 2, 2, _bwH - 4);
+      ctx.fillRect(_bwX + _bwW - 2, _bwY + 2, 2, _bwH - 4);
 
       // WARNING text
       ctx.textAlign = 'center';
-      ctx.font = '10px "Press Start 2P"';
-      ctx.globalAlpha = (_hwText - 0.10) * bwPulse;
+      ctx.font = '7px "Press Start 2P"';
+      ctx.globalAlpha = (_hwText - 0.16) * bwPulse;
       ctx.fillStyle = '#000';
-      ctx.fillText('WARNING', W / 2 + 1, _bwY + 10);
-      ctx.globalAlpha = _hwText * bwPulse;
+      ctx.fillText('WARNING', W / 2 + 1, _bwY + 7);
+      ctx.globalAlpha = _hwText * bwPulse * 0.84;
       ctx.fillStyle = '#fff';
-      ctx.fillText('WARNING', W / 2, _bwY + 9);
+      ctx.fillText('WARNING', W / 2, _bwY + 6);
 
       // Boss name
       if (boss.name) {
-        ctx.font = '6px "Press Start 2P"';
-        ctx.globalAlpha = 0.35 * bwPulse;
+        ctx.font = '5px "Press Start 2P"';
+        ctx.globalAlpha = 0.28 * bwPulse;
         ctx.fillStyle = _bwColor;
-        ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 20);
-        ctx.globalAlpha = _hwText * bwPulseF;
-        ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 19);
+        ctx.fillText(boss.name.toUpperCase(), W / 2 + 1, _bwY + 14);
+        ctx.globalAlpha = _hwText * bwPulseF * 0.76;
+        ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 13);
       }
 
       ctx.shadowBlur = 0;

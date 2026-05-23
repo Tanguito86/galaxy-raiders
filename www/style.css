@@ -219,19 +219,19 @@ canvas {
   max-width: 390px;
   flex-direction: column;
   align-items: center;
-  padding: 0 12px 6px 12px;
+  padding: 0 12px 5px 12px;
   z-index: 50;
   pointer-events: auto;
   /* Panel fondo integrado con el tema */
   background: linear-gradient(
     to bottom,
-    rgba(5, 8, 18, 0.76),
-    rgba(6, 12, 24, 0.88)
+    rgba(5, 8, 18, 0.62),
+    rgba(6, 12, 24, 0.76)
   );
-  border-radius: 10px 10px 0 0;
-  border-top: 1px solid rgba(100, 245, 255, 0.24);
+  border-radius: 8px 8px 0 0;
+  border-top: 1px solid rgba(100, 245, 255, 0.18);
   box-shadow:
-    0 -8px 22px rgba(0, 0, 0, 0.38),
+    0 -6px 16px rgba(0, 0, 0, 0.30),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
@@ -258,16 +258,16 @@ canvas {
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 2px 6px 0 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1px 6px 0 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
   margin-bottom: 0;
 }
 
 .control-deck-logo {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
-  color: #e0e8ff;
-  text-shadow: 0 0 8px rgba(80, 160, 255, 0.5);
+  color: rgba(224, 232, 255, 0.82);
+  text-shadow: 0 0 6px rgba(80, 160, 255, 0.34);
   letter-spacing: 1px;
 }
 
@@ -280,8 +280,8 @@ canvas {
 
 .control-deck-badge {
   font-size: 10px;
-  color: rgba(255, 200, 60, 0.7);
-  text-shadow: 0 0 6px rgba(255, 200, 60, 0.4);
+  color: rgba(255, 200, 60, 0.52);
+  text-shadow: 0 0 5px rgba(255, 200, 60, 0.25);
 }
 
 /* ---- CONTROL DECK ROW ---- */
@@ -290,8 +290,8 @@ canvas {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding-top: 6px;
-  padding-bottom: 2px;
+  padding-top: 5px;
+  padding-bottom: 1px;
 }
 
 /* ---- THEME VARIANTS: fondo del panel segun capitulo ---- */
@@ -300,12 +300,12 @@ canvas {
 body[data-theme="earth"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(8, 20, 36, 0.92),
-    rgba(12, 26, 44, 0.96)
+    rgba(8, 20, 36, 0.74),
+    rgba(12, 26, 44, 0.82)
   );
-  border-top: 2px solid rgba(30, 110, 190, 0.4);
+  border-top: 1px solid rgba(30, 110, 190, 0.26);
   box-shadow:
-    0 -8px 20px rgba(0, 0, 0, 0.45);
+    0 -6px 16px rgba(0, 0, 0, 0.34);
 }
 body[data-theme="earth"] #mobile-controls::before {
   background: inherit;
@@ -317,12 +317,12 @@ body[data-theme="earth"] #mobile-controls::before {
 body[data-theme="atmosphere"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(8, 18, 32, 0.90),
-    rgba(12, 26, 42, 0.95)
+    rgba(8, 18, 32, 0.72),
+    rgba(12, 26, 42, 0.82)
   );
-  border-top: 2px solid rgba(60, 140, 180, 0.35);
+  border-top: 1px solid rgba(60, 140, 180, 0.24);
   box-shadow:
-    0 -8px 20px rgba(0, 0, 0, 0.45);
+    0 -6px 16px rgba(0, 0, 0, 0.34);
 }
 body[data-theme="atmosphere"] #mobile-controls::before {
   background: inherit;
@@ -334,12 +334,12 @@ body[data-theme="atmosphere"] #mobile-controls::before {
 body[data-theme="orbit"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(4, 12, 24, 0.92),
-    rgba(10, 20, 36, 0.96)
+    rgba(4, 12, 24, 0.74),
+    rgba(10, 20, 36, 0.82)
   );
-  border-top: 2px solid rgba(40, 120, 200, 0.4);
+  border-top: 1px solid rgba(40, 120, 200, 0.26);
   box-shadow:
-    0 -8px 20px rgba(0, 0, 0, 0.45);
+    0 -6px 16px rgba(0, 0, 0, 0.34);
 }
 body[data-theme="orbit"] #mobile-controls::before {
   background: inherit;
@@ -351,12 +351,12 @@ body[data-theme="orbit"] #mobile-controls::before {
 body[data-theme="deepSpace"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(10, 6, 22, 0.92),
-    rgba(16, 8, 30, 0.96)
+    rgba(10, 6, 22, 0.74),
+    rgba(16, 8, 30, 0.82)
   );
-  border-top: 2px solid rgba(100, 40, 80, 0.38);
+  border-top: 1px solid rgba(100, 40, 80, 0.25);
   box-shadow:
-    0 -8px 20px rgba(0, 0, 0, 0.45);
+    0 -6px 16px rgba(0, 0, 0, 0.34);
 }
 body[data-theme="deepSpace"] #mobile-controls::before {
   background: inherit;
@@ -368,12 +368,12 @@ body[data-theme="deepSpace"] #mobile-controls::before {
 body[data-theme="imperial"] #mobile-controls {
   background: linear-gradient(
     to bottom,
-    rgba(16, 6, 8, 0.92),
-    rgba(24, 10, 12, 0.96)
+    rgba(16, 6, 8, 0.74),
+    rgba(24, 10, 12, 0.82)
   );
-  border-top: 2px solid rgba(200, 120, 30, 0.4);
+  border-top: 1px solid rgba(200, 120, 30, 0.26);
   box-shadow:
-    0 -8px 20px rgba(0, 0, 0, 0.50);
+    0 -6px 16px rgba(0, 0, 0, 0.36);
 }
 body[data-theme="imperial"] #mobile-controls::before {
   background: inherit;
@@ -384,32 +384,32 @@ body[data-theme="imperial"] #mobile-controls::before {
 /* Joystick virtual - MAS GRANDE */
 #joystick-container {
   position: relative;
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   touch-action: none;
 }
 
 #joystick-base {
   position: absolute;
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
-  background: rgba(0, 255, 0, 0.1);
-  border: 3px solid rgba(80, 255, 120, 0.32);
-  box-shadow: inset 0 0 20px rgba(0, 255, 80, 0.20);
+  background: rgba(0, 255, 0, 0.065);
+  border: 2px solid rgba(80, 255, 120, 0.26);
+  box-shadow: inset 0 0 14px rgba(0, 255, 80, 0.14);
   touch-action: none;
 }
 
 #joystick-stick {
   position: absolute;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: rgba(80, 255, 120, 0.32);
-  border: 3px solid rgba(120, 255, 150, 0.80);
-  box-shadow: 0 0 16px rgba(80, 255, 120, 0.48);
-  left: 25px;
-  top: 25px;
+  background: rgba(80, 255, 120, 0.24);
+  border: 2px solid rgba(120, 255, 150, 0.62);
+  box-shadow: 0 0 12px rgba(80, 255, 120, 0.32);
+  left: 23px;
+  top: 23px;
   transition: none;
   pointer-events: none;
   touch-action: none;
@@ -418,15 +418,15 @@ body[data-theme="imperial"] #mobile-controls::before {
 
 /* Boton FIRE */
 .fire {
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
-  background: rgba(255, 60, 76, 0.12);
-  color: rgba(255, 92, 108, 0.82);
-  border: 3px solid rgba(255, 92, 108, 0.72);
-  box-shadow: 0 0 18px rgba(255, 50, 65, 0.35);
+  background: rgba(255, 60, 76, 0.08);
+  color: rgba(255, 92, 108, 0.74);
+  border: 2px solid rgba(255, 92, 108, 0.58);
+  box-shadow: 0 0 12px rgba(255, 50, 65, 0.26);
   touch-action: manipulation;
 }
 
