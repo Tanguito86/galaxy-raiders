@@ -4095,13 +4095,16 @@ if (shouldShow) {
       ctx.save();
       ctx.translate(_menaceOX, _menaceOY);
 
+      // HC-VS-03D2: check hero readiness once per frame
+      var _crabtronHeroReady = (boss.pattern === 'crossfire' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_crabtron_hero'));
+
       ctx.save();
-      ctx.globalAlpha = bossGlow * 0.55;
+      ctx.globalAlpha = _crabtronHeroReady ? 0 : bossGlow * 0.55;
       drawSprite(ctx, bossSprite, boss.x - 4, boss.y, bossColor, 5);
       drawSprite(ctx, bossSprite, boss.x + 4, boss.y, bossColor, 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y - 4, bossColor, 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y + 4, bossColor, 5);
-      ctx.globalAlpha = 0.24;
+      ctx.globalAlpha = _crabtronHeroReady ? 0 : 0.24;
       drawSprite(ctx, bossSprite, boss.x - 2, boss.y, '#120008', 5);
       drawSprite(ctx, bossSprite, boss.x + 2, boss.y, '#120008', 5);
       drawSprite(ctx, bossSprite, boss.x, boss.y - 2, '#120008', 5);
@@ -4109,10 +4112,10 @@ if (shouldShow) {
       ctx.restore();
 
       if (boss.pattern === 'crossfire') {
-        drawArticulatedBossArms(ctx, boss, bossColor, globalTime);
+        if (!_crabtronHeroReady) drawArticulatedBossArms(ctx, boss, bossColor, globalTime);
         drawCrabtronShootTelegraph(ctx, boss, bossColor, globalTime);
         drawBossHardcoreTelegraph(ctx, boss);
-        drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
+        if (!_crabtronHeroReady) drawCrabtronArmorPlates(ctx, boss, bossColor, globalTime);
         drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
         drawCrabtronDashTelegraph(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'zigzag') {
@@ -4215,7 +4218,7 @@ if (shouldShow) {
         ctx.restore();
       }
 
-      // HC-VS-03D1: CRABTRON hero layered staging — renders behind existing geometry
+      // HC-VS-03D2: CRABTRON hero layered body — primary visual when hero sprite loaded
       if (boss.pattern === 'crossfire') {
         var _heroState = resolveCrabtronHeroState(boss);
         var _heroScale = 0.45;
@@ -4224,14 +4227,17 @@ if (shouldShow) {
         drawCrabtronHeroLayers(ctx, boss, _heroState, _heroScale);
       }
 
-      drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+      // HC-VS-03D2: legacy body replaced by hero layers when ready
+      if (!_crabtronHeroReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
       // HC-121: core pulse brightness
-      var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
-      ctx.save();
-      ctx.globalAlpha = 0.020 + _corePulse * 0.026;
-      drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
-      ctx.restore();
+      if (!_crabtronHeroReady) {
+        var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
+        ctx.save();
+        ctx.globalAlpha = 0.020 + _corePulse * 0.026;
+        drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
+        ctx.restore();
+      }
 
       if (boss.pattern === 'zigzag') {
         drawSerpentrixWave(ctx, boss, bossColor, globalTime);
@@ -4249,12 +4255,17 @@ if (shouldShow) {
         drawEmperorCrownHalo(ctx, boss, bossColor, globalTime);
       }
 
-      ctx.save();
-      ctx.globalAlpha = 0.055;
-      drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
-      ctx.restore();
+      // HC-VS-03D2: ambient glow replaced by hero overlay_glow_damage layer
+      if (!_crabtronHeroReady) {
+        ctx.save();
+        ctx.globalAlpha = 0.055;
+        drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
+        ctx.restore();
+      }
 
       if (boss.pattern === 'crossfire') {
+        // HC-VS-03D2: legacy core replaced by hero weakpoint_core layer;
+        // dynamic pulse rings preserved for gameplay readability
         drawCrabtronCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
         drawTenienteCore(ctx, boss, bossColor, globalTime);
