@@ -1349,6 +1349,100 @@ function drawCrabtronDashTelegraph(ctx, boss, color, time) {
   ctx.restore();
 }
 
+// --- HC-VS-03D1: CRABTRON HERO STATE RESOLVER ---
+function resolveCrabtronHeroState(boss) {
+  if (!boss || !boss.active) {
+    if (boss && typeof boss._deathTimer === 'number' && boss._deathTimer > 0) return 'death_exposed_core';
+    return 'idle';
+  }
+
+  // Priority: death > rage_phase > mid_damage > attack_windup > idle
+
+  if (boss.phase === 3) return 'rage_phase';
+
+  if (boss.flashTimer > 0) return 'mid_damage';
+
+  if (boss.dashMode === 'telegraph' || boss.dashMode === true) return 'attack_windup';
+
+  var shootRate = 600;
+  if (boss.maxHp > 0) {
+    var hpPct = boss.hp / boss.maxHp;
+    var phase = hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3;
+    shootRate = Math.max(600, 1800 - (typeof level === 'number' ? level : 5) * 40);
+    if (phase >= 3) shootRate *= 0.6;
+  }
+  if (boss.shootTimer > shootRate * 0.7) return 'attack_windup';
+
+  if (boss._hcTelegraphType && boss._hcTelegraphTimer > 0) return 'attack_windup';
+
+  return 'idle';
+}
+
+// --- HC-VS-03D1: CRABTRON HERO LAYERED DRAW ---
+function drawCrabtronHeroLayers(ctx, boss, state, scale) {
+  if (!ctx || !boss) return;
+  if (typeof getCrabtronHeroFrame !== 'function') return;
+
+  var spriteId = 'boss_crabtron_hero';
+  if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(spriteId)) return;
+
+  var safeState = state || 'idle';
+  var safeScale = (typeof scale === 'number' && isFinite(scale) && scale > 0) ? scale : 0.45;
+
+  var meta = (typeof getCrabtronHeroMeta === 'function') ? getCrabtronHeroMeta() : null;
+  if (!meta) return;
+
+  var pivot = meta.pivot || [96, 96];
+  var anchorX = pivot[0] / meta.frameW;
+  var anchorY = pivot[1] / meta.frameH;
+
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+
+  // Phase-dependent overlay alpha
+  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+  var phase = hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3;
+  var overlayAlpha = 0.12;
+  if (phase === 2) overlayAlpha = 0.24;
+  if (phase === 3) overlayAlpha = 0.38;
+  if (boss.flashTimer > 0) overlayAlpha += 0.18;
+  overlayAlpha = Math.min(0.60, overlayAlpha);
+
+  // Core alpha animation
+  var corePulse = 0.5 + 0.5 * Math.sin((typeof globalTime === 'number' ? globalTime : 0) * 0.025);
+  var coreAlpha = 0.55 + corePulse * 0.35;
+  if (phase >= 3) coreAlpha = 0.75 + corePulse * 0.20;
+
+  // Z-ordered layer draw
+  var drawOrder = ['shadow', 'body', 'left_claw', 'right_claw', 'cannons_vents', 'weakpoint_core', 'overlay_glow_damage'];
+
+  for (var i = 0; i < drawOrder.length; i++) {
+    var layer = drawOrder[i];
+    var frame = getCrabtronHeroFrame(safeState, layer);
+    if (frame < 0) continue;
+
+    var alpha = 1;
+
+    if (layer === 'shadow') {
+      alpha = 0.30;
+    } else if (layer === 'overlay_glow_damage') {
+      alpha = overlayAlpha;
+    } else if (layer === 'weakpoint_core') {
+      alpha = coreAlpha;
+    }
+
+    if (alpha <= 0.005) continue;
+
+    window.drawSpriteFrame(ctx, spriteId, cx, cy, {
+      frame: frame,
+      scale: safeScale,
+      anchorX: anchorX,
+      anchorY: anchorY,
+      alpha: alpha
+    });
+  }
+}
+
 // --- SERPENTRIX VISUALS ---
 function drawSerpentrixAura(ctx, boss, color, time) {
   var _auraMax = (typeof getFreezeAuditConfig === 'function') ? (getFreezeAuditConfig().bossAuraCap || 0.30) : 0.30;
@@ -4119,6 +4213,15 @@ if (shouldShow) {
           ctx.fillRect(boss.x - _as, boss.y - _as, boss.w + _as * 2, boss.h + _as * 2);
         }
         ctx.restore();
+      }
+
+      // HC-VS-03D1: CRABTRON hero layered staging — renders behind existing geometry
+      if (boss.pattern === 'crossfire') {
+        var _heroState = resolveCrabtronHeroState(boss);
+        var _heroScale = 0.45;
+        if (_smallScreenBoost > 1.0) _heroScale *= _smallScreenBoost;
+        _heroScale = Math.max(0.38, Math.min(0.55, _heroScale));
+        drawCrabtronHeroLayers(ctx, boss, _heroState, _heroScale);
       }
 
       drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);

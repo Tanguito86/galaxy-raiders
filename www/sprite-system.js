@@ -370,6 +370,42 @@
     fallbackColor: "#556677"
   });
 
+  // HC-VS-03D1: CRABTRON hero layered sprite system
+  // Master sheet: 1536x960, 8 cols x 5 rows, 192x192 cells
+  // Columns: composite, shadow, body, left_claw, right_claw, weakpoint_core, cannons_vents, overlay_glow_damage
+  // Rows: idle, attack_windup, mid_damage, rage_phase, death_exposed_core
+  var _CRABTRON_HERO_META = {
+    cols: 8,
+    rows: 5,
+    frameW: 192,
+    frameH: 192,
+    layers: ['composite', 'shadow', 'body', 'left_claw', 'right_claw', 'weakpoint_core', 'cannons_vents', 'overlay_glow_damage'],
+    states: ['idle', 'attack_windup', 'mid_damage', 'rage_phase', 'death_exposed_core'],
+    pivot: [96, 96],
+    scaleHint: 0.55,
+    weakpointPivot: [96, 108],
+    weakpointRadius: 15
+  };
+
+  global.getCrabtronHeroMeta = function () {
+    return _CRABTRON_HERO_META;
+  };
+
+  global.getCrabtronHeroFrame = function (state, layer) {
+    var meta = _CRABTRON_HERO_META;
+    var si = meta.states.indexOf(state);
+    var li = meta.layers.indexOf(layer);
+    if (si < 0 || li < 0) return -1;
+    return si * meta.cols + li;
+  };
+
+  registerSprite("boss_crabtron_hero", {
+    src: "ai-generated/crabtron-hero-20260523/crabtron_hero_master_sheet.png",
+    frameWidth: _CRABTRON_HERO_META.frameW,
+    frameHeight: _CRABTRON_HERO_META.frameH,
+    fallbackColor: "#ff375f"
+  });
+
   // HC-117 boss sprite hook: single-frame registrations (assets TBD)
   registerSprite("boss_crabtron", {
     src: "assets/sprites/boss_crabtron.png",
