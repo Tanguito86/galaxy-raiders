@@ -1399,7 +1399,6 @@ function drawCrabtronHeroLayers(ctx, boss, state, scale) {
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
   var t = (typeof globalTime === 'number' ? globalTime : 0);
-  var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
 
   // === State-driven overlay alpha ===
   var ovAlpha;
@@ -1422,6 +1421,7 @@ function drawCrabtronHeroLayers(ctx, boss, state, scale) {
   }
   if (boss.flashTimer > 0) ovAlpha += 0.10;
   ovAlpha = Math.min(0.80, ovAlpha);
+  if (_smallScreenBoost > 1.0) ovAlpha *= 0.78;
 
   // === State-driven core pulse ===
   var coreFreq, coreBase, coreAmp;
@@ -4342,10 +4342,13 @@ if (shouldShow) {
       if (boss.flashTimer > 0) {
         const flicker = 0.18 + 0.14 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
         ctx.save();
-        ctx.globalAlpha = flicker;
-        drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
-        ctx.globalAlpha = flicker * 0.24;
-        drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
+        // HC-VS-03D4: legacy sprite flash gated behind hero; white crosshair always visible
+        if (!_crabtronHeroReady) {
+          ctx.globalAlpha = flicker;
+          drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+          ctx.globalAlpha = flicker * 0.24;
+          drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
+        }
         ctx.globalAlpha = Math.min(0.44, flicker * 1.6);
         ctx.fillStyle = '#fff';
         var _bfx = Math.round(boss.x + boss.w / 2);
