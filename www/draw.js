@@ -4101,7 +4101,7 @@ if (shouldShow) {
       if (boss.pattern === 'crossfire') {
         ctx.save();
         for (var _ai = 4; _ai >= 0; _ai--) {
-          var _aa = 0.025 * (5 - _ai);
+          var _aa = 0.016 * (5 - _ai);
           var _as = (_ai + 1) * 8;
           ctx.globalAlpha = _aa;
           ctx.fillStyle = bossColor;
@@ -4115,7 +4115,7 @@ if (shouldShow) {
       // HC-121: core pulse brightness
       var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
       ctx.save();
-      ctx.globalAlpha = 0.06 + _corePulse * 0.05;
+      ctx.globalAlpha = 0.035 + _corePulse * 0.035;
       drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
       ctx.restore();
 
@@ -4152,12 +4152,18 @@ if (shouldShow) {
       ctx.restore();
 
       if (boss.flashTimer > 0) {
-        const flicker = 0.25 + 0.20 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
+        const flicker = 0.18 + 0.14 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
         ctx.save();
         ctx.globalAlpha = flicker;
         drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
-        ctx.globalAlpha = flicker * 0.35;
+        ctx.globalAlpha = flicker * 0.24;
         drawBossSpriteOrLegacy(ctx, boss, '#ffffff', 5, { tint: '#ffffff' });
+        ctx.globalAlpha = Math.min(0.44, flicker * 1.6);
+        ctx.fillStyle = '#fff';
+        var _bfx = Math.round(boss.x + boss.w / 2);
+        var _bfy = Math.round(boss.y + boss.h / 2);
+        ctx.fillRect(_bfx - 12, _bfy - 1, 24, 2);
+        ctx.fillRect(_bfx - 1, _bfy - 12, 2, 24);
         ctx.restore();
       }
            
@@ -4668,7 +4674,7 @@ if (shouldShow) {
         if (e.flashTimer > 0) {
           var _ft = e.flashTimer / 150;
           var _hi = _ft * _ft * _ft;
-          var flicker = 0.45 + 0.30 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
+          var flicker = 0.38 + 0.22 * Math.sin(globalTime * 0.06 + e.x * 0.01 + e.flashTimer * 0.005);
           var hitColor = currentPalette[e.color] || currentPalette[1] || '#ff5050';
           var _hitWhiteAlpha = (typeof getFXSuppressionConfig === 'function')
             ? getFXSuppressionConfig().hitFlashWhiteAlpha || 0.30
@@ -4678,11 +4684,17 @@ if (shouldShow) {
             : 0.42;
           ctx.save();
           if (_hi > 0.25) {
-            ctx.globalAlpha = Math.min(_hitWhiteAlpha, _hi * 0.62);
+            ctx.globalAlpha = Math.min(_hitWhiteAlpha * 0.82, _hi * 0.48);
             drawEnemySpriteOrLegacy(ctx, e, spriteKey, '#ffffff', size, { tint: '#ffffff' });
           }
-          ctx.globalAlpha = Math.min(_hitBodyAlpha, flicker * (0.35 + 0.45 * _hi));
+          ctx.globalAlpha = Math.min(_hitBodyAlpha * 0.82, flicker * (0.28 + 0.35 * _hi));
           drawEnemySpriteOrLegacy(ctx, e, spriteKey, hitColor, size, { tint: hitColor });
+          ctx.globalAlpha = Math.min(0.55, _hi + 0.15);
+          ctx.fillStyle = '#fff';
+          var _ifx = Math.round(e.x + e.w / 2);
+          var _ify = Math.round(e.y + e.h / 2);
+          ctx.fillRect(_ifx - 5, _ify - 1, 10, 2);
+          ctx.fillRect(_ifx - 1, _ify - 5, 2, 10);
   ctx.restore();
 }
 
@@ -5237,34 +5249,43 @@ ufoRewards.forEach(d => {
 
       if (p.isRing) {
         var ringAlpha = Math.max(0, p.life);
+        var rr = Math.max(3, Math.round(p.ringRadius));
+        var rx = Math.round(p.x - rr);
+        var ry = Math.round(p.y - rr);
         ctx.strokeStyle = p.color;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1;
         ctx.globalAlpha = Math.min(_maxParticleAlpha, ringAlpha * 0.55);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.ringRadius + 2, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.strokeRect(rx - 1.5, ry - 1.5, rr * 2 + 3, rr * 2 + 3);
         ctx.globalAlpha = Math.min(_maxParticleAlpha, ringAlpha);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.ringRadius, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.strokeRect(rx + 0.5, ry + 0.5, rr * 2, rr * 2);
         p.ringRadius += p.ringExpand * 0.1;
       } else if (p.isSpark) {
+        var sx = Math.round(p.x);
+        var sy = Math.round(p.y);
+        var ss = Math.max(1, Math.round(p.size));
+        ctx.fillStyle = '#050308';
+        ctx.fillRect(sx - 1, sy - 1, ss + 2, ss + 2);
         ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
+        ctx.fillRect(sx, sy, ss, ss);
         ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.45, p.life * 0.45);
-        ctx.fillRect(p.x - p.vx * 0.3, p.y - p.vy * 0.3, p.size, p.size);
+        ctx.fillRect(Math.round(p.x - p.vx * 0.3), Math.round(p.y - p.vy * 0.3), ss, ss);
         ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.35, p.life * 0.35);
         ctx.fillStyle = '#fff';
-        ctx.fillRect(p.x + 1, p.y + 1, Math.max(1, p.size - 2), Math.max(1, p.size - 2));
+        ctx.fillRect(sx + 1, sy + 1, Math.max(1, ss - 2), Math.max(1, ss - 2));
       } else {
-        var size = p.size || 3;
+        var size = Math.max(1, Math.round(p.size || 3));
+        var px = Math.round(p.x);
+        var py = Math.round(p.y);
+        ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.55, Math.max(0, p.life) * 0.55);
+        ctx.fillStyle = '#050308';
+        ctx.fillRect(px - 1, py - 1, size + 2, size + 2);
+        ctx.globalAlpha = Math.min(_maxParticleAlpha, Math.max(0, p.life));
         ctx.fillStyle = p.color;
-        ctx.fillRect(p.x, p.y, size, size);
+        ctx.fillRect(px, py, size, size);
         if (p.life > 0.25) {
           ctx.globalAlpha = Math.min(_maxParticleAlpha * 0.4, p.life * 0.4);
           ctx.fillStyle = '#fff';
-          ctx.fillRect(p.x + 1, p.y + 1, Math.max(1, size - 2), Math.max(1, size - 2));
+          ctx.fillRect(px + 1, py + 1, Math.max(1, size - 2), Math.max(1, size - 2));
         }
       }
     });
@@ -5295,8 +5316,8 @@ ufoRewards.forEach(d => {
         case 'double':  glowColor = '#ff8'; glowOuter = 0.13; glowInner = 0.07; break;
         default:        glowColor = '#fff'; glowOuter = 0.10; glowInner = 0.06; break;
       }
-      glowOuter *= _pbGlowMul;
-      glowInner *= _pbGlowMul;
+      glowOuter *= _pbGlowMul * 0.78;
+      glowInner *= _pbGlowMul * 0.82;
 
       // --- HC-93: trail with enhanced fade ---
       if (Array.isArray(b.trail) && b.trail.length > 0) {
@@ -5307,13 +5328,13 @@ ufoRewards.forEach(d => {
           var ttw = Math.max(1, b.w * (0.35 + tf * 0.40));
           var tth = Math.max(1, b.h * (0.20 + tf * 0.35));
 
-          ctx.globalAlpha = Math.min(_pbTrailCap, 0.02 + tf * 0.28);
+          ctx.globalAlpha = Math.min(_pbTrailCap * 0.72, 0.02 + tf * 0.18);
           ctx.fillStyle = glowColor;
-          ctx.fillRect(tp.x - ttw / 2 - 1, tp.y - tth / 2 - 1, ttw + 2, tth + 2);
+          ctx.fillRect(Math.round(tp.x - ttw / 2 - 1), Math.round(tp.y - tth / 2 - 1), Math.ceil(ttw + 2), Math.ceil(tth + 2));
 
-          ctx.globalAlpha = Math.min(_pbTrailCap * 0.8, 0.04 + tf * 0.22);
+          ctx.globalAlpha = Math.min(_pbTrailCap * 0.62, 0.04 + tf * 0.16);
           ctx.fillStyle = bc;
-          ctx.fillRect(tp.x - ttw / 2, tp.y - tth / 2, ttw, tth);
+          ctx.fillRect(Math.round(tp.x - ttw / 2), Math.round(tp.y - tth / 2), Math.ceil(ttw), Math.ceil(tth));
         }
       }
 
@@ -5329,10 +5350,20 @@ ufoRewards.forEach(d => {
       ctx.fillStyle = glowColor;
       ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
 
+      // --- HC-VS-02C: pixel silhouette wrapper ---
+      var bx = Math.round(b.x);
+      var by = Math.round(b.y);
+      var bw = Math.max(2, Math.round(b.w));
+      var bh = Math.max(4, Math.round(b.h));
+      ctx.globalAlpha = 0.78;
+      ctx.fillStyle = '#03070d';
+      ctx.fillRect(bx - 1, by, bw + 2, bh);
+      ctx.fillRect(bx, by - 1, bw, bh + 2);
+
       // --- HC-93: main body ---
       ctx.globalAlpha = _pbBodyMax;
       ctx.fillStyle = bc;
-      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.fillRect(bx, by, bw, bh);
 
       // --- HC-93: bright core with pulse ---
       var corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.06 + b.x * 0.03);
@@ -5341,7 +5372,7 @@ ufoRewards.forEach(d => {
       var coreAlpha = bt === 'laser' ? 0.55 + corePulse * 0.15 : 0.45 + corePulse * 0.15;
       ctx.globalAlpha = coreAlpha;
       ctx.fillStyle = '#fff';
-      ctx.fillRect(b.x + cw, b.y + ch, Math.max(1, b.w - cw * 2), Math.max(1, b.h - ch * 2));
+      ctx.fillRect(bx + cw, by + ch, Math.max(1, bw - cw * 2), Math.max(1, bh - ch * 2));
 
       // --- HC-93: per-type extras ---
       if (bt === 'laser') {
@@ -6324,11 +6355,11 @@ if (player.weaponType !== 'normal') {
     // HC-RD-07: flash alpha cap from playerFeedback.damage config
     var _pfbFlash = (typeof getPlayerFeedbackConfig === 'function') ? (getPlayerFeedbackConfig().damage || {}) : {};
     var _flCap = (typeof _pfbFlash.screenFlashAlphaCap === 'number') ? _pfbFlash.screenFlashAlphaCap : 0.06;
-    var fsAlpha = Math.min(_flCap, flashScreen * 0.06);
+    var fsAlpha = Math.min(_flCap * 0.82, flashScreen * 0.045);
     if (flashScreen > 20) {
       var fsGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.8);
-      fsGrad.addColorStop(0, 'rgba(255,255,255,' + (fsAlpha * 0.55) + ')');
-      fsGrad.addColorStop(1, 'rgba(255,200,180,' + (fsAlpha * 0.25) + ')');
+      fsGrad.addColorStop(0, 'rgba(255,255,255,' + (fsAlpha * 0.36) + ')');
+      fsGrad.addColorStop(1, 'rgba(255,120,100,' + (fsAlpha * 0.22) + ')');
       ctx.fillStyle = fsGrad;
     } else {
       ctx.fillStyle = 'rgba(255,255,255,' + fsAlpha + ')';

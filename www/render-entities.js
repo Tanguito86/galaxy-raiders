@@ -59,6 +59,69 @@ function _drawEnemyTrail(b, color, steps, maxAlpha, lenMul) {
   }
 }
 
+function _snap(v) {
+  return Math.round(Number(v) || 0);
+}
+
+function _drawPixelThreatCore(b, color, mode) {
+  var x = _snap(b.x);
+  var y = _snap(b.y);
+  var w = Math.max(3, _snap(b.w || 4));
+  var h = Math.max(4, _snap(b.h || 10));
+  var cx = x + Math.floor(w / 2);
+  var cy = y + Math.floor(h / 2);
+  var outline = '#050308';
+
+  ctx.save();
+  ctx.globalAlpha = 1;
+
+  if (mode === 'orb') {
+    var r = Math.max(3, Math.ceil(Math.max(w, h) * 0.5));
+    ctx.fillStyle = outline;
+    ctx.fillRect(cx - 1, cy - r - 1, 2, 2);
+    ctx.fillRect(cx - r - 1, cy - 1, 2, 2);
+    ctx.fillRect(cx + r - 1, cy - 1, 2, 2);
+    ctx.fillRect(cx - 1, cy + r - 1, 2, 2);
+    ctx.fillRect(cx - r + 1, cy - r + 1, r * 2 - 2, r * 2 - 2);
+
+    ctx.fillStyle = color;
+    ctx.fillRect(cx - r + 2, cy - r + 2, r * 2 - 4, r * 2 - 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.68;
+    ctx.fillRect(cx - 1, cy - 2, 2, 4);
+    ctx.fillRect(cx - 2, cy - 1, 4, 2);
+    ctx.restore();
+    return;
+  }
+
+  var cap = mode === 'boss' ? 2 : 1;
+  ctx.fillStyle = outline;
+  ctx.fillRect(x - cap, y - 1, w + cap * 2, h + 2);
+  ctx.fillRect(x - 1, y - cap, w + 2, h + cap * 2);
+
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+
+  ctx.globalAlpha = 0.38;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), 1);
+
+  ctx.globalAlpha = mode === 'fast' ? 0.86 : 0.62;
+  ctx.fillRect(cx - 1, y + 2, 2, Math.max(2, h - 4));
+
+  if (mode === 'boss' || mode === 'tank') {
+    ctx.globalAlpha = 0.72;
+    ctx.fillRect(x + 1, cy - 1, Math.max(1, w - 2), 2);
+  }
+
+  if (mode === 'fast') {
+    ctx.globalAlpha = 0.72;
+    ctx.fillRect(cx - 1, y + h, 2, 2);
+  }
+
+  ctx.restore();
+}
+
 function drawEnemyBullet(b) {
   var _rs = getEnemyBulletRenderStyle(b);
   var kind = _rs.kind;
@@ -112,6 +175,8 @@ function drawEnemyBullet(b) {
     ctx.globalAlpha = 0.30 + bp * 0.15;
     ctx.fillStyle = '#fff';
     ctx.fillRect(x + Math.floor(w * 0.25), y + Math.floor(h * 0.25), Math.max(2, Math.floor(w * 0.5)), Math.max(2, Math.floor(h * 0.5)));
+
+    _drawPixelThreatCore(b, color, 'boss');
 
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -176,6 +241,8 @@ function drawEnemyBullet(b) {
     ctx.arc(cx, cy, Math.max(1, r * 0.45), 0, Math.PI * 2);
     ctx.fill();
 
+    _drawPixelThreatCore(b, color, 'orb');
+
     ctx.globalAlpha = 1;
     ctx.restore();
     return;
@@ -221,6 +288,8 @@ function drawEnemyBullet(b) {
     ctx.fillStyle = '#ffe4b0';
     ctx.fillRect(x + Math.max(1, Math.floor(w * 0.5)), y, 1, h);
 
+    _drawPixelThreatCore(b, color, 'tank');
+
     ctx.restore();
     return;
   }
@@ -257,6 +326,8 @@ function drawEnemyBullet(b) {
     // --- VELOCITY SMEAR ---
     ctx.globalAlpha = 0.30;
     ctx.fillRect(x - (b.vx || 0) * 0.6, y - 3, w, 3);
+
+    _drawPixelThreatCore(b, color, 'split');
 
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -295,6 +366,8 @@ function drawEnemyBullet(b) {
     // --- TIP HIGHLIGHT ---
     ctx.globalAlpha = 0.40;
     ctx.fillRect(x, y - 2, w, 3);
+
+    _drawPixelThreatCore(b, color, 'fast');
 
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -443,6 +516,8 @@ function drawEnemyBullet(b) {
     ctx.fillStyle = '#fff';
     ctx.fillRect(x + 1, y + 1, Math.max(1, w - 2), Math.max(1, h - 2));
   }
+
+  _drawPixelThreatCore(b, color, style === 'fast' ? 'fast' : (style === 'tank' ? 'tank' : style));
 
   ctx.globalAlpha = 1;
   ctx.restore();

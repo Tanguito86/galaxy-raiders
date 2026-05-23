@@ -107,16 +107,11 @@ function drawPopups(ctxRef) {
     const p = popups[i];
     const alpha = Math.max(0, Math.min(1, p.alpha));
     const liftPulse = 0.8 + 0.2 * Math.sin(globalTime * 0.08 + i);
-    drawCtx.globalAlpha = alpha * 0.45;
-    drawCtx.fillStyle = p.color || '#fff';
-    drawCtx.fillText(p.text, p.x, p.y - 1);
-    drawCtx.globalAlpha = alpha;
+    drawCtx.globalAlpha = alpha * 0.68;
     drawCtx.fillStyle = 'rgba(0,0,0,0.65)';
     drawCtx.fillText(p.text, p.x + 1, p.y + 1);
-    drawCtx.fillStyle = 'rgba(0,0,0,0.85)';
-    drawCtx.fillText(p.text, p.x - 1, p.y + 1);
     drawCtx.fillStyle = p.color || '#fff';
-    drawCtx.globalAlpha = alpha * liftPulse;
+    drawCtx.globalAlpha = alpha * liftPulse * 0.86;
     drawCtx.fillText(p.text, p.x, p.y);
   }
 
@@ -199,6 +194,5 @@ let extraLivesEarned = 0;
 // === SISTEMA DE CONTINUE ===
 let continueTimer = 0;
 let continueCount = 0;  // Cuántas veces usó continue
-
 
 
