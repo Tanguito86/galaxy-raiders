@@ -52,43 +52,46 @@ function drawMedals(ctxRef) {
     const cx = m.x + m.w * 0.5;
     const cy = m.y + m.h * 0.5;
     const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.025 + i * 0.9);
-    const glow = 0.25 + pulse * 0.35;
+    const glow = 0.14 + pulse * 0.18;
 
     drawCtx.save();
     drawCtx.translate(cx, cy);
 
     drawCtx.globalAlpha = glow;
     drawCtx.fillStyle = glowC;
-    drawCtx.fillRect(-m.w * 0.5 - 3, -m.h * 0.5 - 3, m.w + 6, m.h + 6);
+    drawCtx.fillRect(-m.w * 0.5 - 2, -m.h * 0.5 - 2, m.w + 4, m.h + 4);
 
     if (typeof feverActive !== 'undefined' && feverActive) {
       var feverPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.04 + i * 0.7);
-      drawCtx.globalAlpha = feverPulse * 0.45;
+      drawCtx.globalAlpha = feverPulse * 0.30;
       drawCtx.fillStyle = '#ff4488';
-      drawCtx.fillRect(-m.w * 0.5 - 5, -m.h * 0.5 - 5, m.w + 10, m.h + 10);
+      drawCtx.fillRect(-m.w * 0.5 - 4, -m.h * 0.5 - 4, m.w + 8, m.h + 8);
     }
 
     drawCtx.globalAlpha = 1;
     drawCtx.fillStyle = borderC;
-    drawCtx.fillRect(-m.w * 0.5 - 1, -m.h * 0.5 - 1, m.w + 2, m.h + 2);
+    drawCtx.fillRect(-5, -7, 10, 14);
+    drawCtx.fillRect(-7, -5, 14, 10);
 
     drawCtx.fillStyle = outerC;
-    drawCtx.fillRect(-m.w * 0.5, -m.h * 0.5, m.w, m.h);
+    drawCtx.fillRect(-4, -6, 8, 12);
+    drawCtx.fillRect(-6, -4, 12, 8);
 
     drawCtx.fillStyle = innerC;
-    drawCtx.fillRect(-m.w * 0.5 + 2, -m.h * 0.5 + 2, m.w - 4, m.h - 4);
+    drawCtx.fillRect(-3, -4, 6, 8);
+    drawCtx.fillRect(-4, -3, 8, 6);
 
     drawCtx.fillStyle = coreC;
-    drawCtx.fillRect(-m.w * 0.5 + 4, -m.h * 0.5 + 4, m.w - 8, m.h - 8);
+    drawCtx.fillRect(-2, -2, 4, 4);
 
     drawCtx.fillStyle = crossC;
-    drawCtx.fillRect(-2, -4, 4, 8);
-    drawCtx.fillRect(-4, -2, 8, 4);
+    drawCtx.fillRect(-1, -4, 2, 8);
+    drawCtx.fillRect(-4, -1, 8, 2);
 
     drawCtx.globalAlpha = 0.35 + pulse * 0.45;
     drawCtx.fillStyle = highC;
-    drawCtx.fillRect(-m.w * 0.5 + 3, -m.h * 0.5 + 2, 5, 2);
-    drawCtx.fillRect(m.w * 0.5 - 4, m.h * 0.5 - 5, 2, 2);
+    drawCtx.fillRect(-3, -5, 4, 1);
+    drawCtx.fillRect(2, 3, 2, 2);
 
     drawCtx.restore();
   }
@@ -196,7 +199,6 @@ let extraLivesEarned = 0;
 // === SISTEMA DE CONTINUE ===
 let continueTimer = 0;
 let continueCount = 0;  // Cuántas veces usó continue
-
 
 
 

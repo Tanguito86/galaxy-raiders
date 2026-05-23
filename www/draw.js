@@ -4358,6 +4358,23 @@ if (shouldShow) {
       };
     }
 
+    var HCART_ENEMY_VISUALS = {
+      alien1: { sprite: 'fleet_scout', scale: 1.36, y: 0, animation: 'idle' },
+      alien2: { sprite: 'fleet_scout', scale: 1.42, y: 0, animation: 'idle' },
+      alien3: { sprite: 'fleet_suppressor', scale: 0.96, y: -1, animation: 'idle' },
+      alien4: { sprite: 'fleet_interceptor', scale: 1.04, y: 0, animation: 'idle' },
+      alien5: { sprite: 'fleet_interceptor', scale: 1.08, y: 0, animation: 'idle' },
+      alien6: { sprite: 'fleet_suppressor', scale: 0.92, y: -1, animation: 'idle' },
+      alien_mini: { sprite: 'fleet_scout', scale: 0.92, y: 0, animation: 'idle' }
+    };
+
+    function getHCArtEnemyVisual(e) {
+      if (!e || !HCART_ENEMY_VISUALS[e.type]) return null;
+      var profile = HCART_ENEMY_VISUALS[e.type];
+      if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(profile.sprite)) return null;
+      return profile;
+    }
+
     function getEnemySpriteId(e) {
       if (!e) return null;
       if (e.type === 'alien1' || e.type === 'alien2' || e.type === 'alien3' ||
@@ -4368,8 +4385,24 @@ if (shouldShow) {
     }
 
     function getEnemyAnimatedSpriteId(e) {
+      var hcArtVisual = getHCArtEnemyVisual(e);
+      if (hcArtVisual) return hcArtVisual.sprite;
       var spriteId = getEnemySpriteId(e);
       return spriteId ? (spriteId + '_strip') : null;
+    }
+
+    function getEnemySpriteAnimationName(e, spriteId) {
+      var hcArtVisual = getHCArtEnemyVisual(e);
+      if (!hcArtVisual || hcArtVisual.sprite !== spriteId) return 'idle';
+      if (spriteId === 'fleet_interceptor') {
+        if (e && (e._chaserTelegraphActive || e.shmupShotsRemaining > 0)) return 'attack';
+        if (e && (e.vx || 0) < -0.2) return 'moveLeft';
+        if (e && (e.vx || 0) > 0.2) return 'moveRight';
+      }
+      if (spriteId === 'fleet_suppressor' && e && (e._suppressorTelegraphActive || e.shmupShotsRemaining > 0)) {
+        return 'attack';
+      }
+      return hcArtVisual.animation || 'idle';
     }
 
     function getEnemyAnimationTimeOffset(e) {
@@ -4395,7 +4428,7 @@ if (shouldShow) {
     function getEnemyAnimatedSpriteFrame(e, spriteId, fallbackFrame) {
       if (!window.SpriteSystem || !spriteId) return fallbackFrame;
       if (typeof window.SpriteSystem.getAnimationFrame === 'function') {
-        return window.SpriteSystem.getAnimationFrame(spriteId, 'idle', globalTime, {
+        return window.SpriteSystem.getAnimationFrame(spriteId, getEnemySpriteAnimationName(e, spriteId), globalTime, {
           timeOffset: getEnemyAnimationTimeOffset(e)
         });
       }
@@ -4423,6 +4456,10 @@ if (shouldShow) {
     }
 
     function getEnemySpriteReadabilityScale(e, spriteId) {
+      var hcArtVisual = getHCArtEnemyVisual(e);
+      if (hcArtVisual && hcArtVisual.sprite === spriteId) {
+        return hcArtVisual.scale * (_smallScreenBoost > 1.0 ? 1.05 : 1);
+      }
       if (!spriteId || spriteId.indexOf('_strip') === -1) return 1;
       if (_ENEMY_READABILITY_MULT.hasOwnProperty(e.type)) return _ENEMY_READABILITY_MULT[e.type];
       return 1.18;
@@ -4435,7 +4472,10 @@ if (shouldShow) {
         alien3: { x: 6,  y: 4, width: 21, height: 25 },
         alien4: { x: 6,  y: 7, width: 20, height: 17 },
         alien5: { x: 10, y: 0, width: 12, height: 27 },
-        alien6: { x: 8,  y: 4, width: 17, height: 24 }
+        alien6: { x: 8,  y: 4, width: 17, height: 24 },
+        fleet_scout: { x: 2, y: 2, width: 12, height: 12 },
+        fleet_interceptor: { x: 3, y: 3, width: 18, height: 17 },
+        fleet_suppressor: { x: 4, y: 3, width: 20, height: 24 }
       };
       return bounds[spriteId] || null;
     }
@@ -4460,8 +4500,9 @@ if (shouldShow) {
       }
 
       var sprite = window.SpriteSystem.getSprite(spriteId);
-      var targetW = e.w || (sprite.frameWidth * size);
-      var targetH = e.h || (sprite.frameHeight * size);
+      var hcArtVisual = getHCArtEnemyVisual(e);
+      var targetW = hcArtVisual ? sprite.frameWidth : (e.w || (sprite.frameWidth * size));
+      var targetH = hcArtVisual ? sprite.frameHeight : (e.h || (sprite.frameHeight * size));
       var visualBounds = getEnemySpriteVisualBounds(spriteId);
       var visualW = visualBounds ? visualBounds.width : sprite.frameWidth;
       var visualH = visualBounds ? visualBounds.height : sprite.frameHeight;
@@ -4471,8 +4512,8 @@ if (shouldShow) {
 
       var drawX = (typeof options.x === 'number') ? options.x : e.x;
       var drawY = (typeof options.y === 'number') ? options.y : e.y;
-      var cx = drawX + targetW / 2;
-      var cy = drawY + targetH / 2;
+      var cx = drawX + (e.w || targetW) / 2;
+      var cy = drawY + (e.h || targetH) / 2 + (hcArtVisual ? (hcArtVisual.y || 0) : 0);
       if (visualBounds) {
         cx -= (visualBounds.x + visualBounds.width / 2 - sprite.frameWidth / 2) * scale;
         cy -= (visualBounds.y + visualBounds.height / 2 - sprite.frameHeight / 2) * scale;
@@ -5052,30 +5093,67 @@ if (shouldShow) {
     // HC-RD-01: PRIORITY_FEEDBACK — powerups, rewards, medals, explosions, popups
     // ================================================================
 
+    function drawPixelPickupCore(ctx, x, y, w, h, color, accent, type) {
+      var cx = Math.floor(x + w / 2);
+      var cy = Math.floor(y + h / 2);
+      var left = Math.floor(cx - 6);
+      var top = Math.floor(cy - 6);
+
+      ctx.fillStyle = '#03070d';
+      ctx.fillRect(left + 2, top, 8, 12);
+      ctx.fillRect(left, top + 2, 12, 8);
+
+      ctx.fillStyle = color;
+      ctx.fillRect(left + 3, top + 1, 6, 10);
+      ctx.fillRect(left + 1, top + 3, 10, 6);
+
+      ctx.fillStyle = accent;
+      ctx.fillRect(left + 4, top + 2, 4, 2);
+      ctx.fillRect(left + 2, top + 4, 2, 4);
+
+      ctx.fillStyle = '#ffffff';
+      if (type === 'double') {
+        ctx.fillRect(cx - 3, cy - 4, 2, 8);
+        ctx.fillRect(cx + 1, cy - 4, 2, 8);
+      } else if (type === 'spread') {
+        ctx.fillRect(cx - 1, cy - 4, 2, 8);
+        ctx.fillRect(cx - 5, cy + 1, 3, 2);
+        ctx.fillRect(cx + 2, cy + 1, 3, 2);
+      } else if (type === 'machine') {
+        ctx.fillRect(cx - 4, cy - 3, 8, 2);
+        ctx.fillRect(cx - 4, cy + 1, 8, 2);
+      } else if (type === 'laser') {
+        ctx.fillRect(cx - 1, cy - 5, 2, 10);
+        ctx.fillRect(cx - 3, cy - 1, 6, 2);
+      } else {
+        ctx.fillRect(cx - 1, cy - 1, 2, 2);
+      }
+    }
+
     // Powerups
     powerUps.forEach(p => {
       const color = getWeaponColor(p.type);
       const cx = p.x + p.w / 2;
       const cy = p.y + p.h / 2;
       const pulse = 0.65 + 0.35 * Math.sin(globalTime * 0.012 + cx * 0.1);
-      const char = p.type.charAt(0).toUpperCase();
+      const accent = p.type === 'laser' ? '#c8ffff' : (p.type === 'machine' ? '#ffd0ff' : '#fff6a8');
 
       ctx.save();
 
       // Aura exterior pulsing
-      ctx.globalAlpha = 0.06 + 0.14 * pulse;
+      ctx.globalAlpha = 0.04 + 0.06 * pulse;
       ctx.fillStyle = color;
       ctx.fillRect(p.x - 4, p.y - 4, p.w + 8, p.h + 8);
-      ctx.globalAlpha = 0.10 + 0.18 * pulse;
+      ctx.globalAlpha = 0.08 + 0.10 * pulse;
       ctx.fillStyle = color;
       ctx.fillRect(p.x - 2, p.y - 2, p.w + 4, p.h + 4);
 
       // Núcleo con borde oscuro para contraste
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = 0.60;
       ctx.fillStyle = '#111';
       ctx.fillRect(p.x - 1, p.y - 1, p.w + 2, p.h + 2);
 
-      ctx.globalAlpha = 0.22 + 0.14 * pulse;
+      ctx.globalAlpha = 0.16 + 0.10 * pulse;
       ctx.fillStyle = color;
       ctx.fillRect(p.x - 1, p.y - 1, p.w + 2, 1);
       ctx.fillRect(p.x - 1, p.y + p.h, p.w + 2, 1);
@@ -5086,22 +5164,14 @@ if (shouldShow) {
       ctx.fillRect(p.x, p.y, p.w, p.h);
 
       // Brillo interno
-      ctx.globalAlpha = 0.35 * pulse;
+      ctx.globalAlpha = 0.16 * pulse;
       ctx.fillStyle = '#fff';
       ctx.fillRect(p.x + 2, p.y + 2, p.w - 4, p.h - 4);
 
       // Letra con glow sutil y sombra
       ctx.globalAlpha = 0.30 * pulse;
-      ctx.font = '9px "Press Start 2P"';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = color;
-      ctx.fillText(char, cx, cy);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = '#000';
-      ctx.fillText(char, cx + 1, cy + 1);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(char, cx, cy);
+      drawPixelPickupCore(ctx, p.x, p.y, p.w, p.h, color, accent, p.type);
 
       ctx.restore();
     });
@@ -5117,30 +5187,40 @@ ufoRewards.forEach(d => {
   ctx.save();
   ctx.translate(cx, cy);
 
-  ctx.globalAlpha = 0.18 + pulse * 0.28;
+  ctx.globalAlpha = 0.08 + pulse * 0.16;
   ctx.fillStyle = color;
-  ctx.fillRect(-d.w * 0.5 - 4, -d.h * 0.5 - 4, d.w + 8, d.h + 8);
+  ctx.fillRect(-d.w * 0.5 - 3, -d.h * 0.5 - 3, d.w + 6, d.h + 6);
 
   ctx.globalAlpha = 1;
   ctx.fillStyle = '#071014';
-  ctx.fillRect(-d.w * 0.5 - 1, -d.h * 0.5 - 1, d.w + 2, d.h + 2);
+  ctx.fillRect(-8, -6, 16, 12);
+  ctx.fillRect(-6, -8, 12, 16);
 
   ctx.fillStyle = color;
-  ctx.fillRect(-d.w * 0.5, -d.h * 0.5, d.w, d.h);
+  ctx.fillRect(-7, -5, 14, 10);
+  ctx.fillRect(-5, -7, 10, 14);
 
   ctx.globalAlpha = 0.35 + pulse * 0.35;
   ctx.fillStyle = accent;
-  ctx.fillRect(-d.w * 0.5 + 2, -d.h * 0.5 + 2, d.w - 4, 3);
-  ctx.fillRect(-d.w * 0.5 + 3, -d.h * 0.5 + 6, 2, d.h - 9);
+  ctx.fillRect(-4, -4, 8, 2);
+  ctx.fillRect(-4, 2, 8, 2);
+  ctx.fillRect(-5, -1, 2, 4);
+  ctx.fillRect(3, -1, 2, 4);
 
   ctx.globalAlpha = 1;
-  ctx.font = '10px "Press Start 2P"';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#000';
-  ctx.fillText('?', 1, 2);
   ctx.fillStyle = '#fff';
-  ctx.fillText('?', 0, 1);
+  if (d.reward && d.reward.kind === 'life') {
+    ctx.fillRect(-1, -4, 2, 8);
+    ctx.fillRect(-4, -1, 8, 2);
+  } else if (d.reward && d.reward.kind === 'shield') {
+    ctx.fillRect(-3, -4, 6, 2);
+    ctx.fillRect(-4, -2, 2, 4);
+    ctx.fillRect(2, -2, 2, 4);
+    ctx.fillRect(-2, 2, 4, 2);
+  } else {
+    ctx.fillRect(-1, -4, 2, 8);
+    ctx.fillRect(-3, -2, 6, 2);
+  }
 
   ctx.restore();
 });
