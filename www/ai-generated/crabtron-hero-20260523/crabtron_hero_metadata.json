@@ -1,0 +1,757 @@
+{
+  "id": "crabtron_hero",
+  "phase": "HC-VS-03B",
+  "source": "www/ai-generated/boss-sprites-20260516/boss_crabtron/raw.png",
+  "cell": {
+    "width": 192,
+    "height": 192
+  },
+  "sheet": "crabtron_hero_master_sheet.png",
+  "columns": [
+    "composite",
+    "shadow",
+    "body",
+    "left_claw",
+    "right_claw",
+    "weakpoint_core",
+    "cannons_vents",
+    "overlay_glow_damage"
+  ],
+  "rows": [
+    "idle",
+    "attack_windup",
+    "mid_damage",
+    "rage_phase",
+    "death_exposed_core"
+  ],
+  "pivot": [
+    96,
+    96
+  ],
+  "runtimeScaleHint": 0.55,
+  "silhouetteSafeArea": [
+    8,
+    20,
+    184,
+    168
+  ],
+  "weakpoint": {
+    "pivot": [
+      96,
+      108
+    ],
+    "radius": 15,
+    "layer": "weakpoint_core"
+  },
+  "slots": {
+    "idle.composite": {
+      "x": 0,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.shadow": {
+      "x": 192,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.body": {
+      "x": 384,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.left_claw": {
+      "x": 576,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.right_claw": {
+      "x": 768,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.weakpoint_core": {
+      "x": 960,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.cannons_vents": {
+      "x": 1152,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "idle.overlay_glow_damage": {
+      "x": 1344,
+      "y": 0,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.composite": {
+      "x": 0,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.shadow": {
+      "x": 192,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.body": {
+      "x": 384,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.left_claw": {
+      "x": 576,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.right_claw": {
+      "x": 768,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.weakpoint_core": {
+      "x": 960,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.cannons_vents": {
+      "x": 1152,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "attack_windup.overlay_glow_damage": {
+      "x": 1344,
+      "y": 192,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.composite": {
+      "x": 0,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.shadow": {
+      "x": 192,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.body": {
+      "x": 384,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.left_claw": {
+      "x": 576,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.right_claw": {
+      "x": 768,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.weakpoint_core": {
+      "x": 960,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.cannons_vents": {
+      "x": 1152,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "mid_damage.overlay_glow_damage": {
+      "x": 1344,
+      "y": 384,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.composite": {
+      "x": 0,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.shadow": {
+      "x": 192,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.body": {
+      "x": 384,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.left_claw": {
+      "x": 576,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.right_claw": {
+      "x": 768,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.weakpoint_core": {
+      "x": 960,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.cannons_vents": {
+      "x": 1152,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "rage_phase.overlay_glow_damage": {
+      "x": 1344,
+      "y": 576,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.composite": {
+      "x": 0,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.shadow": {
+      "x": 192,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.body": {
+      "x": 384,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.left_claw": {
+      "x": 576,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.right_claw": {
+      "x": 768,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.weakpoint_core": {
+      "x": 960,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.cannons_vents": {
+      "x": 1152,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    },
+    "death_exposed_core.overlay_glow_damage": {
+      "x": 1344,
+      "y": 768,
+      "w": 192,
+      "h": 192
+    }
+  },
+  "layers": {
+    "idle": {
+      "composite": "www/ai-generated/crabtron-hero-20260523/layers/idle/composite.png",
+      "shadow": "www/ai-generated/crabtron-hero-20260523/layers/idle/shadow.png",
+      "body": "www/ai-generated/crabtron-hero-20260523/layers/idle/body.png",
+      "left_claw": "www/ai-generated/crabtron-hero-20260523/layers/idle/left_claw.png",
+      "right_claw": "www/ai-generated/crabtron-hero-20260523/layers/idle/right_claw.png",
+      "weakpoint_core": "www/ai-generated/crabtron-hero-20260523/layers/idle/weakpoint_core.png",
+      "cannons_vents": "www/ai-generated/crabtron-hero-20260523/layers/idle/cannons_vents.png",
+      "overlay_glow_damage": "www/ai-generated/crabtron-hero-20260523/layers/idle/overlay_glow_damage.png"
+    },
+    "attack_windup": {
+      "composite": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/composite.png",
+      "shadow": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/shadow.png",
+      "body": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/body.png",
+      "left_claw": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/left_claw.png",
+      "right_claw": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/right_claw.png",
+      "weakpoint_core": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/weakpoint_core.png",
+      "cannons_vents": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/cannons_vents.png",
+      "overlay_glow_damage": "www/ai-generated/crabtron-hero-20260523/layers/attack_windup/overlay_glow_damage.png"
+    },
+    "mid_damage": {
+      "composite": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/composite.png",
+      "shadow": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/shadow.png",
+      "body": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/body.png",
+      "left_claw": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/left_claw.png",
+      "right_claw": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/right_claw.png",
+      "weakpoint_core": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/weakpoint_core.png",
+      "cannons_vents": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/cannons_vents.png",
+      "overlay_glow_damage": "www/ai-generated/crabtron-hero-20260523/layers/mid_damage/overlay_glow_damage.png"
+    },
+    "rage_phase": {
+      "composite": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/composite.png",
+      "shadow": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/shadow.png",
+      "body": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/body.png",
+      "left_claw": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/left_claw.png",
+      "right_claw": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/right_claw.png",
+      "weakpoint_core": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/weakpoint_core.png",
+      "cannons_vents": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/cannons_vents.png",
+      "overlay_glow_damage": "www/ai-generated/crabtron-hero-20260523/layers/rage_phase/overlay_glow_damage.png"
+    },
+    "death_exposed_core": {
+      "composite": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/composite.png",
+      "shadow": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/shadow.png",
+      "body": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/body.png",
+      "left_claw": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/left_claw.png",
+      "right_claw": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/right_claw.png",
+      "weakpoint_core": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/weakpoint_core.png",
+      "cannons_vents": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/cannons_vents.png",
+      "overlay_glow_damage": "www/ai-generated/crabtron-hero-20260523/layers/death_exposed_core/overlay_glow_damage.png"
+    }
+  },
+  "qc": {
+    "idle": {
+      "composite": {
+        "bbox": [
+          6,
+          30,
+          185,
+          170
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4747
+      },
+      "shadow": {
+        "bbox": [
+          6,
+          32,
+          185,
+          170
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4722
+      },
+      "body": {
+        "bbox": [
+          71,
+          30,
+          120,
+          145
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1106
+      },
+      "left_claw": {
+        "bbox": [
+          12,
+          43,
+          76,
+          158
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1183
+      },
+      "right_claw": {
+        "bbox": [
+          117,
+          43,
+          179,
+          158
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1143
+      },
+      "weakpoint_core": {
+        "bbox": [
+          61,
+          65,
+          133,
+          129
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0359
+      },
+      "cannons_vents": {
+        "bbox": [
+          22,
+          31,
+          161,
+          143
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0242
+      },
+      "overlay_glow_damage": {
+        "bbox": [
+          49,
+          53,
+          145,
+          141
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1822
+      }
+    },
+    "attack_windup": {
+      "composite": {
+        "bbox": [
+          2,
+          30,
+          189,
+          172
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4985
+      },
+      "shadow": {
+        "bbox": [
+          2,
+          32,
+          189,
+          172
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4958
+      },
+      "body": {
+        "bbox": [
+          71,
+          30,
+          120,
+          145
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1106
+      },
+      "left_claw": {
+        "bbox": [
+          8,
+          45,
+          72,
+          160
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1183
+      },
+      "right_claw": {
+        "bbox": [
+          121,
+          45,
+          183,
+          160
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1143
+      },
+      "weakpoint_core": {
+        "bbox": [
+          61,
+          65,
+          133,
+          129
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0359
+      },
+      "cannons_vents": {
+        "bbox": [
+          22,
+          31,
+          161,
+          143
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0242
+      },
+      "overlay_glow_damage": {
+        "bbox": [
+          48,
+          52,
+          146,
+          142
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1921
+      }
+    },
+    "mid_damage": {
+      "composite": {
+        "bbox": [
+          6,
+          30,
+          185,
+          170
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4753
+      },
+      "shadow": {
+        "bbox": [
+          6,
+          32,
+          185,
+          170
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4728
+      },
+      "body": {
+        "bbox": [
+          71,
+          30,
+          120,
+          145
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1106
+      },
+      "left_claw": {
+        "bbox": [
+          12,
+          43,
+          76,
+          158
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1183
+      },
+      "right_claw": {
+        "bbox": [
+          117,
+          43,
+          179,
+          158
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1143
+      },
+      "weakpoint_core": {
+        "bbox": [
+          61,
+          65,
+          133,
+          129
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0359
+      },
+      "cannons_vents": {
+        "bbox": [
+          22,
+          31,
+          161,
+          143
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0242
+      },
+      "overlay_glow_damage": {
+        "bbox": [
+          49,
+          53,
+          145,
+          141
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1822
+      }
+    },
+    "rage_phase": {
+      "composite": {
+        "bbox": [
+          3,
+          30,
+          188,
+          168
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.494
+      },
+      "shadow": {
+        "bbox": [
+          3,
+          32,
+          188,
+          168
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.4896
+      },
+      "body": {
+        "bbox": [
+          71,
+          30,
+          120,
+          145
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1106
+      },
+      "left_claw": {
+        "bbox": [
+          9,
+          41,
+          73,
+          156
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1183
+      },
+      "right_claw": {
+        "bbox": [
+          120,
+          41,
+          182,
+          156
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1143
+      },
+      "weakpoint_core": {
+        "bbox": [
+          61,
+          65,
+          133,
+          129
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0359
+      },
+      "cannons_vents": {
+        "bbox": [
+          22,
+          31,
+          161,
+          143
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0242
+      },
+      "overlay_glow_damage": {
+        "bbox": [
+          38,
+          51,
+          155,
+          142
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.2467
+      }
+    },
+    "death_exposed_core": {
+      "composite": {
+        "bbox": [
+          2,
+          30,
+          189,
+          177
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.5017
+      },
+      "shadow": {
+        "bbox": [
+          2,
+          32,
+          189,
+          177
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.499
+      },
+      "body": {
+        "bbox": [
+          71,
+          30,
+          120,
+          145
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1106
+      },
+      "left_claw": {
+        "bbox": [
+          8,
+          50,
+          72,
+          165
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1183
+      },
+      "right_claw": {
+        "bbox": [
+          121,
+          50,
+          183,
+          165
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.1143
+      },
+      "weakpoint_core": {
+        "bbox": [
+          61,
+          65,
+          133,
+          129
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0359
+      },
+      "cannons_vents": {
+        "bbox": [
+          22,
+          31,
+          161,
+          143
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.0242
+      },
+      "overlay_glow_damage": {
+        "bbox": [
+          48,
+          52,
+          146,
+          142
+        ],
+        "edgeAlphaPixels": 0,
+        "coverage": 0.192
+      }
+    }
+  },
+  "notes": [
+    "Generated as a modular hero kit. Not wired into runtime in HC-VS-03B.",
+    "Composite frames are preview-ready; separated layers support cheap runtime animation.",
+    "No gameplay, hitbox, boss behavior, timing, rank, score, or wave data is encoded here."
+  ]
+}

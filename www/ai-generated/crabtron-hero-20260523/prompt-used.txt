@@ -1,0 +1,7 @@
+HC-VS-03B CRABTRON HERO SPRITE PASS
+Source identity: existing generated CRABTRON boss seed from HC-ART.
+Target: modular retro-HD arcade shmup boss kit, not a flat replacement image.
+Priorities: silhouette clarity, weakpoint readability, Android vertical readability, restrained glow, military-industrial sci-fi palette.
+States: idle, attack windup, mid damage, rage phase, death/exposed core.
+Layers: composite, shadow, body, left claw, right claw, weakpoint core, cannons/vents, glow/damage overlay.
+Avoid: neon rainbow, painterly realism, excessive bloom, tiny noisy detail, gameplay-affecting metadata.
