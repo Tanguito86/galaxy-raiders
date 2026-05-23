@@ -1349,10 +1349,10 @@ function drawCrabtronDashTelegraph(ctx, boss, color, time) {
   ctx.restore();
 }
 
-// --- HC-VS-03D1: CRABTRON HERO STATE RESOLVER ---
+// --- HC-VS-03D3: CRABTRON HERO STATE RESOLVER (presentation-enhanced) ---
 function resolveCrabtronHeroState(boss) {
   if (!boss || !boss.active) {
-    if (boss && typeof boss._deathTimer === 'number' && boss._deathTimer > 0) return 'death_exposed_core';
+    if (boss && typeof boss._deathUntil === 'number' && (typeof globalTime === 'number' ? globalTime : 0) < boss._deathUntil) return 'death_exposed_core';
     return 'idle';
   }
 
@@ -1378,7 +1378,7 @@ function resolveCrabtronHeroState(boss) {
   return 'idle';
 }
 
-// --- HC-VS-03D1: CRABTRON HERO LAYERED DRAW ---
+// --- HC-VS-03D3: CRABTRON HERO LAYERED DRAW (presentation pass) ---
 function drawCrabtronHeroLayers(ctx, boss, state, scale) {
   if (!ctx || !boss) return;
   if (typeof getCrabtronHeroFrame !== 'function') return;
@@ -1398,22 +1398,76 @@ function drawCrabtronHeroLayers(ctx, boss, state, scale) {
 
   var cx = boss.x + boss.w / 2;
   var cy = boss.y + boss.h / 2;
-
-  // Phase-dependent overlay alpha
+  var t = (typeof globalTime === 'number' ? globalTime : 0);
   var hpPct = boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
-  var phase = hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3;
-  var overlayAlpha = 0.12;
-  if (phase === 2) overlayAlpha = 0.24;
-  if (phase === 3) overlayAlpha = 0.38;
-  if (boss.flashTimer > 0) overlayAlpha += 0.18;
-  overlayAlpha = Math.min(0.60, overlayAlpha);
 
-  // Core alpha animation
-  var corePulse = 0.5 + 0.5 * Math.sin((typeof globalTime === 'number' ? globalTime : 0) * 0.025);
-  var coreAlpha = 0.55 + corePulse * 0.35;
-  if (phase >= 3) coreAlpha = 0.75 + corePulse * 0.20;
+  // === State-driven overlay alpha ===
+  var ovAlpha;
+  switch (safeState) {
+    case 'attack_windup':
+      ovAlpha = 0.18 + Math.sin(t * 0.042 + 0.6) * 0.10; // building tension
+      break;
+    case 'mid_damage':
+      ovAlpha = 0.28 + Math.abs(Math.sin(t * 0.058)) * 0.22; // damage flicker
+      break;
+    case 'rage_phase':
+      ovAlpha = 0.44 + Math.sin(t * 0.048) * 0.12; // aggressive throb
+      break;
+    case 'death_exposed_core':
+      ovAlpha = 0.58 + Math.abs(Math.sin(t * 0.075 + 1.3)) * 0.22; // collapse flicker
+      break;
+    default: // idle
+      ovAlpha = 0.05 + Math.sin(t * 0.013) * 0.04; // subtle breathing
+      break;
+  }
+  if (boss.flashTimer > 0) ovAlpha += 0.10;
+  ovAlpha = Math.min(0.80, ovAlpha);
 
-  // Z-ordered layer draw
+  // === State-driven core pulse ===
+  var coreFreq, coreBase, coreAmp;
+  switch (safeState) {
+    case 'attack_windup':
+      coreFreq = 0.038; coreBase = 0.55; coreAmp = 0.38;
+      break;
+    case 'mid_damage':
+      coreFreq = 0.052; coreBase = 0.48; coreAmp = 0.42;
+      break;
+    case 'rage_phase':
+      coreFreq = 0.050; coreBase = 0.68; coreAmp = 0.28;
+      break;
+    case 'death_exposed_core':
+      coreFreq = 0.068; coreBase = 0.65; coreAmp = 0.33;
+      break;
+    default: // idle
+      coreFreq = 0.024; coreBase = 0.45; coreAmp = 0.32;
+      break;
+  }
+  var corePulse = 0.5 + 0.5 * Math.sin(t * coreFreq + (safeState === 'mid_damage' ? t * 0.01 : 0));
+  var coreAlpha = coreBase + corePulse * coreAmp;
+
+  // === State-driven shadow alpha ===
+  var shadowAlpha = 0.26;
+  if (safeState === 'attack_windup') shadowAlpha = 0.32;
+  if (safeState === 'rage_phase') shadowAlpha = 0.36;
+  if (safeState === 'death_exposed_core') shadowAlpha = 0.40;
+
+  // === Claw micro-motion offsets (presentation-only, no gameplay effect) ===
+  var lClawOX = 0, lClawOY = 0;
+  var rClawOX = 0, rClawOY = 0;
+  if (safeState === 'attack_windup') {
+    lClawOX = Math.sin(t * 0.045) * 1.4;
+    lClawOY = Math.cos(t * 0.045) * 0.7;
+    rClawOX = Math.sin(t * 0.045 + 0.6) * 1.4;
+    rClawOY = Math.cos(t * 0.045 + 0.6) * 0.7;
+  } else if (safeState === 'rage_phase') {
+    lClawOX = Math.sin(t * 0.065 + 0.3) * 1.8;
+    rClawOX = Math.sin(t * 0.065 + 1.5) * 1.8;
+  }
+
+  var ventOY = (safeState === 'attack_windup') ? Math.sin(t * 0.055) * 1.0 : 0;
+  var overlayOY = (safeState === 'rage_phase') ? Math.sin(t * 0.032) * 1.2 : 0;
+
+  // === Z-ordered layer draw ===
   var drawOrder = ['shadow', 'body', 'left_claw', 'right_claw', 'cannons_vents', 'weakpoint_core', 'overlay_glow_damage'];
 
   for (var i = 0; i < drawOrder.length; i++) {
@@ -1422,18 +1476,27 @@ function drawCrabtronHeroLayers(ctx, boss, state, scale) {
     if (frame < 0) continue;
 
     var alpha = 1;
+    var ox = 0, oy = 0;
 
     if (layer === 'shadow') {
-      alpha = 0.30;
-    } else if (layer === 'overlay_glow_damage') {
-      alpha = overlayAlpha;
+      alpha = shadowAlpha;
+      oy = 2;
+    } else if (layer === 'left_claw') {
+      ox = lClawOX; oy = lClawOY;
+    } else if (layer === 'right_claw') {
+      ox = rClawOX; oy = rClawOY;
+    } else if (layer === 'cannons_vents') {
+      oy = ventOY;
     } else if (layer === 'weakpoint_core') {
       alpha = coreAlpha;
+    } else if (layer === 'overlay_glow_damage') {
+      alpha = ovAlpha;
+      oy = overlayOY;
     }
 
     if (alpha <= 0.005) continue;
 
-    window.drawSpriteFrame(ctx, spriteId, cx, cy, {
+    window.drawSpriteFrame(ctx, spriteId, cx + ox, cy + oy, {
       frame: frame,
       scale: safeScale,
       anchorX: anchorX,
@@ -4218,7 +4281,7 @@ if (shouldShow) {
         ctx.restore();
       }
 
-      // HC-VS-03D2: CRABTRON hero layered body — primary visual when hero sprite loaded
+      // HC-VS-03D3: CRABTRON hero layered body — presentation-driven phase states
       if (boss.pattern === 'crossfire') {
         var _heroState = resolveCrabtronHeroState(boss);
         var _heroScale = 0.45;

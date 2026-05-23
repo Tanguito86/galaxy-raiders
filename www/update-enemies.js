@@ -271,6 +271,7 @@ if (
 if (bossDefeated) {
   bossDefeated = false;
   boss.active = false;
+  boss._deathUntil = (typeof globalTime === 'number' ? globalTime : 0) + 1400; // HC-VS-03D3: death visual state
 
   if (!boss._hardcoreBossClearRewarded) {
     boss._hardcoreBossClearRewarded = true;
