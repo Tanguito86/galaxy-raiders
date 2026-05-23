@@ -620,19 +620,22 @@ function drawArcadePanel(x, y, w, h, accentColor) {
 
 function drawGameplayHudPanel(x, y, w, h, accentColor) {
   ctx.save();
-  ctx.globalAlpha = 0.20;
-  ctx.fillStyle = '#000';
+  ctx.globalAlpha = 0.44;
+  ctx.fillStyle = '#020611';
   ctx.fillRect(x, y, w, h);
-  ctx.globalAlpha = 0.18;
+  ctx.globalAlpha = 0.24;
   ctx.fillStyle = accentColor;
-  ctx.fillRect(x, y, w, 2);
-  ctx.fillRect(x, y + h - 2, w, 2);
-  ctx.globalAlpha = 0.08;
+  ctx.fillRect(x, y, w, 1);
+  ctx.fillRect(x, y + h - 1, w, 1);
+  ctx.globalAlpha = 0.10;
   ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.20)';
   ctx.lineWidth = 1;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = accentColor;
+  ctx.strokeRect(x + 2.5, y + 2.5, w - 5, h - 5);
   ctx.restore();
 }
 
@@ -641,33 +644,33 @@ function drawOverlayPanel(x, y, w, h, accentColor) {
   // HC-RD-06: config-driven overlay panel alpha
   var _ovCfg = (typeof getHUDReadabilityConfig === 'function') ? (getHUDReadabilityConfig().overlays || {}) : {};
   var _ovAlpha = (typeof _ovCfg.overlayPanelAlpha === 'number') ? _ovCfg.overlayPanelAlpha : 0.90;
-  ctx.fillStyle = 'rgba(2,4,12,' + _ovAlpha + ')';
+  ctx.fillStyle = 'rgba(2,6,16,' + Math.min(0.86, _ovAlpha) + ')';
   ctx.fillRect(x, y, w, h);
 
   // Accent glow bars (top / bottom)
-  ctx.globalAlpha = 0.28;
+  ctx.globalAlpha = 0.22;
   ctx.fillStyle = accentColor;
-  ctx.fillRect(x + 6, y + 4, w - 12, 2);
-  ctx.fillRect(x + 6, y + h - 6, w - 12, 2);
+  ctx.fillRect(x + 8, y + 5, w - 16, 1);
+  ctx.fillRect(x + 8, y + h - 6, w - 16, 1);
 
   // Outer border
   ctx.globalAlpha = 1;
   ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
   // Inner border
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.16)';
   ctx.lineWidth = 1;
   ctx.strokeRect(x + 8.5, y + 8.5, w - 17, h - 17);
 
   // Corner brackets
   ctx.fillStyle = accentColor;
-  ctx.globalAlpha = 0.45;
-  ctx.fillRect(x - 1, y + 8, 3, 12);
-  ctx.fillRect(x + w - 2, y + 8, 3, 12);
-  ctx.fillRect(x - 1, y + h - 20, 3, 12);
-  ctx.fillRect(x + w - 2, y + h - 20, 3, 12);
+  ctx.globalAlpha = 0.36;
+  ctx.fillRect(x, y + 8, 2, 10);
+  ctx.fillRect(x + w - 2, y + 8, 2, 10);
+  ctx.fillRect(x, y + h - 18, 2, 10);
+  ctx.fillRect(x + w - 2, y + h - 18, 2, 10);
 
   ctx.restore();
 }
@@ -2978,16 +2981,16 @@ function draw() {
 
   if (state === 'menu') {
     const menuPulse = 0.5 + 0.5 * Math.sin(globalTime * 0.006);
-    const panelAccent = 'rgba(100,245,255,0.58)';
-    const panelW = Math.min(W - 46, 318);
-    const panelH = 248;
+    const panelAccent = 'rgba(100,245,255,0.68)';
+    const panelW = Math.min(W - 58, 294);
+    const panelH = 224;
     const panelX = (W - panelW) / 2;
-    const panelY = 258;
+    const panelY = 272;
 
     ctx.fillStyle = 'rgba(0,0,0,0.28)';
     ctx.fillRect(0, 0, W, H);
 
-    ctx.globalAlpha = 0.07 + menuPulse * 0.05;
+    ctx.globalAlpha = 0.045 + menuPulse * 0.035;
     ctx.fillStyle = panelAccent;
     ctx.fillRect(0, 78, W, 2);
     ctx.fillRect(0, H - 86, W, 2);
@@ -3003,7 +3006,7 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
   
   // Calcular posición centrada
   const cols = alien.row === 0 ? 5 : 4;
-  const spacing = 45;
+  const spacing = 42;
   const totalWidth = (cols - 1) * spacing;
   const startX = (W - totalWidth) / 2;
   const baseX = startX + alien.col * spacing;
@@ -3011,8 +3014,8 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
   // Movimiento ondulante
   const wave = Math.sin(globalTime * 0.003 + alien.col * 0.5) * 8;
   
-  ctx.globalAlpha = 0.78 + menuPulse * 0.18;
-  drawSprite(ctx, SPRITES[spriteKey], baseX + wave - 12, alien.y, color, 3);
+  ctx.globalAlpha = 0.62 + menuPulse * 0.16;
+  drawSprite(ctx, SPRITES[spriteKey], baseX + wave - 10, alien.y + 4, color, 2.5);
   ctx.globalAlpha = 1;
 });
     
@@ -3020,8 +3023,8 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     drawGlowText(
       'GALAXY',
       W / 2,
-      190,
-      '36px "Press Start 2P"',
+      184,
+      '34px "Press Start 2P"',
       menuPulse > 0.35 ? '#fff36a' : '#fff',
       'rgba(255,235,90,0.72)'
     );
@@ -3029,35 +3032,35 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
     drawGlowText(
       'RAIDERS',
       W / 2,
-      232,
-      '30px "Press Start 2P"',
+      226,
+      '29px "Press Start 2P"',
       '#ffffff',
       'rgba(0,245,255,0.68)'
     );
 
     ctx.font = '8px "Press Start 2P"';
     ctx.fillStyle = 'rgba(100,245,255,0.72)';
-    ctx.fillText('INSERT COIN // READY', W / 2, 254);
+    ctx.fillText('INSERT COIN // READY', W / 2, 250);
 
     drawOverlayPanel(panelX, panelY, panelW, panelH, panelAccent);
     
     // High Score
     ctx.font = '9px "Press Start 2P"';
     ctx.fillStyle = '#64f5ff';
-    ctx.fillText('TOP PILOT', W / 2, panelY + 30);
+    ctx.fillText('TOP PILOT', W / 2, panelY + 28);
     ctx.fillStyle = '#fff36a';
-    ctx.fillText(globalTopName + '  ' + globalTopScore, W / 2, panelY + 50);
+    ctx.fillText(globalTopName + '  ' + globalTopScore, W / 2, panelY + 48);
 
     ctx.strokeStyle = 'rgba(255,255,255,0.18)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(panelX + 28, panelY + 68);
-    ctx.lineTo(panelX + panelW - 28, panelY + 68);
+    ctx.moveTo(panelX + 28, panelY + 64);
+    ctx.lineTo(panelX + panelW - 28, panelY + 64);
     ctx.stroke();
 
     // Opciones del menú
-    const menuStartY = panelY + 100;
-    const menuSpacing = 34;
+    const menuStartY = panelY + 94;
+    const menuSpacing = 31;
     
     MENU_OPTIONS.forEach((option, i) => {
       const y = menuStartY + i * menuSpacing;
@@ -3065,49 +3068,49 @@ const spriteKey = alien.type + (menuAnim === 0 ? '_a' : '_b');
       
       if (isSelected) {
         // Fondo seleccionado
-        ctx.fillStyle = 'rgba(255,245,120,0.12)';
-        ctx.fillRect(panelX + 34, y - 20, panelW - 68, 28);
-        ctx.strokeStyle = 'rgba(255,245,120,0.45)';
-        ctx.strokeRect(panelX + 34.5, y - 20.5, panelW - 69, 27);
+        ctx.fillStyle = 'rgba(255,245,120,0.14)';
+        ctx.fillRect(panelX + 28, y - 19, panelW - 56, 27);
+        ctx.strokeStyle = 'rgba(255,245,120,0.52)';
+        ctx.strokeRect(panelX + 28.5, y - 19.5, panelW - 57, 26);
         
         // Flechas
         ctx.fillStyle = '#ff0';
         ctx.font = '12px "Press Start 2P"';
         const pulse = Math.sin(globalTime * 0.008) * 3;
         ctx.textAlign = 'left';
-        ctx.fillText('>', panelX + 48 - pulse, y);
+        ctx.fillText('>', panelX + 42 - pulse, y);
         ctx.textAlign = 'right';
-        ctx.fillText('<', panelX + panelW - 48 + pulse, y);
+        ctx.fillText('<', panelX + panelW - 42 + pulse, y);
       }
 
-      ctx.font = '16px "Press Start 2P"';
+      ctx.font = isSelected ? '17px "Press Start 2P"' : '14px "Press Start 2P"';
       ctx.textAlign = 'center';
-      ctx.fillStyle = isSelected ? '#fff36a' : '#8a94a8';
+      ctx.fillStyle = isSelected ? '#fff36a' : 'rgba(166,176,198,0.72)';
       ctx.fillText(option, W / 2, y);
     });
     
     // Dificultad (HC-12: siempre hardcore)
     let infoY = panelY + panelH - 28;
     ctx.font = '8px "Press Start 2P"';
-    ctx.fillStyle = 'rgba(255,255,255,0.42)';
+    ctx.fillStyle = 'rgba(255,255,255,0.40)';
     ctx.fillText('MODE: ' + difficulties[difficultyIndex].name, W / 2, infoY);
     infoY += 18;
 
     if (typeof getBalanceProfileLabel === 'function') {
       ctx.font = '8px "Press Start 2P"';
-      ctx.fillStyle = 'rgba(255,255,255,0.34)';
+      ctx.fillStyle = 'rgba(255,255,255,0.30)';
       ctx.fillText('BALANCE: ' + getBalanceProfileLabel(), W / 2, infoY);
     }
     
     // Créditos/Fichas
     ctx.font = '10px "Press Start 2P"';
     ctx.fillStyle = '#64f5ff';
-    ctx.fillText(playerCredits + ' CREDITS', W / 2, H - 88);
+    ctx.fillText(playerCredits + ' CREDITS', W / 2, H - 74);
     
     // Instrucciones
     ctx.font = '8px "Press Start 2P"';
-    ctx.fillStyle = 'rgba(255,255,255,0.52)';
-    ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, H - 60);
+    ctx.fillStyle = 'rgba(255,255,255,0.44)';
+    ctx.fillText('UP/DOWN SELECT   FIRE=OK', W / 2, H - 48);
     
     // Botones inferiores
     ctx.font = '16px "Press Start 2P"';
@@ -5258,62 +5261,62 @@ ufoRewards.forEach(d => {
     // ================================================================
     // HUD (HC-96: improved contrast + value glow)
     ctx.save();
-    const hudTop = 7;
+    const hudTop = 8;
     const hudLeftX = 6;
-    const hudLeftW = 112;
-    const hudRightW = 108;
+    const hudLeftW = 132;
+    const hudRightW = 126;
     const hudRightX = W - hudRightW - 6;
 
-    drawGameplayHudPanel(hudLeftX, hudTop, hudLeftW, 38, '#0ff');
-    drawGameplayHudPanel(hudRightX, hudTop, hudRightW, 38, '#ffd966');
+    drawGameplayHudPanel(hudLeftX, hudTop, hudLeftW, 46, '#0ff');
+    drawGameplayHudPanel(hudRightX, hudTop, hudRightW, 46, '#ffd966');
 
     ctx.textBaseline = 'alphabetic';
 
     // LEFT panel — SCORE / LEVEL
     ctx.textAlign = 'left';
-    ctx.font = '6px "Press Start 2P"';
+    ctx.font = '7px "Press Start 2P"';
     ctx.fillStyle = 'rgba(120,255,255,0.85)';
-    ctx.fillText('SCORE', hudLeftX + 6, hudTop + 13);
+    ctx.fillText('SCORE', hudLeftX + 7, hudTop + 15);
     ctx.fillStyle = 'rgba(120,255,255,0.78)';
-    ctx.fillText('LEVEL', hudLeftX + 6, hudTop + 31);
+    ctx.fillText('LEVEL', hudLeftX + 7, hudTop + 36);
 
     ctx.textAlign = 'right';
-    ctx.font = '9px "Press Start 2P"';
+    ctx.font = '10px "Press Start 2P"';
     ctx.globalAlpha = 0.15;
     ctx.fillStyle = '#0ff';
-    ctx.fillText(score, hudLeftX + hudLeftW - 5, hudTop + 16);
-    ctx.fillText(level, hudLeftX + hudLeftW - 5, hudTop + 34);
+    ctx.fillText(score, hudLeftX + hudLeftW - 6, hudTop + 17);
+    ctx.fillText(level, hudLeftX + hudLeftW - 6, hudTop + 38);
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#fff';
-    ctx.fillText(score, hudLeftX + hudLeftW - 7, hudTop + 14);
-    ctx.fillText(level, hudLeftX + hudLeftW - 7, hudTop + 32);
+    ctx.fillText(score, hudLeftX + hudLeftW - 8, hudTop + 15);
+    ctx.fillText(level, hudLeftX + hudLeftW - 8, hudTop + 36);
 
     // RIGHT panel — HI / CHAIN / MEDAL
     ctx.textAlign = 'left';
-    ctx.font = '6px "Press Start 2P"';
+    ctx.font = '7px "Press Start 2P"';
     ctx.fillStyle = 'rgba(255,220,120,0.88)';
-    ctx.fillText('HI', hudRightX + 6, hudTop + 10);
+    ctx.fillText('HI', hudRightX + 7, hudTop + 12);
     ctx.fillStyle = 'rgba(160,235,255,0.85)';
-    ctx.fillText('CHAIN', hudRightX + 6, hudTop + 23);
+    ctx.fillText('CHAIN', hudRightX + 7, hudTop + 27);
     ctx.fillStyle = 'rgba(255,220,120,0.82)';
-    ctx.fillText('MEDAL', hudRightX + 6, hudTop + 35);
+    ctx.fillText('MEDAL', hudRightX + 7, hudTop + 42);
 
     ctx.textAlign = 'right';
-    ctx.font = '7px "Press Start 2P"';
+    ctx.font = '8px "Press Start 2P"';
     ctx.globalAlpha = 0.15;
     ctx.fillStyle = '#ffd966';
-    ctx.fillText(bestScore, hudRightX + hudRightW - 4, hudTop + 12);
+    ctx.fillText(bestScore, hudRightX + hudRightW - 5, hudTop + 13);
     ctx.fillStyle = '#9ee7ff';
-    ctx.fillText(medalChain, hudRightX + hudRightW - 4, hudTop + 25);
+    ctx.fillText(medalChain, hudRightX + hudRightW - 5, hudTop + 28);
     ctx.fillStyle = '#ffd966';
-    ctx.fillText(medalValue, hudRightX + hudRightW - 4, hudTop + 37);
+    ctx.fillText(medalValue, hudRightX + hudRightW - 5, hudTop + 43);
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#fff';
-    ctx.fillText(bestScore, hudRightX + hudRightW - 6, hudTop + 10);
+    ctx.fillText(bestScore, hudRightX + hudRightW - 7, hudTop + 12);
     ctx.fillStyle = '#9ee7ff';
-    ctx.fillText(medalChain, hudRightX + hudRightW - 6, hudTop + 23);
+    ctx.fillText(medalChain, hudRightX + hudRightW - 7, hudTop + 27);
     ctx.fillStyle = '#ffd966';
-    ctx.fillText(medalValue, hudRightX + hudRightW - 6, hudTop + 35);
+    ctx.fillText(medalValue, hudRightX + hudRightW - 7, hudTop + 42);
     ctx.restore();
     drawHardcoreGrazeHUD(ctx);
     if (typeof drawHardcoreRankDebug === 'function') drawHardcoreRankDebug(ctx);

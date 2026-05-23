@@ -547,17 +547,17 @@ window.drawScoreMultiplierHUD = function(ctx) {
   if (mult <= 1.01) return; // Don't show if basically 1.0
 
   var displayText = 'x' + mult.toFixed(2);
-  var x = 6;
-  var y = H - 14;
+  var x = Math.floor(W / 2);
+  var y = 27;
 
   // Subtle pulse when recently gained
   var framesSinceGain = _hcScoreMultiplier.totalFrames - _hcScoreMultiplier.lastGainFrame;
   var pulse = framesSinceGain < 30 ? (1.0 + 0.15 * (1.0 - framesSinceGain / 30)) : 1.0;
 
   ctx.save();
-  ctx.textAlign = 'left';
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = '6px "Press Start 2P"';
+  ctx.font = '8px "Press Start 2P"';
 
   // Color shifts with multiplier level
   var alpha = 0.55 + mult * 0.15;
@@ -567,7 +567,9 @@ window.drawScoreMultiplierHUD = function(ctx) {
   else if (mult >= 1.5) color = '#ffcc66';  // Amber at mid
   else color = '#cccccc';                    // Grey at low
 
-  ctx.globalAlpha = alpha * pulse;
+  ctx.globalAlpha = Math.min(0.95, alpha * pulse);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillText(displayText, x + 1, y + 1);
   ctx.fillStyle = color;
   ctx.fillText(displayText, x, y);
   ctx.globalAlpha = 1;

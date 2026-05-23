@@ -205,7 +205,7 @@ window.drawHardcoreComboHUD = function(ctx) {
   var cfg = _hardcoreComboReadConfig();
   var count = _hardcoreCombo.count;
   var mult = _hardcoreCombo.multiplier;
-  var y = 56;
+  var y = 62;
   var breakMs = (count <= 0 && _hardcoreCombo.expiredCount <= 0 && _hardcoreCombo.lastBreakAt > 0) ? now - _hardcoreCombo.lastBreakAt : 9999;
   var showingBreak = count <= 0 && _hardcoreCombo.expiredCount <= 0 && breakMs < 900;
   var inGrace = _hardcoreCombo.expiredCount > 0;
@@ -236,10 +236,10 @@ window.drawHardcoreComboHUD = function(ctx) {
 
   if (showingBreak) {
     var fadeAlpha = 1.0 - (breakMs / 900);
-    ctx.font = '9px "Press Start 2P"';
+    ctx.font = '10px "Press Start 2P"';
     ctx.globalAlpha = fadeAlpha;
     ctx.fillStyle = '#ff3355';
-    ctx.fillText('COMBO BREAK', 6, y + 6);
+    ctx.fillText('COMBO BREAK', 8, y + 6);
     ctx.globalAlpha = 1;
     ctx.restore();
     return;
@@ -248,21 +248,21 @@ window.drawHardcoreComboHUD = function(ctx) {
   // Grace state: flash the combo label
   if (inGrace) {
     var gracePulse = 0.45 + 0.55 * Math.sin(now * 0.018);
-    ctx.font = '6px "Press Start 2P"';
+    ctx.font = '7px "Press Start 2P"';
     ctx.globalAlpha = gracePulse;
     ctx.fillStyle = '#ff8855';
-    ctx.fillText('GRACE', 6, y);
-    ctx.font = '7px "Press Start 2P"';
+    ctx.fillText('GRACE', 8, y);
+    ctx.font = '8px "Press Start 2P"';
     ctx.globalAlpha = gracePulse * 0.8;
     ctx.fillStyle = '#ffcc88';
-    ctx.fillText(_hardcoreCombo.expiredCount + ' x' + _hardcoreCombo.expiredMultiplier.toFixed(2), 6, y + 13);
+    ctx.fillText(_hardcoreCombo.expiredCount + ' x' + _hardcoreCombo.expiredMultiplier.toFixed(2), 8, y + 14);
 
     // Grace timer bar
     var graceRemaining = cfg.graceMs - (now - _hardcoreCombo.lastExpiredAt);
     var graceRatio = Math.min(1, Math.max(0, graceRemaining / cfg.graceMs));
-    var barX = 6;
+    var barX = 8;
     var barY = y + 22;
-    var barW = 52;
+    var barW = 62;
     var barH = 3;
     ctx.globalAlpha = 0.25;
     ctx.fillStyle = '#444';
@@ -278,27 +278,27 @@ window.drawHardcoreComboHUD = function(ctx) {
   ctx.globalAlpha = comboAlpha;
 
   // COMBO label
-  ctx.font = '6px "Press Start 2P"';
+  ctx.font = '7px "Press Start 2P"';
   ctx.fillStyle = 'rgba(200,120,220,0.82)';
-  ctx.fillText('COMBO', 6, y);
+  ctx.fillText('COMBO', 8, y);
 
   // Count + multiplier
-  ctx.font = '7px "Press Start 2P"';
+  ctx.font = '8px "Press Start 2P"';
   ctx.fillStyle = comboColor;
-  ctx.fillText(count + ' x' + mult.toFixed(2), 6, y + 13);
+  ctx.fillText(count + ' x' + mult.toFixed(2), 8, y + 14);
 
   // Glow overlay (40+)
   if (glowAlpha > 0) {
     ctx.globalAlpha = glowAlpha;
     ctx.fillStyle = '#ffeebb';
-    ctx.fillText(count + ' x' + mult.toFixed(2), 6 + 1, y + 13 + 1);
-    ctx.fillText(count + ' x' + mult.toFixed(2), 6 - 1, y + 13 - 1);
+    ctx.fillText(count + ' x' + mult.toFixed(2), 8 + 1, y + 14 + 1);
+    ctx.fillText(count + ' x' + mult.toFixed(2), 8 - 1, y + 14 - 1);
   }
 
   // Timer bar
-  var barX = 6;
-  var barY = y + 22;
-  var barW = 52;
+  var barX = 8;
+  var barY = y + 24;
+  var barW = 62;
   var barH = 3;
   var remaining = Math.max(0, _hardcoreCombo.activeUntil - now);
   var total = cfg.timeoutMs;
