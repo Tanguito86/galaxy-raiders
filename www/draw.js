@@ -4777,6 +4777,10 @@ if (shouldShow) {
         let color = currentPalette[data.color] || currentPalette[1];
         
         if (e.diving) color = '#f00';
+
+        // HC-VS-05: Faction color override for visual cohesion
+        var factionColor = typeof getFactionColor === 'function' ? getFactionColor(e.type, 'primary') : null;
+        if (factionColor && !e.diving) color = factionColor;
         
     const baseSize = (e.type === 'alien_mini') ? 2 : 3;
     const readabilityScale = _ENEMY_READABILITY_MULT[e.type] || 1;
@@ -4789,6 +4793,11 @@ if (shouldShow) {
       ctx.fillRect(e.x - 2, e.y - 2, e.w + 4, e.h + 4);
       ctx.globalAlpha = 0.025;
       ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
+    }
+
+    // HC-VS-05: Faction silhouette for visual identity
+    if (typeof drawFactionSilhouette === 'function') {
+      drawFactionSilhouette(ctx, e, 0.14);
     }
 
     if (e.spawnFlashTimer > 0) {
@@ -4827,31 +4836,35 @@ if (shouldShow) {
     }
 
     // HC-129: threat telegraph — subtle role indicator (render-only)
-    // HC-RD-03: added outline for contrast
+    // HC-VS-05: uses faction colors for visual cohesion
     if (window.ENCOUNTER_THREAT_TELEGRAPH === true && e.alive) {
       var _threatColor = null;
-      if (e.type === 'alien1')        { _threatColor = '#8df'; }
-      else if (e.type === 'alien2')   { _threatColor = '#4ff'; }
-      else if (e.type === 'alien3')   { _threatColor = '#f55'; }
-      else if (e.type === 'alien4')   { _threatColor = '#bf4'; }
-      else if (e.type === 'alien5')   { _threatColor = '#f62'; }
-      else if (e.type === 'alien6')   { _threatColor = '#c8f'; }
-      else if (e.type === 'alien_mini') { _threatColor = '#f96'; }
+      // Faction-based color (preferred) or legacy per-type fallback
+      if (typeof getFactionColor === 'function') {
+        _threatColor = getFactionColor(e.type, 'telegraph');
+      }
+      if (!_threatColor) {
+        if (e.type === 'alien1')        { _threatColor = '#8df'; }
+        else if (e.type === 'alien2')   { _threatColor = '#4ff'; }
+        else if (e.type === 'alien3')   { _threatColor = '#f55'; }
+        else if (e.type === 'alien4')   { _threatColor = '#bf4'; }
+        else if (e.type === 'alien5')   { _threatColor = '#f62'; }
+        else if (e.type === 'alien6')   { _threatColor = '#c8f'; }
+        else if (e.type === 'alien_mini') { _threatColor = '#f96'; }
+      }
       if (_threatColor) {
         var _tcs0 = _getTelegraphOutlineStyle();
         var _tcx = e.x + e.w / 2;
         var _tcy = e.y + e.h / 2;
         var _tpulse = 0.5 + 0.5 * Math.sin(globalTime * 0.012 + e.x * 0.05);
-        var _tdR = 3.5; // HC-RD-03: slightly larger radius
+        var _tdR = 3.5;
         ctx.save();
-        // dark outline
         ctx.globalAlpha = _tcs0.alpha;
         ctx.strokeStyle = _tcs0.color;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(_tcx, _tcy - e.h * 0.5 - 4, _tdR + 1, 0, Math.PI * 2);
         ctx.stroke();
-        // colored fill
         ctx.globalAlpha = 0.12 + _tpulse * 0.06;
         ctx.fillStyle = _threatColor;
         ctx.beginPath();
@@ -4859,6 +4872,11 @@ if (shouldShow) {
         ctx.fill();
         ctx.restore();
       }
+    }
+
+    // HC-VS-05: Faction identity marker — subtle dot + ring above enemy
+    if (typeof drawFactionMarker === 'function') {
+      drawFactionMarker(ctx, e);
     }
 
         // HC-RD-01: hit flash alpha reduced so flashes don't mask bullets

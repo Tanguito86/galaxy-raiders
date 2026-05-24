@@ -1,53 +1,62 @@
 // ==========================================
 // GALAXY RAIDERS - enemy-identity.js
-// Sistema de identidad/roles para enemigos
+// HC-VS-05: Added faction membership to identity
 // ==========================================
 
 var _ENEMY_IDENTITY_MAP = {
   alien1: {
     role: 'sweeper',
     patternHint: 'wide_sweep',
-    label: 'Sweeper'
+    label: 'Sweeper',
+    faction: 'scout'
   },
   alien2: {
     role: 'sniper',
     patternHint: 'aimed_shots',
-    label: 'Sniper'
+    label: 'Sniper',
+    faction: 'scout'
   },
   alien3: {
     role: 'diver',
     patternHint: 'aggressive_dive',
-    label: 'Diver'
+    label: 'Diver',
+    faction: 'suppressor'
   },
   alien4: {
     role: 'suppressor',
     patternHint: 'lateral_sweep',
-    label: 'Suppressor'
+    label: 'Suppressor',
+    faction: 'scout'
   },
   alien5: {
     role: 'chaser',
     patternHint: 'player_pursuit',
-    label: 'Chaser'
+    label: 'Chaser',
+    faction: 'scout'
   },
   alien6: {
     role: 'flanker',
     patternHint: 'side_flank',
-    label: 'Flanker'
+    label: 'Flanker',
+    faction: 'splitter'
   },
   alien_mini: {
     role: 'baiter',
     patternHint: 'erratic_bait',
-    label: 'Baiter'
+    label: 'Baiter',
+    faction: 'scout'
   },
   ufo: {
     role: 'bonus',
     patternHint: 'reward',
-    label: 'UFO'
+    label: 'UFO',
+    faction: null
   },
   _unknown: {
     role: 'basic',
     patternHint: 'default',
-    label: 'Unknown'
+    label: 'Unknown',
+    faction: null
   }
 };
 

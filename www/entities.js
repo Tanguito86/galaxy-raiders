@@ -220,13 +220,20 @@ function createEnemyDeathPop(x, y, color, enemy) {
   var ringExpand = 5;
   var flashCount = 2;
 
-  if (etype === 'alien_mini') {
+  // HC-VS-05: Faction-based death FX params
+  var hasFactionDeath = (enemy && typeof getFactionDeathParticleCount === 'function');
+  if (hasFactionDeath) {
+    explosionCount = getFactionDeathParticleCount(enemy.type);
+    ringR = typeof getFactionDeathRingRadius === 'function' ? getFactionDeathRingRadius(enemy.type) : ringR;
+  }
+
+  if (!hasFactionDeath && etype === 'alien_mini') {
     explosionCount = 12;
     ringLife = 0.18;
     ringR = 2;
     ringExpand = 3;
     flashCount = 1;
-  } else if (data && data.hp >= 2 && data.speed < 1.0) {
+  } else if (!hasFactionDeath && data && data.hp >= 2 && data.speed < 1.0) {
     explosionCount = 22;
     sparkBase = 1.8;
     sparkExtra = 1.6;

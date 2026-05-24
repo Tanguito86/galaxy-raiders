@@ -11,7 +11,15 @@ function getEnemyBulletRenderStyle(b) {
 
   if (kind === 'basic' && b.sourceType) {
     var st = b.sourceType;
-    if (st === 'alien3') {
+    // HC-VS-05: Prefer faction-based bullet style for cohesion
+    var factionStyle = (typeof getFactionBulletStyle === 'function') ? getFactionBulletStyle(st) : null;
+    if (factionStyle && factionStyle !== 'basic') {
+      style = factionStyle;
+      if (!color) {
+        var fc = typeof getFactionColor === 'function' ? getFactionColor(st, 'primary') : null;
+        color = fc || null;
+      }
+    } else if (st === 'alien3') {
       style = 'tank';
       color = color || '#ff7722';
     } else if (st === 'alien4' || st === 'alien5' || st === 'alien_mini') {
