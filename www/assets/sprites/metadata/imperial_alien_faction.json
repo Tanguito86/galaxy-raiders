@@ -1,0 +1,96 @@
+{
+  "factionId": "imperial_alien",
+  "project": "Galaxy Raiders",
+  "type": "enemy_faction",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "sheet": {
+    "path": "www/assets/sprites/enemies/imperial/imperial_alien_faction_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 128,
+    "frameHeight": 128,
+    "frames": 4
+  },
+  "recommendedGameplaySize": {
+    "width": 64,
+    "height": 64
+  },
+  "pivot": {
+    "x": 64,
+    "y": 64,
+    "anchor": "center"
+  },
+  "units": {
+    "imperial_alien_mk1_master": {
+      "roleClassification": "standard_imperial_line_infantry",
+      "frame": 0,
+      "file": "www/assets/sprites/enemies/imperial/imperial_alien_mk1_master.png",
+      "notes": "Standard Imperial line unit with symmetric geometric armor, glowing crest, and disciplined posture."
+    },
+    "imperial_alien_elite": {
+      "roleClassification": "elite_imperial_commander",
+      "frame": 1,
+      "file": "www/assets/sprites/enemies/imperial/imperial_alien_elite.png",
+      "notes": "Elite-tier Imperial with reinforced armor plating, enhanced crest glow, and commanding vertical presence."
+    },
+    "imperial_alien_lancer": {
+      "roleClassification": "precision_strike_lancer",
+      "frame": 2,
+      "file": "www/assets/sprites/enemies/imperial/imperial_alien_lancer.png",
+      "notes": "Narrow, angular strike unit with forward-projecting lance geometry and streamlined aggressive profile."
+    },
+    "imperial_alien_guardian": {
+      "roleClassification": "heavy_defensive_guardian",
+      "frame": 3,
+      "file": "www/assets/sprites/enemies/imperial/imperial_alien_guardian.png",
+      "notes": "Wide, heavy defense unit with broad shield-like frontal plates and imposing armored bulk."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "unitId": "imperial_alien_mk1_master"
+    },
+    {
+      "frame": 1,
+      "unitId": "imperial_alien_elite"
+    },
+    {
+      "frame": 2,
+      "unitId": "imperial_alien_lancer"
+    },
+    {
+      "frame": 3,
+      "unitId": "imperial_alien_guardian"
+    }
+  ],
+  "readabilityNotes": [
+    "Imperial units use symmetrical, geometric armor shells, glowing vertical energy crests, and disciplined militaristic silhouettes.",
+    "The faction contrasts with Scout (organic insectoid), Suppressor (heavy siege), and Splitter (chaotic fractured): Imperials are rigid, orderly, and imposing.",
+    "Straight armor lines and bright vertical crests provide clear recognition through dense bullet clutter.",
+    "Variant silhouettes remain distinct at 64x64: mk1 is baseline symmetrical, elite is taller and denser, lancer is narrow with forward-pointing geometry, guardian is wide and shield-like."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended display size is 64x64 or larger due to the fine geometry within armor panels.",
+    "Bright vertical crests and strong geometric outlines remain visible on small mobile displays.",
+    "Lancer's narrow profile benefits from contrast emphasis when used as a priority threat on mobile.",
+    "Guardian's wide shield form is the most readable variant at any scale."
+  ],
+  "silhouetteNotes": [
+    "Faction identity comes from rigid symmetry, geometric armor plating, glowing vertical energy crests, and disciplined military posture.",
+    "Mk1 reads as a standard line unit with balanced symmetric geometry.",
+    "Elite reads as a command-tier variant through increased armor density and taller crest.",
+    "Lancer reads as a precision strike threat through its narrow forward-projecting lance form.",
+    "Guardian reads as a heavy defensive anchor through its wide shield-like frontal mass."
+  ],
+  "imperialDisciplineNotes": [
+    "The Imperial faction is designed to read as a disciplined, hierarchical alien military force.",
+    "Symmetrical geometry and rigid armor lines convey order, rank, and predictability in silhouette.",
+    "Formation coherence is supported by shared vertical axis alignment and consistent crest language.",
+    "The faction's visual identity intentionally contrasts with the organic chaos of non-Imperial alien types."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, draw.js, runtime logic, collisions, hitboxes, AI, rank, or balance changes were made.",
+    "Sheet frame order is mk1_master, elite, lancer, guardian."
+  ]
+}
