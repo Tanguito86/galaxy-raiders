@@ -144,6 +144,31 @@
       threatBudget: 30
     },
 
+    FND_diver_intro: {
+      label: 'NEW THREAT',
+      tier: 'foundation',
+      tacticalPurpose: 'Deliberate first diver reveal. Teach dive dodging with maximum telegraph.',
+      dominantRole: 'sweeper',
+      secondaryRole: 'diver',
+      forbiddenRoles: ['chaser','suppressor','sniper','flanker'],
+      allowedSupport: ['baiter'],
+      composition: { sweeper: 6, baiter: 2, diver: 1 },
+      phaseDurations: { INTRO: 2000, BUILD: 5000 },
+      buildTiming: { sweeperDelay: 0, baiterDelay: 600, diverDelay: 4200 },
+      peakLimits: { maxSimultaneousPatterns: 2, maxBullets: 16, interPatternGapMs: 300, diveWaveGapMs: 4000 },
+      resolveTiming: { diverSuspend: true, sniperSuspend: true, suppressorSuspend: true, chaserSuspend: true },
+      reliefPolicy: 'after_clear',
+      entryStyle: 'delayed_reveal',
+      entrySide: 'top',
+      formationKey: 'sparse_line',
+      formationRows: 2,
+      formationCols: 5,
+      formationSpacing: 68,
+      bannerText: 'NEW THREAT',
+      escapeLanes: 3,
+      threatBudget: 22
+    },
+
     // ---- TACTICAL TIER ----
 
     TAC_lane_denial: {
@@ -718,7 +743,7 @@
 
   var LEVEL_PROFILE_MAP = {
     1: 'FND_tutorial',
-    2: 'FND_formation_reading',
+    2: 'FND_diver_intro',
     3: 'TAC_pincer',
     4: 'SET_boss_prelude',
     6: 'FND_recovery_breather',

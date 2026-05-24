@@ -258,43 +258,92 @@ function applyShmupEnemyRoute(e, step, time, player) {
 
 function runSetPieceDivePattern(activeEnemies, dt, diveSlotsLeft) {
   if (diveSlotsLeft <= 0 || setPieceIntroTimer > 0) return 0;
-  if (currentSetPiece !== 'pincer') return 0;
 
-  setPiecePatternTimer += dt;
-  const waveCooldown = Math.max(700, 1550 - level * 22);
-  if (setPiecePatternTimer < waveCooldown) return 0;
-  setPiecePatternTimer = 0;
+  // HC-VS-04C: read active setpiece beat effect for gameplay wiring
+  var beatEffect = (typeof window.getActiveSetpieceBeatEffect === 'function')
+    ? window.getActiveSetpieceBeatEffect() : null;
 
-  const canDive = e => !e.diving && ENEMY_TYPES[e.type]?.canDive !== false;
-  const leftCandidates = activeEnemies.filter(e => canDive(e) && (e.x + e.w / 2) < W * 0.5);
-  const rightCandidates = activeEnemies.filter(e => canDive(e) && (e.x + e.w / 2) >= W * 0.5);
+  // ---- PINCER ASSAULT (Level 3) ----
+  if (currentSetPiece === 'pincer') {
+    // dual_side_entry / closing_wings: both flanks dive
+    if (beatEffect === 'lane_opens') return 0; // relief beat — no dives
 
-  const pickFlank = (arr, side) => {
-    if (arr.length === 0) return null;
-    arr.sort((a, b) => side < 0 ? a.x - b.x : b.x - a.x);
-    return arr[0];
-  };
+    setPiecePatternTimer += dt;
+    var waveCooldown = Math.max(700, 1550 - level * 22);
+    // closing_wings: faster dive cadence, narrower aim spread
+    if (beatEffect === 'closing_wings') waveCooldown = Math.round(waveCooldown * 0.75);
+    if (setPiecePatternTimer < waveCooldown) return 0;
+    setPiecePatternTimer = 0;
 
-  const left = pickFlank(leftCandidates, -1);
-  const right = pickFlank(rightCandidates, 1);
+    var canDive = function(e) { return !e.diving && ENEMY_TYPES[e.type]?.canDive !== false; };
+    var leftCandidates = activeEnemies.filter(function(e) { return canDive(e) && (e.x + e.w / 2) < W * 0.5; });
+    var rightCandidates = activeEnemies.filter(function(e) { return canDive(e) && (e.x + e.w / 2) >= W * 0.5; });
 
-  const playerCenterX = player.x + player.width / 2;
-  const playerAimY = player.y + 20;
-  let launched = 0;
+    var pickFlank = function(arr, side) {
+      if (arr.length === 0) return null;
+      arr.sort(function(a, b) { return side < 0 ? a.x - b.x : b.x - a.x; });
+      return arr[0];
+    };
 
-  if (left && launched < diveSlotsLeft) {
-    launchSetPieceDiver(left, playerCenterX - 26, playerAimY, 1.12);
-    launched++;
+    var left = pickFlank(leftCandidates, -1);
+    var right = pickFlank(rightCandidates, 1);
+
+    var playerCenterX = player.x + player.width / 2;
+    var playerAimY = player.y + 20;
+    var launched = 0;
+
+    // closing_wings: aim at center (narrower spread)
+    var spreadX = beatEffect === 'closing_wings' ? 14 : 26;
+
+    if (left && launched < diveSlotsLeft) {
+      launchSetPieceDiver(left, playerCenterX - spreadX, playerAimY, 1.12);
+      launched++;
+    }
+    if (right && launched < diveSlotsLeft) {
+      launchSetPieceDiver(right, playerCenterX + spreadX, playerAimY, 1.12);
+      launched++;
+    }
+
+    if (launched > 0) {
+      sfxEnemyHit();
+      pushScreenShake('light', 2);
+    }
+
+    return launched;
   }
-  if (right && launched < diveSlotsLeft) {
-    launchSetPieceDiver(right, playerCenterX + 26, playerAimY, 1.12);
-    launched++;
+
+  // ---- KAMIKAZE RUSH (Level 12) ----
+  if (currentSetPiece === 'kamikaze_rush') {
+    var kamBeat = beatEffect || '';
+    if (kamBeat === 'survivors_scatter') return 0;
+
+    setPiecePatternTimer += dt;
+    var kamCooldown = 700;
+    if (kamBeat === 'dive_wave_1') kamCooldown = 1800;
+    if (kamBeat === 'dive_wave_2_3') kamCooldown = 900;
+    if (setPiecePatternTimer < kamCooldown) return 0;
+    setPiecePatternTimer = 0;
+
+    var kamCan = function(e) { return !e.diving && ENEMY_TYPES[e.type]?.canDive !== false; };
+    var kamCandidates = activeEnemies.filter(function(e) { return kamCan(e); });
+    if (kamCandidates.length === 0) return 0;
+
+    var launched = 0;
+    var maxLaunch = beatEffect === 'dive_wave_2_3' ? Math.min(3, diveSlotsLeft) : 1;
+    kamCandidates.sort(function() { return Math.random() - 0.5; });
+
+    for (var k = 0; k < kamCandidates.length && launched < maxLaunch; k++) {
+      var ke = kamCandidates[k];
+      launchSetPieceDiver(ke, player.x + player.width / 2 + (Math.random() - 0.5) * 40, player.y + 20, 1.2);
+      launched++;
+    }
+
+    if (launched > 0) {
+      sfxEnemyHit();
+      pushScreenShake('light', 2);
+    }
+    return launched;
   }
 
-  if (launched > 0) {
-    sfxEnemyHit();
-    pushScreenShake('light', 2);
-  }
-
-  return launched;
+  return 0;
 }

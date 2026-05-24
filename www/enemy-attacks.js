@@ -84,6 +84,10 @@ function fireImperialGuardCrossfire(shooters, side, variant = 0, burstPhase = 0)
 function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
   if (!currentSetPiece || setPieceIntroTimer > 0) return false;
 
+  // HC-VS-04C: read active setpiece beat effect for gameplay wiring
+  var beatEffect = (typeof window.getActiveSetpieceBeatEffect === 'function')
+    ? window.getActiveSetpieceBeatEffect() : null;
+
   const shooters = activeEnemies.filter(e => !e.diving && ENEMY_TYPES[e.type]?.shoots);
   if (shooters.length === 0) {
     if (currentSetPiece === 'imperial_guard') {
@@ -101,40 +105,70 @@ function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
 
   if (currentSetPiece === 'fortress') {
     setPieceFireTimer += dt;
-    const cooldown = Math.max(340, baseCooldown * 0.82);
-    const telegraphDuration = 220;
+    // HC-VS-04C: all_rows_active — fire all rows simultaneously, no cycling
+    if (beatEffect === 'all_rows_active') {
+      if (setPieceTelegraphTimer > 0) {
+        setPieceTelegraphTimer -= dt;
+        if (setPieceTelegraphTimer <= 0) {
+          setPieceTelegraphTimer = 0;
+          var allRows = [...new Set(shooters.map(function(e) { return e.row; }))].sort(function(a, b) { return a - b; });
+          for (var ri = 0; ri < allRows.length; ri++) {
+            var rShooters = shooters.filter(function(e) { return e.row === allRows[ri]; }).sort(function(a, b) { return a.x - b.x; });
+            if (rShooters.length === 0) continue;
+            var volley = pickVolleyShooters(rShooters, Math.min(3, rShooters.length));
+            var bulletSpeed = getDifficultySettings(level).bulletSpeed;
+            for (var vi = 0; vi < volley.length; vi++) {
+              var e = volley[vi];
+              var sx = e.x + e.w / 2;
+              var sy = e.y + e.h;
+              pushEnemyBullet(sx, sy, (vi - 1) * 0.8, bulletSpeed * 0.9, 3, 12, { kind: 'fortress', color: '#ffc66f' });
+            }
+          }
+          enemyLastShot = globalTime;
+          sfxEnemyHit();
+        }
+        return true;
+      }
+    }
+    // HC-VS-04C: row_by_row_clear — stop fire
+    if (beatEffect === 'row_by_row_clear') return true;
+
+    var cooldown = Math.max(340, baseCooldown * 0.82);
+    // HC-VS-04C: rows_descend — slower fire during descent
+    if (beatEffect === 'rows_descend') cooldown = Math.round(cooldown * 1.5);
+    var telegraphDuration = 220;
 
     if (setPieceTelegraphTimer > 0) {
       setPieceTelegraphTimer -= dt;
       if (setPieceTelegraphTimer <= 0) {
         setPieceTelegraphTimer = 0;
 
-        const rows = [...new Set(shooters.map(e => e.row))].sort((a, b) => a - b);
+        var rows = [...new Set(shooters.map(function(e) { return e.row; }))].sort(function(a, b) { return a - b; });
         if (rows.length === 0) return true;
 
-        const requestedLane = Math.max(0, Math.floor(setPieceTelegraphSide || 0));
-        const lane = rows.includes(requestedLane) ? requestedLane : rows[0];
-        const rowShooters = shooters
-          .filter(e => e.row === lane)
-          .sort((a, b) => a.x - b.x);
+        var requestedLane = Math.max(0, Math.floor(setPieceTelegraphSide || 0));
+        var lane = rows.includes(requestedLane) ? requestedLane : rows[0];
+        var rowShooters = shooters
+          .filter(function(e) { return e.row === lane; })
+          .sort(function(a, b) { return a.x - b.x; });
         if (rowShooters.length === 0) return true;
 
-        const volleyCount = Math.min(4, Math.max(2, Math.floor(2 + level / 8)));
-        const volley = pickVolleyShooters(rowShooters, volleyCount);
-        const bulletSpeed = getDifficultySettings(level).bulletSpeed;
-        const center = (volley.length - 1) / 2;
+        var volleyCount = Math.min(4, Math.max(2, Math.floor(2 + level / 8)));
+        var volley = pickVolleyShooters(rowShooters, volleyCount);
+        var bulletSpeed = getDifficultySettings(level).bulletSpeed;
+        var center = (volley.length - 1) / 2;
 
-        volley.forEach((e, i) => {
-          const sx = e.x + e.w / 2;
-          const sy = e.y + e.h;
-          const aimX = player.x + player.width / 2 + (i - center) * 14;
-          const aimY = player.y + player.height * 0.45;
-          const dx = aimX - sx;
-          const dy = aimY - sy;
-          const dist = Math.max(1, Math.hypot(dx, dy));
+        volley.forEach(function(e, i) {
+          var sx = e.x + e.w / 2;
+          var sy = e.y + e.h;
+          var aimX = player.x + player.width / 2 + (i - center) * 14;
+          var aimY = player.y + player.height * 0.45;
+          var dx = aimX - sx;
+          var dy = aimY - sy;
+          var dist = Math.max(1, Math.hypot(dx, dy));
 
-          const vx = clamp((dx / dist) * bulletSpeed * 0.72, -2.2, 2.2);
-          const vy = Math.max(2.2, bulletSpeed * 0.92);
+          var vx = clamp((dx / dist) * bulletSpeed * 0.72, -2.2, 2.2);
+          var vy = Math.max(2.2, bulletSpeed * 0.92);
           pushEnemyBullet(sx, sy, vx, vy, 3, 12, {
             kind: 'fortress',
             color: '#ffc66f'
@@ -149,12 +183,12 @@ function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
 
     if (setPieceFireTimer >= cooldown) {
       setPieceFireTimer = 0;
-      const rows = [...new Set(shooters.map(e => e.row))].sort((a, b) => a - b);
-      if (rows.length === 0) return true;
+      var rowKeys = [...new Set(shooters.map(function(e) { return e.row; }))].sort(function(a, b) { return a - b; });
+      if (rowKeys.length === 0) return true;
 
-      const lane = rows[setPieceLaneIndex % rows.length];
-      setPieceLaneIndex = (setPieceLaneIndex + 1) % rows.length;
-      setPieceTelegraphSide = lane;
+      var targetLane = rowKeys[setPieceLaneIndex % rowKeys.length];
+      setPieceLaneIndex = (setPieceLaneIndex + 1) % rowKeys.length;
+      setPieceTelegraphSide = targetLane;
       setPieceTelegraphTimer = telegraphDuration;
       sfxUIClick();
       vibrate('tap');
@@ -165,12 +199,19 @@ function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
   }
 
   if (currentSetPiece === 'imperial_guard') {
-    const diffMode = difficulties[difficultyIndex] || difficulties[0];
-    const advancedBurst = level >= 19 || diffMode.key === 'hardcore';
-    const cooldown = Math.max(advancedBurst ? 310 : 360, baseCooldown * (advancedBurst ? 0.68 : 0.72));
-    const telegraphDuration = advancedBurst ? 250 : 360;
-    const chainedTelegraphDuration = advancedBurst ? 175 : telegraphDuration;
-    const chainedDelay = advancedBurst ? 115 : 0;
+    // HC-VS-04C: guard_broken — stop fire
+    if (beatEffect === 'guard_broken') return true;
+
+    var diffMode = difficulties[difficultyIndex] || difficulties[0];
+    var advancedBurst = level >= 19 || (diffMode && diffMode.key === 'hardcore');
+    var igCooldown = Math.max(advancedBurst ? 310 : 360, baseCooldown * (advancedBurst ? 0.68 : 0.72));
+    // HC-VS-04C: formation_march — slow deliberate fire
+    if (beatEffect === 'formation_march') igCooldown = Math.round(igCooldown * 1.5);
+    // HC-VS-04C: crossfire_burst_2_chained — faster chained attacks
+    if (beatEffect === 'crossfire_burst_2_chained') { igCooldown = Math.round(igCooldown * 0.7); advancedBurst = true; }
+    var igTelegraphDuration = advancedBurst ? 250 : 360;
+    var chainedTelegraphDuration = advancedBurst ? 175 : igTelegraphDuration;
+    var chainedDelay = advancedBurst ? 115 : 0;
 
     setPieceFireTimer += dt;
     if (setPieceBurstDelayTimer > 0) {
@@ -209,11 +250,11 @@ function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
       return true;
     }
 
-    if (setPieceFireTimer >= cooldown) {
+    if (setPieceFireTimer >= igCooldown) {
       setPieceFireTimer = 0;
       setPieceLaneIndex = (setPieceLaneIndex + 1) % 2;
       setPieceTelegraphSide = (setPieceLaneIndex === 0) ? -1 : 1;
-      setPieceTelegraphTimer = telegraphDuration;
+      setPieceTelegraphTimer = igTelegraphDuration;
       setPieceBurstShotsRemaining = advancedBurst ? 2 : 1;
       setPieceBurstDelayTimer = 0;
       setPieceBurstVariant = (setPieceBurstVariant + 1) % 3;
@@ -227,30 +268,39 @@ function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
 
   if (currentSetPiece === 'split_storm') {
     setPieceFireTimer += dt;
-    const cooldown = Math.max(300, baseCooldown * 0.74);
-    const telegraphDuration = 190;
+    // HC-VS-04C: cleanup_minis — stop fire
+    if (beatEffect === 'cleanup_minis') return true;
+
+    var sCooldown = Math.max(300, baseCooldown * 0.74);
+    // HC-VS-04C: split_cascade — faster fire during climax
+    if (beatEffect === 'split_cascade') sCooldown = Math.round(sCooldown * 0.6);
+    var sTelegraphDuration = 190;
+    // HC-VS-04C: formation_settle — slower, more telegraph
+    if (beatEffect === 'formation_settle') { sCooldown = Math.round(sCooldown * 1.6); sTelegraphDuration = 280; }
 
     if (setPieceTelegraphTimer > 0) {
       setPieceTelegraphTimer -= dt;
       if (setPieceTelegraphTimer <= 0) {
         setPieceTelegraphTimer = 0;
 
-        const splitters = shooters.filter(e => e.type === 'alien6').sort((a, b) => a.x - b.x);
-        const pool = splitters.length > 0 ? splitters : shooters.slice().sort((a, b) => a.x - b.x);
+        var splitters = shooters.filter(function(e) { return e.type === 'alien6'; }).sort(function(a, b) { return a.x - b.x; });
+        var pool = splitters.length > 0 ? splitters : shooters.slice().sort(function(a, b) { return a.x - b.x; });
         if (pool.length === 0) return true;
 
-        const side = setPieceTelegraphSide === -1 ? -1 : 1;
-        const sidePool = pool.filter(e => side < 0 ? (e.x + e.w / 2) < W * 0.5 : (e.x + e.w / 2) >= W * 0.5);
-        const lanePool = sidePool.length > 0 ? sidePool : pool;
-        const shooter = lanePool[Math.floor(Math.random() * lanePool.length)];
+        var side = setPieceTelegraphSide === -1 ? -1 : 1;
+        var sidePool = pool.filter(function(e) { return side < 0 ? (e.x + e.w / 2) < W * 0.5 : (e.x + e.w / 2) >= W * 0.5; });
+        var lanePool = sidePool.length > 0 ? sidePool : pool;
+        var shooter = lanePool[Math.floor(Math.random() * lanePool.length)];
         if (!shooter) return true;
 
-        const sx = shooter.x + shooter.w / 2;
-        const sy = shooter.y + shooter.h;
-        const vy = getDifficultySettings(level).bulletSpeed * 0.9;
-        pushEnemyBullet(sx, sy, -1.25, vy, 4, 9, { kind: 'split_fan', color: '#7effd8' });
+        var sx = shooter.x + shooter.w / 2;
+        var sy = shooter.y + shooter.h;
+        var vy = getDifficultySettings(level).bulletSpeed * 0.9;
+        // HC-VS-04C: split_cascade — wider fan during climax
+        var fanSpread = beatEffect === 'split_cascade' ? 1.8 : 1.25;
+        pushEnemyBullet(sx, sy, -fanSpread, vy, 4, 9, { kind: 'split_fan', color: '#7effd8' });
         pushEnemyBullet(sx, sy, 0, vy, 4, 9, { kind: 'split_fan', color: '#7effd8' });
-        pushEnemyBullet(sx, sy, 1.25, vy, 4, 9, { kind: 'split_fan', color: '#7effd8' });
+        pushEnemyBullet(sx, sy, fanSpread, vy, 4, 9, { kind: 'split_fan', color: '#7effd8' });
 
         enemyLastShot = globalTime;
         sfxEnemyHit();
@@ -258,11 +308,11 @@ function runSetPieceFirePattern(activeEnemies, dt, baseCooldown) {
       return true;
     }
 
-    if (setPieceFireTimer >= cooldown) {
+    if (setPieceFireTimer >= sCooldown) {
       setPieceFireTimer = 0;
       setPieceLaneIndex = (setPieceLaneIndex + 1) % 2;
       setPieceTelegraphSide = setPieceLaneIndex === 0 ? -1 : 1;
-      setPieceTelegraphTimer = telegraphDuration;
+      setPieceTelegraphTimer = sTelegraphDuration;
       sfxUIClick();
       vibrate('tap');
       return true;

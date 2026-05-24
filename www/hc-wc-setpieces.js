@@ -469,6 +469,23 @@
   global.getSetpieceBossName = getSetpieceBossName;
   global.getSetpieceBossLevel = getSetpieceBossLevel;
 
+  // HC-VS-04C: expose active beat effect for gameplay wiring
+  global.getActiveSetpieceBeatEffect = function() {
+    if (!_sp.active) return null;
+    var spData = global._hcWcActiveSetpiece;
+    if (!spData || !spData.beats || _sp.beatIndex >= _sp.totalBeats) return null;
+    var beat = spData.beats[_sp.beatIndex];
+    return beat ? beat.effect : null;
+  };
+
+  global.getActiveSetpieceBeatIntensity = function() {
+    if (!_sp.active) return 0;
+    var spData = global._hcWcActiveSetpiece;
+    if (!spData || !spData.beats || _sp.beatIndex >= _sp.totalBeats) return 0;
+    var beat = spData.beats[_sp.beatIndex];
+    return beat ? (beat.intensity || 0) : 0;
+  };
+
   global.getSetpieceState = function() {
     return {
       active: _sp.active,
