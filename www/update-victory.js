@@ -40,7 +40,12 @@ function updateVictoryAndParticles(step, dt) {
         flashScreen = 30;
         victoryPhase = 2;
         victoryPhaseTimer = 0;
-        startMusic('victory');
+        // HC-AUD-03: crossfade into victory music instead of hard cut
+        if (typeof crossfadeMusicTo === 'function') {
+          crossfadeMusicTo('victory', 800);
+        } else {
+          startMusic('victory');
+        }
         if (typeof startAmbience === 'function') startAmbience('victory');
         if (typeof applyVictoryMix === 'function') applyVictoryMix(600);
       }

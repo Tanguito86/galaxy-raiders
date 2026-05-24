@@ -343,6 +343,10 @@ function playLeadNote(freq, length) {
 
 function getMusicThemeForLevel(lvl, isBoss) {
   if (isBoss) {
+    // HC-AUD-03: Per-boss identity mapping
+    var identityTrack = getBossIdentityTrack();
+    if (identityTrack) return identityTrack;
+    // Level-based fallback
     if (lvl >= 20) return 'finalBoss';
     if (lvl >= 15) return 'boss3';
     if (lvl >= 10) return 'boss2';
@@ -352,6 +356,19 @@ function getMusicThemeForLevel(lvl, isBoss) {
   if (lvl >= 11) return 'chapter3';
   if (lvl >= 6)  return 'chapter2';
   return 'chapter1';
+}
+
+// HC-AUD-03: Map boss pattern to musical identity
+function getBossIdentityTrack() {
+  if (typeof boss === 'undefined' || !boss || !boss.pattern) return null;
+  switch (boss.pattern) {
+    case 'crossfire': return 'boss1';   // CRABTRON — industrial
+    case 'zigzag':    return 'boss2';   // SERPENTRIX — unstable
+    case 'rotate':    return 'boss3';   // ORBITAL — cold pulse
+    case 'supreme':   return 'finalBoss'; // EMPERADOR — oppressive
+    case 'divebomb':  return 'boss2';   // TENIENTE — shares SERPENTRIX theme
+    default: return null;
+  }
 }
 
 function stopAllMusicIntervals() {

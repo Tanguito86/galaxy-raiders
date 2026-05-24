@@ -850,6 +850,11 @@ function updateBossStep(step, dt) {
     if (!boss._entranceAudioStarted) {
       boss._entranceAudioStarted = true;
       if (typeof sfxBossDescentStart === 'function') sfxBossDescentStart();
+      // HC-AUD-03: boss music swell during descent
+      if (typeof bossEntranceMusicSwell === 'function') {
+        var bossTrack = typeof getMusicThemeForLevel === 'function' ? getMusicThemeForLevel(level, true) : 'boss1';
+        bossEntranceMusicSwell(bossTrack);
+      }
     }
     // Expanding telegraph ring during descent
     if (typeof pushScreenShake === 'function' && Math.floor(boss._entranceTraveled / 20) !== Math.floor((boss._entranceTraveled - moveAmount) / 20)) {
