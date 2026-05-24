@@ -6,7 +6,7 @@
 var AC = null;
 var masterGain = null;
 var sfxEnabled = true;
-var sfxVol = 0.35;
+var sfxVol = 1.0;  // HC-AUD-stabilization: was 0.35; now envGain respects per-SFX vol, no double attenuation
 var audioUnlocked = false;
 
 function initAudio() {

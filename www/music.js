@@ -226,8 +226,8 @@ function getMusicDuckingConfig() {
     minLevel: 0.20,
     defaultLevel: 0.60,
     defaultMs: 140,
-    attackMs: 14,
-    releaseMs: 120
+    attackMs: 20,
+    releaseMs: 140
   };
 }
 

@@ -150,8 +150,8 @@ function startAmbience(type) {
     case 'boss':
       // Arena pulse — low pressure throb
       _rampAmbienceParam(nodes.noiseFilter.frequency, 180, 0.5);
-      _rampAmbienceParam(nodes.noiseGain.gain, 0.10, 0.8);
-      _rampAmbienceParam(nodes.droneGain.gain, 0.08, 0.8);
+      _rampAmbienceParam(nodes.noiseGain.gain, 0.08, 0.8);
+      _rampAmbienceParam(nodes.droneGain.gain, 0.07, 0.8);
       _rampAmbienceParam(nodes.droneOsc1.frequency, 38, 1.0);
       _rampAmbienceParam(nodes.droneOsc2.frequency, 38.6, 1.0);
       _rampAmbienceParam(nodes.pulseGain.gain, 0.10, 1.0);

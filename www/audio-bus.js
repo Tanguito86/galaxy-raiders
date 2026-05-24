@@ -15,9 +15,9 @@ function createAudioBuses() {
     var _limiter = null;
     try {
       _limiter = AC.createDynamicsCompressor();
-      _limiter.threshold.setValueAtTime(-6, AC.currentTime);
+      _limiter.threshold.setValueAtTime(-4, AC.currentTime);
       _limiter.knee.setValueAtTime(0, AC.currentTime);
-      _limiter.ratio.setValueAtTime(20, AC.currentTime);
+      _limiter.ratio.setValueAtTime(12, AC.currentTime);
       _limiter.attack.setValueAtTime(0.003, AC.currentTime);
       _limiter.release.setValueAtTime(0.050, AC.currentTime);
       _limiter.connect(AC.destination);
@@ -323,7 +323,7 @@ function initAudioBuses() {
 
 function applyBossFightMix(rampMs) {
   if (!ensureAudioBuses()) return;
-  setBusVolume('music', 0.78, rampMs || 400);
+  setBusVolume('music', 0.74, rampMs || 400);
   setBusVolume('boss', 1.0, rampMs || 300);
   setBusVolume('ambience', 0.65, rampMs || 500);
   setBusVolume('sfx', 1.0, rampMs || 200);

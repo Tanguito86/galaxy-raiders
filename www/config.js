@@ -70,8 +70,8 @@ const MUSIC_DUCKING_PRESETS = {
     minLevel: 0.20,
     defaultLevel: 0.60,
     defaultMs: 140,
-    attackMs: 14,
-    releaseMs: 120,
+    attackMs: 20,
+    releaseMs: 140,
     bigExplosion: { level: 0.42, ms: 230 },
     bossWarning: { level: 0.68, ms: 120 },
     playerHit: { level: 0.56, ms: 150 }
