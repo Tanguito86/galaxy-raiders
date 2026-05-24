@@ -106,7 +106,7 @@ function setMasterMute(muted) {
 
 function sfxBusNode() {
   if (audioBuses && audioBuses.sfx) return audioBuses.sfx;
-  return masterGain || AC.destination;
+  return masterGain || (AC && AC.destination) || null;
 }
 
 function bossBusNode() {

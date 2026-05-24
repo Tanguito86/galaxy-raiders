@@ -74,9 +74,9 @@
       key: "orbital",
       label: "Orbital",
       description: "Circular/elliptical movement. Attacks from all angles. Surround pressure.",
-      pressureStyle: "surround_constrict",
+      pressureStyle: "rotating_lane_compression",
       mobilityStyle: "elliptical_orbit",
-      pacingStyle: "cyclic",
+      pacingStyle: "hypnotic_cycle",
       fairnessBias: "medium",
       recoveryBias: "orbit_apex",
       telegraphStyle: "radial_ring",
@@ -1036,19 +1036,19 @@
 
       archetype: "ORBITAL",
 
-      pressureStyle: "surround_constrict",
+      pressureStyle: "rotating_lane_compression",
       mobilityStyle: "elliptical_orbit",
-      pacingStyle: "cyclic",
+      pacingStyle: "hypnotic_cycle",
       rageStyle: "tighter_orbit_faster_pulse",
       telegraphStyle: "radial_ring",
 
       primarySignature: "orbitalPressure",
       secondarySignature: "laserSweep",
 
-      recoveryBias: "orbit_apex",
-      fairnessBias: "medium",
+      recoveryBias: "orbit_apex_or_ring_gap",
+      fairnessBias: "high_readability",
 
-      weaknessReadability: "Tractor beam vertical column narrow — relies on ground telegraph",
+      weaknessReadability: "Rotating denial must leave readable ring gaps and never hide bullet lanes",
       transitionStyle: "pulse_expansion_ring_flash",
 
       transitionProfile: {
@@ -1070,8 +1070,8 @@
         maxDurationMs: 700,
         frequencyBias: 0.25,
         pressureDropRatio: 0.40,
-        weakpointIntent: "Orbital apex is natural recovery — boss at farthest point from player",
-        readabilityGoal: "Orbit apex phase should be a visible 'safe zone' in the cycle"
+        weakpointIntent: "Orbital apex and ring gaps are natural recovery windows in the cycle",
+        readabilityGoal: "Cold pulse arcs should signal lane compression before bullets arrive"
       },
 
       phasePlan: [
@@ -1163,19 +1163,19 @@
 
       archetype: "EXECUTIONER",
 
-      pressureStyle: "multidirectional_dominant",
+      pressureStyle: "final_exam_authority",
       mobilityStyle: "phased_evolution",
-      pacingStyle: "dramatic_arc",
+      pacingStyle: "apocalypse_arc",
       rageStyle: "ultimate_desperation_mode",
       telegraphStyle: "imperial_glow",
 
       primarySignature: "phaseBurst",
       secondarySignature: "arenaSplit",
 
-      recoveryBias: "phase_transition_only",
-      fairnessBias: "low",
+      recoveryBias: "phase_transition_and_signature_aftercare",
+      fairnessBias: "final_exam_readable",
 
-      weaknessReadability: "Teleport shockwave un-telegraphed — 0-frame reaction needed",
+      weaknessReadability: "Final authority must stay readable through telegraphed gold and ivory threat lanes",
       transitionStyle: "teleport_destination_glow_purple",
 
       transitionProfile: {
@@ -1197,8 +1197,8 @@
         maxDurationMs: 600,
         frequencyBias: 0.15,
         pressureDropRatio: 0.25,
-        weakpointIntent: "Phase transition is the only recovery — final boss privilege, earned between phases",
-        readabilityGoal: "Phase change FX must clearly signal 'safe window' before next imperial assault"
+        weakpointIntent: "Phase transition and signature aftercare are earned recovery windows",
+        readabilityGoal: "Phase change FX must clearly signal the next imperial assault before bullets dominate"
       },
 
       phasePlan: [

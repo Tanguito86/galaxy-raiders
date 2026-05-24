@@ -592,11 +592,11 @@ function updateThirdBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 380);
 
-    var arcCount2 = 4;
-    var arcSpan2 = 0.52;
-    var sideOffset = 0.48;
+    var arcCount2 = 3;
+    var arcSpan2 = 0.40;
+    var sideOffset = 0.62;
     var baseAngle2 = angleToPlayer2 + (target._orbitalArcSide === 0 ? -sideOffset : sideOffset);
-    var color2 = '#4477dd';
+    var color2 = '#66bbff';
 
     for (var j = 0; j < arcCount2; j++) {
       var tj = arcCount2 > 1 ? j / (arcCount2 - 1) : 0.5;
@@ -608,6 +608,19 @@ function updateThirdBossHardcorePattern(b, dt) {
       });
     }
 
+    var laneOffset = 54;
+    var laneSpeed = speed2 * 0.82;
+    pushEnemyBullet(center2.x - laneOffset - 2, target.y + target.h, 0, laneSpeed, 5, 11, {
+      kind: 'orb',
+      color: '#8fdcff',
+      sourceType: 'boss_orbital'
+    });
+    pushEnemyBullet(center2.x + laneOffset - 2, target.y + target.h, 0, laneSpeed, 5, 11, {
+      kind: 'orb',
+      color: '#8fdcff',
+      sourceType: 'boss_orbital'
+    });
+
     if (typeof sfxEnemyHit === 'function') sfxEnemyHit();
     return true;
   }
@@ -616,36 +629,26 @@ function updateThirdBossHardcorePattern(b, dt) {
     var center3 = getBossCenter(target);
     var speed3 = Math.min(3.2, _orbitalBulletSpeed());
     if (target._orbitalPhase3Angle === undefined) target._orbitalPhase3Angle = 0;
-    target._orbitalPhase3Angle += 0.32;
+    target._orbitalPhase3Angle += 0.24;
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'orbital_arc', 420);
 
-    var arcCount3 = Math.min(4, 4);
-    var arcSpan3 = 0.48;
+    var arcCount3 = 3;
+    var arcSpan3 = 0.34;
     var baseAngle3 = target._orbitalPhase3Angle;
-    var color3 = '#3366ff';
+    var color3 = '#8fdcff';
 
-    // Arc 1
-    for (var k = 0; k < arcCount3; k++) {
-      var tk = arcCount3 > 1 ? k / (arcCount3 - 1) : 0.5;
-      var ak = baseAngle3 - arcSpan3 / 2 + tk * arcSpan3;
-      pushEnemyBullet(center3.x - 2, center3.y, Math.cos(ak) * speed3, Math.sin(ak) * speed3, 5, 9, {
-        kind: 'basic',
-        color: color3,
-        sourceType: 'boss_orbital'
-      });
-    }
-
-    // Arc 2 (opposite)
-    var oppositeAngle3 = baseAngle3 + Math.PI;
-    for (var m = 0; m < arcCount3; m++) {
-      var tm = arcCount3 > 1 ? m / (arcCount3 - 1) : 0.5;
-      var am = oppositeAngle3 - arcSpan3 / 2 + tm * arcSpan3;
-      pushEnemyBullet(center3.x - 2, center3.y, Math.cos(am) * speed3, Math.sin(am) * speed3, 5, 9, {
-        kind: 'basic',
-        color: color3,
-        sourceType: 'boss_orbital'
-      });
+    for (var axis = 0; axis < 3; axis++) {
+      var axisAngle = baseAngle3 + axis * Math.PI * 2 / 3;
+      for (var k = 0; k < arcCount3; k++) {
+        var tk = arcCount3 > 1 ? k / (arcCount3 - 1) : 0.5;
+        var ak = axisAngle - arcSpan3 / 2 + tk * arcSpan3;
+        pushEnemyBullet(center3.x - 2, center3.y, Math.cos(ak) * speed3, Math.sin(ak) * speed3, 5, 9, {
+          kind: 'basic',
+          color: color3,
+          sourceType: 'boss_orbital'
+        });
+      }
     }
 
     if (typeof sfxBossWarning === 'function') sfxBossWarning();
@@ -897,7 +900,7 @@ function updateFifthBossHardcorePattern(b, dt) {
       var a = downBias - arcSpan / 2 + t * arcSpan;
       pushEnemyBullet(center.x - 2, target.y + target.h, Math.cos(a) * speed, Math.sin(a) * speed, 5, 12, {
         kind: 'basic',
-        color: '#aa77dd',
+        color: '#d6b8ff',
         sourceType: 'boss_emperador'
       });
     }
@@ -917,7 +920,7 @@ function updateFifthBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 480);
 
-    var color2 = '#9966dd';
+    var color2 = '#d7b8ff';
     var aimCount = 5;
     var aimSpan = 0.8;
 
@@ -968,7 +971,7 @@ function updateFifthBossHardcorePattern(b, dt) {
 
     if (typeof triggerBossTelegraph === 'function') triggerBossTelegraph(target, 'emperador_spread', 520);
 
-    var color3 = '#9977ee';
+    var color3 = '#ffdd88';
     var aimCount3 = 5;
     var aimSpan3 = 0.85;
 

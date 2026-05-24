@@ -133,6 +133,7 @@ function getEnemyFaction(type) {
 }
 
 function getEnemyFactionData(type) {
+  if (typeof getEnemyFaction !== 'function') return null;
   var key = getEnemyFaction(type);
   if (!key) return null;
   return ENEMY_FACTIONS[key];
@@ -265,19 +266,19 @@ function drawFactionMarker(ctx, enemy) {
   var pulse = 1 + Math.sin((typeof globalTime !== 'undefined' ? globalTime : Date.now()) * 0.004) * 0.3;
 
   ctx.save();
-  ctx.globalAlpha = 0.35 * pulse;
+  ctx.globalAlpha = 0.24 * pulse;
 
   // Small faction dot
   ctx.fillStyle = fd.accentColor;
   ctx.beginPath();
-  ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
   ctx.fill();
 
   // Faction color ring
   ctx.strokeStyle = fd.primaryColor;
   ctx.lineWidth = 0.8;
   ctx.beginPath();
-  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 3.4, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.restore();

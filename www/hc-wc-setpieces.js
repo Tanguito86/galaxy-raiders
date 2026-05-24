@@ -66,6 +66,23 @@
       bossTelegraphColor: '#44ccff'
     },
 
+    boss_prelude_20: {
+      label: 'THE THRONE MACHINE',
+      bossName: 'EMPERADOR',
+      bossLevel: 20,
+      level: 20,
+      narrativeArc: 'final_authority',
+      beats: [
+        { phase: 'ANTICIPATE', duration: 2600, text: 'THE THRONE MACHINE', effect: 'banner_fade',  intensity: 0.14 },
+        { phase: 'ESCALATE',   duration: 3200, text: '',                   effect: 'slow_pulse',   intensity: 0.22, pulseInterval: 1800 },
+        { phase: 'REVEAL',     duration: 2200, text: 'EMPERADOR ONLINE',   effect: 'banner_flash', intensity: 0.34 },
+        { phase: 'RESOLVE',    duration: 900,  text: '',                   effect: 'fade_in_boss', intensity: 0.18 }
+      ],
+      preludeColor: '#ffdd88',
+      tensionColor: '#554411',
+      bossTelegraphColor: '#ffeecc'
+    },
+
     // ---- TACTICAL SETPIECES ----
 
     setpiece_pincer_3: {

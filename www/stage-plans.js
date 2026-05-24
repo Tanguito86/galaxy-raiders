@@ -25,18 +25,18 @@ var STAGE_IDENTITIES = {
   10: { name: 'Serpent Den',           aggression: 0.55,spacing: 'medium', bulletStyle: 'boss',     pacing: 'collision',  recovery: 'medium',  climax: 'boss' },
 
   // Chapters 9-12: Late Mid Game
-  11: { name: 'Retreat Path',          aggression: 0.35,spacing: 'medium', bulletStyle: 'direct',   pacing: 'collapse',   recovery: 'long',    climax: 'none' },
-  12: { name: 'Desperate Charge',      aggression: 0.65,spacing: 'dense',  bulletStyle: 'kamikaze', pacing: 'pulse',      recovery: 'short',   climax: 'setpiece' },
-  13: { name: 'Patrol Disrupted',      aggression: 0.5, spacing: 'medium', bulletStyle: 'ambush',   pacing: 'pulse',      recovery: 'normal',  climax: 'none' },
-  14: { name: 'War Zone',              aggression: 0.6, spacing: 'dense',  bulletStyle: 'crossfire',pacing: 'sawtooth',   recovery: 'short',   climax: 'none' },
-  15: { name: 'The Ring',              aggression: 0.6, spacing: 'medium', bulletStyle: 'boss',     pacing: 'collision',  recovery: 'medium',  climax: 'boss' },
+  11: { name: 'No Man\'s Corridor',     aggression: 0.58,spacing: 'medium', bulletStyle: 'layered',  pacing: 'sawtooth',   recovery: 'normal',  climax: 'none' },
+  12: { name: 'Desperate Charge',      aggression: 0.68,spacing: 'dense',  bulletStyle: 'kamikaze', pacing: 'pulse',      recovery: 'short',   climax: 'setpiece' },
+  13: { name: 'Rotating Killbox',      aggression: 0.62,spacing: 'medium', bulletStyle: 'crossfire',pacing: 'pulse',      recovery: 'normal',  climax: 'none' },
+  14: { name: 'Orbital Siege Line',    aggression: 0.70,spacing: 'dense',  bulletStyle: 'orbital',  pacing: 'sawtooth',   recovery: 'short',   climax: 'setpiece' },
+  15: { name: 'The Ring Engine',       aggression: 0.68,spacing: 'medium', bulletStyle: 'boss',     pacing: 'collision',  recovery: 'medium',  climax: 'boss' },
 
   // Chapters 13-16: Late Game
-  16: { name: 'Chaos Cascade',         aggression: 0.75,spacing: 'dense',  bulletStyle: 'splitter', pacing: 'sawtooth',   recovery: 'short',   climax: 'setpiece' },
-  17: { name: 'Bullet Storm',          aggression: 0.8, spacing: 'dense',  bulletStyle: 'survival', pacing: 'overload',   recovery: 'minimal', climax: 'none' },
-  18: { name: 'Elite Guard',           aggression: 0.85,spacing: 'dense',  bulletStyle: 'mixed',    pacing: 'sawtooth',   recovery: 'short',   climax: 'setpiece' },
-  19: { name: 'The Hunt',              aggression: 0.85,spacing: 'medium', bulletStyle: 'boss',     pacing: 'collision',  recovery: 'medium',  climax: 'boss' },
-  20: { name: 'The Throne',            aggression: 1.0, spacing: 'dense',  bulletStyle: 'boss',     pacing: 'overload',   recovery: 'none',    climax: 'boss' }
+  16: { name: 'Chaos Cascade',         aggression: 0.78,spacing: 'dense',  bulletStyle: 'splitter', pacing: 'sawtooth',   recovery: 'short',   climax: 'setpiece' },
+  17: { name: 'Survival Corridor',     aggression: 0.82,spacing: 'dense',  bulletStyle: 'survival', pacing: 'overload',   recovery: 'minimal', climax: 'setpiece' },
+  18: { name: 'Imperial Guard',        aggression: 0.88,spacing: 'dense',  bulletStyle: 'mixed',    pacing: 'sawtooth',   recovery: 'short',   climax: 'setpiece' },
+  19: { name: 'The Hunt',              aggression: 0.88,spacing: 'medium', bulletStyle: 'boss',     pacing: 'collision',  recovery: 'medium',  climax: 'boss' },
+  20: { name: 'The Throne Machine',    aggression: 1.0, spacing: 'dense',  bulletStyle: 'boss',     pacing: 'overload',   recovery: 'phase',   climax: 'boss' }
 };
 
 // ============================================================
@@ -165,13 +165,14 @@ STAGE_PLANS[10] = {
 
 // ═══════════ Chapter 5: Late Mid Game ═══════════
 STAGE_PLANS[11] = {
-  identity: 'retreat_path',
-  tensionCurve: 'collapse',
+  identity: 'no_mans_corridor',
+  tensionCurve: 'sawtooth',
   sections: [
-    { type: 'warmup', durationMs: 8000, intensity: 0.25 },
-    { type: 'formation_showcase', durationMs: 18000, intensity: 0.45 },
-    { type: 'pressure_ramp', durationMs: 22000, intensity: 0.55 },
-    { type: 'relief', durationMs: 15000, intensity: 0.25 }
+    { type: 'warmup', durationMs: 7000, intensity: 0.35 },
+    { type: 'pressure_ramp', durationMs: 22000, intensity: 0.62 },
+    { type: 'relief', durationMs: 10000, intensity: 0.22 },
+    { type: 'crossfire', durationMs: 18000, intensity: 0.68 },
+    { type: 'relief', durationMs: 12000, intensity: 0.24 }
   ]
 };
 
@@ -187,26 +188,26 @@ STAGE_PLANS[12] = {
 };
 
 STAGE_PLANS[13] = {
-  identity: 'patrol_disrupted',
+  identity: 'rotating_killbox',
   tensionCurve: 'pulse',
   sections: [
-    { type: 'warmup', durationMs: 8000, intensity: 0.35 },
+    { type: 'warmup', durationMs: 7000, intensity: 0.38 },
     { type: 'ambush', durationMs: 12000, intensity: 0.70 },
-    { type: 'relief', durationMs: 12000, intensity: 0.20 },
-    { type: 'pressure_ramp', durationMs: 22000, intensity: 0.60 },
-    { type: 'crossfire', durationMs: 20000, intensity: 0.70 }
+    { type: 'relief', durationMs: 9000, intensity: 0.20 },
+    { type: 'crossfire', durationMs: 24000, intensity: 0.76 },
+    { type: 'relief', durationMs: 12000, intensity: 0.24 }
   ]
 };
 
 STAGE_PLANS[14] = {
-  identity: 'war_zone',
+  identity: 'orbital_siege_line',
   tensionCurve: 'sawtooth',
   sections: [
-    { type: 'warmup', durationMs: 8000, intensity: 0.40 },
-    { type: 'pressure_ramp', durationMs: 25000, intensity: 0.65 },
-    { type: 'relief', durationMs: 12000, intensity: 0.25 },
-    { type: 'crossfire', durationMs: 20000, intensity: 0.75 },
-    { type: 'relief', durationMs: 10000, intensity: 0.25 },
+    { type: 'warmup', durationMs: 7000, intensity: 0.42 },
+    { type: 'pressure_ramp', durationMs: 22000, intensity: 0.70 },
+    { type: 'relief', durationMs: 9000, intensity: 0.22 },
+    { type: 'survival_corridor', durationMs: 22000, intensity: 0.82 },
+    { type: 'relief', durationMs: 9000, intensity: 0.24 },
     { type: 'boss_prelude', durationMs: 12000, intensity: 0.25 }  // → ORBITAL
   ]
 };
@@ -236,14 +237,14 @@ STAGE_PLANS[16] = {
 };
 
 STAGE_PLANS[17] = {
-  identity: 'bullet_storm',
+  identity: 'survival_corridor',
   tensionCurve: 'overload',
   sections: [
-    { type: 'warmup', durationMs: 6000, intensity: 0.50 },
-    { type: 'survival_corridor', durationMs: 25000, intensity: 0.90 },
-    { type: 'relief', durationMs: 15000, intensity: 0.25 },
-    { type: 'crossfire', durationMs: 22000, intensity: 0.80 },
-    { type: 'relief', durationMs: 12000, intensity: 0.25 }
+    { type: 'warmup', durationMs: 6000, intensity: 0.52 },
+    { type: 'survival_corridor', durationMs: 26000, intensity: 0.90 },
+    { type: 'relief', durationMs: 12000, intensity: 0.24 },
+    { type: 'crossfire', durationMs: 24000, intensity: 0.84 },
+    { type: 'relief', durationMs: 10000, intensity: 0.24 }
   ]
 };
 
@@ -272,12 +273,12 @@ STAGE_PLANS[19] = {
 };
 
 STAGE_PLANS[20] = {
-  identity: 'the_throne',
+  identity: 'the_throne_machine',
   tensionCurve: 'overload',
   isBoss: true,
   bossPattern: 'supreme',
   sections: [
-    { type: 'boss_prelude', durationMs: 22000, intensity: 0.12 },
+    { type: 'boss_prelude', durationMs: 24000, intensity: 0.14 },
     { type: 'climax', durationMs: 999999, intensity: 1.0 }
   ]
 };
