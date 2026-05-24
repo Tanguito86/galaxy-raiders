@@ -1,0 +1,96 @@
+{
+  "factionId": "splitter_alien",
+  "project": "Galaxy Raiders",
+  "type": "enemy_faction",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "sheet": {
+    "path": "www/assets/sprites/enemies/splitter/splitter_alien_faction_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 128,
+    "frameHeight": 128,
+    "frames": 4
+  },
+  "recommendedGameplaySize": {
+    "width": 64,
+    "height": 64
+  },
+  "pivot": {
+    "x": 64,
+    "y": 64,
+    "anchor": "center"
+  },
+  "units": {
+    "splitter_alien_mk1_master": {
+      "roleClassification": "baseline_chaotic_split_unit",
+      "frame": 0,
+      "file": "www/assets/sprites/enemies/splitter/splitter_alien_mk1_master.png",
+      "notes": "Baseline Splitter organism with jagged multi-limb profile and cracked energy core."
+    },
+    "splitter_alien_elite": {
+      "roleClassification": "elite_heavy_splitter",
+      "frame": 1,
+      "file": "www/assets/sprites/enemies/splitter/splitter_alien_elite.png",
+      "notes": "Heavier elite-tier Splitter with denser armor plates and intensified core glow."
+    },
+    "splitter_alien_shard": {
+      "roleClassification": "fragmentation_swarmer",
+      "frame": 2,
+      "file": "www/assets/sprites/enemies/splitter/splitter_alien_shard.png",
+      "notes": "Small, sharp fragmentation variant that reads as a swarm-splitter with angular projectile-like form."
+    },
+    "splitter_alien_aberration": {
+      "roleClassification": "unstable_aberration_splitter",
+      "frame": 3,
+      "file": "www/assets/sprites/enemies/splitter/splitter_alien_aberration.png",
+      "notes": "Unstable, asymmetric aberration with irregular broken limbs and fractured energy pattern."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "unitId": "splitter_alien_mk1_master"
+    },
+    {
+      "frame": 1,
+      "unitId": "splitter_alien_elite"
+    },
+    {
+      "frame": 2,
+      "unitId": "splitter_alien_shard"
+    },
+    {
+      "frame": 3,
+      "unitId": "splitter_alien_aberration"
+    }
+  ],
+  "readabilityNotes": [
+    "Splitter units use angular, fractured silhouettes with erratic limb layouts and cracked energy cores.",
+    "The faction contrasts strongly with Scout (organic insectoid) and Suppressor (heavy siege): Splitters are chaotic, sharp, and asymmetric.",
+    "Jagged outlines and bright cracked-core energy make units recognizable through dense bullet patterns.",
+    "Variant silhouettes are distinct at 64x64: mk1 is baseline shattered, elite is heavier and more intact, shard is small and spiky, aberration is asymmetric and distorted."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended display size is 64x64 or larger due to the fine angular detail.",
+    "High-contrast cracked cores and sharp limb extensions remain visible on small mobile displays.",
+    "Shard units should not be over-scaled down because their small size already pushes readability limits.",
+    "Avoid excessive overlap for aberration formations as their irregular outlines can confuse peripheral recognition."
+  ],
+  "silhouetteNotes": [
+    "Faction identity comes from fractured, asymmetrical geometry, sharp angular extensions, cracked alien cores, and irregular limb arms.",
+    "Mk1 reads as a baseline shattered organism with balanced angular spread.",
+    "Elite reads as a heavier, more armored splitter through denser plate mass.",
+    "Shard reads as a swift fragmentation threat through compact spiky profile.",
+    "Aberration reads as a chaotic unstable threat through extreme irregularity and asymmetry."
+  ],
+  "chaosReadabilityNotes": [
+    "The Splitter faction is designed to read as intentionally chaotic while remaining gameplay-legible.",
+    "Sharp angular silhouettes and bright cracked energy cores provide fast-recognition hooks despite irregular forms.",
+    "Peripheral vision recognition is supported by the strong silhouette-vs-background contrast and core glow.",
+    "Mixed formations benefit from the wide silhouette variety: each variant has a distinct angular footprint."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, draw.js, runtime logic, collisions, hitboxes, AI, rank, or balance changes were made.",
+    "Sheet frame order is mk1_master, elite, shard, aberration."
+  ]
+}
