@@ -1,0 +1,37 @@
+{
+  "id": "player_s04_wedge",
+  "type": "player",
+  "source": "generated_gpt_image2_concept",
+  "status": "asset_prep_preview",
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "sheet": "player_s04_wedge_sheet.png",
+  "pivot": {
+    "x": 32,
+    "y": 42
+  },
+  "animations": {
+    "idle": [
+      0
+    ],
+    "bankLeft": [
+      1
+    ],
+    "bankRight": [
+      2
+    ],
+    "boost": [
+      3
+    ]
+  },
+  "readability": {
+    "targetScale": "36-48px gameplay height",
+    "androidReadable": true,
+    "notes": [
+      "strong wedge silhouette",
+      "cyan accents preserved",
+      "transparent padding preserved",
+      "placeholder animation frames only"
+    ]
+  }
+}
