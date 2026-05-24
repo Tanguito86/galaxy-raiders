@@ -1,0 +1,88 @@
+{
+  "factionId": "suppressor_alien",
+  "project": "Galaxy Raiders",
+  "type": "enemy_faction",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "sheet": {
+    "path": "www/assets/sprites/enemies/suppressor/suppressor_alien_faction_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 128,
+    "frameHeight": 128,
+    "frames": 4
+  },
+  "recommendedGameplaySize": {
+    "width": 64,
+    "height": 64
+  },
+  "pivot": {
+    "x": 64,
+    "y": 64,
+    "anchor": "center"
+  },
+  "units": {
+    "suppressor_alien_mk1_master": {
+      "roleClassification": "baseline_heavy_pressure_unit",
+      "frame": 0,
+      "file": "www/assets/sprites/enemies/suppressor/suppressor_alien_mk1_master.png",
+      "notes": "Baseline heavy suppressor with broad armored shell and oppressive frontal mass."
+    },
+    "suppressor_alien_elite": {
+      "roleClassification": "elite_command_pressure_unit",
+      "frame": 1,
+      "file": "www/assets/sprites/enemies/suppressor/suppressor_alien_elite.png",
+      "notes": "Larger command-feeling unit with heavier plating and stronger red-orange core presence."
+    },
+    "suppressor_alien_artillery": {
+      "roleClassification": "heavy_ranged_bombardment_unit",
+      "frame": 2,
+      "file": "www/assets/sprites/enemies/suppressor/suppressor_alien_artillery.png",
+      "notes": "Elongated siege organism with frontal bombardment structure and stable heavy geometry."
+    },
+    "suppressor_alien_brute": {
+      "roleClassification": "wide_tank_pressure_unit",
+      "frame": 3,
+      "file": "www/assets/sprites/enemies/suppressor/suppressor_alien_brute.png",
+      "notes": "Extremely wide tank-like alien organism with massive plating and crushing silhouette."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "unitId": "suppressor_alien_mk1_master"
+    },
+    {
+      "frame": 1,
+      "unitId": "suppressor_alien_elite"
+    },
+    {
+      "frame": 2,
+      "unitId": "suppressor_alien_artillery"
+    },
+    {
+      "frame": 3,
+      "unitId": "suppressor_alien_brute"
+    }
+  ],
+  "readabilityNotes": [
+    "Suppressor units are defined by broad armored mass, red-orange alien energy, thick biomechanical plating, and an oppressive frontal silhouette.",
+    "The faction contrasts strongly with Alien Scout: Suppressors are wider, heavier, warmer in palette, and less agile-looking.",
+    "Large shell panels and central red-orange cores preserve readability behind dense bullet patterns.",
+    "Variant silhouettes are distinct at 64x64: mk1 is baseline, elite is denser and higher-rank, artillery is elongated, and brute is the widest pressure unit."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended display size is 64x64 or larger due to the heavy silhouette language.",
+    "The red-orange core and broad armor blocks remain readable on small mobile displays.",
+    "Avoid excessive overlap for brute and elite formations because their wide silhouettes can visually merge."
+  ],
+  "silhouetteNotes": [
+    "Faction identity comes from rectangular mass, thick shell plating, red-orange energy seams, and industrial-organic siege structure.",
+    "Elite should read as a command-heavy variant through increased armor density.",
+    "Artillery should read as a ranged bombardment threat through its longer front structure.",
+    "Brute should read as a tank-like pressure enemy through maximum width and side armor mass."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, draw, runtime logic, collisions, hitboxes, AI, rank, or balance changes were made.",
+    "Sheet frame order is mk1_master, elite, artillery, brute."
+  ]
+}
