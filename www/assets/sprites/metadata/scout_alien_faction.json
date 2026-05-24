@@ -1,0 +1,88 @@
+{
+  "factionId": "scout_alien",
+  "project": "Galaxy Raiders",
+  "type": "enemy_faction",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "sheet": {
+    "path": "www/assets/sprites/enemies/scout/scout_alien_faction_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 128,
+    "frameHeight": 128,
+    "frames": 4
+  },
+  "recommendedGameplaySize": {
+    "width": 64,
+    "height": 64
+  },
+  "pivot": {
+    "x": 64,
+    "y": 64,
+    "anchor": "center"
+  },
+  "units": {
+    "scout_alien_mk1_master": {
+      "roleClassification": "standard_biomechanical_interceptor",
+      "frame": 0,
+      "file": "www/assets/sprites/enemies/scout/scout_alien_mk1_master.png",
+      "notes": "Baseline Alien Scout unit with balanced claw span, cyan core, and readable biomechanical shell."
+    },
+    "scout_alien_elite": {
+      "roleClassification": "elite_heavy_interceptor",
+      "frame": 1,
+      "file": "www/assets/sprites/enemies/scout/scout_alien_elite.png",
+      "notes": "Heavier high-rank unit with broader shell armor, stronger core presence, and more threatening claws."
+    },
+    "scout_alien_sniper": {
+      "roleClassification": "precision_hunter_interceptor",
+      "frame": 2,
+      "file": "www/assets/sprites/enemies/scout/scout_alien_sniper.png",
+      "notes": "Elongated precision unit with narrow profile and sharper forward geometry."
+    },
+    "scout_alien_swarm": {
+      "roleClassification": "light_swarm_interceptor",
+      "frame": 3,
+      "file": "www/assets/sprites/enemies/scout/scout_alien_swarm.png",
+      "notes": "Smaller disposable unit with simplified armor and compact group readability."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "unitId": "scout_alien_mk1_master"
+    },
+    {
+      "frame": 1,
+      "unitId": "scout_alien_elite"
+    },
+    {
+      "frame": 2,
+      "unitId": "scout_alien_sniper"
+    },
+    {
+      "frame": 3,
+      "unitId": "scout_alien_swarm"
+    }
+  ],
+  "readabilityNotes": [
+    "All units preserve the same hostile biomechanical faction language: bone-green shell, purple chitin, cyan core, and claw-like appendages.",
+    "The silhouettes remain separable at 64x64: elite is broad and heavy, sniper is long and narrow, swarm is compact, and mk1 sits between them.",
+    "Cyan cores and veins provide recognition markers without overwhelming the shell outline.",
+    "Low-noise interiors help the units remain readable behind dense bullet patterns."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended display size is 64x64; swarm can be reduced slightly for formations while retaining the cyan core marker.",
+    "Outer claw arcs and central shell shape remain legible on small mobile displays.",
+    "Avoid scaling below roughly 40x40 for swarm-heavy scenes unless supported by strong contrast or spacing."
+  ],
+  "silhouetteNotes": [
+    "Faction identity is defined by insectoid claw span, descending alien body axis, organic armor shell, and a central cyan core.",
+    "Elite reads as the highest-threat silhouette due to width and armor mass.",
+    "Sniper reads as a precision threat through its thin forward profile.",
+    "Swarm reads as a fast disposable unit through a smaller, simpler outline."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, runtime logic, collision, hitbox, AI, rank, or balance changes were made.",
+    "Sheet frame order is mk1_master, elite, sniper, swarm."
+  ]
+}
