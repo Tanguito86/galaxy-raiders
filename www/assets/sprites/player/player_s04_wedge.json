@@ -1,0 +1,111 @@
+{
+  "id": "player_s04_wedge",
+  "project": "Galaxy Raiders",
+  "ship": "S04 Wedge",
+  "type": "player_ship",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "frameSize": {
+    "width": 128,
+    "height": 128
+  },
+  "sheet": {
+    "path": "www/assets/sprites/player/player_s04_wedge_sheet_2x4.png",
+    "columns": 4,
+    "rows": 2,
+    "frameOrder": [
+      "idle",
+      "bank_left",
+      "bank_right",
+      "thrust_01",
+      "thrust_02",
+      "boost",
+      "damage",
+      "respawn"
+    ]
+  },
+  "files": {
+    "idle": "www/assets/sprites/player/player_s04_wedge_idle.png",
+    "bank_left": "www/assets/sprites/player/player_s04_wedge_bank_left.png",
+    "bank_right": "www/assets/sprites/player/player_s04_wedge_bank_right.png",
+    "thrust_01": "www/assets/sprites/player/player_s04_wedge_thrust_01.png",
+    "thrust_02": "www/assets/sprites/player/player_s04_wedge_thrust_02.png",
+    "boost": "www/assets/sprites/player/player_s04_wedge_boost.png",
+    "damage": "www/assets/sprites/player/player_s04_wedge_damage.png",
+    "respawn": "www/assets/sprites/player/player_s04_wedge_respawn.png"
+  },
+  "pivot": {
+    "x": 64,
+    "y": 64,
+    "anchor": "center"
+  },
+  "animations": {
+    "idle": {
+      "frames": [0],
+      "durationMs": 120,
+      "loop": true
+    },
+    "bank_left": {
+      "frames": [1],
+      "durationMs": 120,
+      "loop": true
+    },
+    "bank_right": {
+      "frames": [2],
+      "durationMs": 120,
+      "loop": true
+    },
+    "thrust_01": {
+      "frames": [3],
+      "durationMs": 100,
+      "loop": true
+    },
+    "thrust_02": {
+      "frames": [4],
+      "durationMs": 100,
+      "loop": true
+    },
+    "boost": {
+      "frames": [5],
+      "durationMs": 80,
+      "loop": true
+    },
+    "damage": {
+      "frames": [6],
+      "durationMs": 120,
+      "loop": true
+    },
+    "respawn": {
+      "frames": [7],
+      "durationMs": 120,
+      "loop": true
+    }
+  },
+  "readability": {
+    "targetDisplaySize": {
+      "width": 64,
+      "height": 64
+    },
+    "notes": [
+      "Strong wedge silhouette remains identifiable on black and dark blue backgrounds.",
+      "Cyan accents help separate the ship from bullet clutter without replacing the hull outline.",
+      "Damage and respawn effects stay attached to the ship and do not obscure the primary triangular body.",
+      "Boost and thrust states extend below the hull while preserving the same nose and wing read."
+    ]
+  },
+  "androidReadability": {
+    "validatedDisplaySize": {
+      "width": 64,
+      "height": 64
+    },
+    "notes": [
+      "Readable at small mobile scale because the nose, side wings, and central cyan spine remain high contrast.",
+      "Low-detail hull treatment avoids noisy internal pixels when scaled down.",
+      "Peripheral recognition holds in simulated dense bullet scenes."
+    ]
+  },
+  "integrationNotes": [
+    "Metadata only; no runtime, hitbox, draw, or player logic changes.",
+    "Pivot is centered for preview and sprite-sheet assembly. Gameplay hitbox tuning remains external."
+  ]
+}
