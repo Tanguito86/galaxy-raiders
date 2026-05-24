@@ -34,7 +34,11 @@ var _stageDirector = {
   preludeActive: false,
 
   // Metadata for current section
-  sectionMeta: null
+  sectionMeta: null,
+
+  // HC-VS-04B: section transition buffer
+  transitionGateMs: 0,
+  transitionGateStartedAt: 0
 };
 
 // ============================================================
@@ -89,6 +93,18 @@ window.startStageSection = function(sectionType, meta) {
     _stageDirector.recoveryAvailable = true;
   } else if (sectionType === 'boss_prelude') {
     _stageDirector.preludeActive = true;
+  } else if (sectionType === 'stage_opening') {
+    _stageDirector.consecutivePressure = 0;
+    _stageDirector.recoveryAvailable = true;
+    // HC-VS-04B: stage opening banner — announce the stage
+    if (typeof setPieceBannerText !== 'undefined' && typeof setPieceBannerTimer !== 'undefined') {
+      var levelNum = _stageDirector.currentLevel;
+      var identity = (typeof getStageIdentity === 'function') ? getStageIdentity(levelNum) : null;
+      if (identity && identity.name) {
+        setPieceBannerText = 'STAGE ' + levelNum + ': ' + identity.name.toUpperCase();
+        setPieceBannerTimer = 3000;
+      }
+    }
   }
 
   if (sectionType === 'climax') {
@@ -109,6 +125,11 @@ window.updateStageSection = function(dt) {
   if (!_stageDirector.active) return;
 
   _stageDirector.sectionDurationMs += (dt || 16.667);
+
+  // HC-VS-04B: decay section transition gate
+  if (_stageDirector.transitionGateMs > 0) {
+    _stageDirector.transitionGateMs = Math.max(0, _stageDirector.transitionGateMs - (dt || 16.667));
+  }
 
   // Tension rolling average (last 10 tension values)
   _stageDirector.tensionRolling.push(_stageDirector.tension);
@@ -149,6 +170,24 @@ window.endStageSection = function() {
 // Transition between sections
 window.transitionStageSection = function(newType, meta) {
   window.endStageSection();
+
+  // HC-VS-04B: section transition buffer (~350ms spawn gate + silence)
+  var prevType = _stageDirector.currentSection;
+  var isMajorTransition = (prevType !== newType) &&
+    ((prevType === 'crossfire' && newType === 'boss_prelude') ||
+     (prevType === 'boss_prelude' && newType === 'climax') ||
+     (prevType === 'crossfire' && newType === 'relief') ||
+     (prevType === 'survival_corridor' && newType === 'relief') ||
+     (prevType === 'relief' && newType === 'pressure_ramp'));
+  if (isMajorTransition) {
+    _stageDirector.transitionGateMs = 350;
+    _stageDirector.transitionGateStartedAt = typeof globalTime === 'number' ? globalTime : Date.now();
+    // Brief silence via encounter director if available
+    if (typeof window.forceEncounterSilence === 'function') {
+      window.forceEncounterSilence(350);
+    }
+  }
+
   window.startStageSection(newType, meta);
 };
 
@@ -307,6 +346,8 @@ window.resetStageDirector = function() {
   _stageDirector.climaxActive = false;
   _stageDirector.preludeActive = false;
   _stageDirector.sectionMeta = null;
+  _stageDirector.transitionGateMs = 0;
+  _stageDirector.transitionGateStartedAt = 0;
 };
 
 // ============================================================
@@ -558,6 +599,11 @@ window.getStageInfluenceState = function() {
   var readabilityPressure = 0;
 
   switch (sectionType) {
+    case 'stage_opening':
+      intensityBias = 0.18; aggressionBias = 0.12; densityBias = 0.15;
+      spacingBias = 0.75; recoveryBias = 0.85; setpieceBias = 0;
+      readabilityPressure = 0.08;
+      break;
     case 'warmup':
       intensityBias = 0.2; aggressionBias = 0.1; densityBias = 0.15;
       spacingBias = 0.8; recoveryBias = 0.9; setpieceBias = 0;
@@ -761,6 +807,15 @@ window.validateStageRecoveryIntegrity = function() {
     tension: _stageDirector.tension,
     consecutivePressure: _stageDirector.consecutivePressure
   };
+};
+
+// HC-VS-04B: check if section transition gate is active
+window.isStageSectionTransitionGated = function() {
+  return _stageDirector.transitionGateMs > 0;
+};
+
+window.getStageSectionTransitionGateMs = function() {
+  return _stageDirector.transitionGateMs;
 };
 
 // ============================================================

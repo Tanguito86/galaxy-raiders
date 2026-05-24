@@ -667,6 +667,13 @@
   global.resetEncounterDirectorForLevel = resetEncounterDirectorForLevel;
   global.getCurrentPressure = function() { return director.pressure; };
   global.isSilenceWindowActive = function() { return director.enabled && director.silenceTimer > 0; };
+  // HC-VS-04B: section transition buffer — force brief silence + cooldown
+  global.forceEncounterSilence = function(ms) {
+    var dur = Math.max(0, Math.min(1000, ms || 350));
+    director.silenceTimer = Math.max(director.silenceTimer, dur);
+    director.spawnCooldown = Math.max(director.spawnCooldown, dur);
+    director._waveClearSilenceCounted = true;
+  };
   global.getEncounterDirectorState = function() {
     return {
       enabled: director.enabled,

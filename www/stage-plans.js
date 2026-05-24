@@ -51,10 +51,9 @@ STAGE_PLANS[1] = {
   identity: 'first_contact',
   tensionCurve: 'slow_burn',
   sections: [
-    { type: 'warmup', durationMs: 20000, intensity: 0.20 },
-    { type: 'relief', durationMs: 10000, intensity: 0.10 },
-    { type: 'formation_showcase', durationMs: 15000, intensity: 0.35 },
-    { type: 'relief', durationMs: 12000, intensity: 0.15 }
+    { type: 'stage_opening', durationMs: 10000, intensity: 0.18 },
+    { type: 'formation_showcase', durationMs: 20000, intensity: 0.35 },
+    { type: 'relief', durationMs: 15000, intensity: 0.15 }
   ]
 };
 
@@ -85,11 +84,11 @@ STAGE_PLANS[4] = {
   identity: 'swarm_breach',
   tensionCurve: 'sawtooth',
   sections: [
-    { type: 'warmup', durationMs: 10000, intensity: 0.30 },
-    { type: 'pressure_ramp', durationMs: 25000, intensity: 0.55 },
-    { type: 'relief', durationMs: 12000, intensity: 0.20 },
+    { type: 'warmup', durationMs: 8000, intensity: 0.30 },
+    { type: 'pressure_ramp', durationMs: 20000, intensity: 0.55 },
+    { type: 'relief', durationMs: 8000, intensity: 0.20 },
     { type: 'crossfire', durationMs: 20000, intensity: 0.65 },
-    { type: 'boss_prelude', durationMs: 12000, intensity: 0.25 }  // → CRABTRON next
+    { type: 'boss_prelude', durationMs: 10000, intensity: 0.20 }  // → CRABTRON next: single clean buildup
   ]
 };
 
@@ -100,7 +99,7 @@ STAGE_PLANS[5] = {
   isBoss: true,
   bossPattern: 'crossfire',
   sections: [
-    { type: 'boss_prelude', durationMs: 10000, intensity: 0.20 },
+    { type: 'boss_prelude', durationMs: 4000, intensity: 0.15 },
     { type: 'climax', durationMs: 999999, intensity: 1.0 }
   ]
 };

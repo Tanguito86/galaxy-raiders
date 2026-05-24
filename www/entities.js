@@ -1126,7 +1126,9 @@ function initBoss() {
   delete boss.pulseTimer;
   delete boss.chargeMode;
   delete boss.retreating;
-  delete boss.isTeleporting
+  delete boss.isTeleporting;
+  delete boss._entranceActive;
+  delete boss._entranceTraveled;
   
   // âœ… Cargar datos especÃ­ficos del boss segÃºn el nivel
   const bossData = BOSS_DATA[level];
@@ -1154,7 +1156,13 @@ function initBoss() {
    
   boss.color = bossData.color;
   boss.x = W / 2 - boss.w / 2;
-  boss.y = 100;
+  // HC-VS-04B: boss entrance — start off-screen, descend dramatically
+  boss.y = -(boss.h + 60);
+  boss._entranceActive = true;
+  boss._entranceTargetY = 100;
+  boss._entranceSpeedPxPerMs = 0.16;
+  boss._entranceTraveled = 0;
+  boss._entranceTotal = Math.abs(boss._entranceTargetY - boss.y);
   boss.maxHp = bossData.baseHp;
   boss.hp = boss.maxHp;
   boss.dir = 1;

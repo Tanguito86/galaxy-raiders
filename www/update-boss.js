@@ -841,6 +841,28 @@ function drawEmperadorSignatureBurstTelegraph(ctx) {
 function updateBossStep(step, dt) {
   if (!boss.active) return;
 
+  // HC-VS-04B: boss entrance descent — smooth arrival from off-screen
+  if (boss._entranceActive) {
+    var moveAmount = boss._entranceSpeedPxPerMs * dt;
+    boss.y += moveAmount;
+    boss._entranceTraveled += moveAmount;
+    // Expanding telegraph ring during descent
+    if (typeof pushScreenShake === 'function' && Math.floor(boss._entranceTraveled / 20) !== Math.floor((boss._entranceTraveled - moveAmount) / 20)) {
+      pushScreenShake('light', 2);
+    }
+    if (boss.y >= boss._entranceTargetY) {
+      boss.y = boss._entranceTargetY;
+      boss._entranceActive = false;
+      if (typeof pushScreenShake === 'function') pushScreenShake('heavy', 16);
+      if (typeof sfxBossWarning === 'function') sfxBossWarning();
+      if (typeof flashScreen !== 'undefined') flashScreen = 15;
+      // Show boss name banner at landing
+      if (typeof setPieceBannerText !== 'undefined') setPieceBannerText = boss.name || 'BOSS';
+      if (typeof setPieceBannerTimer !== 'undefined') setPieceBannerTimer = 2000;
+    }
+    return;
+  }
+
   // HC-BD-03: Boss Director phase orchestration hook (passive, read-only)
   if (typeof window.updateBossDirectorState === 'function') {
     window.updateBossDirectorState(boss);
