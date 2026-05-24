@@ -1,6 +1,6 @@
 // =====================
 // GALAXY RAIDERS - audio-engine.js
-// Fase 5: Fachada de audio unificada
+// HC-AUD-01: Bus-aware unified audio facade
 // =====================
 
 (function() {
@@ -119,9 +119,77 @@
       isMuted = !!value;
       if (isMuted) {
         if (typeof stopMusicPlayback === 'function') stopMusicPlayback();
+        if (typeof stopMusicFromBuffer === 'function') stopMusicFromBuffer(100);
+        if (typeof stopAmbience === 'function') stopAmbience(200);
+        if (typeof setMasterMute === 'function') setMasterMute(true);
       } else {
+        if (typeof setMasterMute === 'function') setMasterMute(false);
         if (typeof refreshMusicDucking === 'function') refreshMusicDucking();
         if (typeof syncMuteButtonState === 'function') syncMuteButtonState();
+      }
+    },
+
+    // HC-AUD-01: Bus volume control API
+    setBusVolume: function(busName, value, rampMs) {
+      if (typeof setBusVolume === 'function') setBusVolume(busName, value, rampMs);
+    },
+
+    getBusVolume: function(busName) {
+      if (typeof getBusVolume === 'function') return getBusVolume(busName);
+      return 1.0;
+    },
+
+    setMasterVolume: function(value, rampMs) {
+      if (typeof setMasterVolume === 'function') setMasterVolume(value, rampMs);
+    },
+
+    // HC-AUD-01: OGG music controls
+    oggRegister: function(key, src, loop) {
+      if (typeof oggRegister === 'function') oggRegister(key, src, loop);
+    },
+
+    oggPlay: function(key, fadeInMs) {
+      if (typeof oggPlay === 'function') oggPlay(key, fadeInMs);
+    },
+
+    oggStop: function(fadeOutMs) {
+      if (typeof oggStop === 'function') oggStop(fadeOutMs);
+    },
+
+    // HC-AUD-01: Duck a bus
+    duckBus: function(busName, ms, level) {
+      if (typeof requestBusDuck === 'function') requestBusDuck(busName, ms, level);
+    },
+
+    // HC-AUD-02: Ambience control
+    startAmbience: function(type) {
+      if (typeof startAmbience === 'function') startAmbience(type);
+    },
+
+    stopAmbience: function(fadeOutMs) {
+      if (typeof stopAmbience === 'function') stopAmbience(fadeOutMs);
+    },
+
+    setAmbienceIntensity: function(factor) {
+      if (typeof setAmbienceIntensity === 'function') setAmbienceIntensity(factor);
+    },
+
+    // HC-AUD-02: Buffer-based music control
+    crossfadeMusic: function(trackName, crossfadeMs) {
+      if (typeof crossfadeMusicTo === 'function') crossfadeMusicTo(trackName, crossfadeMs);
+    },
+
+    preloadMusic: function() {
+      if (typeof preloadAllMusicTracks === 'function') preloadAllMusicTracks();
+    },
+
+    // HC-AUD-02: Mute with ambience awareness
+    setMutedFull: function(value) {
+      AudioEngine.setMuted(value);
+      if (value) {
+        if (typeof stopAmbience === 'function') stopAmbience(200);
+      } else if (state === 'menu') {
+        if (typeof startAmbience === 'function') startAmbience('menu');
       }
     }
   };

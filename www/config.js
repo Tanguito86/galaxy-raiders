@@ -89,6 +89,14 @@ const MUSIC_DUCKING_PRESETS = {
   }
 };
 
+// HC-AUD-01: Bus volume presets
+var BUS_VOLUME_PRESETS = {
+  default: { master: 1.0, music: 0.85, sfx: 1.0, ui: 0.90, boss: 1.0, ambience: 0.75 },
+  musicFocus: { master: 1.0, music: 1.0, sfx: 0.70, ui: 0.70, boss: 0.80, ambience: 0.60 },
+  sfxFocus: { master: 1.0, music: 0.45, sfx: 1.0, ui: 0.85, boss: 1.0, ambience: 0.40 },
+  bossFight: { master: 1.0, music: 0.72, sfx: 1.0, ui: 0.80, boss: 1.1, ambience: 0.55 }
+};
+
 let musicDuckingPresetKey = 'cinematic';
 let MUSIC_DUCKING = JSON.parse(JSON.stringify(MUSIC_DUCKING_PRESETS[musicDuckingPresetKey]));
 
@@ -109,4 +117,15 @@ function cycleMusicDuckingPreset() {
 
 function getMusicDuckingPreset() {
   return musicDuckingPresetKey;
+}
+
+// HC-AUD-01: Apply a bus volume preset
+function applyBusVolumePreset(name, rampMs) {
+  var preset = BUS_VOLUME_PRESETS[name];
+  if (!preset) return false;
+  var keys = Object.keys(preset);
+  for (var i = 0; i < keys.length; i++) {
+    if (typeof setBusVolume === 'function') setBusVolume(keys[i], preset[keys[i]], rampMs || 0);
+  }
+  return true;
 }

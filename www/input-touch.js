@@ -69,6 +69,7 @@ if (joystickContainer && joystickStick) {
     if (state === 'menu' && !menuMusicStarted && !isMuted) {
       initAudio();
       startMusic('menu');
+      if (typeof startAmbience === 'function') startAmbience('menu');
       menuMusicStarted = true;
     }
 

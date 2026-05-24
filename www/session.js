@@ -5,6 +5,7 @@
 function stopMusicPlayback() {
   if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
   if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
+  if (typeof stopMusicFromBuffer === 'function') stopMusicFromBuffer(100);
 }
 
 function updatePauseButtonForState(nextState = state) {

@@ -41,6 +41,8 @@ function updateVictoryAndParticles(step, dt) {
         victoryPhase = 2;
         victoryPhaseTimer = 0;
         startMusic('victory');
+        if (typeof startAmbience === 'function') startAmbience('victory');
+        if (typeof applyVictoryMix === 'function') applyVictoryMix(600);
       }
     }
     

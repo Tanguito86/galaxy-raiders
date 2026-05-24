@@ -80,6 +80,7 @@ document.addEventListener('keydown', e => {
   if (state === 'menu' && !menuMusicStarted && !isMuted) {
     initAudio();
     startMusic('menu');
+    if (typeof startAmbience === 'function') startAmbience('menu');
     menuMusicStarted = true;
   }
 
@@ -91,8 +92,11 @@ document.addEventListener('keydown', e => {
     if (isMuted) {
       if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
       if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
+      if (typeof stopMusicFromBuffer === 'function') stopMusicFromBuffer(100);
+      if (typeof stopAmbience === 'function') stopAmbience(200);
     } else if (!isMuted && state === 'playing') {
       startMusic(getMusicThemeForLevel(level, boss.active));
+      if (typeof startAmbience === 'function') startAmbience(boss.active ? 'boss' : 'stage');
     }
     return;
   }

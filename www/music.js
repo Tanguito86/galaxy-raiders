@@ -1,5 +1,6 @@
 ﻿// =====================
 // GALAXY RAIDERS - music.js
+// HC-AUD-01: Routed through master bus, OGG-ready
 // =====================
 
 // --- MUSIC SYSTEM (8-BIT TRACKER) ---
@@ -234,10 +235,13 @@ function ensureMusicBus() {
   if (!AC) return false;
   if (musicBusGain) return true;
 
-  const mix = getMusicDuckingConfig();
+  var mix = getMusicDuckingConfig();
   musicBusGain = AC.createGain();
   musicBusGain.gain.value = mix.baseGain;
-  musicBusGain.connect(AC.destination);
+
+  // Route through audioBuses.master if available, else fallback to destination
+  var dest = (typeof audioBuses !== 'undefined' && audioBuses && audioBuses.music) ? audioBuses.music : AC.destination;
+  musicBusGain.connect(dest);
   return true;
 }
 
@@ -255,34 +259,42 @@ function applyMusicBusGain(level, rampMs) {
 
 function refreshMusicDucking() {
   if (!AC || !ensureMusicBus()) return;
-  const mix = getMusicDuckingConfig();
+  var mix = getMusicDuckingConfig();
 
   if (isMuted) {
     applyMusicBusGain(0.0001, mix.attackMs);
     return;
   }
 
-  const now = AC.currentTime;
-  const duckingActive = now < musicDuckUntil;
-  const targetLevel = duckingActive ? musicDuckLevel : 1.0;
+  var now = AC.currentTime;
+  var duckingActive = now < musicDuckUntil;
+  var targetLevel = duckingActive ? musicDuckLevel : 1.0;
   if (!duckingActive) musicDuckLevel = 1.0;
 
   applyMusicBusGain(targetLevel, duckingActive ? mix.attackMs : mix.releaseMs);
+
+  // Also refresh bus-level ducking from audio-bus.js
+  if (typeof refreshBusDucking === 'function') refreshBusDucking();
 }
 
 function requestMusicDuck(ms, level) {
   initAudio();
   if (!AC || isMuted || !ensureMusicBus()) return;
 
-  const mix = getMusicDuckingConfig();
-  const now = AC.currentTime;
-  const duckMs = Math.max(0, Number(ms ?? mix.defaultMs) || mix.defaultMs);
-  const duckLevel = Math.max(mix.minLevel, Math.min(1.0, Number(level ?? mix.defaultLevel) || mix.defaultLevel));
+  var mix = getMusicDuckingConfig();
+  var now = AC.currentTime;
+  var duckMs = Math.max(0, Number(ms ?? mix.defaultMs) || mix.defaultMs);
+  var duckLevel = Math.max(mix.minLevel, Math.min(1.0, Number(level ?? mix.defaultLevel) || mix.defaultLevel));
 
   if (now >= musicDuckUntil) musicDuckLevel = 1.0;
   musicDuckLevel = Math.min(musicDuckLevel, duckLevel);
   musicDuckUntil = Math.max(musicDuckUntil, now + duckMs / 1000);
   refreshMusicDucking();
+
+  // Also trigger bus-level ducking for music bus
+  if (typeof requestBusDuck === 'function') {
+    requestBusDuck('music', duckMs, duckLevel);
+  }
 }
 
 
@@ -353,6 +365,13 @@ function startMusic(trackName) {
   ensureMusicBus();
   refreshMusicDucking();
 
+  // Prefer buffer-based playback (HC-AUD-02)
+  if (typeof playMusicFromBuffer === 'function') {
+    var used = playMusicFromBuffer(trackName, 300);
+    if (used) return;
+  }
+
+  // Fallback: legacy tracker
   stopAllMusicIntervals();
 
   currentTrack = trackName;
@@ -418,16 +437,19 @@ function startMusic(trackName) {
 }
 
 // --- SFX ---
-function playTone(freq, type, duration, vol = 0.1) {
+function playTone(freq, type, duration, vol) {
+  if (vol === void 0) vol = 0.1;
   if (!AC || isMuted) return;
-  const osc = AC.createOscillator();
-  const gain = AC.createGain();
+  var osc = AC.createOscillator();
+  var gain = AC.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, AC.currentTime);
   gain.gain.setValueAtTime(vol, AC.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.01, AC.currentTime + duration);
   osc.connect(gain);
-  gain.connect(AC.destination);
+  ensureMusicBus();
+  var dest = musicBusGain || AC.destination;
+  gain.connect(dest);
   osc.start();
   osc.stop(AC.currentTime + duration);
 }
@@ -435,14 +457,16 @@ function playTone(freq, type, duration, vol = 0.1) {
 
 function playUfoSound() {
   if (!AC || isMuted) return;
-  const osc = AC.createOscillator();
-  const gain = AC.createGain();
+  var osc = AC.createOscillator();
+  var gain = AC.createGain();
   osc.frequency.setValueAtTime(300, AC.currentTime);
   osc.frequency.linearRampToValueAtTime(600, AC.currentTime + 0.2);
   gain.gain.setValueAtTime(0.05, AC.currentTime);
   gain.gain.linearRampToValueAtTime(0, AC.currentTime + 0.2);
   osc.connect(gain);
-  gain.connect(AC.destination);
+  ensureMusicBus();
+  var dest = musicBusGain || AC.destination;
+  gain.connect(dest);
   osc.start();
   osc.stop(AC.currentTime + 0.2);
 }

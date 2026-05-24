@@ -7,6 +7,7 @@ function endGame() {
   
   if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
   if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
+  if (typeof stopMusicFromBuffer === 'function') stopMusicFromBuffer(200);
 
   // Feedback inmediato
   pushScreenShake('heavy', 40);
@@ -55,6 +56,9 @@ function useContinue() {
   
   state = 'playing';
   startMusic(getMusicThemeForLevel(level, boss.active));
+  if (typeof startAmbience === 'function') startAmbience(boss.active ? 'boss' : 'stage');
+  if (typeof applyStageMix === 'function' && !boss.active) applyStageMix(300);
+  if (typeof applyBossFightMix === 'function' && boss.active) applyBossFightMix(300);
   
   sfxPowerUp();
   
@@ -77,6 +81,12 @@ function declineContinue() {
   }
   
   startMusic('menu');
+  if (typeof startAmbience === 'function') startAmbience('menu');
+  if (typeof setBusVolume === 'function') {
+    setBusVolume('music', 0.85, 500);
+    setBusVolume('sfx', 0.90, 400);
+    setBusVolume('ambience', 0.60, 500);
+  }
 }
 
 

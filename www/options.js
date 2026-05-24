@@ -24,8 +24,10 @@ function toggleMuteSetting(cfg = {}) {
 
   if (isMuted && stopMusicOnMute) {
     stopMusicPlayback();
+    if (typeof stopAmbience === 'function') stopAmbience(200);
   } else if (!isMuted && resumeMusicOnUnmute && state === 'playing') {
     startMusic(getMusicThemeForLevel(level, boss.active));
+    if (typeof startAmbience === 'function') startAmbience(boss.active ? 'boss' : 'stage');
   }
 
   if (!isMuted && playClickOnUnmute) sfxUIClick();

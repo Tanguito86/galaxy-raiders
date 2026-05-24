@@ -1,8 +1,8 @@
 // =====================
 // GALAXY RAIDERS - audio.js
+// HC-AUD-01: Refactored with bus routing + spam control
 // =====================
 
-// === AUDIO SFX 80s (sin archivos) ===
 var AC = null;
 var masterGain = null;
 var sfxEnabled = true;
@@ -15,7 +15,27 @@ function initAudio() {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = AC.createGain();
     masterGain.gain.value = sfxVol;
-    masterGain.connect(AC.destination);
+
+    // Create bus topology (audio-bus.js)
+    if (typeof createAudioBuses === 'function') {
+      createAudioBuses();
+      if (audioBuses) {
+        masterGain.connect(audioBuses.sfx);
+        if (typeof initAudioBuses === 'function') initAudioBuses();
+        // HC-AUD-02: Apply bus mix — music slightly under SFX so gameplay dominates
+        if (typeof setBusVolume === 'function') {
+          setBusVolume('music', 0.82, 0);
+          setBusVolume('ambience', 0.70, 0);
+          setBusVolume('sfx', 1.0, 0);
+          setBusVolume('boss', 1.0, 0);
+          setBusVolume('ui', 0.90, 0);
+        }
+      } else {
+        masterGain.connect(AC.destination);
+      }
+    } else {
+      masterGain.connect(AC.destination);
+    }
   } catch (e) {}
 }
 
@@ -45,57 +65,80 @@ function envGain(g, t0, a, d) {
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d);
 }
 
-function tone({ type='square', f=440, f2=null, dur=0.08, vol=0.6, attack=0.003, decay=0.06 }) {
+function tone({ type='square', f=440, f2=null, dur=0.08, vol=0.6, attack=0.003, decay=0.06, bus }) {
   if (!sfxEnabled || isMuted || !audioUnlocked) return;
-  const t0 = AC.currentTime;
+  if (typeof voiceStart === 'function' && !voiceStart()) return;
 
-  const o = AC.createOscillator();
+  var t0 = AC.currentTime;
+  var out = bus || masterGain;
+  if (!out) return;
+
+  var o = AC.createOscillator();
   o.type = type;
   o.frequency.setValueAtTime(f, t0);
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
 
-  const g = AC.createGain();
+  var g = AC.createGain();
   g.gain.value = 0.0001;
 
   o.connect(g);
-  g.connect(masterGain);
+  g.connect(out);
 
+  var endTime = t0 + attack + decay + 0.02;
   envGain(g, t0, attack, decay);
   o.start(t0);
-  o.stop(t0 + attack + decay + 0.02);
+  o.stop(endTime);
+
+  o.onended = function () {
+    if (typeof voiceEnd === 'function') voiceEnd();
+    try { g.disconnect(); } catch (e) {}
+  };
 }
 
-function noise({ dur=0.12, vol=0.5, attack=0.002, decay=0.10, hp=800, lp=8000 }) {
+function noise({ dur=0.12, vol=0.5, attack=0.002, decay=0.10, hp=800, lp=8000, bus }) {
   if (!sfxEnabled || isMuted || !audioUnlocked) return;
-  const t0 = AC.currentTime;
+  if (typeof voiceStart === 'function' && !voiceStart()) return;
 
-  const bufferSize = Math.max(1, Math.floor(AC.sampleRate * dur));
-  const buffer = AC.createBuffer(1, bufferSize, AC.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+  var t0 = AC.currentTime;
+  var out = bus || masterGain;
+  if (!out) return;
 
-  const src = AC.createBufferSource();
+  var bufferSize = Math.max(1, Math.floor(AC.sampleRate * dur));
+  var buffer = AC.createBuffer(1, bufferSize, AC.sampleRate);
+  var data = buffer.getChannelData(0);
+  for (var i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+
+  var src = AC.createBufferSource();
   src.buffer = buffer;
 
-  const hpF = AC.createBiquadFilter();
+  var hpF = AC.createBiquadFilter();
   hpF.type = 'highpass';
   hpF.frequency.setValueAtTime(hp, t0);
 
-  const lpF = AC.createBiquadFilter();
+  var lpF = AC.createBiquadFilter();
   lpF.type = 'lowpass';
   lpF.frequency.setValueAtTime(lp, t0);
 
-  const g = AC.createGain();
+  var g = AC.createGain();
   g.gain.value = 0.0001;
 
   src.connect(hpF);
   hpF.connect(lpF);
   lpF.connect(g);
-  g.connect(masterGain);
+  g.connect(out);
 
   envGain(g, t0, attack, decay);
   src.start(t0);
-  src.stop(t0 + attack + decay + 0.02);
+
+  var endTime = t0 + attack + decay + 0.02;
+  src.stop(endTime);
+
+  src.onended = function () {
+    if (typeof voiceEnd === 'function') voiceEnd();
+    try { g.disconnect(); } catch (e) {}
+    try { hpF.disconnect(); } catch (e) {}
+    try { lpF.disconnect(); } catch (e) {}
+  };
 }
 
 // Balance de volúmenes
@@ -139,6 +182,7 @@ function sfxShootByWeapon(type) {
 }
 
 function sfxEnemyHit() {
+  if (typeof sfxGuard === 'function' && !sfxGuard('enemyHit', 30)) return;
   tone({ type:'square', f:randPitch(520), f2:randPitch(420), dur:0.04, vol:VOL.hit, attack:0.002, decay:0.05 });
 }
 
@@ -148,12 +192,14 @@ function sfxEnemyKill() {
 }
 
 function sfxBigExplosion() {
-  const mix = (typeof MUSIC_DUCKING !== 'undefined' && MUSIC_DUCKING.bigExplosion)
+  var mix = (typeof MUSIC_DUCKING !== 'undefined' && MUSIC_DUCKING.bigExplosion)
     ? MUSIC_DUCKING.bigExplosion
     : { level: 0.38, ms: 240 };
   duck(mix.ms, mix.level);
-  tone({ type:'sine', f:randPitch(80), f2:randPitch(40), dur:0.15, vol:VOL.big, attack:0.003, decay:0.15 });
-  noise({ dur:0.18, vol:VOL.big * 0.8, attack:0.002, decay:0.18, hp:120, lp:2000 });
+  if (typeof requestBusDuck === 'function') requestBusDuck('sfx', mix.ms * 0.6, 0.65);
+  var bossOut = typeof bossBusNode === 'function' ? bossBusNode() : undefined;
+  tone({ type:'sine', f:randPitch(80), f2:randPitch(40), dur:0.15, vol:VOL.big, attack:0.003, decay:0.15, bus: bossOut });
+  noise({ dur:0.18, vol:VOL.big * 0.8, attack:0.002, decay:0.18, hp:120, lp:2000, bus: bossOut });
 }
 
 function sfxPowerUp() {
@@ -162,21 +208,23 @@ function sfxPowerUp() {
 }
 
 function sfxPlayerHit() {
-  const mix = (typeof MUSIC_DUCKING !== 'undefined' && MUSIC_DUCKING.playerHit)
+  var mix = (typeof MUSIC_DUCKING !== 'undefined' && MUSIC_DUCKING.playerHit)
     ? MUSIC_DUCKING.playerHit
     : { level: 0.50, ms: 170 };
   duck(mix.ms, mix.level);
-  tone({ type:'square', f:randPitch(180), f2:randPitch(120), dur:0.10, vol:VOL.playerHit, attack:0.002, decay:0.12 });
-  noise({ dur:0.08, vol:VOL.hit, attack:0.002, decay:0.10, hp:200, lp:1800 });
+  if (typeof requestBusDuck === 'function') requestBusDuck('sfx', mix.ms * 0.5, 0.55);
+  tone({ type:'square', f:randPitch(180), f2:randPitch(120), dur:0.10, vol:VOL.playerHit, attack:0.002, decay:0.12, bus: typeof bossBusNode === 'function' ? bossBusNode() : undefined });
+  noise({ dur:0.08, vol:VOL.hit, attack:0.002, decay:0.10, hp:200, lp:1800, bus: typeof bossBusNode === 'function' ? bossBusNode() : undefined });
 }
 
 function sfxBossWarning() {
-  const mix = (typeof MUSIC_DUCKING !== 'undefined' && MUSIC_DUCKING.bossWarning)
+  var mix = (typeof MUSIC_DUCKING !== 'undefined' && MUSIC_DUCKING.bossWarning)
     ? MUSIC_DUCKING.bossWarning
     : { level: 0.58, ms: 150 };
   duck(mix.ms, mix.level);
-  tone({ type:'square', f:880, dur:0.06, vol:VOL.hit, attack:0.002, decay:0.08 });
-  setTimeout(() => tone({ type:'square', f:880, dur:0.06, vol:VOL.hit, attack:0.002, decay:0.08 }), 120);
+  var bossOut = typeof bossBusNode === 'function' ? bossBusNode() : undefined;
+  tone({ type:'square', f:880, dur:0.06, vol:VOL.hit, attack:0.002, decay:0.08, bus: bossOut });
+  setTimeout(function () { tone({ type:'square', f:880, dur:0.06, vol:VOL.hit, attack:0.002, decay:0.08, bus: bossOut }); }, 120);
 }
 
 function sfxImperialTelegraph() {
@@ -185,7 +233,8 @@ function sfxImperialTelegraph() {
 }
 
 function sfxUIClick() {
-  tone({ type:'square', f:randPitch(1040), f2:randPitch(920), dur:0.02, vol:VOL.ui, attack:0.001, decay:0.03 });
+  if (typeof sfxGuard === 'function' && !sfxGuard('uiClick', 25)) return;
+  tone({ type:'square', f:randPitch(1040), f2:randPitch(920), dur:0.02, vol:VOL.ui, attack:0.001, decay:0.03, bus: typeof uiBusNode === 'function' ? uiBusNode() : undefined });
 }
 
 function sfxConfirm() {
@@ -206,18 +255,20 @@ function sfxStageStart() {
 // HC-VS-04D: new threat reveal — descending warning
 function sfxNewThreat() {
   duck(160, 0.52);
-  tone({ type:'sawtooth', f:660, f2:330, dur:0.12, vol:VOL.playerHit * 0.65, attack:0.003, decay:0.14 });
-  setTimeout(function() {
-    tone({ type:'square', f:440, f2:220, dur:0.08, vol:VOL.hit * 0.5, attack:0.002, decay:0.10 });
+  var bossOut = typeof bossBusNode === 'function' ? bossBusNode() : undefined;
+  tone({ type:'sawtooth', f:660, f2:330, dur:0.12, vol:VOL.playerHit * 0.65, attack:0.003, decay:0.14, bus: bossOut });
+  setTimeout(function () {
+    tone({ type:'square', f:440, f2:220, dur:0.08, vol:VOL.hit * 0.5, attack:0.002, decay:0.10, bus: bossOut });
   }, 140);
 }
 
 // HC-VS-04D: setpiece escalation sting — sharp double-tap
 function sfxSetpieceEscalate() {
   duck(120, 0.48);
-  tone({ type:'square', f:880, f2:1100, dur:0.04, vol:VOL.hit * 0.7, attack:0.001, decay:0.05 });
-  setTimeout(function() {
-    tone({ type:'square', f:1100, f2:1320, dur:0.04, vol:VOL.hit * 0.65, attack:0.001, decay:0.05 });
+  var bossOut = typeof bossBusNode === 'function' ? bossBusNode() : undefined;
+  tone({ type:'square', f:880, f2:1100, dur:0.04, vol:VOL.hit * 0.7, attack:0.001, decay:0.05, bus: bossOut });
+  setTimeout(function () {
+    tone({ type:'square', f:1100, f2:1320, dur:0.04, vol:VOL.hit * 0.65, attack:0.001, decay:0.05, bus: bossOut });
   }, 50);
 }
 
@@ -233,6 +284,7 @@ function sfxBossDescentStart() {
   }
   duck(1400, 0.45);
   var t0 = AC.currentTime;
+  var out = (typeof bossBusNode === 'function' ? bossBusNode() : masterGain);
   _bossDescentOsc = AC.createOscillator();
   _bossDescentOsc.type = 'sawtooth';
   _bossDescentOsc.frequency.setValueAtTime(55, t0);
@@ -242,7 +294,7 @@ function sfxBossDescentStart() {
   _bossDescentGain.gain.exponentialRampToValueAtTime(0.14, t0 + 1.0);
   _bossDescentGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.5);
   _bossDescentOsc.connect(_bossDescentGain);
-  _bossDescentGain.connect(masterGain);
+  _bossDescentGain.connect(out);
   _bossDescentOsc.start(t0);
   _bossDescentOsc.stop(t0 + 1.55);
 }

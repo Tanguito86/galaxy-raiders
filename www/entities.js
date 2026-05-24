@@ -424,9 +424,13 @@ function startLevel() {
   if (BOSS_LEVELS.includes(level)) {
     initBoss();
     startMusic(getMusicThemeForLevel(level, true));
+    if (typeof startAmbience === 'function') startAmbience('boss');
+    if (typeof applyBossFightMix === 'function') applyBossFightMix(400);
   } else {
     initEnemies();
     startMusic(getMusicThemeForLevel(level, false));
+    if (typeof startAmbience === 'function') startAmbience('stage');
+    if (typeof applyStageMix === 'function') applyStageMix(500);
   }
   
   currentPalette = PALETTES[(level - 1) % PALETTES.length];
