@@ -11,9 +11,21 @@ function createAudioBuses() {
   if (!AC) return null;
 
   try {
+    // HC-AUD-stabilization: transparent safety limiter before destination
+    var _limiter = null;
+    try {
+      _limiter = AC.createDynamicsCompressor();
+      _limiter.threshold.setValueAtTime(-6, AC.currentTime);
+      _limiter.knee.setValueAtTime(0, AC.currentTime);
+      _limiter.ratio.setValueAtTime(20, AC.currentTime);
+      _limiter.attack.setValueAtTime(0.003, AC.currentTime);
+      _limiter.release.setValueAtTime(0.050, AC.currentTime);
+      _limiter.connect(AC.destination);
+    } catch(e) { _limiter = null; }
+
     var master = AC.createGain();
     master.gain.value = 1.0;
-    master.connect(AC.destination);
+    master.connect(_limiter || AC.destination);
 
     var music = AC.createGain();
     music.gain.value = 1.0;
@@ -148,9 +160,9 @@ function voiceEnd() {
 // =====================
 
 var _duckState = {
-  music: { until: 0, level: 1.0 },
-  sfx: { until: 0, level: 1.0 },
-  ambience: { until: 0, level: 1.0 }
+  music: { until: 0, level: 1.0, restore: 1.0 },
+  sfx: { until: 0, level: 1.0, restore: 1.0 },
+  ambience: { until: 0, level: 1.0, restore: 1.0 }
 };
 
 function requestBusDuck(busName, ms, level) {
@@ -160,7 +172,10 @@ function requestBusDuck(busName, ms, level) {
   var duckMs = Math.max(0, Number(ms) || 160);
   var duckLevel = Math.max(0.05, Math.min(1.0, Number(level) || 0.5));
   var d = _duckState[busName];
-  if (now >= d.until) d.level = 1.0;
+  if (now >= d.until) {
+    d.level = 1.0;
+    d.restore = audioBuses[busName].gain.value; // snapshot pre-duck gain
+  }
   d.level = Math.min(d.level, duckLevel);
   d.until = Math.max(d.until, now + duckMs / 1000);
   _applyBusDuck(busName);
@@ -171,8 +186,8 @@ function _applyBusDuck(busName) {
   var d = _duckState[busName];
   var now = AC.currentTime;
   var ducking = now < d.until;
-  var target = ducking ? d.level : 1.0;
-  if (!ducking) d.level = 1.0;
+  var target = ducking ? d.level : d.restore; // restore to pre-duck gain
+  if (!ducking) { d.level = 1.0; d.restore = 1.0; }
   var bus = audioBuses[busName];
   bus.gain.cancelScheduledValues(now);
   bus.gain.setValueAtTime(bus.gain.value, now);
@@ -308,9 +323,8 @@ function initAudioBuses() {
 
 function applyBossFightMix(rampMs) {
   if (!ensureAudioBuses()) return;
-  // Boss fight: music slightly up, boss bus gets a bump, ambience stays subtle
   setBusVolume('music', 0.78, rampMs || 400);
-  setBusVolume('boss', 1.10, rampMs || 300);
+  setBusVolume('boss', 1.0, rampMs || 300);
   setBusVolume('ambience', 0.65, rampMs || 500);
   setBusVolume('sfx', 1.0, rampMs || 200);
 }

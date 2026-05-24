@@ -58,10 +58,12 @@ function duck(ms = 120, level = 0.35) {
   }
 }
 
-function envGain(g, t0, a, d) {
+function envGain(g, t0, a, d, vol) {
+  if (vol === void 0) vol = 1.0;
+  var peak = Math.max(0.0001, Math.min(1.0, vol));
   g.gain.cancelScheduledValues(t0);
   g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(1.0, t0 + a);
+  g.gain.exponentialRampToValueAtTime(peak, t0 + a);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d);
 }
 
@@ -85,7 +87,7 @@ function tone({ type='square', f=440, f2=null, dur=0.08, vol=0.6, attack=0.003, 
   g.connect(out);
 
   var endTime = t0 + attack + decay + 0.02;
-  envGain(g, t0, attack, decay);
+  envGain(g, t0, attack, decay, vol);
   o.start(t0);
   o.stop(endTime);
 
@@ -127,7 +129,7 @@ function noise({ dur=0.12, vol=0.5, attack=0.002, decay=0.10, hp=800, lp=8000, b
   lpF.connect(g);
   g.connect(out);
 
-  envGain(g, t0, attack, decay);
+  envGain(g, t0, attack, decay, vol);
   src.start(t0);
 
   var endTime = t0 + attack + decay + 0.02;

@@ -781,12 +781,24 @@ function _playMusicBufferLoop(buffer, key) {
   _currentMusicSource = src;
   _currentMusicGain = gain;
   _currentMusicKey = key;
-  var loopMs = (buffer.duration - 0.05) * 1000;
-  if (loopMs < 200) loopMs = buffer.duration * 1000;
-  _musicLoopTimer = setTimeout(function() {
-    if (_currentMusicKey !== key) return;
-    _playMusicBufferLoop(buffer, key);
-  }, loopMs);
+
+  // HC-AUD-stabilization: respect loop flag
+  var shouldLoop = true;
+  if (_TRACKS[key] && _TRACKS[key].loop === false) shouldLoop = false;
+  // Non-looping tracks from WAV: victory and gameover
+  if (key === 'victory' || key === 'gameover') {
+    var wavData = _TRACKS[key];
+    if (!wavData || wavData.loop === false) shouldLoop = false;
+  }
+
+  if (shouldLoop) {
+    var loopMs = (buffer.duration - 0.05) * 1000;
+    if (loopMs < 200) loopMs = buffer.duration * 1000;
+    _musicLoopTimer = setTimeout(function() {
+      if (_currentMusicKey !== key) return;
+      _playMusicBufferLoop(buffer, key);
+    }, loopMs);
+  }
   _fadeMusicGainTo(gain, 1.0, 350);
 }
 
@@ -878,7 +890,9 @@ setTimeout(function() {
 
 function bossEntranceMusicSwell(trackName) {
   if (isMuted || !AC) return;
-  // Stop current music with short fade
+  // Stop current music and clear all timers to prevent race condition
+  if (_musicLoopTimer) { clearTimeout(_musicLoopTimer); _musicLoopTimer = null; }
+  _currentMusicKey = null; // prevent stale loop from restarting old track
   if (_currentMusicGain) {
     _fadeMusicGainTo(_currentMusicGain, 0.15, 300);
   }

@@ -290,11 +290,6 @@ function requestMusicDuck(ms, level) {
   musicDuckLevel = Math.min(musicDuckLevel, duckLevel);
   musicDuckUntil = Math.max(musicDuckUntil, now + duckMs / 1000);
   refreshMusicDucking();
-
-  // Also trigger bus-level ducking for music bus
-  if (typeof requestBusDuck === 'function') {
-    requestBusDuck('music', duckMs, duckLevel);
-  }
 }
 
 
