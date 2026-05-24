@@ -1168,6 +1168,7 @@ function initBoss() {
   boss._entranceSpeedPxPerMs = 0.16;
   boss._entranceTraveled = 0;
   boss._entranceTotal = Math.abs(boss._entranceTargetY - boss.y);
+  boss._preImpactDone = false; // HC-AUD-04
   boss.maxHp = bossData.baseHp;
   boss.hp = boss.maxHp;
   boss.dir = 1;

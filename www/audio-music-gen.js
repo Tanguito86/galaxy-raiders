@@ -914,3 +914,90 @@ function bossEntranceMusicSwell(trackName) {
     }
   }, 400);
 }
+
+// =====================
+// HC-AUD-04: REAL WAV/OGG FILE LOADER
+// =====================
+
+var _wavFileMap = {
+  menu: 'assets/audio/music_menu.wav',
+  chapter1: 'assets/audio/music_chapter1.wav',
+  chapter2: 'assets/audio/music_chapter2.wav',
+  chapter3: 'assets/audio/music_chapter3.wav',
+  chapter4: 'assets/audio/music_chapter4.wav',
+  boss1: 'assets/audio/music_boss_crabtron.wav',
+  boss2: 'assets/audio/music_boss_serpentrix.wav',
+  boss3: 'assets/audio/music_boss_orbital.wav',
+  finalBoss: 'assets/audio/music_boss_emperador.wav',
+  victory: 'assets/audio/music_victory.wav',
+  gameover: 'assets/audio/music_gameover.wav'
+};
+
+var _wavFilesLoaded = 0;
+var _wavFilesTotal = 0;
+
+function loadWavTrack(trackKey, url) {
+  if (!AC || _musicBuffers[trackKey]) return;
+
+  fetch(url).then(function(response) {
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return response.arrayBuffer();
+  }).then(function(arrayBuffer) {
+    return AC.decodeAudioData(arrayBuffer);
+  }).then(function(audioBuffer) {
+    _musicBuffers[trackKey] = audioBuffer;
+    _wavFilesLoaded++;
+    // Auto-play if this was requested while loading
+    if (_currentMusicKey === trackKey && !_currentMusicSource) {
+      _playMusicBufferLoop(audioBuffer, trackKey);
+    }
+  }).catch(function() {
+    // Fallback: render from track data
+    renderMusicTrack(trackKey);
+  });
+}
+
+function preloadWavTracks() {
+  if (_wavFilesTotal > 0) return;
+  var keys = Object.keys(_wavFileMap);
+  _wavFilesTotal = keys.length;
+  _wavFilesLoaded = 0;
+
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var url = _wavFileMap[key];
+    loadWavTrack(key, url);
+  }
+}
+
+// Override preload to try WAV files first
+var _origPreloadAllMusicTracks = preloadAllMusicTracks;
+preloadAllMusicTracks = function() {
+  if (_musicPreloadStarted) return;
+  _musicPreloadStarted = true;
+
+  if (typeof AC !== 'undefined' && AC && typeof fetch === 'function') {
+    // Try loading real WAV files
+    preloadWavTracks();
+    // Also trigger legacy render as fallback after a delay
+    setTimeout(function() {
+      var keys = Object.keys(_wavFileMap);
+      for (var i = 0; i < keys.length; i++) {
+        if (!_musicBuffers[keys[i]]) renderMusicTrack(keys[i]);
+      }
+    }, 8000);
+  } else {
+    // No fetch API — render from track data
+    _origPreloadAllMusicTracks();
+  }
+};
+
+// Override playMusicFromBuffer to auto-load WAV on demand
+var _origPlayMusicFromBuffer = playMusicFromBuffer;
+playMusicFromBuffer = function(trackName, crossfadeMs) {
+  // If buffer not in cache but WAV file exists, try loading it
+  if (!_musicBuffers[trackName] && _wavFileMap[trackName] && typeof fetch === 'function') {
+    loadWavTrack(trackName, _wavFileMap[trackName]);
+  }
+  return _origPlayMusicFromBuffer(trackName, crossfadeMs);
+};

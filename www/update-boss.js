@@ -860,11 +860,42 @@ function updateBossStep(step, dt) {
     if (typeof pushScreenShake === 'function' && Math.floor(boss._entranceTraveled / 20) !== Math.floor((boss._entranceTraveled - moveAmount) / 20)) {
       pushScreenShake('light', 2);
     }
+    // HC-AUD-04: Pre-impact silence — duck all buses 150ms before landing
+    if (!boss._preImpactDone && boss._entranceTotal > 0) {
+      var remaining = boss._entranceTotal - boss._entranceTraveled;
+      var impactThreshold = boss._entranceSpeedPxPerMs * 150; // 150ms before landing
+      if (remaining <= impactThreshold) {
+        boss._preImpactDone = true;
+        if (typeof requestBusDuck === 'function') {
+          requestBusDuck('sfx', 450, 0.25);
+          requestBusDuck('ambience', 450, 0.15);
+        }
+        if (typeof requestMusicDuck === 'function') requestMusicDuck(400, 0.30);
+      }
+    }
     if (boss.y >= boss._entranceTargetY) {
       boss.y = boss._entranceTargetY;
       boss._entranceActive = false;
       // HC-VS-04D: stop descent rumble on landing
       if (typeof sfxBossDescentStop === 'function') sfxBossDescentStop();
+      // HC-AUD-04: Impact sub hit — heavy low tone for physical impact
+      if (typeof AC !== 'undefined' && AC && typeof sfxEnabled !== 'undefined' && sfxEnabled && !isMuted) {
+        try {
+          var subOsc = AC.createOscillator();
+          var subGain = AC.createGain();
+          subOsc.type = 'sine';
+          subOsc.frequency.setValueAtTime(28, AC.currentTime);
+          subOsc.frequency.exponentialRampToValueAtTime(18, AC.currentTime + 0.4);
+          subGain.gain.setValueAtTime(0.35, AC.currentTime);
+          subGain.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + 0.5);
+          subOsc.connect(subGain);
+          var subOut = (typeof bossBusNode === 'function' ? bossBusNode() : null) || masterGain || AC.destination;
+          subGain.connect(subOut);
+          subOsc.start(AC.currentTime);
+          subOsc.stop(AC.currentTime + 0.55);
+          subOsc.onended = function() { try { subGain.disconnect(); } catch(e) {} };
+        } catch(e) {}
+      }
       if (typeof pushScreenShake === 'function') pushScreenShake('heavy', 16);
       if (typeof sfxBossWarning === 'function') sfxBossWarning();
       if (typeof flashScreen !== 'undefined') flashScreen = 15;
