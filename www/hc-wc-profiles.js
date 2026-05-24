@@ -1075,6 +1075,10 @@
     if (profile.bannerText && typeof global.setPieceBannerText !== 'undefined') {
       global.setPieceBannerText = profile.bannerText;
       global.setPieceBannerTimer = 2500;
+      // HC-VS-04D: new threat audio sting
+      if (profile.bannerText === 'NEW THREAT' && typeof sfxNewThreat === 'function') {
+        sfxNewThreat();
+      }
     }
 
     return true;

@@ -73,6 +73,21 @@
     },
     rankDown: function() {
       if (typeof sfxRankDown === 'function') sfxRankDown();
+    },
+    stageStart: function() {
+      if (typeof sfxStageStart === 'function') sfxStageStart();
+    },
+    newThreat: function() {
+      if (typeof sfxNewThreat === 'function') sfxNewThreat();
+    },
+    setpieceEscalate: function() {
+      if (typeof sfxSetpieceEscalate === 'function') sfxSetpieceEscalate();
+    },
+    bossDescentStart: function() {
+      if (typeof sfxBossDescentStart === 'function') sfxBossDescentStart();
+    },
+    bossDescentStop: function() {
+      if (typeof sfxBossDescentStop === 'function') sfxBossDescentStop();
     }
   };
 

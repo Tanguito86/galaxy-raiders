@@ -1129,6 +1129,7 @@ function initBoss() {
   delete boss.isTeleporting;
   delete boss._entranceActive;
   delete boss._entranceTraveled;
+  delete boss._entranceAudioStarted;
   
   // âœ… Cargar datos especÃ­ficos del boss segÃºn el nivel
   const bossData = BOSS_DATA[level];

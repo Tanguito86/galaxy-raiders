@@ -105,6 +105,8 @@ window.startStageSection = function(sectionType, meta) {
         setPieceBannerTimer = 3000;
       }
     }
+    // HC-VS-04D: stage opening audio stinger
+    if (typeof sfxStageStart === 'function') sfxStageStart();
   }
 
   if (sectionType === 'climax') {

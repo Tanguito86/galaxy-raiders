@@ -244,6 +244,15 @@
       if (_sp.beatIndex < _sp.totalBeats) {
         var nextBeat = spData.beats[_sp.beatIndex];
         _sp.beatPhase = nextBeat.phase || BEAT_PHASES.ESCALATE;
+        // HC-VS-04D: audio sting on escalation beats
+        var nextEffect = nextBeat.effect || '';
+        var isEscalationBeat = nextEffect === 'all_rows_active' ||
+          nextEffect === 'closing_wings' || nextEffect === 'split_cascade' ||
+          nextEffect === 'crossfire_burst_2_chained' || nextEffect === 'dive_wave_2_3' ||
+          nextBeat.phase === 'CLIMAX' || nextBeat.phase === 'ESCALATE';
+        if (isEscalationBeat && typeof sfxSetpieceEscalate === 'function') {
+          sfxSetpieceEscalate();
+        }
       } else {
         _sp.beatPhase = BEAT_PHASES.COMPLETE;
         _sp.active = false;

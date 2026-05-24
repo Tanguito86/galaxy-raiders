@@ -846,6 +846,11 @@ function updateBossStep(step, dt) {
     var moveAmount = boss._entranceSpeedPxPerMs * dt;
     boss.y += moveAmount;
     boss._entranceTraveled += moveAmount;
+    // HC-VS-04D: start descent rumble on first frame
+    if (!boss._entranceAudioStarted) {
+      boss._entranceAudioStarted = true;
+      if (typeof sfxBossDescentStart === 'function') sfxBossDescentStart();
+    }
     // Expanding telegraph ring during descent
     if (typeof pushScreenShake === 'function' && Math.floor(boss._entranceTraveled / 20) !== Math.floor((boss._entranceTraveled - moveAmount) / 20)) {
       pushScreenShake('light', 2);
@@ -853,10 +858,11 @@ function updateBossStep(step, dt) {
     if (boss.y >= boss._entranceTargetY) {
       boss.y = boss._entranceTargetY;
       boss._entranceActive = false;
+      // HC-VS-04D: stop descent rumble on landing
+      if (typeof sfxBossDescentStop === 'function') sfxBossDescentStop();
       if (typeof pushScreenShake === 'function') pushScreenShake('heavy', 16);
       if (typeof sfxBossWarning === 'function') sfxBossWarning();
       if (typeof flashScreen !== 'undefined') flashScreen = 15;
-      // Show boss name banner at landing
       if (typeof setPieceBannerText !== 'undefined') setPieceBannerText = boss.name || 'BOSS';
       if (typeof setPieceBannerTimer !== 'undefined') setPieceBannerTimer = 2000;
     }

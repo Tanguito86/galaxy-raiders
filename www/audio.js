@@ -192,6 +192,68 @@ function sfxConfirm() {
   tone({ type:'square', f:randPitch(660), f2:randPitch(990), dur:0.05, vol:VOL.hit, attack:0.002, decay:0.06 });
 }
 
+// HC-VS-04D: stage opening jingle — ascending arpeggio
+function sfxStageStart() {
+  var notes = [60, 64, 67, 72]; // C4 E4 G4 C5
+  notes.forEach(function(m, i) {
+    setTimeout(function() {
+      tone({ type:'square', f:midiToFreq(m), f2:midiToFreq(m + 0.3), dur:0.06, vol:VOL.power * 0.55, attack:0.003, decay:0.07 });
+      duck(80, 0.55);
+    }, i * 65);
+  });
+}
+
+// HC-VS-04D: new threat reveal — descending warning
+function sfxNewThreat() {
+  duck(160, 0.52);
+  tone({ type:'sawtooth', f:660, f2:330, dur:0.12, vol:VOL.playerHit * 0.65, attack:0.003, decay:0.14 });
+  setTimeout(function() {
+    tone({ type:'square', f:440, f2:220, dur:0.08, vol:VOL.hit * 0.5, attack:0.002, decay:0.10 });
+  }, 140);
+}
+
+// HC-VS-04D: setpiece escalation sting — sharp double-tap
+function sfxSetpieceEscalate() {
+  duck(120, 0.48);
+  tone({ type:'square', f:880, f2:1100, dur:0.04, vol:VOL.hit * 0.7, attack:0.001, decay:0.05 });
+  setTimeout(function() {
+    tone({ type:'square', f:1100, f2:1320, dur:0.04, vol:VOL.hit * 0.65, attack:0.001, decay:0.05 });
+  }, 50);
+}
+
+// HC-VS-04D: boss descent rumble — building tension
+var _bossDescentOsc = null;
+var _bossDescentGain = null;
+function sfxBossDescentStart() {
+  if (!sfxEnabled || isMuted || !audioUnlocked || !AC) return;
+  if (_bossDescentOsc) {
+    try { _bossDescentOsc.stop(); } catch(e) {}
+    _bossDescentOsc = null;
+    _bossDescentGain = null;
+  }
+  duck(1400, 0.45);
+  var t0 = AC.currentTime;
+  _bossDescentOsc = AC.createOscillator();
+  _bossDescentOsc.type = 'sawtooth';
+  _bossDescentOsc.frequency.setValueAtTime(55, t0);
+  _bossDescentOsc.frequency.exponentialRampToValueAtTime(180, t0 + 1.2);
+  _bossDescentGain = AC.createGain();
+  _bossDescentGain.gain.setValueAtTime(0.06, t0);
+  _bossDescentGain.gain.exponentialRampToValueAtTime(0.14, t0 + 1.0);
+  _bossDescentGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.5);
+  _bossDescentOsc.connect(_bossDescentGain);
+  _bossDescentGain.connect(masterGain);
+  _bossDescentOsc.start(t0);
+  _bossDescentOsc.stop(t0 + 1.55);
+}
+function sfxBossDescentStop() {
+  if (_bossDescentOsc) {
+    try { _bossDescentOsc.stop(); } catch(e) {}
+    _bossDescentOsc = null;
+    _bossDescentGain = null;
+  }
+}
+
 // === HC-42: HARDCORE SYSTEMS AUDIO FEEDBACK ===
 
 var lastGrazeSfx = 0;
