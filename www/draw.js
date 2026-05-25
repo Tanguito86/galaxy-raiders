@@ -4388,6 +4388,8 @@ if (shouldShow) {
       var _imperialFlagshipReady = (boss.pattern === 'supreme' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_imperial_flagship') && isFlagshipVisualEnabled());
       // HC-SPRITE-SERPENTRIX-03: check Serpentrix Hero readiness once per frame
       var _serpentrixHeroReady = (boss.pattern === 'zigzag' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_serpentrix_hero') && isSerpentrixHeroEnabled());
+      // HC-SPRITE-COLOSSUS-STAGE15: check Orbital Colossus readiness once per frame
+      var _colossusReady = (boss.pattern === 'rotate' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_orbital_siege_colossus') && isColossusVisualEnabled());
 
       ctx.save();
       ctx.globalAlpha = _crabtronHeroReady ? 0 : bossGlow * 0.55;
@@ -4412,10 +4414,12 @@ if (shouldShow) {
       } else if (boss.pattern === 'zigzag') {
         if (!_serpentrixHeroReady) drawSerpentrixAura(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'rotate') {
-        drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
-        drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
-        drawOrbitalPulseWarning(ctx, boss, bossColor, globalTime);
-        drawOrbitalTractorBeamIndicator(ctx, boss, bossColor, globalTime);
+        if (!_colossusReady) {
+          drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
+          drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
+          drawOrbitalPulseWarning(ctx, boss, bossColor, globalTime);
+          drawOrbitalTractorBeamIndicator(ctx, boss, bossColor, globalTime);
+        }
       } else if (boss.pattern === 'divebomb') {
         drawTenienteAura(ctx, boss, bossColor, globalTime);
         drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
@@ -4532,6 +4536,13 @@ if (shouldShow) {
         drawSerpentrixHeroLayers(ctx, boss, _serpState, _serpScale);
       }
 
+      // HC-SPRITE-COLOSSUS-STAGE15: Orbital Siege Colossus visual for ORBITAL (level 15)
+      // Visual-only swap — no gameplay, hitbox, collision, or AI changes.
+      // Falls back to legacy ORBITAL geometric rendering when sprite unavailable.
+      if (boss.pattern === 'rotate' && _colossusReady) {
+        drawOrbitalSiegeColossusVisual(ctx, boss);
+      }
+
       // HC-SPRITE-WIRE-02: Imperial Flagship visual for EMPERADOR (level 20)
       // Visual-only swap — no gameplay, hitbox, collision, or AI changes.
       // Falls back to legacy EMPERADOR geometric rendering when sprite unavailable.
@@ -4542,10 +4553,11 @@ if (shouldShow) {
       // HC-VS-03D2: legacy body replaced by hero layers when ready
       // HC-SPRITE-WIRE-02: also replaced by flagship visual when ready
       // HC-SPRITE-SERPENTRIX-03: also replaced by serpentrix hero when ready
-      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+      // HC-SPRITE-COLOSSUS-STAGE15: also replaced by colossus visual when ready
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
       // HC-121: core pulse brightness
-      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) {
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) {
         var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
         ctx.save();
         ctx.globalAlpha = 0.020 + _corePulse * 0.026;
@@ -4561,7 +4573,7 @@ if (shouldShow) {
           drawSerpentrixVenomDrops(ctx, boss, bossColor, globalTime);
         }
       } else if (boss.pattern === 'rotate') {
-        drawOrbitalCore(ctx, boss, bossColor, globalTime);
+        if (!_colossusReady) drawOrbitalCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
         drawTenienteWings(ctx, boss, bossColor, globalTime);
         drawTenienteCannons(ctx, boss, bossColor, globalTime);
@@ -4575,7 +4587,8 @@ if (shouldShow) {
       // HC-VS-03D2: ambient glow replaced by hero overlay_glow_damage layer
       // HC-SPRITE-WIRE-02: also gated when flagship sprite is active
       // HC-SPRITE-SERPENTRIX-03: also gated when serpentrix hero is active
-      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) {
+      // HC-SPRITE-COLOSSUS-STAGE15: also gated when colossus visual is active
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) {
         ctx.save();
         ctx.globalAlpha = 0.055;
         drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
@@ -4604,7 +4617,8 @@ if (shouldShow) {
         // HC-VS-03D4: legacy sprite flash gated behind hero; white crosshair always visible
         // HC-SPRITE-WIRE-02: also gated behind flagship
         // HC-SPRITE-SERPENTRIX-03: also gated behind serpentrix hero
-        if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) {
+        // HC-SPRITE-COLOSSUS-STAGE15: also gated behind colossus visual
+        if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) {
           ctx.globalAlpha = flicker;
           drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
           ctx.globalAlpha = flicker * 0.24;
@@ -5032,7 +5046,9 @@ if (shouldShow) {
         if (f >= 0) return f;
       }
       var idx = _COLOSSUS_STATE_LABELS.indexOf(state);
-      return idx >= 0 ? idx : 0;
+      // HC-SPRITE-COLOSSUS-STAGE15: 8-col grid, each state row = idx * 8
+      if (idx >= 0) return idx * 8;
+      return 0;
     }
 
     function isColossusVisualEnabled() {

@@ -680,30 +680,34 @@
 
   // ═══════════════════════════════════════════════════════
   // SPRITE LAB PHASE E: Orbital Siege Colossus (Fortress)
-  // Sheet: 1280x320, 4 frames horizontal, 320x320 each
-  // Frame order: 0=master, 1=damaged, 2=core_exposed, 3=weapon_open
+  // HC-SPRITE-COLOSSUS-STAGE15: Updated to 8x4 grid, 192x192 cells
+  // Sheet: 1536x768, 8 cols x 4 rows, 192x192 each (32 frames)
+  // Row 0 (frames 0-7): master / idle reactor pulse
+  // Row 1 (frames 8-15): damaged / intensified reactor
+  // Row 2 (frames 16-23): core_exposed / overdrive glow
+  // Row 3 (frames 24-31): weapon_open / critical weapon phase
   // ═══════════════════════════════════════════════════════
   var _ORBITAL_SIEGE_COLOSSUS_META = {
-    sheetCols: 4,
-    sheetRows: 1,
-    frameW: 320,
-    frameH: 320,
+    sheetCols: 8,
+    sheetRows: 4,
+    frameW: 192,
+    frameH: 192,
     bossId: 'orbital_siege_colossus',
     faction: 'orbital_siege',
     tier: 'fortress',
     phases: {
       master: 0,
       phase_1_full_armor: 0,
-      damaged: 1,
-      phase_2_damaged: 1,
-      core_exposed: 2,
-      phase_3_core_exposed: 2,
-      weapon_open: 3,
-      phase_special_weapon_deployed: 3
+      damaged: 8,
+      phase_2_damaged: 8,
+      core_exposed: 16,
+      phase_3_core_exposed: 16,
+      weapon_open: 24,
+      phase_special_weapon_deployed: 24
     },
     phaseLabels: ['master', 'damaged', 'core_exposed', 'weapon_open'],
-    recommendedGameplaySize: { width: 240, height: 240 },
-    pivot: { x: 160, y: 160, anchor: 'center' },
+    recommendedGameplaySize: { width: 192, height: 192 },
+    pivot: { x: 96, y: 96, anchor: 'center' },
     scaleHint: 0.75
   };
 
@@ -711,12 +715,14 @@
   global.getOrbitalSiegeColossusPhaseFrame = function (phase) { return _ORBITAL_SIEGE_COLOSSUS_META.phases[phase] != null ? _ORBITAL_SIEGE_COLOSSUS_META.phases[phase] : -1; };
 
   registerSprite("boss_orbital_siege_colossus", {
-    src: "assets/sprites/bosses/orbital_siege/orbital_siege_colossus_sheet.png",
+    src: "assets/sprites/bosses/orbital_siege/orbital_colossus_hero_sheet.png",
     frameWidth: _ORBITAL_SIEGE_COLOSSUS_META.frameW,
     frameHeight: _ORBITAL_SIEGE_COLOSSUS_META.frameH,
     animations: {
-      idle: { frames: [0,1,2], fps: 1.2, loop: true },
-      weaponOpen: { frames: [3], fps: 0, loop: false }
+      idle: { frames: [0,1,2,3,4,5,6,7], fps: 6, loop: true },
+      damaged: { frames: [8,9,10,11,12,13,14,15], fps: 6, loop: true },
+      coreExposed: { frames: [16,17,18,19,20,21,22,23], fps: 6, loop: true },
+      weaponOpen: { frames: [24,25,26,27,28,29,30,31], fps: 6, loop: true }
     },
     fallbackColor: "#44ccff"
   });
