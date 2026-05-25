@@ -4612,8 +4612,6 @@ if (shouldShow) {
 
     // SPRITE LAB PHASE A: Scout Alien faction override mapping
     // Kill switch: GALAXY_CONFIG.spriteLab.factionScout === false disables faction override
-    // Uses 128x128 frames scaled to 64px gameplay target (scale = 64/128 = 0.50)
-    // Maps Scout-aligned enemy types to faction_scout frames
     var _spriteLabScoutEnabled = !(typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.factionScout === false);
     var _SPRITE_LAB_SCOUT_MAP = {
       alien1: { sprite: 'faction_scout', scale: 0.50, y: 0, animation: 'idle', frame: 0 },
@@ -4623,16 +4621,50 @@ if (shouldShow) {
       alien_mini: { sprite: 'faction_scout', scale: 0.42, y: 0, animation: 'idle', frame: 3 }
     };
 
+    // SPRITE LAB PHASE B: Suppressor faction override
+    // Kill switch: GALAXY_CONFIG.spriteLab.factionSuppressor === false
+    // alien3 is the only suppressor-type enemy; maps to mk1_master (frame 0)
+    var _spriteLabSuppressorEnabled = !(typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.factionSuppressor === false);
+    var _SPRITE_LAB_SUPPRESSOR_MAP = {
+      alien3: { sprite: 'faction_suppressor', scale: 0.50, y: 0, animation: 'idle', frame: 0 }
+    };
+
+    // SPRITE LAB PHASE B: Splitter faction override
+    // Kill switch: GALAXY_CONFIG.spriteLab.factionSplitter === false
+    // alien6 was previously rendered as fleet_suppressor (red/orange) — now correctly Splitter (magenta)
+    var _spriteLabSplitterEnabled = !(typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.factionSplitter === false);
+    var _SPRITE_LAB_SPLITTER_MAP = {
+      alien6: { sprite: 'faction_splitter', scale: 0.50, y: 0, animation: 'idle', frame: 0 }
+    };
+
+    // SPRITE LAB PHASE B: Imperial faction override (reserved — no enemy types yet)
+    // Kill switch: GALAXY_CONFIG.spriteLab.factionImperial === false
+    // Imperial faction sprites are registered and ready. They will activate once
+    // Imperial enemy spawn types are introduced in a future gameplay pass.
+    // Currently: no mapping — Imperial enemies do not exist in the spawn pool.
+    var _spriteLabImperialEnabled = !(typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.factionImperial === false);
+    var _SPRITE_LAB_IMPERIAL_MAP = {};
+
     function getHCArtEnemyVisual(e) {
       if (!e) return null;
-      // SPRITE LAB PHASE A: Scout faction override (highest priority)
-      if (_spriteLabScoutEnabled && _SPRITE_LAB_SCOUT_MAP[e.type]) {
-        var spOverride = _SPRITE_LAB_SCOUT_MAP[e.type];
-        if (window.SpriteSystem && window.SpriteSystem.isSpriteReady(spOverride.sprite)) {
-          return spOverride;
+      // SPRITE LAB PHASE A+B: Faction override checks (priority: Scout → Suppressor → Splitter → Imperial)
+      // Each faction override checks its kill switch AND sprite readiness before returning.
+      var factionChecks = [
+        { enabled: _spriteLabScoutEnabled,      map: _SPRITE_LAB_SCOUT_MAP },
+        { enabled: _spriteLabSuppressorEnabled,  map: _SPRITE_LAB_SUPPRESSOR_MAP },
+        { enabled: _spriteLabSplitterEnabled,    map: _SPRITE_LAB_SPLITTER_MAP },
+        { enabled: _spriteLabImperialEnabled,    map: _SPRITE_LAB_IMPERIAL_MAP }
+      ];
+      for (var fi = 0; fi < factionChecks.length; fi++) {
+        var fc = factionChecks[fi];
+        if (fc.enabled && fc.map[e.type]) {
+          var spOverride = fc.map[e.type];
+          if (window.SpriteSystem && window.SpriteSystem.isSpriteReady(spOverride.sprite)) {
+            return spOverride;
+          }
         }
       }
-      // Fall through to existing HC Art visuals
+      // Fall through to existing HC Art visuals (fleet_* sprites)
       if (!HCART_ENEMY_VISUALS[e.type]) return null;
       var profile = HCART_ENEMY_VISUALS[e.type];
       if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(profile.sprite)) return null;
@@ -4743,7 +4775,10 @@ if (shouldShow) {
         fleet_suppressor: { x: 4, y: 3, width: 20, height: 24 },
         alien_mini: { x: 2, y: 2, width: 10, height: 10 },
         alien_mini_strip: { x: 2, y: 2, width: 10, height: 10 },
-        faction_scout: { x: 16, y: 16, width: 96, height: 96 }
+        faction_scout: { x: 16, y: 16, width: 96, height: 96 },
+        faction_suppressor: { x: 16, y: 16, width: 96, height: 96 },
+        faction_splitter: { x: 16, y: 16, width: 96, height: 96 },
+        faction_imperial: { x: 16, y: 16, width: 96, height: 96 }
       };
       return bounds[spriteId] || null;
     }

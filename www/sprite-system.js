@@ -443,6 +443,53 @@
     fallbackColor: "#7cff6b"
   });
 
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE B: Suppressor faction
+  // Sheet: 512x128, 4 frames horizontal, 128x128 each
+  // Frame order: 0=mk1_master, 1=elite, 2=artillery, 3=brute
+  // ═══════════════════════════════════════════════════════
+  registerSprite("faction_suppressor", {
+    src: "assets/sprites/enemies/suppressor/suppressor_alien_faction_sheet.png",
+    frameWidth: 128,
+    frameHeight: 128,
+    animations: {
+      idle: { frames: [0,1,2,3], fps: 6, loop: true }
+    },
+    fallbackColor: "#cc4422"
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE B: Splitter faction
+  // Sheet: 512x128, 4 frames horizontal, 128x128 each
+  // Frame order: 0=mk1_master, 1=elite, 2=shard, 3=aberration
+  // ═══════════════════════════════════════════════════════
+  registerSprite("faction_splitter", {
+    src: "assets/sprites/enemies/splitter/splitter_alien_faction_sheet.png",
+    frameWidth: 128,
+    frameHeight: 128,
+    animations: {
+      idle: { frames: [0,1,2,3], fps: 6, loop: true }
+    },
+    fallbackColor: "#cc44aa"
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE B: Imperial faction
+  // Sheet: 512x128, 4 frames horizontal, 128x128 each
+  // Frame order: 0=mk1_master, 1=elite, 2=lancer, 3=guardian
+  // NOTE: Imperial has no dedicated enemy spawn type yet —
+  // sprite is registered for future integration when Imperial enemies are created.
+  // ═══════════════════════════════════════════════════════
+  registerSprite("faction_imperial", {
+    src: "assets/sprites/enemies/imperial/imperial_alien_faction_sheet.png",
+    frameWidth: 128,
+    frameHeight: 128,
+    animations: {
+      idle: { frames: [0,1,2,3], fps: 6, loop: true }
+    },
+    fallbackColor: "#d6b85a"
+  });
+
   // HC-VS-03D1: CRABTRON hero layered sprite system
   // Master sheet: 1536x960, 8 cols x 5 rows, 192x192 cells
   // Columns: composite, shadow, body, left_claw, right_claw, weakpoint_core, cannons_vents, overlay_glow_damage

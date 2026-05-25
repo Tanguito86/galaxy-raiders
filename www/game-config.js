@@ -137,8 +137,11 @@ window.GALAXY_CONFIG = {
   // ============ SPRITE LAB (Phase A kill switches) ============
   // Set a key to false to disable that feature and revert to the prior tier.
   spriteLab: {
-    playerS04Wedge: true,  // false → reverts to player_wedge tier
-    factionScout: true     // false → reverts to fleet_scout/interceptor tier
+    playerS04Wedge: true,   // false → reverts to player_wedge tier
+    factionScout: true,     // false → reverts to fleet_scout/interceptor tier
+    factionSuppressor: true,// false → reverts to fleet_suppressor tier
+    factionSplitter: true,  // false → reverts to fleet_suppressor tier (alien6)
+    factionImperial: true   // false → reserved for future Imperial enemy types
   },
 
   // ============ BOSS AI MOVEMENT ============
