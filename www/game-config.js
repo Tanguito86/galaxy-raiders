@@ -148,7 +148,11 @@ window.GALAXY_CONFIG = {
     miniBossScout: true,      // false → scout_hive_leader falls back to default boss render
     miniBossSuppressor: true, // false → suppressor_siege_core falls back
     miniBossSplitter: true,   // false → splitter_aberrant_node falls back
-    miniBossImperial: true    // false → imperial_command_lancer falls back
+    miniBossImperial: true,   // false → imperial_command_lancer falls back
+
+    // PHASE D: Imperial Flagship kill switches
+    imperialFlagship: true,           // false → disables flagship sprite rendering entirely
+    imperialFlagshipPhaseDebug: false // true → exposes manual phase override (debug only)
   },
 
   // ============ BOSS AI MOVEMENT ============

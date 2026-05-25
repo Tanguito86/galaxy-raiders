@@ -4640,6 +4640,160 @@ if (shouldShow) {
       ctx.restore();
     }
 
+    // ═══════════════════════════════════════════════════════
+    // SPRITE LAB PHASE D: Imperial Flagship Command visual system
+    // Visual-only rendering — no gameplay, no hitbox, no AI changes.
+    // Phase support: master, damaged, core_exposed
+    // ═══════════════════════════════════════════════════════
+
+    var _FLAGSHIP_SPRITE_ID = 'boss_imperial_flagship';
+    var _FLAGSHIP_PHASE_LABELS = ['master', 'damaged', 'core_exposed'];
+
+    function getFlagshipPhaseFrame(phase) {
+      if (typeof window.getImperialFlagshipPhaseFrame === 'function') {
+        var f = window.getImperialFlagshipPhaseFrame(phase);
+        if (f >= 0) return f;
+      }
+      var idx = _FLAGSHIP_PHASE_LABELS.indexOf(phase);
+      return idx >= 0 ? idx : 0;
+    }
+
+    function isFlagshipVisualEnabled() {
+      if (typeof GALAXY_CONFIG === 'undefined') return false;
+      var sl = GALAXY_CONFIG.spriteLab;
+      return !!(sl && sl.imperialFlagship !== false);
+    }
+
+    function isFlagshipSpriteReady() {
+      return !!(window.SpriteSystem && window.SpriteSystem.isSpriteReady(_FLAGSHIP_SPRITE_ID));
+    }
+
+    function getFlagshipPhaseDebugOverride() {
+      if (typeof GALAXY_CONFIG === 'undefined') return null;
+      var sl = GALAXY_CONFIG.spriteLab;
+      if (!sl || !sl.imperialFlagshipPhaseDebug) return null;
+      if (typeof GALAXY_CONFIG.debug === 'undefined') return null;
+      if (typeof window._flagshipPhaseDebugOverride === 'string') return window._flagshipPhaseDebugOverride;
+      return null;
+    }
+
+    function resolveFlagshipVisualPhase(boss) {
+      var debugOverride = getFlagshipPhaseDebugOverride();
+      if (debugOverride) return debugOverride;
+
+      if (!boss) return 'master';
+      var hpPct = boss.hp > 0 && boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+      if (hpPct > 0.66) return 'master';
+      if (hpPct > 0.33) return 'damaged';
+      return 'core_exposed';
+    }
+
+    function drawImperialFlagshipVisual(ctx, boss, x, y, w, h, opts) {
+      if (!ctx) return false;
+      if (!isFlagshipVisualEnabled()) return false;
+
+      opts = opts || {};
+      var phase = opts.phase || resolveFlagshipVisualPhase(boss);
+      var frame = getFlagshipPhaseFrame(phase);
+      var drawX = (typeof opts.x === 'number') ? opts.x : (x || (boss ? boss.x : 0));
+      var drawY = (typeof opts.y === 'number') ? opts.y : (y || (boss ? boss.y : 0));
+      var drawW = (typeof opts.w === 'number') ? opts.w : (w || (boss ? boss.w : 192));
+      var drawH = (typeof opts.h === 'number') ? opts.h : (h || (boss ? boss.h : 192));
+      var alpha = (typeof opts.alpha === 'number') ? opts.alpha : 1;
+      var tint = opts.tint || undefined;
+      var rotation = (typeof opts.rotation === 'number') ? opts.rotation : 0;
+      var flipX = opts.flipX === true;
+      var scale = (typeof opts.scale === 'number') ? opts.scale : 1;
+
+      if (isFlagshipSpriteReady()) {
+        var computedScale = scale;
+        if (!opts.scale) {
+          var sprite = window.SpriteSystem.getSprite(_FLAGSHIP_SPRITE_ID);
+          if (sprite) {
+            var metaScale = (typeof getImperialFlagshipMeta === 'function' && getImperialFlagshipMeta().scaleHint) ? getImperialFlagshipMeta().scaleHint : 0.75;
+            computedScale = Math.min(drawW / sprite.frameWidth, drawH / sprite.frameHeight) * metaScale;
+          }
+          if (!isFinite(computedScale) || computedScale <= 0) computedScale = 1;
+        }
+        window.drawSpriteFrame(ctx, _FLAGSHIP_SPRITE_ID, drawX + drawW / 2, drawY + drawH / 2, {
+          frame: frame,
+          scale: computedScale,
+          anchorX: 0.5,
+          anchorY: 0.5,
+          alpha: alpha,
+          tint: tint,
+          rotation: rotation,
+          flipX: flipX,
+          fallback: function () {
+            drawFlagshipFallback(ctx, drawX, drawY, drawW, drawH, phase);
+          }
+        });
+        return true;
+      }
+
+      drawFlagshipFallback(ctx, drawX, drawY, drawW, drawH, phase);
+      return false;
+    }
+
+    function drawFlagshipFallback(ctx, x, y, w, h, phase) {
+      if (!ctx) return;
+      var phaseColors = { master: '#ffe066', damaged: '#e6a817', core_exposed: '#ff5533' };
+      var col = phaseColors[phase] || '#d6b85a';
+      var cx = x + w / 2;
+      var cy = y + h / 2;
+      var radius = Math.min(w, h) * 0.45;
+
+      ctx.save();
+      ctx.globalAlpha = 0.30;
+      ctx.fillStyle = col;
+      ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      if (phase === 'core_exposed') {
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = '#ff4422';
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawFlagshipDebugOverlay(ctx, boss, phase, x, y, w, h) {
+      if (!ctx) return;
+      var debugCfg = (typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.debug) ? GALAXY_CONFIG.debug : null;
+      if (!debugCfg || !(debugCfg.showBossPattern || debugCfg.showHardcoreInfo)) return;
+
+      var drawX = (typeof x === 'number') ? x : (boss ? boss.x : 0);
+      var drawY = (typeof y === 'number') ? y : (boss ? boss.y : 0);
+      var drawW = (typeof w === 'number') ? w : (boss ? boss.w : 192);
+      var ph = phase || resolveFlagshipVisualPhase(boss);
+      var frame = getFlagshipPhaseFrame(ph);
+
+      ctx.save();
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.font = '4px "Press Start 2P"';
+      ctx.globalAlpha = 0.65;
+      ctx.fillStyle = '#ff0';
+      ctx.fillText('FLAGSHIP ' + ph, drawX + drawW / 2, drawY - 14);
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = '#d6b85a';
+      ctx.fillText('f:' + frame + ' imperial_alien', drawX + drawW / 2, drawY - 8);
+      var enabled = isFlagshipVisualEnabled();
+      var ready = isFlagshipSpriteReady();
+      ctx.fillStyle = enabled ? (ready ? '#0f0' : '#f80') : '#f00';
+      ctx.fillText(enabled ? (ready ? 'RDY' : 'LOADING') : 'OFF', drawX + drawW / 2, drawY - 4);
+      ctx.restore();
+    }
+
     function getEnemyFormationPulse(e, time) {
       var row = e.row || 0;
       var wave = Math.sin(time * 0.0018 + row * 0.45);

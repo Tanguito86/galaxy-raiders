@@ -602,4 +602,45 @@
     },
     fallbackColor: "#887766"
   });
+
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE D: Imperial Flagship Command
+  // Sheet: 768x256, 3 frames horizontal, 256x256 each
+  // Phase order: 0=phase_1_full_armor (master),
+  //              1=phase_2_damaged, 2=phase_3_core_exposed
+  // ═══════════════════════════════════════════════════════
+  var _IMPERIAL_FLAGSHIP_META = {
+    sheetCols: 3,
+    sheetRows: 1,
+    frameW: 256,
+    frameH: 256,
+    bossId: 'imperial_flagship_command',
+    faction: 'imperial_alien',
+    tier: 'flagship',
+    phases: {
+      master: 0,
+      phase_1_full_armor: 0,
+      damaged: 1,
+      phase_2_damaged: 1,
+      core_exposed: 2,
+      phase_3_core_exposed: 2
+    },
+    phaseLabels: ['master', 'damaged', 'core_exposed'],
+    recommendedGameplaySize: { width: 192, height: 192 },
+    pivot: { x: 128, y: 128, anchor: 'center' },
+    scaleHint: 0.75
+  };
+
+  global.getImperialFlagshipMeta = function () { return _IMPERIAL_FLAGSHIP_META; };
+  global.getImperialFlagshipPhaseFrame = function (phase) { return _IMPERIAL_FLAGSHIP_META.phases[phase] != null ? _IMPERIAL_FLAGSHIP_META.phases[phase] : -1; };
+
+  registerSprite("boss_imperial_flagship", {
+    src: "assets/sprites/bosses/imperial_flagship/imperial_flagship_command_sheet.png",
+    frameWidth: _IMPERIAL_FLAGSHIP_META.frameW,
+    frameHeight: _IMPERIAL_FLAGSHIP_META.frameH,
+    animations: {
+      idle: { frames: [0,1,2], fps: 1.5, loop: true }
+    },
+    fallbackColor: "#d6b85a"
+  });
 })();
