@@ -4,6 +4,7 @@ node_modules/
 # Editor / OS
 .idea/
 .vscode/
+.claude/
 .DS_Store
 Thumbs.db
 
@@ -27,3 +28,27 @@ release/*.aab
 release/*.apks
 
 agent-sprite-forge/
+
+# Sprite Lab — intermediate generation output (duplicate of www/assets/)
+ai/generated/
+
+# Sprite Lab — individual frame exports (canonical sheets are tracked separately)
+www/assets/sprites/bosses/scout_hive_leader.png
+www/assets/sprites/bosses/suppressor_siege_core.png
+www/assets/sprites/bosses/splitter_aberrant_node.png
+www/assets/sprites/bosses/imperial_command_lancer.png
+www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_core_exposed.png
+www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_damaged.png
+www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_master.png
+www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_core_exposed.png
+www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_damaged.png
+www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_master.png
+www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_weapon_open.png
+www/assets/sprites/enemies/imperial/imperial_alien_elite.png
+www/assets/sprites/enemies/imperial/imperial_alien_guardian.png
+www/assets/sprites/enemies/imperial/imperial_alien_lancer.png
+www/assets/sprites/enemies/imperial/imperial_alien_mk1_master.png
+www/assets/sprites/enemies/splitter/splitter_alien_aberration.png
+www/assets/sprites/enemies/splitter/splitter_alien_elite.png
+www/assets/sprites/enemies/splitter/splitter_alien_mk1_master.png
+www/assets/sprites/enemies/splitter/splitter_alien_shard.png
