@@ -306,12 +306,27 @@
 
   registerSprite("alien6_strip", {
     src: "assets/sprites/alien6-strip.png",
-    frameWidth: 32,
-    frameHeight: 32,
+    frameWidth: 32, frameHeight: 32,
     animations: {
-      idle: { frames: [0, 1, 2], fps: 6, loop: true }
+      idle: { frames: [0,1,2], fps: 6, loop: true }
     },
     fallbackColor: "#ff4d5e"
+  });
+
+  // SPRITE LAB: alien_mini middleware fallback — reuses alien1 strip at smaller scale
+  // Prevents ghost-rectangle-only visible gap when HC art sprites are loading
+  registerSprite("alien_mini_strip", {
+    src: "assets/sprites/alien1-strip.png",
+    frameWidth: 32, frameHeight: 32,
+    animations: {
+      idle: { frames: [0,1,2], fps: 6, loop: true }
+    },
+    fallbackColor: "#7cff6b"
+  });
+  registerSprite("alien_mini", {
+    src: "assets/sprites/alien1.png",
+    frameWidth: 32, frameHeight: 32,
+    fallbackColor: "#7cff6b"
   });
 
   // ═══════════════════════════════════════════════════════

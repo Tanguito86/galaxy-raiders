@@ -4635,7 +4635,8 @@ if (shouldShow) {
     function getEnemySpriteId(e) {
       if (!e) return null;
       if (e.type === 'alien1' || e.type === 'alien2' || e.type === 'alien3' ||
-          e.type === 'alien4' || e.type === 'alien5' || e.type === 'alien6') {
+          e.type === 'alien4' || e.type === 'alien5' || e.type === 'alien6' ||
+          e.type === 'alien_mini') {
         return e.type;
       }
       return null;
@@ -4733,6 +4734,8 @@ if (shouldShow) {
         fleet_scout: { x: 2, y: 2, width: 12, height: 12 },
         fleet_interceptor: { x: 3, y: 3, width: 18, height: 17 },
         fleet_suppressor: { x: 4, y: 3, width: 20, height: 24 },
+        alien_mini: { x: 2, y: 2, width: 10, height: 10 },
+        alien_mini_strip: { x: 2, y: 2, width: 10, height: 10 },
         faction_scout: { x: 16, y: 16, width: 96, height: 96 }
       };
       return bounds[spriteId] || null;
@@ -4848,6 +4851,8 @@ if (shouldShow) {
     const size = baseSize * readabilityScale;
 
     ctx.save();
+    // SPRITE LAB: ghost placeholder — save/restore to prevent alpha bleed
+    ctx.save();
     if (!isEnemyAnimatedSpriteReady(e)) {
       ctx.globalAlpha = 0.015;
       ctx.fillStyle = color;
@@ -4855,6 +4860,7 @@ if (shouldShow) {
       ctx.globalAlpha = 0.025;
       ctx.fillRect(e.x - 1, e.y - 1, e.w + 2, e.h + 2);
     }
+    ctx.restore();
 
     // HC-VS-05: Faction silhouette for visual identity
     if (typeof drawFactionSilhouette === 'function') {
