@@ -1387,7 +1387,7 @@ function drawCrabtronHeroLayers(ctx, boss, state, scale) {
   if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(spriteId)) return;
 
   var safeState = state || 'idle';
-  var safeScale = (typeof scale === 'number' && isFinite(scale) && scale > 0) ? scale : 0.45;
+  var safeScale = (typeof scale === 'number' && isFinite(scale) && scale > 0) ? scale : 0.55;
 
   var meta = (typeof getCrabtronHeroMeta === 'function') ? getCrabtronHeroMeta() : null;
   if (!meta) return;
@@ -3956,15 +3956,22 @@ if (shouldShow) {
     var frameState = getS04WedgeAnimationFrame();
     var meta = typeof getS04WedgeMeta === 'function' ? getS04WedgeMeta() : null;
     var frame = meta ? meta.frameMap[frameState] : 0;
-    // 128x128 sprite centered over 33x24 hitbox
-    var dx = player.x - 47; // center 128px over 33px
-    var dy = player.y - 52; // center 128px over 24px
-    window.drawSpriteFrame(ctx, 'player_s04_wedge', dx, dy, {
+    var frameW = meta && meta.frameW ? meta.frameW : 128;
+    var frameH = meta && meta.frameH ? meta.frameH : 128;
+    var pivot = meta && meta.pivot ? meta.pivot : null;
+    var pivotX = pivot ? (Array.isArray(pivot) ? pivot[0] : pivot.x) : frameW / 2;
+    var pivotY = pivot ? (Array.isArray(pivot) ? pivot[1] : pivot.y) : frameH / 2;
+    if (typeof pivotX !== 'number' || !isFinite(pivotX)) pivotX = frameW / 2;
+    if (typeof pivotY !== 'number' || !isFinite(pivotY)) pivotY = frameH / 2;
+    var playerCenterX = player.x + player.width / 2;
+    var playerCenterY = player.y + player.height / 2;
+
+    window.drawSpriteFrame(ctx, 'player_s04_wedge', playerCenterX, playerCenterY, {
       frame: frame,
       rotation: 0,
       scale: 0.45, // 128x128 at 0.45 = ~58px visual — fits gameplay hitbox
-      anchorX: 0,
-      anchorY: 0
+      anchorX: pivotX / frameW,
+      anchorY: pivotY / frameH
     });
   }
 
