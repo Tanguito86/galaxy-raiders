@@ -4202,6 +4202,8 @@ if (shouldShow) {
 
       // HC-VS-03D2: check hero readiness once per frame
       var _crabtronHeroReady = (boss.pattern === 'crossfire' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_crabtron_hero'));
+      // SPRITE LAB PHASE D: check Imperial Flagship readiness once per frame
+      var _imperialFlagshipReady = (boss.pattern === 'supreme' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_imperial_flagship') && isFlagshipVisualEnabled());
 
       ctx.save();
       ctx.globalAlpha = _crabtronHeroReady ? 0 : bossGlow * 0.55;
@@ -4236,7 +4238,8 @@ if (shouldShow) {
         drawTenienteImpactWarning(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'supreme') {
         drawEmperorImperialAura(ctx, boss, bossColor, globalTime);
-        drawEmperorEnergyMantle(ctx, boss, bossColor, globalTime);
+        // HC-SPRITE-WIRE-02: EnergyMantle replaced by flagship sprite body when ready
+        if (!_imperialFlagshipReady) drawEmperorEnergyMantle(ctx, boss, bossColor, globalTime);
         drawEmperorTeleportIndicator(ctx, boss, bossColor, globalTime);
       }
 
@@ -4335,11 +4338,19 @@ if (shouldShow) {
         drawCrabtronHeroLayers(ctx, boss, _heroState, _heroScale);
       }
 
+      // HC-SPRITE-WIRE-02: Imperial Flagship visual for EMPERADOR (level 20)
+      // Visual-only swap — no gameplay, hitbox, collision, or AI changes.
+      // Falls back to legacy EMPERADOR geometric rendering when sprite unavailable.
+      if (boss.pattern === 'supreme' && _imperialFlagshipReady) {
+        drawImperialFlagshipVisual(ctx, boss);
+      }
+
       // HC-VS-03D2: legacy body replaced by hero layers when ready
-      if (!_crabtronHeroReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+      // HC-SPRITE-WIRE-02: also replaced by flagship visual when ready
+      if (!_crabtronHeroReady && !_imperialFlagshipReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
       // HC-121: core pulse brightness
-      if (!_crabtronHeroReady) {
+      if (!_crabtronHeroReady && !_imperialFlagshipReady) {
         var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
         ctx.save();
         ctx.globalAlpha = 0.020 + _corePulse * 0.026;
@@ -4360,11 +4371,13 @@ if (shouldShow) {
         drawTenienteCockpit(ctx, boss, bossColor, globalTime);
         drawTenienteLights(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'supreme') {
-        drawEmperorCrownHalo(ctx, boss, bossColor, globalTime);
+        // HC-SPRITE-WIRE-02: CrownHalo replaced by flagship sprite when ready
+        if (!_imperialFlagshipReady) drawEmperorCrownHalo(ctx, boss, bossColor, globalTime);
       }
 
       // HC-VS-03D2: ambient glow replaced by hero overlay_glow_damage layer
-      if (!_crabtronHeroReady) {
+      // HC-SPRITE-WIRE-02: also gated when flagship sprite is active
+      if (!_crabtronHeroReady && !_imperialFlagshipReady) {
         ctx.save();
         ctx.globalAlpha = 0.055;
         drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
@@ -4378,8 +4391,11 @@ if (shouldShow) {
       } else if (boss.pattern === 'divebomb') {
         drawTenienteCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'supreme') {
-        drawEmperorCore(ctx, boss, bossColor, globalTime);
-        drawEmperorPhaseOverload(ctx, boss, bossColor, globalTime);
+        // HC-SPRITE-WIRE-02: EmperorCore + PhaseOverload replaced by flagship sprite when ready
+        if (!_imperialFlagshipReady) {
+          drawEmperorCore(ctx, boss, bossColor, globalTime);
+          drawEmperorPhaseOverload(ctx, boss, bossColor, globalTime);
+        }
       }
 
       ctx.restore();
@@ -4388,7 +4404,8 @@ if (shouldShow) {
         const flicker = 0.18 + 0.14 * Math.sin(globalTime * 0.04 + boss.flashTimer * 0.01);
         ctx.save();
         // HC-VS-03D4: legacy sprite flash gated behind hero; white crosshair always visible
-        if (!_crabtronHeroReady) {
+        // HC-SPRITE-WIRE-02: also gated behind flagship
+        if (!_crabtronHeroReady && !_imperialFlagshipReady) {
           ctx.globalAlpha = flicker;
           drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
           ctx.globalAlpha = flicker * 0.24;
