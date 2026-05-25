@@ -4282,9 +4282,12 @@ if (shouldShow) {
       }
 
       // HC-VS-03D3: CRABTRON hero layered body — presentation-driven phase states
+      // Hero render scale is metadata-driven (scaleHint from _CRABTRON_HERO_META).
+      // Falls back to 0.45 if metadata is unavailable.
       if (boss.pattern === 'crossfire') {
         var _heroState = resolveCrabtronHeroState(boss);
-        var _heroScale = 0.45;
+        var _heroMetaScale = (typeof getCrabtronHeroMeta === 'function' && getCrabtronHeroMeta().scaleHint) ? getCrabtronHeroMeta().scaleHint : 0.45;
+        var _heroScale = _heroMetaScale;
         if (_smallScreenBoost > 1.0) _heroScale *= _smallScreenBoost;
         _heroScale = Math.max(0.38, Math.min(0.55, _heroScale));
         drawCrabtronHeroLayers(ctx, boss, _heroState, _heroScale);
@@ -4327,9 +4330,9 @@ if (shouldShow) {
       }
 
       if (boss.pattern === 'crossfire') {
-        // HC-VS-03D2: legacy core replaced by hero weakpoint_core layer;
-        // dynamic pulse rings preserved for gameplay readability
-        drawCrabtronCore(ctx, boss, bossColor, globalTime);
+        // HC-VS-03D2: legacy core gated — hero weakpoint_core layer provides its own animated pulse.
+        // Legacy pixel-art core rings are only drawn as a fallback when hero sprite is unavailable.
+        if (!_crabtronHeroReady) drawCrabtronCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
         drawTenienteCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'supreme') {
