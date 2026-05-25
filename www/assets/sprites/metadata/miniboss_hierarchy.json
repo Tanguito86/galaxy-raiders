@@ -1,0 +1,119 @@
+{
+  "hierarchyId": "miniboss_hierarchy_01",
+  "project": "Galaxy Raiders",
+  "type": "miniboss_hierarchy",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "phase": "01",
+  "sheet": {
+    "path": "www/assets/sprites/bosses/miniboss_hierarchy_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 192,
+    "frameHeight": 192,
+    "frames": 4
+  },
+  "recommendedGameplaySize": {
+    "width": 128,
+    "height": 128
+  },
+  "pivot": {
+    "x": 96,
+    "y": 96,
+    "anchor": "center"
+  },
+  "units": {
+    "scout_hive_leader": {
+      "faction": "scout_alien",
+      "roleClassification": "hive_swarm_commander",
+      "frame": 0,
+      "file": "www/assets/sprites/bosses/scout_hive_leader.png",
+      "notes": "Large Scout Hive Leader with expanded insectoid claw span, reinforced chitin armor, and dominant cyan core presence."
+    },
+    "suppressor_siege_core": {
+      "faction": "suppressor_alien",
+      "roleClassification": "siege_anchor_boss",
+      "frame": 1,
+      "file": "www/assets/sprites/bosses/suppressor_siege_core.png",
+      "notes": "Massive Suppressor Siege Core with oversized armored shell, intense red-orange energy hub, and crushing frontal geometry."
+    },
+    "splitter_aberrant_node": {
+      "faction": "splitter_alien",
+      "roleClassification": "chaos_node_boss",
+      "frame": 2,
+      "file": "www/assets/sprites/bosses/splitter_aberrant_node.png",
+      "notes": "Unstable Splitter Aberrant Node with extreme fractal asymmetry, multiple fractured limbs, and volatile energy fractures."
+    },
+    "imperial_command_lancer": {
+      "faction": "imperial_alien",
+      "roleClassification": "command_strike_boss",
+      "frame": 3,
+      "file": "www/assets/sprites/bosses/imperial_command_lancer.png",
+      "notes": "Towering Imperial Command Lancer with elongated strike geometry, reinforced command crest, and rigid disciplined posture."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "unitId": "scout_hive_leader",
+      "faction": "scout_alien"
+    },
+    {
+      "frame": 1,
+      "unitId": "suppressor_siege_core",
+      "faction": "suppressor_alien"
+    },
+    {
+      "frame": 2,
+      "unitId": "splitter_aberrant_node",
+      "faction": "splitter_alien"
+    },
+    {
+      "frame": 3,
+      "unitId": "imperial_command_lancer",
+      "faction": "imperial_alien"
+    }
+  ],
+  "readabilityNotes": [
+    "Mini-bosses are scaled to 192x192 master resolution and designed for high-visibility combat at the recommended 128x128 gameplay size.",
+    "Each boss preserves its parent faction silhouette identity while scaling up detail density for larger on-screen presence.",
+    "High-contrast energy markers (cyan core, red-orange hub, fractured white energy, vertical command crest) provide instant faction recognition.",
+    "Large boss hitboxes benefit from the expanded sprite area: peripheral readability remains strong even with dense bullet clutter."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended gameplay size is 128x128, larger than standard enemies to maintain boss readability on mobile.",
+    "Energy cores and crests provide strong contrast markers that remain visible on small displays.",
+    "Bosses should generally occupy a larger share of the screen in mobile layouts, so the 192x192 master resolution provides headroom.",
+    "Splitter Aberrant Node's fractal complexity may reduce peripheral readability on mobile; centering it in the playfield is recommended."
+  ],
+  "silhouetteNotes": [
+    "Scout Hive Leader reads as an ascended insectoid commander through enhanced claw span and thicker chitin plates.",
+    "Suppressor Siege Core reads as a siege anchor through massive armored bulk and a dominant central energy hub.",
+    "Splitter Aberrant Node reads as a chaos node through extreme asymmetry, cracked limbs, and volatile energy fractures.",
+    "Imperial Command Lancer reads as a command strike threat through towering vertical geometry and a reinforced crest.",
+    "All four mini-bosses maintain faction silhouette identity while scaling up for boss-level readability."
+  ],
+  "combatReadabilityNotes": [
+    "The four mini-bosses are designed for intense shmup combat scenarios where they dominate the field visually.",
+    "High-contrast energy markers ensure boss silhouette remains readable behind player and enemy bullet patterns.",
+    "Faction color differentiation (cyan, red-orange, fractured white, rigid gold-white) supports rapid threat identification.",
+    "At gameplay resolution, all four bosses are instantly distinguishable by silhouette, energy color, and geometry language."
+  ],
+  "hierarchyRoleNotes": [
+    "Scout Hive Leader: swarm commander that brings Scout-themed formations and pressure patterns.",
+    "Suppressor Siege Core: siege anchor designed for sustained pressure encounters with heavy firepower.",
+    "Splitter Aberrant Node: chaos node for unpredictable, high-intensity fragmentation combat.",
+    "Imperial Command Lancer: command strike leader for disciplined, formation-based boss encounters.",
+    "This Phase 01 hierarchy establishes one mini-boss per enemy faction for balanced roster coverage."
+  ],
+  "factionEscalationNotes": [
+    "Each mini-boss escalates its parent faction's visual language to boss scale while preserving identity.",
+    "Scout: claw span expands, chitin becomes heavier, core grows more dominant.",
+    "Suppressor: shell becomes massive, siege-structure red-orange core dominates center mass.",
+    "Splitter: asymmetry amplifies, limbs become more erratic, energy fractures multiply.",
+    "Imperial: verticality extends, crest reinforcement increases, disciplined geometry becomes more imposing."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, draw.js, runtime logic, collisions, hitboxes, boss AI, rank, or balance changes were made.",
+    "Sheet frame order is scout_hive_leader, suppressor_siege_core, splitter_aberrant_node, imperial_command_lancer."
+  ]
+}
