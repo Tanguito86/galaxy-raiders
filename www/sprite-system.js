@@ -561,4 +561,45 @@
     frameHeight: 128,
     fallbackColor: "#ffffff"
   });
+
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE C: Mini-boss hierarchy
+  // Sheet: 768x192, 4 frames horizontal, 192x192 each
+  // Frame order: 0=scout_hive_leader, 1=suppressor_siege_core,
+  //              2=splitter_aberrant_node, 3=imperial_command_lancer
+  // ═══════════════════════════════════════════════════════
+  var _MINIBOSS_HIERARCHY_META = {
+    sheetCols: 4,
+    sheetRows: 1,
+    frameW: 192,
+    frameH: 192,
+    unitMap: {
+      scout_hive_leader: 0,
+      suppressor_siege_core: 1,
+      splitter_aberrant_node: 2,
+      imperial_command_lancer: 3
+    },
+    factionMap: {
+      scout_hive_leader: 'scout_alien',
+      suppressor_siege_core: 'suppressor_alien',
+      splitter_aberrant_node: 'splitter_alien',
+      imperial_command_lancer: 'imperial_alien'
+    },
+    recommendedGameplaySize: { width: 128, height: 128 },
+    pivot: { x: 96, y: 96, anchor: 'center' },
+    scaleHint: 1.0
+  };
+
+  global.getMiniBossHierarchyMeta = function () { return _MINIBOSS_HIERARCHY_META; };
+  global.getMiniBossFrame = function (unitId) { return _MINIBOSS_HIERARCHY_META.unitMap[unitId] != null ? _MINIBOSS_HIERARCHY_META.unitMap[unitId] : -1; };
+
+  registerSprite("boss_miniboss_hierarchy", {
+    src: "assets/sprites/bosses/miniboss_hierarchy_sheet.png",
+    frameWidth: _MINIBOSS_HIERARCHY_META.frameW,
+    frameHeight: _MINIBOSS_HIERARCHY_META.frameH,
+    animations: {
+      idle: { frames: [0,1,2,3], fps: 4, loop: true }
+    },
+    fallbackColor: "#887766"
+  });
 })();

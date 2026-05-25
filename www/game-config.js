@@ -134,14 +134,21 @@ window.GALAXY_CONFIG = {
     debugMissingSprites: true
   },
 
-  // ============ SPRITE LAB (Phase A kill switches) ============
+  // ============ SPRITE LAB (Phase A/B/C kill switches) ============
   // Set a key to false to disable that feature and revert to the prior tier.
   spriteLab: {
     playerS04Wedge: true,   // false → reverts to player_wedge tier
     factionScout: true,     // false → reverts to fleet_scout/interceptor tier
     factionSuppressor: true,// false → reverts to fleet_suppressor tier
     factionSplitter: true,  // false → reverts to fleet_suppressor tier (alien6)
-    factionImperial: true   // false → reserved for future Imperial enemy types
+    factionImperial: true,  // false → reserved for future Imperial enemy types
+
+    // PHASE C: Mini-boss hierarchy kill switches
+    miniBossHierarchy: true, // false → disables all mini-boss sprite rendering
+    miniBossScout: true,      // false → scout_hive_leader falls back to default boss render
+    miniBossSuppressor: true, // false → suppressor_siege_core falls back
+    miniBossSplitter: true,   // false → splitter_aberrant_node falls back
+    miniBossImperial: true    // false → imperial_command_lancer falls back
   },
 
   // ============ BOSS AI MOVEMENT ============

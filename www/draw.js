@@ -4511,6 +4511,135 @@ if (shouldShow) {
       ctx.restore();
     }
 
+    // ═══════════════════════════════════════════════════════
+    // SPRITE LAB PHASE C: Mini-boss hierarchy visual system
+    // Visual-only rendering — no gameplay, no hitbox, no AI changes.
+    // Registered for future mini-boss encounter integration.
+    // ═══════════════════════════════════════════════════════
+
+    var _MINIBOSS_SPRITE_ID = 'boss_miniboss_hierarchy';
+
+    var _MINIBOSS_VISUAL_MAP = {
+      scout_hive_leader:       { frame: 0, faction: 'scout_alien',      color: '#5ef7ff', fallbackKey: 'boss_crabtron' },
+      suppressor_siege_core:   { frame: 1, faction: 'suppressor_alien', color: '#ff5533', fallbackKey: 'boss_serpentrix' },
+      splitter_aberrant_node:  { frame: 2, faction: 'splitter_alien',   color: '#dd66cc', fallbackKey: 'boss_orbital' },
+      imperial_command_lancer: { frame: 3, faction: 'imperial_alien',   color: '#ffd866', fallbackKey: 'boss_emperador' }
+    };
+
+    function getMiniBossVisualConfig(unitId) {
+      return _MINIBOSS_VISUAL_MAP[unitId] || null;
+    }
+
+    function isMiniBossVisualEnabled(unitId) {
+      if (typeof GALAXY_CONFIG === 'undefined') return false;
+      var sl = GALAXY_CONFIG.spriteLab;
+      if (!sl || sl.miniBossHierarchy === false) return false;
+      switch (unitId) {
+        case 'scout_hive_leader':        return sl.miniBossScout !== false;
+        case 'suppressor_siege_core':    return sl.miniBossSuppressor !== false;
+        case 'splitter_aberrant_node':   return sl.miniBossSplitter !== false;
+        case 'imperial_command_lancer':  return sl.miniBossImperial !== false;
+        default: return sl.miniBossHierarchy !== false;
+      }
+    }
+
+    function isMiniBossSpriteReady() {
+      return !!(window.SpriteSystem && window.SpriteSystem.isSpriteReady(_MINIBOSS_SPRITE_ID));
+    }
+
+    function drawMiniBossVisual(ctx, unitId, x, y, w, h, opts) {
+      if (!ctx) return false;
+      if (!isMiniBossVisualEnabled(unitId)) return false;
+
+      var visual = getMiniBossVisualConfig(unitId);
+      if (!visual) return false;
+
+      opts = opts || {};
+      var alpha = (typeof opts.alpha === 'number') ? opts.alpha : 1;
+      var tint = opts.tint || undefined;
+      var rotation = (typeof opts.rotation === 'number') ? opts.rotation : 0;
+      var scale = (typeof opts.scale === 'number') ? opts.scale : 1;
+      var flipX = opts.flipX === true;
+      var drawX = (typeof opts.x === 'number') ? opts.x : x;
+      var drawY = (typeof opts.y === 'number') ? opts.y : y;
+      var dw = (typeof w === 'number') ? w : 128;
+      var dh = (typeof h === 'number') ? h : 128;
+
+      if (isMiniBossSpriteReady()) {
+        var computedScale = scale;
+        if (!opts.scale) {
+          var sprite = window.SpriteSystem.getSprite(_MINIBOSS_SPRITE_ID);
+          if (sprite) {
+            computedScale = Math.min(dw / sprite.frameWidth, dh / sprite.frameHeight);
+          }
+          if (!isFinite(computedScale) || computedScale <= 0) computedScale = 1;
+        }
+        window.drawSpriteFrame(ctx, _MINIBOSS_SPRITE_ID, drawX + dw / 2, drawY + dh / 2, {
+          frame: visual.frame,
+          scale: computedScale,
+          anchorX: 0.5,
+          anchorY: 0.5,
+          alpha: alpha,
+          tint: tint,
+          rotation: rotation,
+          flipX: flipX,
+          fallback: function () {
+            drawMiniBossFallback(ctx, unitId, drawX, drawY, dw, dh, visual);
+          }
+        });
+        return true;
+      }
+
+      drawMiniBossFallback(ctx, unitId, drawX, drawY, dw, dh, visual);
+      return false;
+    }
+
+    function drawMiniBossFallback(ctx, unitId, x, y, w, h, visual) {
+      if (!ctx) return;
+      var v = visual || getMiniBossVisualConfig(unitId);
+      var col = v ? v.color : '#887766';
+      var cx = x + w / 2;
+      var cy = y + h / 2;
+      var radius = Math.min(w, h) * 0.4;
+
+      ctx.save();
+      ctx.globalAlpha = 0.30;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.50;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = col;
+      ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
+      ctx.restore();
+    }
+
+    // SPRITE LAB PHASE C: debug overlay — show mini-boss visual ID when debug mode is active
+    function drawMiniBossDebugOverlay(ctx, unitId, x, y, w, h) {
+      if (!ctx || !unitId) return;
+      var debugCfg = (typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.debug) ? GALAXY_CONFIG.debug : null;
+      if (!debugCfg || !(debugCfg.showBossPattern || debugCfg.showHardcoreInfo || debugCfg.showEnemyRoles)) return;
+
+      ctx.save();
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.font = '4px "Press Start 2P"';
+      ctx.globalAlpha = 0.65;
+      ctx.fillStyle = '#ff0';
+      ctx.fillText('MB:' + unitId, x + w / 2, y - 8);
+      var visual = getMiniBossVisualConfig(unitId);
+      if (visual) {
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = visual.color;
+        ctx.fillText(visual.faction + ' f:' + visual.frame, x + w / 2, y - 4);
+      }
+      ctx.restore();
+    }
+
     function getEnemyFormationPulse(e, time) {
       var row = e.row || 0;
       var wave = Math.sin(time * 0.0018 + row * 0.45);
