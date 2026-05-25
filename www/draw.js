@@ -3364,7 +3364,10 @@ function draw() {
   // ================================================================
   // 1) Limpiar y pintar fondo SIN translate (así el fondo no recibe shake global)
   ctx.clearRect(0, 0, W, H);
-  drawThemedBackground(ctx, level, globalTime);
+  var lv1FarDrawn = (typeof drawLv1FarParallax === 'function')
+    ? drawLv1FarParallax(ctx, level, globalTime)
+    : false;
+  if (!lv1FarDrawn) drawThemedBackground(ctx, level, globalTime);
 
   const mobileControls = document.getElementById('mobile-controls');
   if (mobileControls) {
@@ -3428,6 +3431,7 @@ function draw() {
 
   // 2.5) HC-97: atmospheric effects (dust, speed lines, ambient flash)
   if (typeof drawHC97Atmosphere === 'function') drawHC97Atmosphere(ctx, level, globalTime);
+  if (typeof drawLv1MidParallax === 'function') drawLv1MidParallax(ctx, level, globalTime);
 
   // 3) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
@@ -6617,6 +6621,7 @@ ufoRewards.forEach(d => {
     // Enemy bullets
     enemyBullets.forEach(drawEnemyBullet);
 
+    if (typeof drawLv1ForegroundFxParallax === 'function') drawLv1ForegroundFxParallax(ctx, level, globalTime);
 
     // ================================================================
     // HC-RD-01: PRIORITY_FEEDBACK — HUD overlays
