@@ -387,16 +387,16 @@
 
   // ═══════════════════════════════════════════════════════
   // SPRITE LAB PHASE A: S04 Wedge upgraded player ship
-  // Sheet: 512x256, 2 cols x 4 rows, 128x128 cells
+  // Sheet: 512x256, 4 cols x 2 rows, 128x128 cells
   // Frame map (row-major idle=0, thrust=1, bankL=2, bankR=3, boost=4, damage=5, respawn=6, thrust2=7)
   // ═══════════════════════════════════════════════════════
   var _S04_WEDGE_META = {
-    sheetCols: 2,
-    sheetRows: 4,
+    sheetCols: 4,
+    sheetRows: 2,
     frameW: 128,
     frameH: 128,
-    // 2x4 grid: row 0 = idle(0), thrust_01(1); row 1 = bank_left(2), bank_right(3);
-    //           row 2 = boost(4), damage(5); row 3 = respawn(6), thrust_02(7)
+    // 4x2 grid: row 0 = idle(0), thrust_01(1), bank_left(2), bank_right(3);
+    //           row 1 = boost(4), damage(5), respawn(6), thrust_02(7)
     frameMap: {
       idle:      0,
       thrust_01: 1,

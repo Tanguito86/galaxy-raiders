@@ -3939,7 +3939,7 @@ if (shouldShow) {
 
   // ═══════════════════════════════════════════════════════
   // SPRITE LAB PHASE A: S04 WEDGE animation frame mapping
-  // 128x128 frames, 2x4 grid. Simplified state map vs 32-frame strip.
+  // 128x128 frames, 4x2 grid. Simplified state map vs 32-frame strip.
   // ═══════════════════════════════════════════════════════
   function getS04WedgeAnimationFrame() {
     var t = globalTime || Date.now();
