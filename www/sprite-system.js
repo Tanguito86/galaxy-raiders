@@ -589,6 +589,40 @@
     fallbackColor: "#ffc857"
   });
 
+  // HC-SPRITE-LIEUTENANT-19: TENIENTE hero layered sprite system
+  // Master sheet: 1536x768, 8 cols x 4 rows, 192x192 cells
+  // Rows: idle, damaged, overdrive, critical
+  // Columns: shadow, body, thrusters_engines, wings, cockpit, cannons_armaments, lights_glow, overlay_damage
+  var _LIEUTENANT_HERO_META = {
+    cols: 8,
+    rows: 4,
+    frameW: 192,
+    frameH: 192,
+    layers: ['shadow', 'body', 'thrusters_engines', 'wings', 'cockpit', 'cannons_armaments', 'lights_glow', 'overlay_damage'],
+    states: ['idle', 'damaged', 'overdrive', 'critical'],
+    pivot: [96, 96],
+    scaleHint: 0.55
+  };
+
+  global.getLieutenantHeroMeta = function () {
+    return _LIEUTENANT_HERO_META;
+  };
+
+  global.getLieutenantHeroFrame = function (state, layer) {
+    var meta = _LIEUTENANT_HERO_META;
+    var si = meta.states.indexOf(state);
+    var li = meta.layers.indexOf(layer);
+    if (si < 0 || li < 0) return -1;
+    return si * meta.cols + li;
+  };
+
+  registerSprite("boss_lieutenant_hero", {
+    src: "assets/sprites/bosses/teniente/imperial_lieutenant_hero_sheet.png",
+    frameWidth: _LIEUTENANT_HERO_META.frameW,
+    frameHeight: _LIEUTENANT_HERO_META.frameH,
+    fallbackColor: "#ffc857"
+  });
+
   registerSprite("boss_emperador", {
     src: "assets/sprites/boss_emperador.png",
     frameWidth: 128,

@@ -162,7 +162,10 @@ window.GALAXY_CONFIG = {
     orbitalSiegeStateDebug: false,    // true → exposes manual state override (debug only)
 
     // HC-SPRITE-SERPENTRIX-03: Serpentrix Hero kill switch
-    serpentrixHero: true              // false → disables serpentrix hero sprite rendering entirely
+    serpentrixHero: true,             // false → disables serpentrix hero sprite rendering entirely
+
+    // HC-SPRITE-LIEUTENANT-19: Lieutenant Hero kill switch
+    lieutenantHero: true              // false → disables lieutenant hero sprite rendering entirely
   },
 
   // ============ BOSS AI MOVEMENT ============

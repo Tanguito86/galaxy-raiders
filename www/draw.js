@@ -1688,6 +1688,182 @@ function drawSerpentrixHeroLayers(ctx, boss, state, scale) {
   }
 }
 
+// --- HC-SPRITE-LIEUTENANT-19: LIEUTENANT HERO STATE RESOLVER (presentation-enhanced) ---
+function resolveLieutenantHeroState(boss) {
+  if (!boss || !boss.active) {
+    if (boss && typeof boss._deathUntil === 'number' && (typeof globalTime === 'number' ? globalTime : 0) < boss._deathUntil) return 'critical';
+    return 'idle';
+  }
+
+  // Priority: critical > overdrive > damaged > idle
+
+  if (boss.phase === 3) return 'critical';
+
+  if (boss.flashTimer > 0) return 'damaged';
+
+  var shootRate = 600;
+  if (boss.maxHp > 0) {
+    var hpPct = boss.hp / boss.maxHp;
+    var phase = hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3;
+    shootRate = Math.max(600, 1800 - (typeof level === 'number' ? level : 5) * 40);
+    if (phase >= 3) shootRate *= 0.6;
+  }
+  if (boss.shootTimer > shootRate * 0.7) return 'overdrive';
+
+  if (boss._hcTelegraphType && boss._hcTelegraphTimer > 0) return 'damaged';
+
+  return 'idle';
+}
+
+// --- HC-SPRITE-LIEUTENANT-19: LIEUTENANT HERO LAYERED DRAW (presentation pass) ---
+function drawLieutenantHeroLayers(ctx, boss, state, scale) {
+  if (!ctx || !boss) return;
+  if (typeof getLieutenantHeroFrame !== 'function') return;
+
+  var spriteId = 'boss_lieutenant_hero';
+  if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(spriteId)) return;
+
+  var safeState = state || 'idle';
+  var safeScale = (typeof scale === 'number' && isFinite(scale) && scale > 0) ? scale : 0.55;
+
+  var meta = (typeof getLieutenantHeroMeta === 'function') ? getLieutenantHeroMeta() : null;
+  if (!meta) return;
+
+  var pivot = meta.pivot || [96, 96];
+  var anchorX = pivot[0] / meta.frameW;
+  var anchorY = pivot[1] / meta.frameH;
+
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var t = (typeof globalTime === 'number' ? globalTime : 0);
+
+  // === State-driven overlay alpha ===
+  var ovAlpha;
+  switch (safeState) {
+    case 'damaged':
+      ovAlpha = 0.22 + Math.abs(Math.sin(t * 0.052)) * 0.16;
+      break;
+    case 'overdrive':
+      ovAlpha = 0.34 + Math.sin(t * 0.048 + 0.4) * 0.14;
+      break;
+    case 'critical':
+      ovAlpha = 0.50 + Math.abs(Math.sin(t * 0.068 + 1.2)) * 0.24;
+      break;
+    default:
+      ovAlpha = 0.04 + Math.sin(t * 0.012) * 0.03;
+      break;
+  }
+  if (boss.flashTimer > 0) ovAlpha += 0.10;
+  ovAlpha = Math.min(0.80, ovAlpha);
+  if (_smallScreenBoost > 1.0) ovAlpha *= 0.78;
+
+  // === State-driven lights glow ===
+  var lightFreq, lightBase, lightAmp;
+  switch (safeState) {
+    case 'damaged':
+      lightFreq = 0.044; lightBase = 0.52; lightAmp = 0.32;
+      break;
+    case 'overdrive':
+      lightFreq = 0.056; lightBase = 0.62; lightAmp = 0.30;
+      break;
+    case 'critical':
+      lightFreq = 0.060; lightBase = 0.68; lightAmp = 0.28;
+      break;
+    default:
+      lightFreq = 0.022; lightBase = 0.44; lightAmp = 0.28;
+      break;
+  }
+  var lightPulse = 0.5 + 0.5 * Math.sin(t * lightFreq);
+  var lightAlpha = lightBase + lightPulse * lightAmp;
+
+  // === State-driven thruster alpha ===
+  var thrusterAlpha;
+  switch (safeState) {
+    case 'overdrive':
+      thrusterAlpha = 0.85 + Math.abs(Math.sin(t * 0.055)) * 0.14;
+      break;
+    case 'critical':
+      thrusterAlpha = 0.72 + Math.abs(Math.sin(t * 0.070)) * 0.24;
+      break;
+    default:
+      thrusterAlpha = 0.58 + Math.sin(t * 0.025) * 0.14;
+      break;
+  }
+
+  // === State-driven shadow alpha ===
+  var shadowAlpha = 0.24;
+  if (safeState === 'damaged') shadowAlpha = 0.30;
+  if (safeState === 'overdrive') shadowAlpha = 0.32;
+  if (safeState === 'critical') shadowAlpha = 0.38;
+
+  // === Thruster micro-motion ===
+  var thrusterOY = 0;
+  if (safeState === 'overdrive') {
+    thrusterOY = Math.sin(t * 0.055) * 1.2;
+  } else if (safeState === 'critical') {
+    thrusterOY = Math.sin(t * 0.068) * 1.8;
+  } else {
+    thrusterOY = Math.sin(t * 0.020) * 0.5;
+  }
+
+  // === Wing micro-motion ===
+  var wingOY = 0;
+  if (safeState === 'overdrive') {
+    wingOY = Math.sin(t * 0.048 + 0.6) * 0.9;
+  } else if (safeState === 'critical') {
+    wingOY = Math.sin(t * 0.062 + 0.6) * 1.4;
+  }
+
+  // === Cockpit micro-motion ===
+  var cockpitOX = 0;
+  if (safeState === 'damaged') {
+    cockpitOX = Math.sin(t * 0.058) * 0.8;
+  } else if (safeState === 'critical') {
+    cockpitOX = Math.sin(t * 0.065) * 1.2;
+  }
+
+  var overlayOY = (safeState === 'critical') ? Math.sin(t * 0.035) * 1.0 : 0;
+
+  // === Z-ordered layer draw ===
+  var drawOrder = ['shadow', 'body', 'thrusters_engines', 'wings', 'cockpit', 'cannons_armaments', 'lights_glow', 'overlay_damage'];
+
+  for (var i = 0; i < drawOrder.length; i++) {
+    var layer = drawOrder[i];
+    var frame = getLieutenantHeroFrame(safeState, layer);
+    if (frame < 0) continue;
+
+    var alpha = 1;
+    var ox = 0, oy = 0;
+
+    if (layer === 'shadow') {
+      alpha = shadowAlpha;
+      oy = 2;
+    } else if (layer === 'thrusters_engines') {
+      alpha = thrusterAlpha;
+      oy = thrusterOY;
+    } else if (layer === 'wings') {
+      oy = wingOY;
+    } else if (layer === 'cockpit') {
+      ox = cockpitOX;
+    } else if (layer === 'lights_glow') {
+      alpha = lightAlpha;
+    } else if (layer === 'overlay_damage') {
+      alpha = ovAlpha;
+      oy = overlayOY;
+    }
+
+    if (alpha <= 0.005) continue;
+
+    window.drawSpriteFrame(ctx, spriteId, cx + ox, cy + oy, {
+      frame: frame,
+      scale: safeScale,
+      anchorX: anchorX,
+      anchorY: anchorY,
+      alpha: alpha
+    });
+  }
+}
+
 // --- SERPENTRIX VISUALS ---
 function drawSerpentrixAura(ctx, boss, color, time) {
   var _auraMax = (typeof getFreezeAuditConfig === 'function') ? (getFreezeAuditConfig().bossAuraCap || 0.30) : 0.30;
@@ -4390,6 +4566,8 @@ if (shouldShow) {
       var _serpentrixHeroReady = (boss.pattern === 'zigzag' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_serpentrix_hero') && isSerpentrixHeroEnabled());
       // HC-SPRITE-COLOSSUS-STAGE15: check Orbital Colossus readiness once per frame
       var _colossusReady = (boss.pattern === 'rotate' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_orbital_siege_colossus') && isColossusVisualEnabled());
+      // HC-SPRITE-LIEUTENANT-19: check Lieutenant Hero readiness once per frame
+      var _lieutenantHeroReady = (boss.pattern === 'divebomb' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_lieutenant_hero') && isLieutenantHeroEnabled());
 
       ctx.save();
       ctx.globalAlpha = _crabtronHeroReady ? 0 : bossGlow * 0.55;
@@ -4421,9 +4599,11 @@ if (shouldShow) {
           drawOrbitalTractorBeamIndicator(ctx, boss, bossColor, globalTime);
         }
       } else if (boss.pattern === 'divebomb') {
-        drawTenienteAura(ctx, boss, bossColor, globalTime);
-        drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
-        drawTenienteImpactWarning(ctx, boss, bossColor, globalTime);
+        if (!_lieutenantHeroReady) {
+          drawTenienteAura(ctx, boss, bossColor, globalTime);
+          drawTenienteEngineTrails(ctx, boss, bossColor, globalTime);
+          drawTenienteImpactWarning(ctx, boss, bossColor, globalTime);
+        }
       } else if (boss.pattern === 'supreme') {
         drawEmperorImperialAura(ctx, boss, bossColor, globalTime);
         // HC-SPRITE-WIRE-02: EnergyMantle replaced by flagship sprite body when ready
@@ -4543,6 +4723,18 @@ if (shouldShow) {
         drawOrbitalSiegeColossusVisual(ctx, boss);
       }
 
+      // HC-SPRITE-LIEUTENANT-19: Lieutenant Hero visual for TENIENTE (level 19)
+      // Visual-only swap — no gameplay, hitbox, collision, or AI changes.
+      // Falls back to legacy TENIENTE geometric rendering when sprite unavailable.
+      if (boss.pattern === 'divebomb') {
+        var _ltState = resolveLieutenantHeroState(boss);
+        var _ltMetaScale = (typeof getLieutenantHeroMeta === 'function' && getLieutenantHeroMeta().scaleHint) ? getLieutenantHeroMeta().scaleHint : 0.45;
+        var _ltScale = _ltMetaScale;
+        if (_smallScreenBoost > 1.0) _ltScale *= _smallScreenBoost;
+        _ltScale = Math.max(0.38, Math.min(0.65, _ltScale));
+        drawLieutenantHeroLayers(ctx, boss, _ltState, _ltScale);
+      }
+
       // HC-SPRITE-WIRE-02: Imperial Flagship visual for EMPERADOR (level 20)
       // Visual-only swap — no gameplay, hitbox, collision, or AI changes.
       // Falls back to legacy EMPERADOR geometric rendering when sprite unavailable.
@@ -4554,10 +4746,11 @@ if (shouldShow) {
       // HC-SPRITE-WIRE-02: also replaced by flagship visual when ready
       // HC-SPRITE-SERPENTRIX-03: also replaced by serpentrix hero when ready
       // HC-SPRITE-COLOSSUS-STAGE15: also replaced by colossus visual when ready
-      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+      // HC-SPRITE-LIEUTENANT-19: also replaced by lieutenant hero when ready
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady && !_lieutenantHeroReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
       // HC-121: core pulse brightness
-      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) {
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady && !_lieutenantHeroReady) {
         var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
         ctx.save();
         ctx.globalAlpha = 0.020 + _corePulse * 0.026;
@@ -4575,10 +4768,12 @@ if (shouldShow) {
       } else if (boss.pattern === 'rotate') {
         if (!_colossusReady) drawOrbitalCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
-        drawTenienteWings(ctx, boss, bossColor, globalTime);
-        drawTenienteCannons(ctx, boss, bossColor, globalTime);
-        drawTenienteCockpit(ctx, boss, bossColor, globalTime);
-        drawTenienteLights(ctx, boss, bossColor, globalTime);
+        if (!_lieutenantHeroReady) {
+          drawTenienteWings(ctx, boss, bossColor, globalTime);
+          drawTenienteCannons(ctx, boss, bossColor, globalTime);
+          drawTenienteCockpit(ctx, boss, bossColor, globalTime);
+          drawTenienteLights(ctx, boss, bossColor, globalTime);
+        }
       } else if (boss.pattern === 'supreme') {
         // HC-SPRITE-WIRE-02: CrownHalo replaced by flagship sprite when ready
         if (!_imperialFlagshipReady) drawEmperorCrownHalo(ctx, boss, bossColor, globalTime);
@@ -4588,7 +4783,8 @@ if (shouldShow) {
       // HC-SPRITE-WIRE-02: also gated when flagship sprite is active
       // HC-SPRITE-SERPENTRIX-03: also gated when serpentrix hero is active
       // HC-SPRITE-COLOSSUS-STAGE15: also gated when colossus visual is active
-      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) {
+      // HC-SPRITE-LIEUTENANT-19: also gated when lieutenant hero is active
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady && !_lieutenantHeroReady) {
         ctx.save();
         ctx.globalAlpha = 0.055;
         drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
@@ -4600,7 +4796,7 @@ if (shouldShow) {
         // Legacy pixel-art core rings are only drawn as a fallback when hero sprite is unavailable.
         if (!_crabtronHeroReady) drawCrabtronCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
-        drawTenienteCore(ctx, boss, bossColor, globalTime);
+        if (!_lieutenantHeroReady) drawTenienteCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'supreme') {
         // HC-SPRITE-WIRE-02: EmperorCore + PhaseOverload replaced by flagship sprite when ready
         if (!_imperialFlagshipReady) {
@@ -4618,7 +4814,8 @@ if (shouldShow) {
         // HC-SPRITE-WIRE-02: also gated behind flagship
         // HC-SPRITE-SERPENTRIX-03: also gated behind serpentrix hero
         // HC-SPRITE-COLOSSUS-STAGE15: also gated behind colossus visual
-        if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady) {
+        // HC-SPRITE-LIEUTENANT-19: also gated behind lieutenant hero
+        if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady && !_colossusReady && !_lieutenantHeroReady) {
           ctx.globalAlpha = flicker;
           drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
           ctx.globalAlpha = flicker * 0.24;
@@ -4899,6 +5096,13 @@ if (shouldShow) {
       if (typeof GALAXY_CONFIG === 'undefined') return false;
       var sl = GALAXY_CONFIG.spriteLab;
       return !!(sl && sl.serpentrixHero !== false);
+    }
+
+    // HC-SPRITE-LIEUTENANT-19: Lieutenant Hero kill switch helper
+    function isLieutenantHeroEnabled() {
+      if (typeof GALAXY_CONFIG === 'undefined') return false;
+      var sl = GALAXY_CONFIG.spriteLab;
+      return !!(sl && sl.lieutenantHero !== false);
     }
 
     function isFlagshipSpriteReady() {
