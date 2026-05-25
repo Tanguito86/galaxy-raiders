@@ -233,6 +233,9 @@ drawMiniBossVisual(ctx, 'suppressor_siege_core', x, y, 128, 128, { alpha: 0.15 }
 // During boss prelude at level 15:
 drawMiniBossVisual(ctx, 'splitter_aberrant_node', x, y, 128, 128, { alpha: 0.15 });
 
+// During boss prelude at level 19:
+drawMiniBossVisual(ctx, 'splitter_aberrant_node', x, y, 128, 128, { alpha: 0.15 });
+
 // During boss prelude at level 20:
 drawMiniBossVisual(ctx, 'imperial_command_lancer', x, y, 128, 128, { alpha: 0.15 });
 ```

@@ -236,7 +236,7 @@ Create a new fortress-tier boss slot for Orbital Siege Colossus, distinct from e
 
 #### E4. Insert Fortress into Stage Plan
 - **Suggested level:** 25+ (post-game or secret boss)
-- **Alternative:** Replace level 15 ORBITAL with Fortress (if ORBITAL is re-themed)
+- **Alternative:** Replace level 15 ORBITAL with Fortress (REJECTED — ORBITAL is canonically level 15)
 - **Files:** `www/stage-plans.js`
 
 #### E5. Create Fortress Encounter
