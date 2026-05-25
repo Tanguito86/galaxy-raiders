@@ -2,6 +2,8 @@
 // GALAXY RAIDERS - game-loop.js
 // =====================
 
+'use strict';
+
 window.GameLoop = (function() {
   let lastTime = 0;
   let rafId = null;
