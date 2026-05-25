@@ -1378,6 +1378,33 @@ function resolveCrabtronHeroState(boss) {
   return 'idle';
 }
 
+// --- HC-SPRITE-SERPENTRIX-03: SERPENTRIX HERO STATE RESOLVER (presentation-enhanced) ---
+function resolveSerpentrixHeroState(boss) {
+  if (!boss || !boss.active) {
+    if (boss && typeof boss._deathUntil === 'number' && (typeof globalTime === 'number' ? globalTime : 0) < boss._deathUntil) return 'death_collapse';
+    return 'idle_coil';
+  }
+
+  // Priority: death_collapse > rage_phase > attack_windup > venom_charge > idle_coil
+
+  if (boss.phase === 3) return 'rage_phase';
+
+  if (boss.flashTimer > 0) return 'attack_windup';
+
+  var shootRate = 600;
+  if (boss.maxHp > 0) {
+    var hpPct = boss.hp / boss.maxHp;
+    var phase = hpPct > 0.66 ? 1 : hpPct > 0.33 ? 2 : 3;
+    shootRate = Math.max(600, 1800 - (typeof level === 'number' ? level : 5) * 40);
+    if (phase >= 3) shootRate *= 0.6;
+  }
+  if (boss.shootTimer > shootRate * 0.7) return 'venom_charge';
+
+  if (boss._hcTelegraphType && boss._hcTelegraphTimer > 0) return 'attack_windup';
+
+  return 'idle_coil';
+}
+
 // --- HC-VS-03D3: CRABTRON HERO LAYERED DRAW (presentation pass) ---
 function drawCrabtronHeroLayers(ctx, boss, state, scale) {
   if (!ctx || !boss) return;
@@ -1490,6 +1517,161 @@ function drawCrabtronHeroLayers(ctx, boss, state, scale) {
     } else if (layer === 'weakpoint_core') {
       alpha = coreAlpha;
     } else if (layer === 'overlay_glow_damage') {
+      alpha = ovAlpha;
+      oy = overlayOY;
+    }
+
+    if (alpha <= 0.005) continue;
+
+    window.drawSpriteFrame(ctx, spriteId, cx + ox, cy + oy, {
+      frame: frame,
+      scale: safeScale,
+      anchorX: anchorX,
+      anchorY: anchorY,
+      alpha: alpha
+    });
+  }
+}
+
+// --- HC-SPRITE-SERPENTRIX-03: SERPENTRIX HERO LAYERED DRAW (presentation pass) ---
+function drawSerpentrixHeroLayers(ctx, boss, state, scale) {
+  if (!ctx || !boss) return;
+  if (typeof getSerpentrixHeroFrame !== 'function') return;
+
+  var spriteId = 'boss_serpentrix_hero';
+  if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(spriteId)) return;
+
+  var safeState = state || 'idle_coil';
+  var safeScale = (typeof scale === 'number' && isFinite(scale) && scale > 0) ? scale : 0.55;
+
+  var meta = (typeof getSerpentrixHeroMeta === 'function') ? getSerpentrixHeroMeta() : null;
+  if (!meta) return;
+
+  var pivot = meta.pivot || [96, 96];
+  var anchorX = pivot[0] / meta.frameW;
+  var anchorY = pivot[1] / meta.frameH;
+
+  var cx = boss.x + boss.w / 2;
+  var cy = boss.y + boss.h / 2;
+  var t = (typeof globalTime === 'number' ? globalTime : 0);
+
+  // === State-driven overlay alpha ===
+  var ovAlpha;
+  switch (safeState) {
+    case 'attack_windup':
+      ovAlpha = 0.18 + Math.sin(t * 0.042 + 0.6) * 0.10;
+      break;
+    case 'venom_charge':
+      ovAlpha = 0.32 + Math.abs(Math.sin(t * 0.055)) * 0.18;
+      break;
+    case 'rage_phase':
+      ovAlpha = 0.44 + Math.sin(t * 0.048) * 0.12;
+      break;
+    case 'death_collapse':
+      ovAlpha = 0.58 + Math.abs(Math.sin(t * 0.075 + 1.3)) * 0.22;
+      break;
+    default:
+      ovAlpha = 0.05 + Math.sin(t * 0.013) * 0.04;
+      break;
+  }
+  if (boss.flashTimer > 0) ovAlpha += 0.10;
+  ovAlpha = Math.min(0.80, ovAlpha);
+  if (_smallScreenBoost > 1.0) ovAlpha *= 0.78;
+
+  // === State-driven eye glow ===
+  var eyeFreq, eyeBase, eyeAmp;
+  switch (safeState) {
+    case 'attack_windup':
+      eyeFreq = 0.042; eyeBase = 0.58; eyeAmp = 0.30;
+      break;
+    case 'venom_charge':
+      eyeFreq = 0.055; eyeBase = 0.65; eyeAmp = 0.30;
+      break;
+    case 'rage_phase':
+      eyeFreq = 0.050; eyeBase = 0.72; eyeAmp = 0.24;
+      break;
+    case 'death_collapse':
+      eyeFreq = 0.068; eyeBase = 0.55; eyeAmp = 0.40;
+      break;
+    default:
+      eyeFreq = 0.024; eyeBase = 0.48; eyeAmp = 0.28;
+      break;
+  }
+  var eyePulse = 0.5 + 0.5 * Math.sin(t * eyeFreq + (safeState === 'venom_charge' ? t * 0.01 : 0));
+  var eyeAlpha = eyeBase + eyePulse * eyeAmp;
+
+  // === State-driven fangs/venom alpha ===
+  var fangsAlpha;
+  switch (safeState) {
+    case 'venom_charge':
+      fangsAlpha = 0.82 + Math.abs(Math.sin(t * 0.058)) * 0.16;
+      break;
+    case 'rage_phase':
+      fangsAlpha = 0.88 + Math.sin(t * 0.045) * 0.10;
+      break;
+    case 'death_collapse':
+      fangsAlpha = 0.38 + Math.abs(Math.sin(t * 0.062)) * 0.28;
+      break;
+    default:
+      fangsAlpha = 0.65 + Math.sin(t * 0.022) * 0.12;
+      break;
+  }
+
+  // === State-driven shadow alpha ===
+  var shadowAlpha = 0.26;
+  if (safeState === 'attack_windup') shadowAlpha = 0.32;
+  if (safeState === 'rage_phase') shadowAlpha = 0.36;
+  if (safeState === 'death_collapse') shadowAlpha = 0.40;
+
+  // === Tail coil micro-motion ===
+  var tailOX = 0, tailOY = 0;
+  if (safeState === 'idle_coil') {
+    tailOX = Math.sin(t * 0.018) * 1.2;
+    tailOY = Math.cos(t * 0.018) * 0.8;
+  } else if (safeState === 'attack_windup') {
+    tailOX = Math.sin(t * 0.042) * 2.0;
+    tailOY = Math.cos(t * 0.042) * 1.2;
+  } else if (safeState === 'rage_phase') {
+    tailOX = Math.sin(t * 0.060 + 0.4) * 2.5;
+    tailOY = Math.cos(t * 0.060 + 0.4) * 1.4;
+  }
+
+  // === Head micro-motion ===
+  var headOX = 0, headOY = 0;
+  if (safeState === 'attack_windup') {
+    headOX = Math.sin(t * 0.048 + 0.8) * 1.3;
+    headOY = Math.cos(t * 0.048 + 0.8) * 0.7;
+  } else if (safeState === 'venom_charge') {
+    headOY = Math.sin(t * 0.052) * 0.6;
+  } else if (safeState === 'rage_phase') {
+    headOX = Math.sin(t * 0.065 + 0.3) * 1.6;
+  }
+
+  var overlayOY = (safeState === 'rage_phase') ? Math.sin(t * 0.032) * 1.2 : 0;
+
+  // === Z-ordered layer draw ===
+  var drawOrder = ['shadow', 'tail_coils', 'body', 'scales_armor', 'head', 'fangs_venom', 'eyes_glow', 'overlay_damage'];
+
+  for (var i = 0; i < drawOrder.length; i++) {
+    var layer = drawOrder[i];
+    var frame = getSerpentrixHeroFrame(safeState, layer);
+    if (frame < 0) continue;
+
+    var alpha = 1;
+    var ox = 0, oy = 0;
+
+    if (layer === 'shadow') {
+      alpha = shadowAlpha;
+      oy = 2;
+    } else if (layer === 'tail_coils') {
+      ox = tailOX; oy = tailOY;
+    } else if (layer === 'head') {
+      ox = headOX; oy = headOY;
+    } else if (layer === 'fangs_venom') {
+      alpha = fangsAlpha;
+    } else if (layer === 'eyes_glow') {
+      alpha = eyeAlpha;
+    } else if (layer === 'overlay_damage') {
       alpha = ovAlpha;
       oy = overlayOY;
     }
@@ -4204,6 +4386,8 @@ if (shouldShow) {
       var _crabtronHeroReady = (boss.pattern === 'crossfire' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_crabtron_hero'));
       // SPRITE LAB PHASE D: check Imperial Flagship readiness once per frame
       var _imperialFlagshipReady = (boss.pattern === 'supreme' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_imperial_flagship') && isFlagshipVisualEnabled());
+      // HC-SPRITE-SERPENTRIX-03: check Serpentrix Hero readiness once per frame
+      var _serpentrixHeroReady = (boss.pattern === 'zigzag' && window.SpriteSystem && window.SpriteSystem.isSpriteReady('boss_serpentrix_hero') && isSerpentrixHeroEnabled());
 
       ctx.save();
       ctx.globalAlpha = _crabtronHeroReady ? 0 : bossGlow * 0.55;
@@ -4226,7 +4410,7 @@ if (shouldShow) {
         drawCrabtronMuzzleFlash(ctx, boss, bossColor, globalTime);
         drawCrabtronDashTelegraph(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'zigzag') {
-        drawSerpentrixAura(ctx, boss, bossColor, globalTime);
+        if (!_serpentrixHeroReady) drawSerpentrixAura(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'rotate') {
         drawOrbitalEnergyField(ctx, boss, bossColor, globalTime);
         drawOrbitalRingArcs(ctx, boss, bossColor, globalTime);
@@ -4338,6 +4522,16 @@ if (shouldShow) {
         drawCrabtronHeroLayers(ctx, boss, _heroState, _heroScale);
       }
 
+      // HC-SPRITE-SERPENTRIX-03: SERPENTRIX hero layered body
+      if (boss.pattern === 'zigzag') {
+        var _serpState = resolveSerpentrixHeroState(boss);
+        var _serpMetaScale = (typeof getSerpentrixHeroMeta === 'function' && getSerpentrixHeroMeta().scaleHint) ? getSerpentrixHeroMeta().scaleHint : 0.45;
+        var _serpScale = _serpMetaScale;
+        if (_smallScreenBoost > 1.0) _serpScale *= _smallScreenBoost;
+        _serpScale = Math.max(0.38, Math.min(0.65, _serpScale));
+        drawSerpentrixHeroLayers(ctx, boss, _serpState, _serpScale);
+      }
+
       // HC-SPRITE-WIRE-02: Imperial Flagship visual for EMPERADOR (level 20)
       // Visual-only swap — no gameplay, hitbox, collision, or AI changes.
       // Falls back to legacy EMPERADOR geometric rendering when sprite unavailable.
@@ -4347,10 +4541,11 @@ if (shouldShow) {
 
       // HC-VS-03D2: legacy body replaced by hero layers when ready
       // HC-SPRITE-WIRE-02: also replaced by flagship visual when ready
-      if (!_crabtronHeroReady && !_imperialFlagshipReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
+      // HC-SPRITE-SERPENTRIX-03: also replaced by serpentrix hero when ready
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
 
       // HC-121: core pulse brightness
-      if (!_crabtronHeroReady && !_imperialFlagshipReady) {
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) {
         var _corePulse = 0.5 + 0.5 * Math.sin(globalTime * 0.003);
         ctx.save();
         ctx.globalAlpha = 0.020 + _corePulse * 0.026;
@@ -4359,10 +4554,12 @@ if (shouldShow) {
       }
 
       if (boss.pattern === 'zigzag') {
-        drawSerpentrixWave(ctx, boss, bossColor, globalTime);
-        drawSerpentrixEyes(ctx, boss, bossColor, globalTime);
-        drawSerpentrixFangs(ctx, boss, bossColor, globalTime);
-        drawSerpentrixVenomDrops(ctx, boss, bossColor, globalTime);
+        if (!_serpentrixHeroReady) {
+          drawSerpentrixWave(ctx, boss, bossColor, globalTime);
+          drawSerpentrixEyes(ctx, boss, bossColor, globalTime);
+          drawSerpentrixFangs(ctx, boss, bossColor, globalTime);
+          drawSerpentrixVenomDrops(ctx, boss, bossColor, globalTime);
+        }
       } else if (boss.pattern === 'rotate') {
         drawOrbitalCore(ctx, boss, bossColor, globalTime);
       } else if (boss.pattern === 'divebomb') {
@@ -4377,7 +4574,8 @@ if (shouldShow) {
 
       // HC-VS-03D2: ambient glow replaced by hero overlay_glow_damage layer
       // HC-SPRITE-WIRE-02: also gated when flagship sprite is active
-      if (!_crabtronHeroReady && !_imperialFlagshipReady) {
+      // HC-SPRITE-SERPENTRIX-03: also gated when serpentrix hero is active
+      if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) {
         ctx.save();
         ctx.globalAlpha = 0.055;
         drawSprite(ctx, bossSprite, boss.x, boss.y - 1, '#ffd0c0', 5);
@@ -4405,7 +4603,8 @@ if (shouldShow) {
         ctx.save();
         // HC-VS-03D4: legacy sprite flash gated behind hero; white crosshair always visible
         // HC-SPRITE-WIRE-02: also gated behind flagship
-        if (!_crabtronHeroReady && !_imperialFlagshipReady) {
+        // HC-SPRITE-SERPENTRIX-03: also gated behind serpentrix hero
+        if (!_crabtronHeroReady && !_imperialFlagshipReady && !_serpentrixHeroReady) {
           ctx.globalAlpha = flicker;
           drawBossSpriteOrLegacy(ctx, boss, bossColor, 5);
           ctx.globalAlpha = flicker * 0.24;
@@ -4679,6 +4878,13 @@ if (shouldShow) {
       if (typeof GALAXY_CONFIG === 'undefined') return false;
       var sl = GALAXY_CONFIG.spriteLab;
       return !!(sl && sl.imperialFlagship !== false);
+    }
+
+    // HC-SPRITE-SERPENTRIX-03: Serpentrix Hero kill switch helper
+    function isSerpentrixHeroEnabled() {
+      if (typeof GALAXY_CONFIG === 'undefined') return false;
+      var sl = GALAXY_CONFIG.spriteLab;
+      return !!(sl && sl.serpentrixHero !== false);
     }
 
     function isFlagshipSpriteReady() {

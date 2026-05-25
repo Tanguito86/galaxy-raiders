@@ -159,7 +159,10 @@ window.GALAXY_CONFIG = {
 
     // PHASE E: Orbital Siege Colossus kill switches
     orbitalSiegeColossus: true,       // false → disables fortress sprite rendering entirely
-    orbitalSiegeStateDebug: false     // true → exposes manual state override (debug only)
+    orbitalSiegeStateDebug: false,    // true → exposes manual state override (debug only)
+
+    // HC-SPRITE-SERPENTRIX-03: Serpentrix Hero kill switch
+    serpentrixHero: true              // false → disables serpentrix hero sprite rendering entirely
   },
 
   // ============ BOSS AI MOVEMENT ============

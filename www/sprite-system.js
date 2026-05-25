@@ -541,6 +541,40 @@
     fallbackColor: "#35ff9a"
   });
 
+  // HC-SPRITE-SERPENTRIX-03: SERPENTRIX hero layered sprite system
+  // Master sheet: 1536x960, 8 cols x 5 rows, 192x192 cells
+  // Rows: idle_coil, attack_windup, venom_charge, rage_phase, death_collapse
+  // Columns: shadow, tail_coils, body, scales_armor, head, fangs_venom, eyes_glow, overlay_damage
+  var _SERPENTRIX_HERO_META = {
+    cols: 8,
+    rows: 5,
+    frameW: 192,
+    frameH: 192,
+    layers: ['shadow', 'tail_coils', 'body', 'scales_armor', 'head', 'fangs_venom', 'eyes_glow', 'overlay_damage'],
+    states: ['idle_coil', 'attack_windup', 'venom_charge', 'rage_phase', 'death_collapse'],
+    pivot: [96, 96],
+    scaleHint: 0.55
+  };
+
+  global.getSerpentrixHeroMeta = function () {
+    return _SERPENTRIX_HERO_META;
+  };
+
+  global.getSerpentrixHeroFrame = function (state, layer) {
+    var meta = _SERPENTRIX_HERO_META;
+    var si = meta.states.indexOf(state);
+    var li = meta.layers.indexOf(layer);
+    if (si < 0 || li < 0) return -1;
+    return si * meta.cols + li;
+  };
+
+  registerSprite("boss_serpentrix_hero", {
+    src: "assets/sprites/bosses/serpentrix/serpentrix_hero_sheet.png",
+    frameWidth: _SERPENTRIX_HERO_META.frameW,
+    frameHeight: _SERPENTRIX_HERO_META.frameH,
+    fallbackColor: "#35ff9a"
+  });
+
   registerSprite("boss_orbital", {
     src: "assets/sprites/boss_orbital.png",
     frameWidth: 96,
