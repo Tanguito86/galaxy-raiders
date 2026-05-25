@@ -453,7 +453,11 @@ window.loadStagePlan = function(levelNum) {
   _stageDirectorPlan.sectionIndex = 0;
   _stageDirectorPlan.sectionsInPlan = getStagePlanSectionCount(plan);
   _stageDirectorPlan.planCompleted = false;
-  window.onStageDirectorLevelChange(levelNum);
+  if (typeof _stageDirLvlChangeOrig === 'function') {
+    _stageDirLvlChangeOrig(levelNum);
+  } else {
+    _stageDirector.currentLevel = levelNum;
+  }
 
   // Start first section
   var firstSection = getStagePlanCurrentSection(plan, 0);
