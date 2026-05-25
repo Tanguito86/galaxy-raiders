@@ -4794,6 +4794,171 @@ if (shouldShow) {
       ctx.restore();
     }
 
+    // ═══════════════════════════════════════════════════════
+    // SPRITE LAB PHASE E: Orbital Siege Colossus (Fortress) visual system
+    // Visual-only rendering — no gameplay, no hitbox, no AI changes.
+    // States: master, damaged, core_exposed, weapon_open
+    // ═══════════════════════════════════════════════════════
+
+    var _COLOSSUS_SPRITE_ID = 'boss_orbital_siege_colossus';
+    var _COLOSSUS_STATE_LABELS = ['master', 'damaged', 'core_exposed', 'weapon_open'];
+
+    function getColossusStateFrame(state) {
+      if (typeof window.getOrbitalSiegeColossusPhaseFrame === 'function') {
+        var f = window.getOrbitalSiegeColossusPhaseFrame(state);
+        if (f >= 0) return f;
+      }
+      var idx = _COLOSSUS_STATE_LABELS.indexOf(state);
+      return idx >= 0 ? idx : 0;
+    }
+
+    function isColossusVisualEnabled() {
+      if (typeof GALAXY_CONFIG === 'undefined') return false;
+      var sl = GALAXY_CONFIG.spriteLab;
+      return !!(sl && sl.orbitalSiegeColossus !== false);
+    }
+
+    function isColossusSpriteReady() {
+      return !!(window.SpriteSystem && window.SpriteSystem.isSpriteReady(_COLOSSUS_SPRITE_ID));
+    }
+
+    function getColossusStateDebugOverride() {
+      if (typeof GALAXY_CONFIG === 'undefined') return null;
+      var sl = GALAXY_CONFIG.spriteLab;
+      if (!sl || !sl.orbitalSiegeStateDebug) return null;
+      if (typeof window._orbitalSiegeStateDebugOverride === 'string') return window._orbitalSiegeStateDebugOverride;
+      return null;
+    }
+
+    function resolveColossusVisualState(boss) {
+      var debugOverride = getColossusStateDebugOverride();
+      if (debugOverride) return debugOverride;
+
+      if (!boss) return 'master';
+      var hpPct = boss.hp > 0 && boss.maxHp > 0 ? boss.hp / boss.maxHp : 1;
+      if (hpPct > 0.66) return 'master';
+      if (hpPct > 0.33) return 'damaged';
+      return 'core_exposed';
+    }
+
+    function drawOrbitalSiegeColossusVisual(ctx, boss, x, y, w, h, opts) {
+      if (!ctx) return false;
+      if (!isColossusVisualEnabled()) return false;
+
+      opts = opts || {};
+      var state = opts.state || resolveColossusVisualState(boss);
+      var frame = getColossusStateFrame(state);
+      var drawX = (typeof opts.x === 'number') ? opts.x : (x || (boss ? boss.x : 0));
+      var drawY = (typeof opts.y === 'number') ? opts.y : (y || (boss ? boss.y : 0));
+      var drawW = (typeof opts.w === 'number') ? opts.w : (w || (boss ? boss.w : 240));
+      var drawH = (typeof opts.h === 'number') ? opts.h : (h || (boss ? boss.h : 240));
+      var alpha = (typeof opts.alpha === 'number') ? opts.alpha : 1;
+      var tint = opts.tint || undefined;
+      var rotation = (typeof opts.rotation === 'number') ? opts.rotation : 0;
+      var flipX = opts.flipX === true;
+      var scale = (typeof opts.scale === 'number') ? opts.scale : 1;
+
+      if (isColossusSpriteReady()) {
+        var computedScale = scale;
+        if (!opts.scale) {
+          var sprite = window.SpriteSystem.getSprite(_COLOSSUS_SPRITE_ID);
+          if (sprite) {
+            var metaScale = (typeof getOrbitalSiegeColossusMeta === 'function' && getOrbitalSiegeColossusMeta().scaleHint) ? getOrbitalSiegeColossusMeta().scaleHint : 0.75;
+            computedScale = Math.min(drawW / sprite.frameWidth, drawH / sprite.frameHeight) * metaScale;
+          }
+          if (!isFinite(computedScale) || computedScale <= 0) computedScale = 1;
+        }
+        window.drawSpriteFrame(ctx, _COLOSSUS_SPRITE_ID, drawX + drawW / 2, drawY + drawH / 2, {
+          frame: frame,
+          scale: computedScale,
+          anchorX: 0.5,
+          anchorY: 0.5,
+          alpha: alpha,
+          tint: tint,
+          rotation: rotation,
+          flipX: flipX,
+          fallback: function () {
+            drawColossusFallback(ctx, drawX, drawY, drawW, drawH, state);
+          }
+        });
+        return true;
+      }
+
+      drawColossusFallback(ctx, drawX, drawY, drawW, drawH, state);
+      return false;
+    }
+
+    function drawColossusFallback(ctx, x, y, w, h, state) {
+      if (!ctx) return;
+      var stateColors = { master: '#44ccff', damaged: '#3399dd', core_exposed: '#ff6622', weapon_open: '#ffcc00' };
+      var col = stateColors[state] || '#44ccff';
+      var cx = x + w / 2;
+      var cy = y + h / 2;
+      var outerR = Math.min(w, h) * 0.48;
+      var innerR = outerR * 0.55;
+
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = col;
+      ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+      ctx.globalAlpha = 0.40;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
+      ctx.fill();
+      if (state === 'core_exposed') {
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = '#ff4422';
+        ctx.beginPath();
+        ctx.arc(cx, cy, innerR * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (state === 'weapon_open') {
+        ctx.globalAlpha = 0.30;
+        ctx.fillStyle = '#ffcc00';
+        for (var wi = 0; wi < 4; wi++) {
+          var wAngle = (wi / 4) * Math.PI * 2;
+          var wx = cx + Math.cos(wAngle) * outerR * 0.85;
+          var wy = cy + Math.sin(wAngle) * outerR * 0.85;
+          ctx.fillRect(wx - 4, wy - 4, 8, 8);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawColossusDebugOverlay(ctx, boss, state, x, y, w, h) {
+      if (!ctx) return;
+      var debugCfg = (typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.debug) ? GALAXY_CONFIG.debug : null;
+      if (!debugCfg || !(debugCfg.showBossPattern || debugCfg.showHardcoreInfo)) return;
+
+      var drawX = (typeof x === 'number') ? x : (boss ? boss.x : 0);
+      var drawY = (typeof y === 'number') ? y : (boss ? boss.y : 0);
+      var drawW = (typeof w === 'number') ? w : (boss ? boss.w : 240);
+      var st = state || resolveColossusVisualState(boss);
+      var frame = getColossusStateFrame(st);
+
+      ctx.save();
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'center';
+      ctx.font = '4px "Press Start 2P"';
+      ctx.globalAlpha = 0.65;
+      ctx.fillStyle = '#ff0';
+      ctx.fillText('COLOSSUS ' + st, drawX + drawW / 2, drawY - 14);
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = '#44ccff';
+      ctx.fillText('f:' + frame + ' orbital_siege', drawX + drawW / 2, drawY - 8);
+      var enabled = isColossusVisualEnabled();
+      var ready = isColossusSpriteReady();
+      ctx.fillStyle = enabled ? (ready ? '#0f0' : '#f80') : '#f00';
+      ctx.fillText(enabled ? (ready ? 'RDY' : 'LOADING') : 'OFF', drawX + drawW / 2, drawY - 4);
+      ctx.restore();
+    }
+
     function getEnemyFormationPulse(e, time) {
       var row = e.row || 0;
       var wave = Math.sin(time * 0.0018 + row * 0.45);

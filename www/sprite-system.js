@@ -643,4 +643,47 @@
     },
     fallbackColor: "#d6b85a"
   });
+
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE E: Orbital Siege Colossus (Fortress)
+  // Sheet: 1280x320, 4 frames horizontal, 320x320 each
+  // Frame order: 0=master, 1=damaged, 2=core_exposed, 3=weapon_open
+  // ═══════════════════════════════════════════════════════
+  var _ORBITAL_SIEGE_COLOSSUS_META = {
+    sheetCols: 4,
+    sheetRows: 1,
+    frameW: 320,
+    frameH: 320,
+    bossId: 'orbital_siege_colossus',
+    faction: 'orbital_siege',
+    tier: 'fortress',
+    phases: {
+      master: 0,
+      phase_1_full_armor: 0,
+      damaged: 1,
+      phase_2_damaged: 1,
+      core_exposed: 2,
+      phase_3_core_exposed: 2,
+      weapon_open: 3,
+      phase_special_weapon_deployed: 3
+    },
+    phaseLabels: ['master', 'damaged', 'core_exposed', 'weapon_open'],
+    recommendedGameplaySize: { width: 240, height: 240 },
+    pivot: { x: 160, y: 160, anchor: 'center' },
+    scaleHint: 0.75
+  };
+
+  global.getOrbitalSiegeColossusMeta = function () { return _ORBITAL_SIEGE_COLOSSUS_META; };
+  global.getOrbitalSiegeColossusPhaseFrame = function (phase) { return _ORBITAL_SIEGE_COLOSSUS_META.phases[phase] != null ? _ORBITAL_SIEGE_COLOSSUS_META.phases[phase] : -1; };
+
+  registerSprite("boss_orbital_siege_colossus", {
+    src: "assets/sprites/bosses/orbital_siege/orbital_siege_colossus_sheet.png",
+    frameWidth: _ORBITAL_SIEGE_COLOSSUS_META.frameW,
+    frameHeight: _ORBITAL_SIEGE_COLOSSUS_META.frameH,
+    animations: {
+      idle: { frames: [0,1,2], fps: 1.2, loop: true },
+      weaponOpen: { frames: [3], fps: 0, loop: false }
+    },
+    fallbackColor: "#44ccff"
+  });
 })();

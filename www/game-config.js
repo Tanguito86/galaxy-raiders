@@ -152,7 +152,11 @@ window.GALAXY_CONFIG = {
 
     // PHASE D: Imperial Flagship kill switches
     imperialFlagship: true,           // false → disables flagship sprite rendering entirely
-    imperialFlagshipPhaseDebug: false // true → exposes manual phase override (debug only)
+    imperialFlagshipPhaseDebug: false, // true → exposes manual phase override (debug only)
+
+    // PHASE E: Orbital Siege Colossus kill switches
+    orbitalSiegeColossus: true,       // false → disables fortress sprite rendering entirely
+    orbitalSiegeStateDebug: false     // true → exposes manual state override (debug only)
   },
 
   // ============ BOSS AI MOVEMENT ============
