@@ -150,6 +150,9 @@ window.GALAXY_CONFIG = {
     miniBossSplitter: true,   // false → splitter_aberrant_node falls back
     miniBossImperial: true,   // false → imperial_command_lancer falls back
 
+    // HC-SPRITE-MINIBOSS-02: boss prelude silhouette preview
+    minibossPreludePreview: true, // false → disables mini-boss silhouette during boss warning overlay
+
     // PHASE D: Imperial Flagship kill switches
     imperialFlagship: true,           // false → disables flagship sprite rendering entirely
     imperialFlagshipPhaseDebug: false, // true → exposes manual phase override (debug only)

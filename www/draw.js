@@ -6821,6 +6821,27 @@ if (player.weaponType !== 'normal') {
         ctx.fillText(boss.name.toUpperCase(), W / 2, _bwY + 13);
       }
 
+      // HC-SPRITE-MINIBOSS-02: mini-boss prelude silhouette preview
+      // Foreshadows upcoming faction mini-boss during boss warning intro.
+      // Visual-only tease — no gameplay, no entity, no HP, no collision.
+      if (typeof drawMiniBossVisual === 'function') {
+        var _mbPreludeEnabled = (typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.minibossPreludePreview !== false);
+        if (_mbPreludeEnabled) {
+          var _mbPreludeMap = { crossfire: 'scout_hive_leader', zigzag: 'suppressor_siege_core', rotate: 'splitter_aberrant_node', divebomb: 'splitter_aberrant_node', supreme: 'imperial_command_lancer' };
+          var _mbUnitId = _mbPreludeMap[boss.pattern];
+          if (_mbUnitId) {
+            var _mbSize = Math.min(W * 0.42, 160);
+            var _mbX = W / 2 - _mbSize / 2;
+            var _mbY = H * 0.38 - _mbSize / 2;
+            var _mbAlpha = 0.06 + 0.04 * bwPulseF;
+            ctx.save();
+            ctx.globalAlpha = _mbAlpha;
+            drawMiniBossVisual(ctx, _mbUnitId, _mbX, _mbY, _mbSize, _mbSize, { alpha: 1, tint: _bwColor });
+            ctx.restore();
+          }
+        }
+      }
+
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
       ctx.restore();
