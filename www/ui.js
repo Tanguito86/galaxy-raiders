@@ -274,26 +274,85 @@ function requestDebugLevelSkip() {
   beginWaveTransition(level, level + 1);
 }
 
+// HC-DEBUG-SKIP: Dev-only direct level jump via console or boss buttons.
+// Usage: window.__GR_DEBUG_JUMP_TO_LEVEL(15)
+window.__GR_DEBUG_JUMP_TO_LEVEL = function (targetLevel) {
+  if (!shouldShowDebugLevelSkipButton()) {
+    console.warn('GR DEBUG: showLevelSkipButton is not enabled in GALAXY_CONFIG.debug');
+    return;
+  }
+  if (state !== 'playing') {
+    console.warn('GR DEBUG: state is not "playing", current state:', state);
+    return;
+  }
+  if (typeof targetLevel !== 'number' || targetLevel < 1) {
+    console.warn('GR DEBUG: invalid target level', targetLevel);
+    return;
+  }
+
+  if (typeof clearCombatState === 'function') clearCombatState();
+  if (typeof resetProgressionState === 'function') resetProgressionState();
+
+  level = targetLevel;
+  if (typeof startLevel === 'function') startLevel();
+
+  debugLevelJumpText = 'LVL ' + targetLevel;
+  debugLevelJumpTimer = 900;
+
+  var bossNames = { 5: 'CRABTRON', 10: 'SERPENTRIX', 15: 'ORBITAL', 19: 'TENIENTE', 20: 'EMPERADOR' };
+  var label = bossNames[targetLevel] ? bossNames[targetLevel] : 'WAVE';
+  console.log('GR DEBUG: Jumped to level ' + targetLevel + ' — ' + label);
+};
+
 function initDebugLevelSkipButton() {
   if (!shouldShowDebugLevelSkipButton()) return;
 
-  const controls = document.querySelector('.control-deck-row') || document.getElementById('game-container');
-  if (!controls || document.getElementById('btn-debug-level-skip')) return;
+  var container = document.querySelector('.control-deck-row') || document.getElementById('game-container');
+  if (!container || document.getElementById('btn-debug-level-skip')) return;
 
-  const btn = document.createElement('button');
+  // --- Boss jump button panel ---
+  var bossLevels = [5, 10, 15, 19, 20];
+  var bossLabels = ['LV5', 'LV10', 'LV15', 'LV19', 'LV20'];
+  var bossNames = ['Crabtron', 'Serpentrix', 'Colossus', 'Lieutenant', 'Emperor'];
+
+  var panel = document.createElement('div');
+  panel.id = 'debug-boss-jump-panel';
+  panel.className = 'debug-boss-jump-panel';
+
+  for (var i = 0; i < bossLevels.length; i++) {
+    (function (targetLvl) {
+      var btn = document.createElement('button');
+      btn.className = 'debug-boss-jump-btn';
+      btn.type = 'button';
+      btn.textContent = bossLabels[i];
+      btn.title = 'Debug: Jump to level ' + targetLvl + ' — ' + bossNames[i];
+      btn.setAttribute('aria-label', 'Jump to level ' + targetLvl);
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.__GR_DEBUG_JUMP_TO_LEVEL(targetLvl);
+        if (typeof vibrate === 'function') vibrate('tap');
+      });
+      panel.appendChild(btn);
+    })(bossLevels[i]);
+  }
+
+  container.appendChild(panel);
+
+  // --- +LVL skip button ---
+  var btn = document.createElement('button');
   btn.id = 'btn-debug-level-skip';
   btn.className = 'debug-next-level-btn';
   btn.type = 'button';
   btn.textContent = '+LVL';
   btn.title = 'Debug: avanzar nivel';
   btn.setAttribute('aria-label', 'Debug avanzar nivel');
-  btn.addEventListener('click', (e) => {
+  btn.addEventListener('click', function (e) {
     e.preventDefault();
     requestDebugLevelSkip();
-    vibrate('tap');
+    if (typeof vibrate === 'function') vibrate('tap');
   });
 
-  controls.appendChild(btn);
+  container.appendChild(btn);
 }
 
 initDebugLevelSkipButton();

@@ -172,6 +172,37 @@ canvas {
   color: #000;
 }
 
+/* HC-DEBUG-SKIP: Boss jump button panel */
+.debug-boss-jump-panel {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--fire-center) + 132px);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.debug-boss-jump-btn {
+  width: 44px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 204, 0, 0.14);
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.debug-boss-jump-btn:active {
+  background: rgba(255, 204, 0, 0.35);
+  color: #fff;
+}
+
 /* Estado muteado */
 .mute-btn.muted {
   background: rgba(0, 180, 255, 0.08);
@@ -458,10 +489,15 @@ body[data-theme="imperial"] #mobile-controls::before {
   #mobile-controls,
   .pause-btn-center,
   .mute-btn,
-  .debug-next-level-btn,
   .fullscreen-btn {
     display: none !important;
   }
+  /* HC-DEBUG-SKIP: debug buttons always visible on desktop when flag enabled */
+  .debug-next-level-btn:not([style*="display: none"]),
+  .debug-boss-jump-panel:not([style*="display: none"]) {
+    display: block;
+  }
+}
 
   #info {
     display: none !important;
