@@ -262,16 +262,13 @@ function requestDebugLevelSkip() {
   if (!shouldShowDebugLevelSkipButton()) return;
   if (state !== 'playing') return;
   if (pendingNextLevel) return;
-  if (boss && boss.active) {
-    debugLevelJumpText = 'BOSS ACTIVE';
-    debugLevelJumpTimer = 700;
-    return;
-  }
   if (typeof beginWaveTransition !== 'function') return;
 
+  var currentLevel = level;
+  var nextLevel = currentLevel + 1;
   debugLevelJumpText = '+LVL';
   debugLevelJumpTimer = 900;
-  beginWaveTransition(level, level + 1);
+  beginWaveTransition(currentLevel, nextLevel);
 }
 
 // HC-DEBUG-SKIP: Dev-only direct level jump via console or boss buttons.
@@ -386,4 +383,3 @@ if (muteBtn) {
     });
   });
 }
-

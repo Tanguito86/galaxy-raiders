@@ -3,10 +3,12 @@
 // =====================
 
 var waveTransitionActive = false;
+var waveTransitionTargetLevel = null;
 
 function beginWaveTransition(completedLevel, nextLevel) {
   if (waveTransitionActive) return;
   waveTransitionActive = true;
+  waveTransitionTargetLevel = nextLevel;
   pendingNextLevel = true;
   // HC-RK-04: apply rank wave pause through safety governor
   var rankPauseResult = (typeof window.getHardcoreRankGameplayWavePause === 'function')
@@ -141,7 +143,8 @@ function update(dt) {
 
     if (levelClearTimer <= 0) {
       pendingNextLevel = false;
-      level++;
+      level = (typeof waveTransitionTargetLevel === 'number') ? waveTransitionTargetLevel : level + 1;
+      waveTransitionTargetLevel = null;
       awardScore({ points: 1000, source: 'levelClear' });
       startLevel();
       waveTransitionActive = false;

@@ -37,6 +37,7 @@ function resetRunStats() {
 function resetProgressionState() {
   pendingNextLevel = false;
   waveTransitionActive = false;
+  if (typeof waveTransitionTargetLevel !== 'undefined') waveTransitionTargetLevel = null;
   levelClearTimer = 0;
   warpSpeed = 1;
   resetWaveRewardTracking();
