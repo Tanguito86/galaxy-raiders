@@ -131,7 +131,14 @@ window.GALAXY_CONFIG = {
   sprites: {
     enabled: true,
     fallbackToLegacy: true,
-    debugMissingSprites: false
+    debugMissingSprites: true
+  },
+
+  // ============ SPRITE LAB (Phase A kill switches) ============
+  // Set a key to false to disable that feature and revert to the prior tier.
+  spriteLab: {
+    playerS04Wedge: true,  // false → reverts to player_wedge tier
+    factionScout: true     // false → reverts to fleet_scout/interceptor tier
   },
 
   // ============ BOSS AI MOVEMENT ============

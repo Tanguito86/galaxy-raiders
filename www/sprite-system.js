@@ -334,18 +334,18 @@
   // Sheet: 1152×44, 32 frames, 36×44 per frame
   // Palette: HC-PLAYER-WEDGE-CRIMSON (9 colors)
   // ═══════════════════════════════════════════════════════
+  // player_wedge_anim_sheet.png does not exist — alias to S04 sheet to prevent 404.
+  // S04 Wedge takes priority in the draw chain; this tier is only reached if S04 fails.
   registerSprite("player_wedge", {
-    src: "assets/sprites/player/player_wedge_anim_sheet.png",
-    frameWidth: 36,
-    frameHeight: 44,
+    src: "assets/sprites/player/player_s04_wedge_sheet_2x4.png",
+    frameWidth: 128,
+    frameHeight: 128,
     animations: {
-      idle:      { frames: [0,1,2], fps: 5.5, loop: true },
-      bankLeft:  { frames: [3,4,5], fps: 8, loop: true },
-      bankRight: { frames: [6,7,8], fps: 8, loop: true },
-      bankUp:    { frames: [9,10,11], fps: 8, loop: true },
-      bankDown:  { frames: [12,13,14], fps: 8, loop: true },
-      boost:     { frames: [27,28,29], fps: 10, loop: false },
-      hit:       { frames: [30,31], fps: 20, loop: false }
+      idle:      { frames: [0,1], fps: 5.5, loop: true },
+      bankLeft:  { frames: [2], fps: 0, loop: false },
+      bankRight: { frames: [3], fps: 0, loop: false },
+      boost:     { frames: [4], fps: 0, loop: false },
+      hit:       { frames: [5], fps: 0, loop: false }
     },
     fallbackColor: "#dd3333"
   });
