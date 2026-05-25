@@ -371,7 +371,11 @@ function stopAllMusicIntervals() {
   if (musicBassInterval) { clearInterval(musicBassInterval); musicBassInterval = null; }
 }
 
+var _startMusicActive = false;
 function startMusic(trackName) {
+  if (_startMusicActive) { console.warn('[MENU AUDIO] startMusic re-entered for', trackName, '— aborting to prevent recursion'); return; }
+  _startMusicActive = true;
+  try {
   if (isMuted) return;
   initAudio();
   ensureMusicBus();
@@ -446,6 +450,7 @@ function startMusic(trackName) {
     if (noteData.n !== 0) playMusicNote(NOTES[noteData.n], noteData.l);
     musicIndex = (musicIndex + 1) % trackData.length;
   }, speed);
+  } finally { _startMusicActive = false; }
 }
 
 // --- SFX ---

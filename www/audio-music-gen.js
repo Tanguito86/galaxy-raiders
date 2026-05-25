@@ -840,7 +840,8 @@ function playMusicFromBuffer(trackName, crossfadeMs) {
     return true;
   }
   renderMusicTrack(trackName);
-  if (typeof startMusic === 'function') startMusic(trackName);
+  // Buffer not ready yet — return false so the caller falls back to the legacy tracker.
+  // Do NOT call startMusic here: it creates mutual recursion (startMusic→playMusicFromBuffer→startMusic→…).
   return false;
 }
 
