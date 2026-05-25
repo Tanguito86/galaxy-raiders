@@ -1,0 +1,99 @@
+{
+  "bossId": "imperial_flagship_command",
+  "project": "Galaxy Raiders",
+  "type": "flagship_boss",
+  "faction": "imperial_alien",
+  "tier": "flagship",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "sheet": {
+    "path": "www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 256,
+    "frameHeight": 256,
+    "frames": 3
+  },
+  "recommendedGameplaySize": {
+    "width": 192,
+    "height": 192
+  },
+  "pivot": {
+    "x": 128,
+    "y": 128,
+    "anchor": "center"
+  },
+  "phases": {
+    "phase_1_full_armor": {
+      "frame": 0,
+      "hpRange": "100% - 66%",
+      "file": "www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_master.png",
+      "notes": "Full Imperial armor with commanding crest authority and symmetric shield geometry."
+    },
+    "phase_2_damaged": {
+      "frame": 1,
+      "hpRange": "66% - 33%",
+      "file": "www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_damaged.png",
+      "notes": "Broken armor panels, sparking vents, partial core exposure. Intensity escalation."
+    },
+    "phase_3_core_exposed": {
+      "frame": 2,
+      "hpRange": "33% - 0%",
+      "file": "www/assets/sprites/bosses/imperial_flagship/imperial_flagship_command_core_exposed.png",
+      "notes": "Critical state: shattered plates, fully exposed volatile core, imminent destruction."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "phaseId": "phase_1_full_armor",
+      "unitId": "imperial_flagship_command_master"
+    },
+    {
+      "frame": 1,
+      "phaseId": "phase_2_damaged",
+      "unitId": "imperial_flagship_command_damaged"
+    },
+    {
+      "frame": 2,
+      "phaseId": "phase_3_core_exposed",
+      "unitId": "imperial_flagship_command_core_exposed"
+    }
+  ],
+  "readabilityNotes": [
+    "Imperial Flagship Command uses towering vertical geometry, rigid symmetry, geometric shield plates, and a dominant energy crest to project flagship authority.",
+    "The three-phase escalation (armored -> damaged -> core exposed) communicates boss HP loss visually without requiring HUD inspection.",
+    "At 256x256 master resolution, the recommended gameplay size of 192x192 provides exceptional detail and readability.",
+    "The bright vertical crest and geometric armor panels remain readable behind dense endgame bullet patterns.",
+    "Flagship silhouette is the largest and most authoritative in the Galaxy Raiders boss roster."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended gameplay size is 192x192 \u2014 the largest boss visual in the game, ensuring mobile readability even on small displays.",
+    "The vertical crest and rigid symmetry provide strong recognition hooks at any scale.",
+    "Phase 3 (core exposed) has the highest contrast readability due to the bright exposed core against the fractured armor.",
+    "For very small screens (<400px landscape), consider scaling the flagship slightly larger rather than smaller \u2014 it's meant to dominate."
+  ],
+  "silhouetteNotes": [
+    "Flagship silhouette is defined by towering verticality, a reinforced command crest, broad geometric shield panels, and rigid bilateral symmetry.",
+    "The silhouette intentionally contrasts with Crabtron's asymmetrical claw layout: Flagship is orderly, imposing, and hierarchical.",
+    "Phase 1 reads as an intact imperial war machine through full armor coverage.",
+    "Phase 2 reads as a damaged but dangerous vessel through broken panels and sparking energy.",
+    "Phase 3 reads as a desperate final stand through shattered armor and a fully exposed volatile core."
+  ],
+  "flagshipAuthorityNotes": [
+    "Imperial Flagship Command is designed as the premium flagship-tier boss benchmark alongside Crabtron.",
+    "At 256x256 master resolution, it exceeds the 192x192 mini-boss tier and establishes a new visual quality ceiling.",
+    "The faction identity (Imperial) creates a clear visual escalation chain: Imperial Command Lancer (mini-boss) -> Imperial Flagship Command.",
+    "Flagship authority is projected through maximum sprite resolution, towering vertical geometry, and phase-based destruction narrative."
+  ],
+  "weakpointReadabilityNotes": [
+    "Phase 1: weakpoint is the central energy crest \u2014 bright, vertical, symmetrically centered.",
+    "Phase 2: weakpoint expands as armor panels break, revealing partial core exposure behind the crest.",
+    "Phase 3: weakpoint is the fully exposed volatile core \u2014 the most readable and highest-priority target state.",
+    "The weakpoint escalation follows a clear visual trajectory: crest -> partial core -> full core exposure."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, draw.js, runtime logic, collisions, hitboxes, boss AI, rank, or balance changes were made.",
+    "Sheet frame order is master (phase 1), damaged (phase 2), core_exposed (phase 3).",
+    "This package is production-ready for runtime integration when the Imperial faction flagship slot is activated."
+  ]
+}
