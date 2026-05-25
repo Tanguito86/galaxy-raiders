@@ -1,0 +1,116 @@
+{
+  "bossId": "orbital_siege_colossus",
+  "project": "Galaxy Raiders",
+  "type": "fortress_class_boss",
+  "faction": "orbital_siege",
+  "tier": "fortress",
+  "version": "1.0",
+  "date": "2026-05-24",
+  "sheet": {
+    "path": "www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_sheet.png",
+    "layout": "horizontal",
+    "frameWidth": 320,
+    "frameHeight": 320,
+    "frames": 4
+  },
+  "recommendedGameplaySize": {
+    "width": 240,
+    "height": 240
+  },
+  "pivot": {
+    "x": 160,
+    "y": 160,
+    "anchor": "center"
+  },
+  "phases": {
+    "phase_1_full_armor": {
+      "frame": 0,
+      "hpRange": "100% - 66%",
+      "file": "www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_master.png",
+      "notes": "Intact orbital fortress with full ring geometry, layered armor, and commanding siege presence."
+    },
+    "phase_2_damaged": {
+      "frame": 1,
+      "hpRange": "66% - 33%",
+      "file": "www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_damaged.png",
+      "notes": "Fractured ring segments, damaged armor scoring, flickering siege energy. Damage escalation visible."
+    },
+    "phase_3_core_exposed": {
+      "frame": 2,
+      "hpRange": "33% - 0%",
+      "file": "www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_core_exposed.png",
+      "notes": "Shattered ring sections, fully exposed central reactor, cascading structural collapse. Maximum weakpoint readability."
+    },
+    "phase_special_weapon_deployed": {
+      "frame": 3,
+      "hpRange": "any (superweapon trigger)",
+      "file": "www/assets/sprites/bosses/orbital_siege/orbital_siege_colossus_weapon_open.png",
+      "notes": "Superweapon active state: artillery arrays deployed, energy channels charged, catastrophic attack posture."
+    }
+  },
+  "frameMapping": [
+    {
+      "frame": 0,
+      "phaseId": "phase_1_full_armor",
+      "unitId": "orbital_siege_colossus_master"
+    },
+    {
+      "frame": 1,
+      "phaseId": "phase_2_damaged",
+      "unitId": "orbital_siege_colossus_damaged"
+    },
+    {
+      "frame": 2,
+      "phaseId": "phase_3_core_exposed",
+      "unitId": "orbital_siege_colossus_core_exposed"
+    },
+    {
+      "frame": 3,
+      "phaseId": "phase_special_weapon_deployed",
+      "unitId": "orbital_siege_colossus_weapon_open"
+    }
+  ],
+  "readabilityNotes": [
+    "Orbital Siege Colossus uses concentric ring geometry, layered armor structures, and a central reactor core to project fortress-class catastrophic scale.",
+    "At 320x320 master resolution, this is the largest boss asset in Galaxy Raiders \u2014 a true screen-dominating superweapon.",
+    "The ring silhouette and central energy reactor provide strong recognition anchors even with massive bullet density.",
+    "Four states cover the complete fortress combat arc: armored, damaged, critical, and superweapon-deployed."
+  ],
+  "androidReadabilityNotes": [
+    "Recommended gameplay size is 240x240 \u2014 the largest boss visual in the game, demanding significant screen real estate.",
+    "The concentric ring silhouette and bright central core remain readable even on small displays due to extreme contrast.",
+    "This is intentionally the most screen-filling boss \u2014 it should dominate mobile layouts during fortress encounters.",
+    "Consider scaling down to 192x192 for very small screens (<400px landscape) while preserving ring readability."
+  ],
+  "silhouetteNotes": [
+    "Fortress-class silhouette is defined by concentric ring geometry, layered armor bands, and a dominant central reactor core.",
+    "The ring structure creates a unique donut-like silhouette unlike any other Galaxy Raiders boss \u2014 instantly recognizable.",
+    "Phase 1 reads as an intact orbital fortress through complete ring structure and uniform armor plating.",
+    "Phase 2 reads as a damaged siege platform through fractured ring sections and scoring damage.",
+    "Phase 3 reads as a critically exposed fortress through shattered rings and a fully visible reactor core.",
+    "Phase 4 reads as a catastrophic superweapon through deployed artillery arrays and active energy channels."
+  ],
+  "fortressHierarchyNotes": [
+    "Orbital Siege Colossus is designed as the fortress-class catastrophic superweapon benchmark for Galaxy Raiders.",
+    "At 320x320 master resolution, it exceeds even the 256x256 Imperial Flagship Command tier.",
+    "The faction identity (Orbital Siege) is unique \u2014 focused on large-scale siege geometry rather than organic or militaristic language.",
+    "This asset establishes the ceiling for fortress-class bosses: screen-dominating, ring-based, catastrophic scale."
+  ],
+  "superweaponActivationNotes": [
+    "Frame 3 (weapon_open) represents the superweapon activation state \u2014 distinct from the damage-phase states.",
+    "Artillery arrays extend from the ring structure, creating a wider, more aggressive silhouette during attack sequences.",
+    "Energy channels glow along the deployed weapon paths, providing strong visual telegraphing for incoming catastrophic attacks.",
+    "The superweapon state can be triggered independently of HP-based phase changes for gameplay flexibility."
+  ],
+  "weakpointReadabilityNotes": [
+    "Phase 1: weakpoint is the central reactor ring \u2014 visible but protected by layered armor.",
+    "Phase 2: weakpoint expands as armor fractures, revealing more of the reactor core through gaps.",
+    "Phase 3: weakpoint is the fully exposed central reactor \u2014 maximum visibility, maximum vulnerability signal.",
+    "Phase 4: weakpoint remains exposed during superweapon deployment \u2014 high-risk/high-reward targeting window."
+  ],
+  "integrationNotes": [
+    "Asset preparation only; no gameplay, draw.js, runtime logic, collisions, hitboxes, boss AI, rank, or balance changes were made.",
+    "Sheet frame order is master (phase 1), damaged (phase 2), core_exposed (phase 3), weapon_open (special).",
+    "This package is production-ready for runtime integration when the Orbital Siege fortress slot is activated."
+  ]
+}
