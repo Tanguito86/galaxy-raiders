@@ -3938,7 +3938,38 @@ if (shouldShow) {
   }
 
   // ═══════════════════════════════════════════════════════
-  // HC-ART-02: S04 WEDGE animation frame mapping
+  // SPRITE LAB PHASE A: S04 WEDGE animation frame mapping
+  // 128x128 frames, 2x4 grid. Simplified state map vs 32-frame strip.
+  // ═══════════════════════════════════════════════════════
+  function getS04WedgeAnimationFrame() {
+    var t = globalTime || Date.now();
+    if (isInvincible) {
+      return Math.floor(t / 100) % 2 === 0 ? 'damage' : 'idle';
+    }
+    if (player.movingLeft) return 'bank_left';
+    if (player.movingRight) return 'bank_right';
+    if (player.movingUp || player.movingDown) return 'thrust'; // thrust animation for vertical
+    return 'idle';
+  }
+
+  function drawS04WedgePlayer() {
+    var frameState = getS04WedgeAnimationFrame();
+    var meta = typeof getS04WedgeMeta === 'function' ? getS04WedgeMeta() : null;
+    var frame = meta ? meta.frameMap[frameState] : 0;
+    // 128x128 sprite centered over 33x24 hitbox
+    var dx = player.x - 47; // center 128px over 33px
+    var dy = player.y - 52; // center 128px over 24px
+    window.drawSpriteFrame(ctx, 'player_s04_wedge', dx, dy, {
+      frame: frame,
+      rotation: 0,
+      scale: 0.45, // 128x128 at 0.45 = ~58px visual — fits gameplay hitbox
+      anchorX: 0,
+      anchorY: 0
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // HC-ART-02: S04 WEDGE animation frame mapping (36x44 strip)
   // ═══════════════════════════════════════════════════════
   function getWedgeAnimationFrame() {
     var t = globalTime || Date.now();
@@ -4025,9 +4056,13 @@ if (shouldShow) {
   }
 
   // ═══════════════════════════════════════════════════════
-  // HC-ART-02: S04 WEDGE priority (HIGHEST)
+  // SPRITE LAB PHASE A: S04 WEDGE priority (HIGHEST)
+  // Kill switch: GALAXY_CONFIG.spriteLab.playerS04Wedge === false reverts to player_wedge
   // ═══════════════════════════════════════════════════════
-  if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_wedge')) {
+  var _s04WedgeEnabled = !(typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.playerS04Wedge === false);
+  if (_s04WedgeEnabled && window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_s04_wedge')) {
+    drawS04WedgePlayer();
+  } else if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_wedge')) {
     drawWedgePlayer();
   } else if (window.SpriteSystem && window.SpriteSystem.isSpriteReady('player_ship_3x3')) {
     drawPlayerSprite('player_ship_3x3', getAnimatedPlayerFrame());
@@ -4568,8 +4603,30 @@ if (shouldShow) {
       alien_mini: { sprite: 'fleet_scout', scale: 0.92, y: 0, animation: 'idle' }
     };
 
+    // SPRITE LAB PHASE A: Scout Alien faction override mapping
+    // Kill switch: GALAXY_CONFIG.spriteLab.factionScout === false disables faction override
+    // Uses 128x128 frames scaled to 64px gameplay target (scale = 64/128 = 0.50)
+    // Maps Scout-aligned enemy types to faction_scout frames
+    var _spriteLabScoutEnabled = !(typeof GALAXY_CONFIG !== 'undefined' && GALAXY_CONFIG.spriteLab && GALAXY_CONFIG.spriteLab.factionScout === false);
+    var _SPRITE_LAB_SCOUT_MAP = {
+      alien1: { sprite: 'faction_scout', scale: 0.50, y: 0, animation: 'idle', frame: 0 },
+      alien2: { sprite: 'faction_scout', scale: 0.50, y: 0, animation: 'idle', frame: 2 },
+      alien4: { sprite: 'faction_scout', scale: 0.48, y: 0, animation: 'idle', frame: 1 },
+      alien5: { sprite: 'faction_scout', scale: 0.46, y: 0, animation: 'idle', frame: 3 },
+      alien_mini: { sprite: 'faction_scout', scale: 0.42, y: 0, animation: 'idle', frame: 3 }
+    };
+
     function getHCArtEnemyVisual(e) {
-      if (!e || !HCART_ENEMY_VISUALS[e.type]) return null;
+      if (!e) return null;
+      // SPRITE LAB PHASE A: Scout faction override (highest priority)
+      if (_spriteLabScoutEnabled && _SPRITE_LAB_SCOUT_MAP[e.type]) {
+        var spOverride = _SPRITE_LAB_SCOUT_MAP[e.type];
+        if (window.SpriteSystem && window.SpriteSystem.isSpriteReady(spOverride.sprite)) {
+          return spOverride;
+        }
+      }
+      // Fall through to existing HC Art visuals
+      if (!HCART_ENEMY_VISUALS[e.type]) return null;
       var profile = HCART_ENEMY_VISUALS[e.type];
       if (!window.SpriteSystem || !window.SpriteSystem.isSpriteReady(profile.sprite)) return null;
       return profile;
@@ -4675,7 +4732,8 @@ if (shouldShow) {
         alien6: { x: 8,  y: 4, width: 17, height: 24 },
         fleet_scout: { x: 2, y: 2, width: 12, height: 12 },
         fleet_interceptor: { x: 3, y: 3, width: 18, height: 17 },
-        fleet_suppressor: { x: 4, y: 3, width: 20, height: 24 }
+        fleet_suppressor: { x: 4, y: 3, width: 20, height: 24 },
+        faction_scout: { x: 16, y: 16, width: 96, height: 96 }
       };
       return bounds[spriteId] || null;
     }

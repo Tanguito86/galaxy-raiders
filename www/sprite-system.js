@@ -370,6 +370,64 @@
     fallbackColor: "#556677"
   });
 
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE A: S04 Wedge upgraded player ship
+  // Sheet: 512x256, 2 cols x 4 rows, 128x128 cells
+  // Frame map (row-major idle=0, thrust=1, bankL=2, bankR=3, boost=4, damage=5, respawn=6, thrust2=7)
+  // ═══════════════════════════════════════════════════════
+  var _S04_WEDGE_META = {
+    sheetCols: 2,
+    sheetRows: 4,
+    frameW: 128,
+    frameH: 128,
+    // 2x4 grid: row 0 = idle(0), thrust_01(1); row 1 = bank_left(2), bank_right(3);
+    //           row 2 = boost(4), damage(5); row 3 = respawn(6), thrust_02(7)
+    frameMap: {
+      idle:      0,
+      thrust_01: 1,
+      bank_left: 2,
+      bank_right:3,
+      boost:     4,
+      damage:    5,
+      respawn:   6,
+      thrust_02: 7
+    }
+  };
+
+  global.getS04WedgeMeta = function () { return _S04_WEDGE_META; };
+  global.getS04WedgeFrame = function (state) { return _S04_WEDGE_META.frameMap[state] || 0; };
+
+  registerSprite("player_s04_wedge", {
+    src: "assets/sprites/player/player_s04_wedge_sheet_2x4.png",
+    frameWidth: _S04_WEDGE_META.frameW,
+    frameHeight: _S04_WEDGE_META.frameH,
+    animations: {
+      idle:      { frames: [0,1], fps: 5.5, loop: true },
+      thrust:    { frames: [0,1,7], fps: 8, loop: true },
+      bankLeft:  { frames: [2], fps: 0, loop: false },
+      bankRight: { frames: [3], fps: 0, loop: false },
+      boost:     { frames: [4], fps: 0, loop: false },
+      damage:    { frames: [5], fps: 0, loop: false },
+      respawn:   { frames: [6], fps: 0, loop: false }
+    },
+    fallbackColor: "#dd3333"
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // SPRITE LAB PHASE A: Scout Alien faction
+  // Sheet: 512x128, 4 frames horizontal, 128x128 each
+  // Frame order: 0=mk1_master, 1=elite, 2=sniper, 3=swarm
+  // ═══════════════════════════════════════════════════════
+  registerSprite("faction_scout", {
+    src: "assets/sprites/enemies/scout/scout_alien_faction_sheet.png",
+    frameWidth: 128,
+    frameHeight: 128,
+    animations: {
+      idle: { frames: [0,1,2,3], fps: 6, loop: true }
+    },
+    fallbackColor: "#7cff6b"
+  });
+
   // HC-VS-03D1: CRABTRON hero layered sprite system
   // Master sheet: 1536x960, 8 cols x 5 rows, 192x192 cells
   // Columns: composite, shadow, body, left_claw, right_claw, weakpoint_core, cannons_vents, overlay_glow_damage
