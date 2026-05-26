@@ -3367,7 +3367,10 @@ function draw() {
   var lv1FarDrawn = (typeof drawLv1FarParallax === 'function')
     ? drawLv1FarParallax(ctx, level, globalTime)
     : false;
-  if (!lv1FarDrawn) drawThemedBackground(ctx, level, globalTime);
+  var lv2FarDrawn = (typeof drawLv2FarParallax === 'function')
+    ? drawLv2FarParallax(ctx, level, globalTime)
+    : false;
+  if (!lv1FarDrawn && !lv2FarDrawn) drawThemedBackground(ctx, level, globalTime);
 
   const mobileControls = document.getElementById('mobile-controls');
   if (mobileControls) {
@@ -3432,6 +3435,7 @@ function draw() {
   // 2.5) HC-97: atmospheric effects (dust, speed lines, ambient flash)
   if (typeof drawHC97Atmosphere === 'function') drawHC97Atmosphere(ctx, level, globalTime);
   if (typeof drawLv1MidParallax === 'function') drawLv1MidParallax(ctx, level, globalTime);
+  if (typeof drawLv2MidParallax === 'function') drawLv2MidParallax(ctx, level, globalTime);
 
   // 3) STAR SHAKE (solo fondo, más fuerte en boss)
   const bgShakeMult = boss.active ? SHAKE_CONFIG.bgBossMultiplier : SHAKE_CONFIG.bgNormalMultiplier;
@@ -6622,6 +6626,7 @@ ufoRewards.forEach(d => {
     enemyBullets.forEach(drawEnemyBullet);
 
     if (typeof drawLv1ForegroundFxParallax === 'function') drawLv1ForegroundFxParallax(ctx, level, globalTime);
+    if (typeof drawLv2ForegroundFxParallax === 'function') drawLv2ForegroundFxParallax(ctx, level, globalTime);
 
     // ================================================================
     // HC-RD-01: PRIORITY_FEEDBACK — HUD overlays
