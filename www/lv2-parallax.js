@@ -13,9 +13,9 @@ var LV2_PARALLAX = {
   midAlpha: 0.38,
   fxAlpha: 0.20,
   assets: {
-    far: 'assets/backgrounds/lv2/asteroid_drift_far.png?v=lv2-asteroid-drift-palette-20260525',
-    mid: 'assets/backgrounds/lv2/asteroid_drift_mid.png?v=lv2-asteroid-drift-palette-20260525',
-    fx: 'assets/backgrounds/lv2/asteroid_drift_fx.png?v=lv2-asteroid-drift-palette-20260525'
+    far: 'assets/backgrounds/lv2/asteroid_drift_far.png?v=lv2-frontier-blue-20260525',
+    mid: 'assets/backgrounds/lv2/asteroid_drift_mid.png?v=lv2-frontier-blue-20260525',
+    fx: 'assets/backgrounds/lv2/asteroid_drift_fx.png?v=lv2-frontier-blue-20260525'
   }
 };
 
