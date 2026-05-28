@@ -1,0 +1,57 @@
+# ── Galaxy Raiders — FreezeOps Config ──────────────────────
+#
+# Protects gameplay, audio DSP, and scoring from accidental
+# AI changes. Based on CLAUDE.md frozen zones:
+#   hitboxes, difficulty, patterns, score, rank, bosses.
+#
+# DO NOT edit these protected files without review.
+# UI, menus, options, and input are safe to change freely.
+# ───────────────────────────────────────────────────────────
+
+version: "1"
+rules:
+  # Game changes should be surgical. 200 lines max per PR.
+  - type: max_changed_lines
+    value: 200
+
+  # ── Core Gameplay (frozen per CLAUDE.md) ─────────────────
+  - type: protected_paths
+    paths:
+      - www/game-loop.js          # Frame timing — must stay rAF
+      - www/collisions.js         # Hitbox logic — frozen
+      - www/update.js             # Main update orchestrator
+      - www/combat.js             # Combat/damage math
+      - www/entities.js           # Entity state machine
+
+  # ── Balance & Difficulty (frozen) ───────────────────────
+  - type: protected_paths
+    paths:
+      - www/balance.js            # Difficulty tuning
+      - www/game-config.js        # Global game parameters
+
+  # ── Bosses & Patterns (frozen) ──────────────────────────
+  - type: protected_paths
+    paths:
+      - www/boss-patterns.js      # Boss attack sequences
+      - www/boss-ai-movement.js   # Boss movement logic
+      - www/update-boss.js        # Boss state update
+      - www/enemy-pattern-hooks.js # Enemy formation hooks
+
+  # ── Scoring & Rank (frozen) ─────────────────────────────
+  - type: protected_paths
+    paths:
+      - www/hardcore-rank.js      # Rank/score calculation
+      - www/hardcore-combo.js     # Combo system
+
+  # ── Audio DSP Runtime (frozen per audit) ────────────────
+  - type: protected_paths
+    paths:
+      - www/audio-engine.js       # Web Audio API engine
+      - www/audio-bus.js          # Audio routing/mixing
+
+  # Danger patterns AI coding tools frequently inject.
+  - type: forbidden_text
+    patterns:
+      - setInterval                # Breaks frame timing (use rAF)
+      - Math.random(               # Non-deterministic in gameplay
+      - TODO_THROWAWAY             # Debugging leftovers
